@@ -15,10 +15,12 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.6",
     "@iconify-json/lucide": "^1.2.134",
     "@iconify-json/simple-icons": "^1.2.96",
     "@nuxt/ui": "^4.11.1",
     "@scalar/nuxt": "0.6.74",
+    "better-auth": "^1.7.6",
     "drizzle-orm": "^0.45.3",
     "nuxt": "^4.5.2",
     "pg": "^8.23.0",
