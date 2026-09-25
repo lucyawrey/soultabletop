@@ -45,7 +45,7 @@ pnpm dev
 
 ## Database
 
-The server uses MikroORM with Neon PostgreSQL. Until launch, development and the
+The server uses Drizzle with Neon PostgreSQL. Until launch, development and the
 `prod` environment intentionally use the Neon production branch. Copy
 `.env.example` to `.env` and replace the placeholder with the pooled Neon
 connection string:
@@ -55,15 +55,14 @@ cp .env.example .env
 ```
 
 The connection is kept in the private `DATABASE_URL` runtime config and is
-not exposed to the browser. MikroORM is initialized lazily by
+not exposed to the browser. The Drizzle connection is initialized lazily by
 `useDatabase()` in server code.
 
 Useful database commands:
 
 ```bash
-pnpm db:debug
-pnpm db:migration:create
-pnpm db:migration:up
+pnpm db:generate
+pnpm db:migrate
 ```
 
 ## Production

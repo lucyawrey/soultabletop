@@ -1,6 +1,9 @@
-import { MikroORM, PostgreSqlDriver } from "@mikro-orm/postgresql";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "../database/schema";
 
-let ormPromise: Promise<MikroORM> | undefined;
+let database: ReturnType<typeof drizzle<typeof schema>> | undefined;
+let pool: Pool | undefined;
 
 export function useDatabase() {
   const databaseUrl =
@@ -10,17 +13,8 @@ export function useDatabase() {
     throw new Error("DATABASE_URL is required to connect to the database.");
   }
 
-  ormPromise ??= MikroORM.init({
-    driver: PostgreSqlDriver,
-    clientUrl: databaseUrl,
-    driverOptions: {
-      ssl: true,
-    },
-    entities: [],
-    discovery: {
-      warnWhenNoEntities: false,
-    },
-  });
+  pool ??= new Pool({ connectionString: databaseUrl, ssl: true });
+  database ??= drizzle({ client: pool, schema });
 
-  return ormPromise;
+  return database;
 }
