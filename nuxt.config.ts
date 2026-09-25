@@ -13,10 +13,6 @@ export default defineNuxtConfig({
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? "",
   },
 
-  routeRules: {
-    "/": { prerender: true },
-  },
-
   compatibilityDate: "2026-06-30",
 
   nitro: {
