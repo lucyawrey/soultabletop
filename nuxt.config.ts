@@ -18,6 +18,12 @@ export default defineNuxtConfig({
 
   compatibilityDate: "2026-06-30",
 
+  nitro: {
+    experimental: {
+      openAPI: true,
+    },
+  },
+
   eslint: {
     config: {
       stylistic: {
@@ -27,9 +33,15 @@ export default defineNuxtConfig({
     },
   },
 
-  nitro: {
-    experimental: {
-      openAPI: true,
+  scalar: {
+    darkMode: true,
+    metaData: {
+      title: "Soul Tabletop API Documentation",
     },
+    servers: [
+      {
+        url: process.env.BASE_URL,
+      },
+    ],
   },
 });
