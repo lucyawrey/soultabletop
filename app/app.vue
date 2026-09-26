@@ -21,7 +21,7 @@ useSeoMeta({
 
 <template>
   <UApp>
-    <UHeader>
+    <UHeader :ui="{ root: 'bg-default' }">
       <template #left>
         <NuxtLink
           to="/"
