@@ -17,9 +17,6 @@ useSeoMeta({
   ogDescription: description,
   twitterCard: "summary_large_image",
 });
-
-const sessionState = await useAuthSession();
-const isLoggedIn = computed(() => !!sessionState.data.value?.user);
 </script>
 
 <template>
@@ -35,11 +32,44 @@ const isLoggedIn = computed(() => !!sessionState.data.value?.user);
         </NuxtLink>
       </template>
 
-      <template v-if="isLoggedIn" #center>
+      <template #default>
         <UButton to="/games" color="neutral" variant="link">Games</UButton>
-        <UButton color="neutral" variant="link" disabled>Characters</UButton>
-        <UButton color="neutral" variant="link" disabled>Content</UButton>
-        <UButton to="/systems" color="neutral" variant="link">Systems</UButton>
+        <UButton href="#" color="neutral" variant="link" @click.prevent>
+          Characters
+        </UButton>
+        <UButton href="#" color="neutral" variant="link" @click.prevent>
+          Content
+        </UButton>
+        <UButton href="#" color="neutral" variant="link" @click.prevent>
+          Types
+        </UButton>
+        <UButton to="/systems" color="neutral" variant="link"
+          >Game Systems</UButton
+        >
+        <UButton href="#" color="neutral" variant="link" @click.prevent>
+          Groups
+        </UButton>
+      </template>
+
+      <template #body>
+        <nav class="flex flex-col gap-2">
+          <UButton to="/games" color="neutral" variant="link">Games</UButton>
+          <UButton href="#" color="neutral" variant="link" @click.prevent>
+            Characters
+          </UButton>
+          <UButton href="#" color="neutral" variant="link" @click.prevent>
+            Content
+          </UButton>
+          <UButton href="#" color="neutral" variant="link" @click.prevent>
+            Types
+          </UButton>
+          <UButton to="/systems" color="neutral" variant="link"
+            >Game Systems</UButton
+          >
+          <UButton href="#" color="neutral" variant="link" @click.prevent>
+            Groups
+          </UButton>
+        </nav>
       </template>
 
       <template #right>
