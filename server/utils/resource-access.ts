@@ -16,7 +16,7 @@ interface ResourceAccessContext {
   userId: string;
   isSiteAdmin: boolean;
   groupRoles: Map<string, "admin" | "editor" | "member">;
-  gameRoles: Map<string, "GM" | "Player">;
+  gameRoles: Map<string, "gm" | "player">;
   gameOwners: Map<string, { userId: string | null; groupId: string | null }>;
   systemGroupIds: Set<string>;
   grants: (typeof resourceGrant.$inferSelect)[];
@@ -75,7 +75,7 @@ export async function loadResourceAccessContext(
 
   return {
     userId: user.id,
-    isSiteAdmin: profiles[0]?.role === "Admin",
+    isSiteAdmin: profiles[0]?.role === "admin",
     groupRoles: new Map(groups.map(({ groupId, role }) => [groupId, role])),
     gameRoles: new Map(games.map(({ gameId, role }) => [gameId, role])),
     gameOwners: new Map(
@@ -162,7 +162,7 @@ export function getResourceAccess(
         isGameOwner ||
         (role !== undefined &&
           (grant.gameAudience === "members" ||
-            (grant.gameAudience === "GMs" && role === "GM")));
+            (grant.gameAudience === "gms" && role === "gm")));
       if (includedInAudience) {
         canRead = true;
         canEdit ||= grant.permission === "edit";

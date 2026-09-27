@@ -87,14 +87,14 @@ export const verification = pgTable("verification", {
     .notNull(),
 });
 
-export const siteRole = pgEnum("site_role", ["Member", "Admin"]);
+export const siteRole = pgEnum("site_role", ["member", "admin"]);
 export const groupRole = pgEnum("group_role", ["admin", "editor", "member"]);
-export const gameRole = pgEnum("game_role", ["GM", "Player"]);
+export const gameRole = pgEnum("game_role", ["gm", "player"]);
 export const contentCategory = pgEnum("content_category", [
-  "General",
-  "NonPlayerCharacter",
-  "Document",
-  "PlayerCharacter",
+  "general",
+  "nonPlayerCharacter",
+  "document",
+  "playerCharacter",
 ]);
 export const resourceKind = pgEnum("resource_kind", [
   "system",
@@ -104,7 +104,7 @@ export const resourceKind = pgEnum("resource_kind", [
   "content",
 ]);
 export const sharePermission = pgEnum("share_permission", ["read", "edit"]);
-export const gameAudience = pgEnum("game_audience", ["members", "GMs"]);
+export const gameAudience = pgEnum("game_audience", ["members", "gms"]);
 export const groupKind = pgEnum("group_kind", ["user", "system"]);
 
 export type ContentFieldSchema =
@@ -127,7 +127,7 @@ export const userProfile = pgTable(
     userId: text("user_id")
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
-    role: siteRole("role").default("Member").notNull(),
+    role: siteRole("role").default("member").notNull(),
     slug: text("slug").notNull(),
     iconImageUrl: text("icon_image_url"),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -332,7 +332,7 @@ export const gameMembership = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    role: gameRole("role").default("Player").notNull(),
+    role: gameRole("role").default("player").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -351,7 +351,7 @@ export const contentType = pgTable("content_type", {
     .notNull()
     .references(() => system.resourceId, { onDelete: "restrict" }),
   contentCategory: contentCategory("content_category")
-    .default("General")
+    .default("general")
     .notNull(),
   hasStrictSchema: boolean("has_strict_schema").default(false).notNull(),
   schema: jsonb("schema")

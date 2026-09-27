@@ -36,8 +36,10 @@ const isLoggedIn = computed(() => !!sessionState.data.value?.user);
       </template>
 
       <template v-if="isLoggedIn" #center>
-        <UButton to="/systems" color="neutral" variant="link">Systems</UButton>
         <UButton to="/games" color="neutral" variant="link">Games</UButton>
+        <UButton color="neutral" variant="link" disabled>Characters</UButton>
+        <UButton color="neutral" variant="link" disabled>Content</UButton>
+        <UButton to="/systems" color="neutral" variant="link">Systems</UButton>
       </template>
 
       <template #right>

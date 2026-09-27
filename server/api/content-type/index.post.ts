@@ -13,10 +13,10 @@ import { isUniqueConstraintError } from "../../utils/user-profile";
 import { parseBody, contentTypeCreateSchema } from "../../utils/api-schemas";
 
 const categories = new Set([
-  "General",
-  "NonPlayerCharacter",
-  "Document",
-  "PlayerCharacter",
+  "general",
+  "nonPlayerCharacter",
+  "document",
+  "playerCharacter",
 ]);
 
 defineRouteMeta({
@@ -38,10 +38,10 @@ defineRouteMeta({
               contentCategory: {
                 type: "string",
                 enum: [
-                  "General",
-                  "NonPlayerCharacter",
-                  "Document",
-                  "PlayerCharacter",
+                  "general",
+                  "nonPlayerCharacter",
+                  "document",
+                  "playerCharacter",
                 ],
               },
               hasStrictSchema: { type: "boolean" },
@@ -126,10 +126,10 @@ export default defineEventHandler(async (event) => {
           systemId: body.systemId as string,
           contentCategory:
             (body.contentCategory as
-              | "General"
-              | "NonPlayerCharacter"
-              | "Document"
-              | "PlayerCharacter") ?? "General",
+              | "general"
+              | "nonPlayerCharacter"
+              | "document"
+              | "playerCharacter") ?? "general",
           hasStrictSchema: body.hasStrictSchema === true,
           schema: (body.schema ?? {}) as ContentTypeSchema,
         })
