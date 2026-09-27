@@ -24,7 +24,7 @@ defineRouteMeta({
               groupId: { type: "string", format: "uuid" },
               gameId: { type: "string", format: "uuid" },
               permission: { type: "string", enum: ["read", "edit"] },
-              gameAudience: { type: "string", enum: ["members", "GMs"] },
+              gameAudience: { type: "string", enum: ["members", "gms"] },
             },
           },
         },
@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
     });
   if (
     body.gameId !== undefined &&
-    !["members", "GMs"].includes(body.gameAudience as string)
+    !["members", "gms"].includes(body.gameAudience as string)
   )
     throw createError({
       statusCode: 400,
@@ -77,7 +77,7 @@ export default defineEventHandler(async (event) => {
         groupId: typeof body.groupId === "string" ? body.groupId : null,
         gameId: typeof body.gameId === "string" ? body.gameId : null,
         permission: body.permission as "read" | "edit",
-        gameAudience: body.gameAudience as "members" | "GMs" | undefined,
+        gameAudience: body.gameAudience as "members" | "gms" | undefined,
         createdByUserId: user.id,
       })
       .returning();

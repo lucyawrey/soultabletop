@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
         ),
       );
     if (
-      profile?.role !== "Admin" &&
+      profile?.role !== "admin" &&
       membership?.role !== "admin" &&
       membership?.role !== "editor"
     )

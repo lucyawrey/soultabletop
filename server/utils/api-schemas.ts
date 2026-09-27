@@ -47,10 +47,10 @@ export const contentTypeCreateSchema = Type.Intersect([
     systemId: uuidSchema,
     contentCategory: Type.Optional(
       Type.Union([
-        Type.Literal("General"),
-        Type.Literal("NonPlayerCharacter"),
-        Type.Literal("Document"),
-        Type.Literal("PlayerCharacter"),
+        Type.Literal("general"),
+        Type.Literal("nonPlayerCharacter"),
+        Type.Literal("document"),
+        Type.Literal("playerCharacter"),
       ]),
     ),
     hasStrictSchema: Type.Optional(Type.Boolean()),
@@ -63,10 +63,10 @@ export const contentTypePatchSchema = Type.Partial(
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
     contentCategory: Type.Union([
-      Type.Literal("General"),
-      Type.Literal("NonPlayerCharacter"),
-      Type.Literal("Document"),
-      Type.Literal("PlayerCharacter"),
+      Type.Literal("general"),
+      Type.Literal("nonPlayerCharacter"),
+      Type.Literal("document"),
+      Type.Literal("playerCharacter"),
     ]),
     hasStrictSchema: Type.Boolean(),
     schema: Type.Object({}, { additionalProperties: true }),
@@ -109,7 +109,7 @@ export const groupPatchSchema = Type.Partial(groupCreateSchema);
 
 export const gameMembershipSchema = Type.Object({
   userId: Type.String({ minLength: 1 }),
-  role: Type.Union([Type.Literal("GM"), Type.Literal("Player")]),
+  role: Type.Union([Type.Literal("gm"), Type.Literal("player")]),
 });
 
 export const groupMembershipSchema = Type.Object({
@@ -127,7 +127,7 @@ export const resourceGrantSchema = Type.Object({
   gameId: Type.Optional(uuidSchema),
   permission: Type.Union([Type.Literal("read"), Type.Literal("edit")]),
   gameAudience: Type.Optional(
-    Type.Union([Type.Literal("members"), Type.Literal("GMs")]),
+    Type.Union([Type.Literal("members"), Type.Literal("gms")]),
   ),
 });
 

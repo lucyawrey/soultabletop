@@ -27,10 +27,10 @@ defineRouteMeta({
               contentCategory: {
                 type: "string",
                 enum: [
-                  "General",
-                  "NonPlayerCharacter",
-                  "Document",
-                  "PlayerCharacter",
+                  "general",
+                  "nonPlayerCharacter",
+                  "document",
+                  "playerCharacter",
                 ],
               },
               hasStrictSchema: { type: "boolean" },
@@ -80,7 +80,7 @@ export default defineEventHandler(async (event) => {
       ...(body.contentCategory !== undefined
         ? {
             contentCategory: body.contentCategory as
-              "General" | "NonPlayerCharacter" | "Document" | "PlayerCharacter",
+              "general" | "nonPlayerCharacter" | "document" | "playerCharacter",
           }
         : {}),
       ...(body.hasStrictSchema !== undefined

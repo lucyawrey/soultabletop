@@ -21,7 +21,7 @@ defineRouteMeta({
             required: ["userId", "role"],
             properties: {
               userId: { type: "string" },
-              role: { type: "string", enum: ["GM", "Player"] },
+              role: { type: "string", enum: ["gm", "player"] },
             },
           },
         },
@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
   const body = await parseBody(event, gameMembershipSchema);
   if (
     typeof body.userId !== "string" ||
-    (body.role !== "GM" && body.role !== "Player")
+    (body.role !== "gm" && body.role !== "player")
   )
     throw createError({
       statusCode: 400,
