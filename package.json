@@ -12,7 +12,8 @@
     "format:check": "prettier . --check",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run format:check"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.6",
