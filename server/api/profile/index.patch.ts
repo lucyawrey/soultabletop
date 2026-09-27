@@ -4,7 +4,10 @@ import { userProfile } from "../../database/schema";
 import { parseBody, profilePatchSchema } from "../../utils/api-schemas";
 import { useDatabase } from "../../utils/database";
 import { requireAuthenticatedUser } from "../../utils/auth";
-import { ensureUserProfile, isUniqueConstraintError } from "../../utils/user-profile";
+import {
+  ensureUserProfile,
+  isUniqueConstraintError,
+} from "../../utils/user-profile";
 
 defineRouteMeta({
   openAPI: {
@@ -17,7 +20,7 @@ defineRouteMeta({
           schema: {
             type: "object",
             properties: {
-              slug: { pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", type: "string" },
+              slug: { type: "string" },
               iconImageUrl: { type: ["string", "null"] },
             },
           },

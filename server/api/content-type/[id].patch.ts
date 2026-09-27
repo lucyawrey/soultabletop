@@ -1,6 +1,7 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
 import { contentType, resource } from "../../database/schema";
+import type { ContentTypeSchema } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
@@ -86,7 +87,7 @@ export default defineEventHandler(async (event) => {
         ? { hasStrictSchema: body.hasStrictSchema === true }
         : {}),
       ...(body.schema !== undefined
-        ? { schema: body.schema as Record<string, unknown> }
+        ? { schema: body.schema as ContentTypeSchema }
         : {}),
     })
     .where(eq(contentType.resourceId, id))

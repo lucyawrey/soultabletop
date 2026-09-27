@@ -1,6 +1,5 @@
 import { createError, getRouterParam } from "h3";
-import { eq } from "drizzle-orm";
-import { gameMembership, resource } from "../../../database/schema";
+import { gameMembership } from "../../../database/schema";
 import { requireAuthenticatedUser } from "../../../utils/auth";
 import {
   requireResourceEditor,

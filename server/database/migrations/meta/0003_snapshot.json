@@ -95,12 +95,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -178,12 +174,8 @@
           "name": "content_resource_id_resource_id_fk",
           "tableFrom": "content",
           "tableTo": "resource",
-          "columnsFrom": [
-            "resource_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resource_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -191,12 +183,8 @@
           "name": "content_content_type_id_content_type_resource_id_fk",
           "tableFrom": "content",
           "tableTo": "content_type",
-          "columnsFrom": [
-            "content_type_id"
-          ],
-          "columnsTo": [
-            "resource_id"
-          ],
+          "columnsFrom": ["content_type_id"],
+          "columnsTo": ["resource_id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -204,12 +192,8 @@
           "name": "content_sheet_id_sheet_resource_id_fk",
           "tableFrom": "content",
           "tableTo": "sheet",
-          "columnsFrom": [
-            "sheet_id"
-          ],
-          "columnsTo": [
-            "resource_id"
-          ],
+          "columnsFrom": ["sheet_id"],
+          "columnsTo": ["resource_id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -265,12 +249,8 @@
           "name": "content_type_resource_id_resource_id_fk",
           "tableFrom": "content_type",
           "tableTo": "resource",
-          "columnsFrom": [
-            "resource_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resource_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -278,12 +258,8 @@
           "name": "content_type_system_id_system_resource_id_fk",
           "tableFrom": "content_type",
           "tableTo": "system",
-          "columnsFrom": [
-            "system_id"
-          ],
-          "columnsTo": [
-            "resource_id"
-          ],
+          "columnsFrom": ["system_id"],
+          "columnsTo": ["resource_id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -317,12 +293,8 @@
           "name": "game_resource_id_resource_id_fk",
           "tableFrom": "game",
           "tableTo": "resource",
-          "columnsFrom": [
-            "resource_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resource_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -330,12 +302,8 @@
           "name": "game_system_id_system_resource_id_fk",
           "tableFrom": "game",
           "tableTo": "system",
-          "columnsFrom": [
-            "system_id"
-          ],
-          "columnsTo": [
-            "resource_id"
-          ],
+          "columnsFrom": ["system_id"],
+          "columnsTo": ["resource_id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -400,12 +368,8 @@
           "name": "game_membership_game_id_game_resource_id_fk",
           "tableFrom": "game_membership",
           "tableTo": "game",
-          "columnsFrom": [
-            "game_id"
-          ],
-          "columnsTo": [
-            "resource_id"
-          ],
+          "columnsFrom": ["game_id"],
+          "columnsTo": ["resource_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -413,12 +377,8 @@
           "name": "game_membership_user_id_user_id_fk",
           "tableFrom": "game_membership",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -426,10 +386,7 @@
       "compositePrimaryKeys": {
         "game_membership_game_id_user_id_pk": {
           "name": "game_membership_game_id_user_id_pk",
-          "columns": [
-            "game_id",
-            "user_id"
-          ]
+          "columns": ["game_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -511,12 +468,8 @@
           "name": "group_created_by_user_id_user_id_fk",
           "tableFrom": "group",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -586,12 +539,8 @@
           "name": "group_membership_group_id_group_id_fk",
           "tableFrom": "group_membership",
           "tableTo": "group",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -599,12 +548,8 @@
           "name": "group_membership_user_id_user_id_fk",
           "tableFrom": "group_membership",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -612,10 +557,7 @@
       "compositePrimaryKeys": {
         "group_membership_group_id_user_id_pk": {
           "name": "group_membership_group_id_user_id_pk",
-          "columns": [
-            "group_id",
-            "user_id"
-          ]
+          "columns": ["group_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -815,12 +757,8 @@
           "name": "resource_owner_user_id_user_id_fk",
           "tableFrom": "resource",
           "tableTo": "user",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -828,12 +766,8 @@
           "name": "resource_owner_group_id_group_id_fk",
           "tableFrom": "resource",
           "tableTo": "group",
-          "columnsFrom": [
-            "owner_group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_group_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -841,12 +775,8 @@
           "name": "resource_created_by_user_id_user_id_fk",
           "tableFrom": "resource",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -854,12 +784,8 @@
           "name": "resource_updated_by_user_id_user_id_fk",
           "tableFrom": "resource",
           "tableTo": "user",
-          "columnsFrom": [
-            "updated_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -867,12 +793,8 @@
           "name": "resource_moderated_by_user_id_user_id_fk",
           "tableFrom": "resource",
           "tableTo": "user",
-          "columnsFrom": [
-            "moderated_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["moderated_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1093,12 +1015,8 @@
           "name": "resource_grant_resource_id_resource_id_fk",
           "tableFrom": "resource_grant",
           "tableTo": "resource",
-          "columnsFrom": [
-            "resource_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resource_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1106,12 +1024,8 @@
           "name": "resource_grant_user_id_user_id_fk",
           "tableFrom": "resource_grant",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1119,12 +1033,8 @@
           "name": "resource_grant_group_id_group_id_fk",
           "tableFrom": "resource_grant",
           "tableTo": "group",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1132,12 +1042,8 @@
           "name": "resource_grant_game_id_game_resource_id_fk",
           "tableFrom": "resource_grant",
           "tableTo": "game",
-          "columnsFrom": [
-            "game_id"
-          ],
-          "columnsTo": [
-            "resource_id"
-          ],
+          "columnsFrom": ["game_id"],
+          "columnsTo": ["resource_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1145,12 +1051,8 @@
           "name": "resource_grant_created_by_user_id_user_id_fk",
           "tableFrom": "resource_grant",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1231,12 +1133,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1246,9 +1144,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -1331,12 +1227,8 @@
           "name": "sheet_resource_id_resource_id_fk",
           "tableFrom": "sheet",
           "tableTo": "resource",
-          "columnsFrom": [
-            "resource_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resource_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1344,12 +1236,8 @@
           "name": "sheet_content_type_id_content_type_resource_id_fk",
           "tableFrom": "sheet",
           "tableTo": "content_type",
-          "columnsFrom": [
-            "content_type_id"
-          ],
-          "columnsTo": [
-            "resource_id"
-          ],
+          "columnsFrom": ["content_type_id"],
+          "columnsTo": ["resource_id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1377,12 +1265,8 @@
           "name": "system_resource_id_resource_id_fk",
           "tableFrom": "system",
           "tableTo": "resource",
-          "columnsFrom": [
-            "resource_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resource_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1450,9 +1334,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1526,12 +1408,8 @@
           "name": "user_profile_user_id_user_id_fk",
           "tableFrom": "user_profile",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1603,72 +1481,42 @@
     "public.content_category": {
       "name": "content_category",
       "schema": "public",
-      "values": [
-        "General",
-        "NonPlayerCharacter",
-        "Document",
-        "PlayerCharacter"
-      ]
+      "values": ["General", "NonPlayerCharacter", "Document", "PlayerCharacter"]
     },
     "public.game_audience": {
       "name": "game_audience",
       "schema": "public",
-      "values": [
-        "members",
-        "GMs"
-      ]
+      "values": ["members", "GMs"]
     },
     "public.game_role": {
       "name": "game_role",
       "schema": "public",
-      "values": [
-        "GM",
-        "Player"
-      ]
+      "values": ["GM", "Player"]
     },
     "public.group_kind": {
       "name": "group_kind",
       "schema": "public",
-      "values": [
-        "user",
-        "system"
-      ]
+      "values": ["user", "system"]
     },
     "public.group_role": {
       "name": "group_role",
       "schema": "public",
-      "values": [
-        "admin",
-        "editor",
-        "member"
-      ]
+      "values": ["admin", "editor", "member"]
     },
     "public.resource_kind": {
       "name": "resource_kind",
       "schema": "public",
-      "values": [
-        "system",
-        "game",
-        "contentType",
-        "sheet",
-        "content"
-      ]
+      "values": ["system", "game", "contentType", "sheet", "content"]
     },
     "public.share_permission": {
       "name": "share_permission",
       "schema": "public",
-      "values": [
-        "read",
-        "edit"
-      ]
+      "values": ["read", "edit"]
     },
     "public.site_role": {
       "name": "site_role",
       "schema": "public",
-      "values": [
-        "Member",
-        "Admin"
-      ]
+      "values": ["Member", "Admin"]
     }
   },
   "schemas": {},

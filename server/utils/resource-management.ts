@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { User } from "better-auth";
 import { createError } from "h3";
-import { resource, type Resource } from "../database/schema";
+import { resource } from "../database/schema";
 import { useDatabase } from "./database";
 import {
   getResourceAccess,

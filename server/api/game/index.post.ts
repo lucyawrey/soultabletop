@@ -94,6 +94,7 @@ export default defineEventHandler(async (event) => {
           updatedByUserId: user.id,
         })
         .returning();
+      if (!createdResource) throw new Error("Game Resource was not created");
       const [createdGame] = await tx
         .insert(game)
         .values({

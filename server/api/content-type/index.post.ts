@@ -11,6 +11,7 @@ import {
 import { requireName, requireSlug } from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import { parseBody, contentTypeCreateSchema } from "../../utils/api-schemas";
+
 const categories = new Set([
   "General",
   "NonPlayerCharacter",
@@ -116,6 +117,8 @@ export default defineEventHandler(async (event) => {
           updatedByUserId: user.id,
         })
         .returning();
+      if (!createdResource)
+        throw new Error("ContentType Resource was not created");
       const [createdType] = await tx
         .insert(contentType)
         .values({
