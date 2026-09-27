@@ -1,4 +1,4 @@
-import { createError, getRouterParam } from "h3";
+import { getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
 import { resourceGrant } from "../../../database/schema";
 import { requireAuthenticatedUser } from "../../../utils/auth";

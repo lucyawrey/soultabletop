@@ -91,6 +91,7 @@ export default defineEventHandler(async (event) => {
           updatedByUserId: user.id,
         })
         .returning();
+      if (!createdResource) throw new Error("System Resource was not created");
       const [createdSystem] = await tx
         .insert(system)
         .values({ resourceId: createdResource.id })

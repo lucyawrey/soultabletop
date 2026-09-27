@@ -39,6 +39,7 @@ export default defineEventHandler(async (event) => {
         .insert(group)
         .values({ name, slug, createdByUserId: user.id })
         .returning();
+      if (!createdGroup) throw new Error("Group was not created");
       await tx
         .insert(groupMembership)
         .values({ groupId: createdGroup.id, userId: user.id, role: "admin" });
