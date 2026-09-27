@@ -1,5 +1,6 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
+import { createError, toWebRequest, type H3Event } from "h3";
 import { useDatabase } from "./database";
 
 function createAuth() {
@@ -19,4 +20,21 @@ let auth: ReturnType<typeof createAuth> | undefined;
 
 export function useAuth() {
   return (auth ??= createAuth());
+}
+
+export async function getAuthenticatedUser(event: H3Event) {
+  const session = await useAuth().api.getSession({
+    headers: toWebRequest(event).headers,
+  });
+
+  return session?.user ?? null;
+}
+
+export async function requireAuthenticatedUser(event: H3Event) {
+  const user = await getAuthenticatedUser(event);
+
+  if (!user)
+    throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+
+  return user;
 }

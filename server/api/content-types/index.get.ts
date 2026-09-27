@@ -1,5 +1,5 @@
 import { asc, eq } from "drizzle-orm";
-import { content, resource } from "../../database/schema";
+import { contentType, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
@@ -11,11 +11,11 @@ export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
   const database = useDatabase();
   const records = await database
-    .select({ item: content, resource })
-    .from(content)
-    .innerJoin(resource, eq(resource.id, content.resourceId))
-    .orderBy(asc(resource.createdAt));
-  const accessContext = user
+    .select({ type: contentType, resource })
+    .from(contentType)
+    .innerJoin(resource, eq(resource.id, contentType.resourceId))
+    .orderBy(asc(resource.name));
+  const context = user
     ? await loadResourceAccessContext(
         user,
         records.map(({ resource: item }) => item.id),
@@ -24,18 +24,17 @@ export default defineEventHandler(async (event) => {
 
   return records
     .filter(({ resource: item }) =>
-      accessContext
-        ? getResourceAccess(item, accessContext).canRead
+      context
+        ? getResourceAccess(item, context).canRead
         : item.isPubliclyReadable && !item.isAdminHidden,
     )
-    .map(({ item, resource: resourceItem }) => ({
-      id: resourceItem.id,
-      slug: resourceItem.slug,
-      name: resourceItem.name,
-      createdAt: resourceItem.createdAt,
-      updatedAt: resourceItem.updatedAt,
-      contentTypeId: item.contentTypeId,
-      sheetId: item.sheetId,
-      data: item.data,
+    .map(({ type, resource: item }) => ({
+      id: item.id,
+      slug: item.slug,
+      name: item.name,
+      systemId: type.systemId,
+      contentCategory: type.contentCategory,
+      hasStrictSchema: type.hasStrictSchema,
+      schema: type.schema,
     }));
 });

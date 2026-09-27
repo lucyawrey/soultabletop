@@ -3,16 +3,28 @@ import type { AuthFormField, FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { authClient } from "~/utils/auth-client";
 
 type AuthMode = "login" | "register";
-type AuthFormData = { name?: string; email: string; password: string };
+type AuthFormData = {
+  name?: string;
+  slug?: string;
+  email: string;
+  password: string;
+};
 
 type DataTab = "content" | "characters" | "games";
 
 interface ContentItem {
   id: string;
+  slug: string;
   name: string;
-  displayName: string;
   createdAt: string;
   updatedAt: string;
+  contentTypeId: string;
+  data: Record<string, unknown>;
+}
+
+interface ContentTypeOption {
+  id: string;
+  name: string;
 }
 
 const mode = ref<AuthMode>("login");
@@ -30,8 +42,15 @@ const fields = computed<AuthFormField[]>(() => [
         {
           name: "name",
           type: "text",
-          label: "Name",
-          placeholder: "Your name",
+          label: "Display Name",
+          placeholder: "Your display name",
+          required: true,
+        } satisfies AuthFormField,
+        {
+          name: "slug",
+          type: "text",
+          label: "Username",
+          placeholder: "your-name",
           required: true,
         } satisfies AuthFormField,
       ]
@@ -78,10 +97,21 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
       return;
     }
 
+    if (isRegistering.value) {
+      await $fetch("/api/profile", {
+        method: "POST",
+        body: { slug: event.data.slug },
+      });
+    } else {
+      await $fetch("/api/profile");
+    }
+
     await refreshNuxtData();
   } catch (error) {
     errorMessage.value =
-      error instanceof Error ? error.message : "Authentication failed.";
+      error instanceof Error
+        ? error.message
+        : "Authentication or profile setup failed.";
   } finally {
     busy.value = false;
   }
@@ -131,18 +161,31 @@ const {
   default: () => [],
   immediate: false,
 });
+const { data: contentTypes, refresh: refreshContentTypes } = useLazyFetch<
+  ContentTypeOption[]
+>("/api/content-types", {
+  default: () => [],
+  immediate: false,
+});
+
+const contentTypeOptions = computed(() =>
+  contentTypes.value.map((type) => ({ label: type.name, value: type.id })),
+);
 
 watch(
   isLoggedIn,
   (loggedIn) => {
-    if (loggedIn) refreshContent();
+    if (loggedIn) {
+      refreshContent();
+      refreshContentTypes();
+    }
   },
   { immediate: true },
 );
 
 const contentColumns: TableColumn<ContentItem>[] = [
-  { accessorKey: "displayName", header: "Display name" },
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "slug", header: "Slug" },
   {
     accessorKey: "updatedAt",
     header: "Updated",
@@ -153,41 +196,68 @@ const contentColumns: TableColumn<ContentItem>[] = [
 
 const isContentFormOpen = ref(false);
 const editingContent = ref<ContentItem | null>(null);
-const contentForm = reactive({ name: "", displayName: "" });
+const contentForm = reactive({
+  slug: "",
+  name: "",
+  contentTypeId: "",
+  data: "{}",
+});
 const contentFormBusy = ref(false);
+const contentFormError = ref("");
 
 function openCreateContent() {
+  if (!contentTypes.value.length) return;
   editingContent.value = null;
+  contentFormError.value = "";
+  contentForm.slug = "";
   contentForm.name = "";
-  contentForm.displayName = "";
+  contentForm.contentTypeId = contentTypes.value[0].id;
+  contentForm.data = "{}";
   isContentFormOpen.value = true;
 }
 
 function openEditContent(item: ContentItem) {
   editingContent.value = item;
+  contentFormError.value = "";
+  contentForm.slug = item.slug;
   contentForm.name = item.name;
-  contentForm.displayName = item.displayName;
+  contentForm.contentTypeId = item.contentTypeId;
+  contentForm.data = JSON.stringify(item.data, null, 2);
   isContentFormOpen.value = true;
 }
 
 async function submitContentForm() {
   contentFormBusy.value = true;
+  contentFormError.value = "";
 
   try {
+    const data = JSON.parse(contentForm.data) as unknown;
+    if (typeof data !== "object" || data === null || Array.isArray(data)) {
+      throw new Error("Content data must be a JSON object.");
+    }
+
     if (editingContent.value) {
       await $fetch(`/api/content/${editingContent.value.id}`, {
         method: "PATCH",
-        body: { name: contentForm.name, displayName: contentForm.displayName },
+        body: { slug: contentForm.slug, name: contentForm.name, data },
       });
     } else {
       await $fetch("/api/content", {
         method: "POST",
-        body: { name: contentForm.name, displayName: contentForm.displayName },
+        body: {
+          slug: contentForm.slug,
+          name: contentForm.name,
+          contentTypeId: contentForm.contentTypeId,
+          data,
+        },
       });
     }
 
     isContentFormOpen.value = false;
     await refreshContent();
+  } catch (error) {
+    contentFormError.value =
+      error instanceof Error ? error.message : "Could not save content.";
   } finally {
     contentFormBusy.value = false;
   }
@@ -311,10 +381,18 @@ async function deleteContent() {
         <template #header>
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-lg font-semibold text-highlighted">Content</h2>
-            <UButton icon="i-lucide-plus" size="sm" @click="openCreateContent">
+            <UButton
+              icon="i-lucide-plus"
+              size="sm"
+              :disabled="contentTypes.length === 0"
+              @click="openCreateContent"
+            >
               New content
             </UButton>
           </div>
+          <p v-if="contentTypes.length === 0" class="mt-2 text-sm text-muted">
+            Create a System and ContentType before adding content records.
+          </p>
         </template>
 
         <UTable
@@ -353,7 +431,7 @@ async function deleteContent() {
 
           <template #empty>
             <p class="py-6 text-center text-sm text-muted">
-              No content yet. Create your first entry to get started.
+              No content records yet.
             </p>
           </template>
         </UTable>
@@ -389,12 +467,33 @@ async function deleteContent() {
           class="space-y-4"
           @submit="submitContentForm"
         >
-          <UFormField name="displayName" label="Display name" required>
-            <UInput v-model="contentForm.displayName" class="w-full" />
-          </UFormField>
           <UFormField name="name" label="Name" required>
-            <UInput v-model="contentForm.name" class="w-full" />
+            <UInput v-model="contentForm.name" class="w-full" required />
           </UFormField>
+          <UFormField name="slug" label="Slug" required>
+            <UInput v-model="contentForm.slug" class="w-full" required />
+          </UFormField>
+          <UFormField name="contentTypeId" label="Content type" required>
+            <USelect
+              v-model="contentForm.contentTypeId"
+              :items="contentTypeOptions"
+              class="w-full"
+              :disabled="!!editingContent"
+            />
+          </UFormField>
+          <UFormField name="data" label="Data (JSON)" required>
+            <UTextarea
+              v-model="contentForm.data"
+              class="w-full font-mono"
+              :rows="8"
+            />
+          </UFormField>
+          <UAlert
+            v-if="contentFormError"
+            color="error"
+            variant="subtle"
+            :description="contentFormError"
+          />
         </UForm>
       </template>
 
@@ -417,7 +516,7 @@ async function deleteContent() {
     <UModal
       v-model:open="isDeleteContentOpen"
       title="Delete content"
-      :description="`Are you sure you want to delete &quot;${deletingContent?.displayName}&quot;? This action cannot be undone.`"
+      :description="`Are you sure you want to delete &quot;${deletingContent?.name}&quot;? This action cannot be undone.`"
       :ui="{ footer: 'justify-end' }"
     >
       <template #footer="{ close }">

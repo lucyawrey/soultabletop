@@ -1,21 +1,41 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
-import { content } from "../../database/schema";
+import { resource } from "../../database/schema";
+import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
+import {
+  getResourceAccess,
+  loadResourceAccessContext,
+} from "../../utils/resource-access";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
+  if (!id)
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing Resource ID",
+    });
+
+  const user = await requireAuthenticatedUser(event);
   const database = useDatabase();
-  const [contentItem] = await database
+  const [resourceItem] = await database
     .select()
-    .from(content)
-    .where(eq(content.id, id!))
+    .from(resource)
+    .where(eq(resource.id, id))
     .limit(1);
 
-  if (!contentItem) {
+  if (!resourceItem || resourceItem.kind !== "content") {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
 
-  await database.delete(content).where(eq(content.id, id!));
+  const context = await loadResourceAccessContext(user, [resourceItem.id]);
+  if (!getResourceAccess(resourceItem, context).canDelete) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: "Content cannot be deleted",
+    });
+  }
+
+  await database.delete(resource).where(eq(resource.id, id));
   setResponseStatus(event, 204);
 });

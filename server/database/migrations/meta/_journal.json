@@ -15,6 +15,13 @@
       "when": 1790363867521,
       "tag": "0001_wonderful_phalanx",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790476565764,
+      "tag": "0002_domain_model",
+      "breakpoints": true
     }
   ]
 }

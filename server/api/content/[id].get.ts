@@ -1,20 +1,55 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
-import { content } from "../../database/schema";
+import { content, resource } from "../../database/schema";
+import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
+import {
+  getResourceAccess,
+  loadResourceAccessContext,
+} from "../../utils/resource-access";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
+  if (!id)
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing Resource ID",
+    });
+
   const database = useDatabase();
-  const [contentItem] = await database
-    .select()
+  const [record] = await database
+    .select({ item: content, resource })
     .from(content)
-    .where(eq(content.id, id!))
+    .innerJoin(resource, eq(resource.id, content.resourceId))
+    .where(eq(content.resourceId, id))
     .limit(1);
 
-  if (!contentItem) {
+  if (!record) {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
 
-  return contentItem;
+  const user = await getAuthenticatedUser(event);
+  if (user) {
+    const context = await loadResourceAccessContext(user, [record.resource.id]);
+    if (!getResourceAccess(record.resource, context).canRead) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Content not found",
+      });
+    }
+  } else if (
+    !record.resource.isPubliclyReadable ||
+    record.resource.isAdminHidden
+  ) {
+    throw createError({ statusCode: 404, statusMessage: "Content not found" });
+  }
+
+  return {
+    id: record.resource.id,
+    slug: record.resource.slug,
+    name: record.resource.name,
+    createdAt: record.resource.createdAt,
+    updatedAt: record.resource.updatedAt,
+    ...record.item,
+  };
 });
