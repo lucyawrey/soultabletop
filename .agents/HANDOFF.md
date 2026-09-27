@@ -48,7 +48,7 @@ Repo: `/Users/lucy/Developer/games/soultabletop`, branch `main`, package manager
   just `CAST col::new_enum` — this **fails or silently loses data** if existing
   rows hold old enum labels. Always hand-check generated enum migrations and
   insert `UPDATE ... SET col = CASE col WHEN 'Old' THEN 'new' ... END` before
-  the final cast when the enum's *values* (not just the type) are changing on
+  the final cast when the enum's _values_ (not just the type) are changing on
   a database that already has rows.
 - Future Characters page: no new backend needed — it will just hit the
   existing `/api/content` endpoints filtered client-side (or via query) to
@@ -77,7 +77,7 @@ Repo: `/Users/lucy/Developer/games/soultabletop`, branch `main`, package manager
   unimplemented pages for now").
 - Group management UI (backend exists, no frontend).
 - Game/Group membership management UI (backend exists — `POST
-  /api/game/[id]/members`, no GET-members endpoint yet either).
+/api/game/[id]/members`, no GET-members endpoint yet either).
 - See `TODO.md` for additional low-priority items (external copy file,
   dashboard-as-recents-welcome-page, TypeBox-based OpenAPI generation).
 
@@ -89,3 +89,8 @@ Repo: `/Users/lucy/Developer/games/soultabletop`, branch `main`, package manager
   remap and run against the live Neon DB (`pnpm db:migrate` succeeded).
   `pnpm typecheck && pnpm lint` both clean.
 - Nothing else is mid-flight / half-finished at handoff time.
+
+# User Generated Hand Off Details
+
+- Since this document was written I have added basic Character and Content main pages with the help of an agent, but do not have any logs.
+- The next goal is to built the buil the Types page so users can create and manage ContentTypes from UI.

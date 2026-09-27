@@ -34,10 +34,10 @@ useSeoMeta({
 
       <template #default>
         <UButton to="/games" color="neutral" variant="link">Games</UButton>
-        <UButton href="#" color="neutral" variant="link" @click.prevent>
+        <UButton to="/characters" color="neutral" variant="link">
           Characters
         </UButton>
-        <UButton href="#" color="neutral" variant="link" @click.prevent>
+        <UButton to="/content" color="neutral" variant="link">
           Content
         </UButton>
         <UButton href="#" color="neutral" variant="link" @click.prevent>
@@ -54,10 +54,10 @@ useSeoMeta({
       <template #body>
         <nav class="flex flex-col gap-2">
           <UButton to="/games" color="neutral" variant="link">Games</UButton>
-          <UButton href="#" color="neutral" variant="link" @click.prevent>
+          <UButton to="/characters" color="neutral" variant="link">
             Characters
           </UButton>
-          <UButton href="#" color="neutral" variant="link" @click.prevent>
+          <UButton to="/content" color="neutral" variant="link">
             Content
           </UButton>
           <UButton href="#" color="neutral" variant="link" @click.prevent>

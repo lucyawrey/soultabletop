@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AuthFormField, FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { authClient } from "~/utils/auth-client";
+import { extractApiErrorMessage } from "~/utils/api-error";
 
 type AuthMode = "login" | "register";
 type AuthFormData = {
@@ -175,8 +176,7 @@ async function signOut() {
   }
 }
 
-// Characters have no backing data yet — dashboard tab is a placeholder.
-// Games now lives at /games as a real route.
+// Games, Content, and Characters each have dedicated routes.
 const dataTabs = [
   {
     label: "Content",
@@ -295,8 +295,10 @@ async function submitContentForm() {
     isContentFormOpen.value = false;
     await refreshContent();
   } catch (error) {
-    contentFormError.value =
-      error instanceof Error ? error.message : "Could not save content.";
+    contentFormError.value = extractApiErrorMessage(
+      error,
+      "Could not save content.",
+    );
   } finally {
     contentFormBusy.value = false;
   }
@@ -511,8 +513,11 @@ async function deleteContent() {
         <div class="flex flex-col items-center gap-3 py-12 text-center">
           <UIcon name="i-lucide-users" class="size-10 text-muted" />
           <p class="text-muted">
-            Characters aren't set up yet — this section is coming later.
+            Character management now has a dedicated page.
           </p>
+          <UButton to="/characters" color="neutral" variant="soft" size="sm">
+            Open Characters
+          </UButton>
         </div>
       </UPageCard>
     </div>
