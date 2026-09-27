@@ -8,6 +8,18 @@ import {
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Content"],
+    summary: "Delete a Content record",
+    responses: {
+      204: { description: "Deleted" },
+      401: { description: "Authentication required" },
+      403: { description: "Not editable" },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
   if (!id)

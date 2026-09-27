@@ -1,6 +1,7 @@
-import { createError, readBody } from "h3";
+import { createError } from "h3";
 import { eq } from "drizzle-orm";
 import { content, contentType, resource, sheet } from "../../database/schema";
+import { createContentSchema, parseBody } from "../../utils/api-schemas";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { validateContentData } from "../../utils/content-validation";
 import { useDatabase } from "../../utils/database";
@@ -10,52 +11,43 @@ import {
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 
-interface CreateContentBody {
-  slug?: unknown;
-  name?: unknown;
-  contentTypeId?: unknown;
-  sheetId?: unknown;
-  data?: unknown;
-}
+defineRouteMeta({
+  openAPI: {
+    tags: ["Content"],
+    summary: "Create a Content record",
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            required: ["slug", "name", "contentTypeId"],
+            properties: {
+              slug: { type: "string" },
+              name: { type: "string" },
+              contentTypeId: { format: "uuid", type: "string" },
+              sheetId: { type: ["string", "null"] },
+              data: { type: "object", additionalProperties: true },
+            },
+          } as const,
+        },
+      },
+    },
+    responses: {
+      201: { description: "Created Content record" },
+      400: { description: "Invalid Content data" },
+      401: { description: "Authentication required" },
+      403: { description: "Referenced resource is inaccessible" },
+      404: { description: "ContentType or Sheet not found" },
+      409: { description: "Slug already exists" },
+    },
+  },
+});
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const body = await readBody<CreateContentBody>(event);
-
-  if (
-    typeof body?.slug !== "string" ||
-    typeof body.name !== "string" ||
-    typeof body.contentTypeId !== "string" ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      body.contentTypeId,
-    )
-  ) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "slug, name, and contentTypeId are required",
-    });
-  }
-
-  const slug = body.slug.toLowerCase();
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-    throw createError({ statusCode: 400, statusMessage: "Invalid slug" });
-  }
-  const name = body.name.trim();
-  if (!name) {
-    throw createError({ statusCode: 400, statusMessage: "name is required" });
-  }
-
-  if (
-    body.data !== undefined &&
-    (typeof body.data !== "object" ||
-      body.data === null ||
-      Array.isArray(body.data))
-  ) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "data must be a JSON object",
-    });
-  }
+  const body = await parseBody(event, createContentSchema);
+  const { slug, name } = body;
 
   const database = useDatabase();
   const [typeRecord] = await database
@@ -82,7 +74,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const data = (body.data ?? {}) as Record<string, unknown>;
+  const data = body.data;
   const validationError = validateContentData(
     data,
     typeRecord.type.schema,
@@ -93,18 +85,7 @@ export default defineEventHandler(async (event) => {
   }
 
   let sheetId: string | null = null;
-  if (body.sheetId !== undefined && body.sheetId !== null) {
-    if (
-      typeof body.sheetId !== "string" ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        body.sheetId,
-      )
-    ) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "sheetId must be a Resource ID",
-      });
-    }
+  if (body.sheetId) {
     const [sheetRecord] = await database
       .select({ sheet, resource })
       .from(sheet)
@@ -145,6 +126,7 @@ export default defineEventHandler(async (event) => {
           updatedByUserId: user.id,
         })
         .returning();
+      if (!createdResource) throw new Error("Content Resource was not created");
       const [createdContent] = await transaction
         .insert(content)
         .values({

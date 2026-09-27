@@ -1,12 +1,24 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
 import { content, resource } from "../../database/schema";
-import { getAuthenticatedUser } from "../../utils/auth";
+import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
   getResourceAccess,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
+
+defineRouteMeta({
+  openAPI: {
+    tags: ["Content"],
+    summary: "Get a Content record",
+    responses: {
+      200: { description: "Content record" },
+      401: { description: "Authentication required" },
+      404: { description: "Not found" },
+    },
+  },
+});
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -28,19 +40,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
 
-  const user = await getAuthenticatedUser(event);
-  if (user) {
-    const context = await loadResourceAccessContext(user, [record.resource.id]);
-    if (!getResourceAccess(record.resource, context).canRead) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Content not found",
-      });
-    }
-  } else if (
-    !record.resource.isPubliclyReadable ||
-    record.resource.isAdminHidden
-  ) {
+  const user = await requireAuthenticatedUser(event);
+  const context = await loadResourceAccessContext(user, [record.resource.id]);
+  if (!getResourceAccess(record.resource, context).canRead) {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
 

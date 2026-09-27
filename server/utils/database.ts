@@ -13,7 +13,13 @@ export function useDatabase() {
     throw new Error("DATABASE_URL is required to connect to the database.");
   }
 
-  pool ??= new Pool({ connectionString: databaseUrl, ssl: true });
+  pool ??= new Pool({
+    connectionString: databaseUrl,
+    ssl: true,
+    connectionTimeoutMillis: 10_000,
+    idleTimeoutMillis: 30_000,
+    query_timeout: 10_000,
+  });
   database ??= drizzle({ client: pool, schema });
 
   return database;

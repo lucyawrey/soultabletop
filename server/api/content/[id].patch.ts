@@ -16,6 +16,34 @@ interface UpdateContentBody {
   sheetId?: unknown;
 }
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Content"],
+    summary: "Update a Content record",
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              slug: { type: "string" },
+              name: { type: "string" },
+              sheetId: { type: ["string", "null"] },
+              data: { type: "object", additionalProperties: true },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: { description: "Updated Content record" },
+      401: { description: "Authentication required" },
+      403: { description: "Not editable" },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
   if (!id)
