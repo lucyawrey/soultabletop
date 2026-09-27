@@ -66,6 +66,31 @@ export async function requireResourceEditor(
   return item;
 }
 
+export async function requireResourceReader(
+  user: Pick<User, "id" | "name"> | null,
+  resourceId: string,
+) {
+  const database = useDatabase();
+  const [item] = await database
+    .select()
+    .from(resource)
+    .where(eq(resource.id, resourceId))
+    .limit(1);
+  if (!item)
+    throw createError({ statusCode: 404, statusMessage: "Resource not found" });
+
+  const canRead = user
+    ? getResourceAccess(
+        item,
+        await loadResourceAccessContext(user, [resourceId]),
+      ).canRead
+    : item.isPubliclyReadable && !item.isAdminHidden;
+  if (!canRead) {
+    throw createError({ statusCode: 404, statusMessage: "Resource not found" });
+  }
+  return item;
+}
+
 export function requireOwnerTarget(
   user: Pick<User, "id">,
   ownerGroupId: string | null,

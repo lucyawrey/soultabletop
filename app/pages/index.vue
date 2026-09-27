@@ -9,7 +9,7 @@ type AuthFormData = {
   password: string;
 };
 
-type DataTab = "content" | "characters" | "games";
+type DataTab = "content" | "characters";
 
 interface ContentItem {
   id: string;
@@ -27,7 +27,8 @@ interface ContentTypeOption {
 }
 
 const mode = ref<AuthMode>("login");
-const usernameSlug = ref("");
+const registerForm = reactive({ name: "", slug: "" });
+const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(registerForm);
 const authBusy = ref(false);
 const signOutBusy = ref(false);
 const errorMessage = ref("");
@@ -51,8 +52,11 @@ const fields = computed<AuthFormField[]>(() => [
           name: "slug",
           type: "text",
           label: "Username",
+          description:
+            "Auto-generated from your display name — edit if you need something different or unique.",
           placeholder: "your-name",
           required: true,
+          error: slugError.value || undefined,
         } satisfies AuthFormField,
       ]
     : []),
@@ -75,7 +79,11 @@ const fields = computed<AuthFormField[]>(() => [
 function setMode(nextMode: AuthMode) {
   if (authBusy.value) return;
   mode.value = nextMode;
-  if (nextMode === "register") usernameSlug.value = "";
+  if (nextMode === "register") {
+    registerForm.name = "";
+    registerForm.slug = "";
+    resetSlugTouched(false);
+  }
   errorMessage.value = "";
 }
 
@@ -85,10 +93,15 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
   errorMessage.value = "";
 
   try {
-    const slug = usernameSlug.value.trim().toLowerCase();
+    const slug = registerForm.slug.trim().toLowerCase();
     if (registering) {
       if (!slug) {
         errorMessage.value = "Username is required.";
+        return;
+      }
+      if (getSlugError(slug)) {
+        errorMessage.value =
+          "Username must use lowercase letters, numbers, and hyphens only.";
         return;
       }
 
@@ -106,7 +119,7 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
       await $fetch("/api/register", {
         method: "POST",
         body: {
-          name: event.data.name?.trim() ?? "",
+          name: registerForm.name.trim(),
           email: event.data.email.trim(),
           password: event.data.password,
           slug,
@@ -162,7 +175,8 @@ async function signOut() {
   }
 }
 
-// Characters and games have no backing data yet — dashboard tabs are placeholders.
+// Characters have no backing data yet — dashboard tab is a placeholder.
+// Games now lives at /games as a real route.
 const dataTabs = [
   {
     label: "Content",
@@ -174,7 +188,6 @@ const dataTabs = [
     value: "characters" as DataTab,
     icon: "i-lucide-users",
   },
-  { label: "Games", value: "games" as DataTab, icon: "i-lucide-dice-5" },
 ];
 const activeTab = ref<DataTab>("content");
 
@@ -342,9 +355,19 @@ async function deleteContent() {
           :loading="authBusy"
           @submit="onSubmit"
         >
+          <template #name-field>
+            <UInput
+              v-model="registerForm.name"
+              class="w-full"
+              size="md"
+              name="name"
+              placeholder="Your display name"
+              required
+            />
+          </template>
           <template #slug-field>
             <UInput
-              v-model="usernameSlug"
+              :model-value="registerForm.slug"
               class="w-full"
               size="md"
               name="slug"
@@ -352,6 +375,7 @@ async function deleteContent() {
               autocapitalize="none"
               placeholder="your-name"
               required
+              @update:model-value="onSlugInput"
             />
           </template>
           <template #description>
@@ -483,20 +507,11 @@ async function deleteContent() {
         </UTable>
       </UPageCard>
 
-      <UPageCard v-else-if="activeTab === 'characters'">
+      <UPageCard v-else>
         <div class="flex flex-col items-center gap-3 py-12 text-center">
           <UIcon name="i-lucide-users" class="size-10 text-muted" />
           <p class="text-muted">
             Characters aren't set up yet — this section is coming later.
-          </p>
-        </div>
-      </UPageCard>
-
-      <UPageCard v-else>
-        <div class="flex flex-col items-center gap-3 py-12 text-center">
-          <UIcon name="i-lucide-dice-5" class="size-10 text-muted" />
-          <p class="text-muted">
-            Games aren't set up yet — this section is coming later.
           </p>
         </div>
       </UPageCard>

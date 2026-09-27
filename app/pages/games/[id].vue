@@ -1,0 +1,212 @@
+<script setup lang="ts">
+import { extractApiErrorMessage } from "~/utils/api-error";
+
+definePageMeta({ middleware: "auth" });
+
+interface GameDetail {
+  id: string;
+  slug: string;
+  name: string;
+  isPubliclyReadable: boolean;
+  updatedAt: string;
+  systemId?: string;
+}
+
+interface SystemOption {
+  id: string;
+  name: string;
+}
+
+const route = useRoute();
+const id = route.params.id as string;
+
+const { data: game, refresh } = await useFetch<GameDetail>(`/api/game/${id}`);
+
+const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
+  default: () => [],
+});
+
+const system = computed(() =>
+  systems.value.find((item) => item.id === game.value?.systemId),
+);
+
+const isFormOpen = ref(false);
+const form = reactive({ slug: "", name: "", isPubliclyReadable: false });
+const formBusy = ref(false);
+const formError = ref("");
+const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+
+function openEdit() {
+  if (!game.value) return;
+  formError.value = "";
+  form.slug = game.value.slug;
+  form.name = game.value.name;
+  form.isPubliclyReadable = game.value.isPubliclyReadable;
+  resetSlugTouched(true);
+  isFormOpen.value = true;
+}
+
+async function submitForm() {
+  formBusy.value = true;
+  formError.value = "";
+
+  try {
+    await $fetch(`/api/game/${id}`, {
+      method: "PATCH",
+      body: {
+        slug: form.slug,
+        name: form.name,
+        isPubliclyReadable: form.isPubliclyReadable,
+      },
+    });
+    isFormOpen.value = false;
+    await refresh();
+  } catch (error) {
+    formError.value = extractApiErrorMessage(error, "Could not save Game.");
+  } finally {
+    formBusy.value = false;
+  }
+}
+
+const isDeleteOpen = ref(false);
+const deleteBusy = ref(false);
+
+async function remove() {
+  deleteBusy.value = true;
+
+  try {
+    await $fetch(`/api/game/${id}`, { method: "DELETE" });
+    await navigateTo("/games");
+  } finally {
+    deleteBusy.value = false;
+  }
+}
+</script>
+
+<template>
+  <div class="mx-auto w-full max-w-(--ui-container) space-y-6 p-4 py-8">
+    <UButton
+      to="/games"
+      icon="i-lucide-arrow-left"
+      color="neutral"
+      variant="link"
+      size="sm"
+    >
+      Back to Games
+    </UButton>
+
+    <template v-if="game">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-highlighted">{{ game.name }}</h1>
+          <p class="text-sm text-muted">
+            {{ game.slug }} ·
+            {{ game.isPubliclyReadable ? "Public" : "Private" }}
+          </p>
+          <p v-if="system" class="mt-1 text-sm">
+            System:
+            <NuxtLink
+              :to="`/systems/${system.id}`"
+              class="text-primary hover:underline"
+            >
+              {{ system.name }}
+            </NuxtLink>
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <UButton
+            icon="i-lucide-pencil"
+            color="neutral"
+            variant="outline"
+            @click="openEdit"
+          >
+            Edit
+          </UButton>
+          <UButton
+            icon="i-lucide-trash"
+            color="error"
+            variant="outline"
+            @click="isDeleteOpen = true"
+          >
+            Delete
+          </UButton>
+        </div>
+      </div>
+    </template>
+
+    <UModal v-model:open="isFormOpen" title="Edit Game">
+      <template #body>
+        <UForm
+          id="game-detail-form"
+          :state="form"
+          class="space-y-4"
+          @submit="submitForm"
+        >
+          <UFormField name="name" label="Name" required>
+            <UInput v-model="form.name" class="w-full" required />
+          </UFormField>
+          <UFormField
+            name="slug"
+            label="Slug"
+            description="Auto-generated from the name — edit if you need something different or unique."
+            :error="slugError"
+            required
+          >
+            <UInput
+              :model-value="form.slug"
+              class="w-full"
+              required
+              @update:model-value="onSlugInput"
+            />
+          </UFormField>
+          <UFormField name="isPubliclyReadable" label="Publicly readable">
+            <USwitch v-model="form.isPubliclyReadable" />
+          </UFormField>
+          <UAlert
+            v-if="formError"
+            color="error"
+            variant="subtle"
+            :description="formError"
+          />
+        </UForm>
+      </template>
+
+      <template #footer="{ close }">
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="outline"
+          @click="close"
+        />
+        <UButton
+          type="submit"
+          form="game-detail-form"
+          label="Save"
+          :loading="formBusy"
+        />
+      </template>
+    </UModal>
+
+    <UModal
+      v-model:open="isDeleteOpen"
+      title="Delete Game"
+      :description="`Are you sure you want to delete &quot;${game?.name}&quot;? This action cannot be undone.`"
+      :ui="{ footer: 'justify-end' }"
+    >
+      <template #footer="{ close }">
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="outline"
+          @click="close"
+        />
+        <UButton
+          label="Delete"
+          color="error"
+          :loading="deleteBusy"
+          @click="remove"
+        />
+      </template>
+    </UModal>
+  </div>
+</template>
