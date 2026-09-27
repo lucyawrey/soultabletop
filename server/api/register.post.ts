@@ -12,6 +12,35 @@ interface RegisterBody {
   slug?: unknown;
 }
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Authentication"],
+    summary: "Register a user",
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            required: ["name", "email", "password", "slug"],
+            properties: {
+              name: { type: "string" },
+              email: { type: "string", format: "email" },
+              password: { type: "string" },
+              slug: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: { description: "Registered user" },
+      400: { description: "Invalid registration" },
+      409: { description: "Username already exists" },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
   const body = await readBody<RegisterBody>(event);
   const name = typeof body?.name === "string" ? body.name.trim() : "";

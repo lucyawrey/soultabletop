@@ -188,7 +188,7 @@ const {
 });
 const { data: contentTypes, refresh: refreshContentTypes } = useLazyFetch<
   ContentTypeOption[]
->("/api/content-types", {
+>("/api/content-type", {
   default: () => [],
   immediate: false,
 });

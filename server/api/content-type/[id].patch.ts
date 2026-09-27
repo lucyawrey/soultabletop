@@ -1,0 +1,95 @@
+import { createError, getRouterParam } from "h3";
+import { eq } from "drizzle-orm";
+import { contentType, resource } from "../../database/schema";
+import { requireAuthenticatedUser } from "../../utils/auth";
+import { useDatabase } from "../../utils/database";
+import {
+  requireName,
+  requireResourceEditor,
+  requireSlug,
+} from "../../utils/resource-management";
+import { parseBody, contentTypePatchSchema } from "../../utils/api-schemas";
+
+defineRouteMeta({
+  openAPI: {
+    tags: ["ContentType"],
+    summary: "Update a ContentType",
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              slug: { type: "string" },
+              contentCategory: {
+                type: "string",
+                enum: [
+                  "General",
+                  "NonPlayerCharacter",
+                  "Document",
+                  "PlayerCharacter",
+                ],
+              },
+              hasStrictSchema: { type: "boolean" },
+              schema: { type: "object", additionalProperties: true },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: { description: "Updated ContentType" },
+      401: { description: "Authentication required" },
+      403: { description: "Not editable" },
+    },
+  },
+});
+
+export default defineEventHandler(async (event) => {
+  const user = await requireAuthenticatedUser(event);
+  const id = getRouterParam(event, "id");
+  if (!id)
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Resource ID is required",
+    });
+  const body = await parseBody(event, contentTypePatchSchema);
+  const item = await requireResourceEditor(user, id);
+  if (item.kind !== "contentType")
+    throw createError({
+      statusCode: 404,
+      statusMessage: "ContentType not found",
+    });
+  const database = useDatabase();
+  const [updatedResource] = await database
+    .update(resource)
+    .set({
+      ...(body.name !== undefined ? { name: requireName(body.name) } : {}),
+      ...(body.slug !== undefined ? { slug: requireSlug(body.slug) } : {}),
+      updatedByUserId: user.id,
+      updatedAt: new Date(),
+    })
+    .where(eq(resource.id, id))
+    .returning();
+  const [updatedType] = await database
+    .update(contentType)
+    .set({
+      ...(body.contentCategory !== undefined
+        ? {
+            contentCategory: body.contentCategory as
+              "General" | "NonPlayerCharacter" | "Document" | "PlayerCharacter",
+          }
+        : {}),
+      ...(body.hasStrictSchema !== undefined
+        ? { hasStrictSchema: body.hasStrictSchema === true }
+        : {}),
+      ...(body.schema !== undefined
+        ? { schema: body.schema as Record<string, unknown> }
+        : {}),
+    })
+    .where(eq(contentType.resourceId, id))
+    .returning();
+  return { ...updatedResource, ...updatedType };
+});

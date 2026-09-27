@@ -3,6 +3,17 @@ import { sql } from "drizzle-orm";
 import { userProfile } from "../../database/schema";
 import { useDatabase } from "../../utils/database";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Profile"],
+    summary: "Check username availability",
+    responses: {
+      200: { description: "Availability result" },
+      400: { description: "Invalid slug" },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   if (typeof query.slug !== "string") {

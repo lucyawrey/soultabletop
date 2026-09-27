@@ -7,6 +7,17 @@ import {
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["ContentType"],
+    summary: "List accessible ContentTypes",
+    responses: {
+      200: { description: "ContentType list" },
+      401: { description: "Authentication required" },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
   const database = useDatabase();

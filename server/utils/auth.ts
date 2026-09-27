@@ -1,6 +1,6 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
-import { createError, toWebRequest, type H3Event } from "h3";
+import { createError, getRequestHeaders, type H3Event } from "h3";
 import { useDatabase } from "./database";
 
 function createAuth() {
@@ -24,7 +24,7 @@ export function useAuth() {
 
 export async function getAuthenticatedUser(event: H3Event) {
   const session = await useAuth().api.getSession({
-    headers: toWebRequest(event).headers,
+    headers: new Headers(getRequestHeaders(event) as HeadersInit),
   });
 
   return session?.user ?? null;
