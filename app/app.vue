@@ -17,6 +17,9 @@ useSeoMeta({
   ogDescription: description,
   twitterCard: "summary_large_image",
 });
+
+const sessionState = await useAuthSession();
+const isLoggedIn = computed(() => !!sessionState.data.value?.user);
 </script>
 
 <template>
@@ -30,6 +33,11 @@ useSeoMeta({
           <UIcon name="i-lucide-dices" class="size-5 text-primary" />
           <span>Soul Tabletop</span>
         </NuxtLink>
+      </template>
+
+      <template v-if="isLoggedIn" #center>
+        <UButton to="/systems" color="neutral" variant="link">Systems</UButton>
+        <UButton to="/games" color="neutral" variant="link">Games</UButton>
       </template>
 
       <template #right>
