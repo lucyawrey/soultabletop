@@ -1,7 +1,10 @@
 import type { Static, TSchema } from "@sinclair/typebox";
-import { Type } from "@sinclair/typebox";
+import { FormatRegistry, Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { createError, readBody, type H3Event } from "h3";
+import { uuidPattern } from "./resource-management";
+
+FormatRegistry.Set("uuid", (value) => uuidPattern.test(value));
 
 export const uuidSchema = Type.String({ format: "uuid" });
 export const slugSchema = Type.String({
@@ -133,16 +136,11 @@ export async function parseBody<T extends TSchema>(
   schema: T,
 ): Promise<Static<T>> {
   const body = await readBody(event);
-  if (
-    body &&
-    typeof body === "object" &&
-    typeof (body as Record<string, unknown>).slug === "string"
-  ) {
-    (body as Record<string, unknown>).slug = (
-      (body as Record<string, unknown>).slug as string
-    )
-      .trim()
-      .toLowerCase();
+  if (body && typeof body === "object") {
+    const record = body as Record<string, unknown>;
+    if (typeof record.slug === "string")
+      record.slug = record.slug.trim().toLowerCase();
+    if (record.ownerGroupId === "") delete record.ownerGroupId;
   }
   if (!Value.Check(schema, body)) {
     throw createError({
