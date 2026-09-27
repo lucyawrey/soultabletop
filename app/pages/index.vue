@@ -5,7 +5,6 @@ import { authClient } from "~/utils/auth-client";
 type AuthMode = "login" | "register";
 type AuthFormData = {
   name?: string;
-  slug?: string;
   email: string;
   password: string;
 };
@@ -28,7 +27,9 @@ interface ContentTypeOption {
 }
 
 const mode = ref<AuthMode>("login");
-const busy = ref(false);
+const usernameSlug = ref("");
+const authBusy = ref(false);
+const signOutBusy = ref(false);
 const errorMessage = ref("");
 
 const sessionState = await authClient.useSession(useFetch);
@@ -72,37 +73,61 @@ const fields = computed<AuthFormField[]>(() => [
 ]);
 
 function setMode(nextMode: AuthMode) {
+  if (authBusy.value) return;
   mode.value = nextMode;
+  if (nextMode === "register") usernameSlug.value = "";
   errorMessage.value = "";
 }
 
 async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
-  busy.value = true;
+  const registering = isRegistering.value;
+  authBusy.value = true;
   errorMessage.value = "";
 
   try {
-    const result = isRegistering.value
-      ? await authClient.signUp.email({
+    const slug = usernameSlug.value.trim().toLowerCase();
+    if (registering) {
+      if (!slug) {
+        errorMessage.value = "Username is required.";
+        return;
+      }
+
+      const availability = await $fetch<{ available: boolean }>(
+        "/api/profile/username-availability",
+        { query: { slug } },
+      );
+      if (!availability.available) {
+        errorMessage.value = "That username is already in use.";
+        return;
+      }
+    }
+
+    if (registering) {
+      await $fetch("/api/register", {
+        method: "POST",
+        body: {
           name: event.data.name?.trim() ?? "",
           email: event.data.email.trim(),
           password: event.data.password,
-        })
-      : await authClient.signIn.email({
-          email: event.data.email.trim(),
-          password: event.data.password,
-        });
-
-    if (result.error) {
-      errorMessage.value = result.error.message ?? "Authentication failed.";
-      return;
-    }
-
-    if (isRegistering.value) {
-      await $fetch("/api/profile", {
-        method: "POST",
-        body: { slug: event.data.slug },
+          slug,
+        },
       });
+      const session = await authClient.getSession();
+      if (session.error || !session.data) {
+        throw session.error ?? new Error("Could not load the new session.");
+      }
+      authClient.hydrateSession(session.data);
     } else {
+      const result = await authClient.signIn.email({
+        email: event.data.email.trim(),
+        password: event.data.password,
+      });
+
+      if (result.error) {
+        errorMessage.value = result.error.message ?? "Authentication failed.";
+        return;
+      }
+
       await $fetch("/api/profile");
     }
 
@@ -113,12 +138,12 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
         ? error.message
         : "Authentication or profile setup failed.";
   } finally {
-    busy.value = false;
+    authBusy.value = false;
   }
 }
 
 async function signOut() {
-  busy.value = true;
+  signOutBusy.value = true;
   errorMessage.value = "";
 
   try {
@@ -133,7 +158,7 @@ async function signOut() {
     errorMessage.value =
       error instanceof Error ? error.message : "Could not sign out.";
   } finally {
-    busy.value = false;
+    signOutBusy.value = false;
   }
 }
 
@@ -173,9 +198,9 @@ const contentTypeOptions = computed(() =>
 );
 
 watch(
-  isLoggedIn,
-  (loggedIn) => {
-    if (loggedIn) {
+  [isLoggedIn, authBusy],
+  ([loggedIn, submittingAuth]) => {
+    if (loggedIn && !submittingAuth) {
       refreshContent();
       refreshContentTypes();
     }
@@ -206,12 +231,13 @@ const contentFormBusy = ref(false);
 const contentFormError = ref("");
 
 function openCreateContent() {
-  if (!contentTypes.value.length) return;
+  const firstContentType = contentTypes.value[0];
+  if (!firstContentType) return;
   editingContent.value = null;
   contentFormError.value = "";
   contentForm.slug = "";
   contentForm.name = "";
-  contentForm.contentTypeId = contentTypes.value[0].id;
+  contentForm.contentTypeId = firstContentType.id;
   contentForm.data = "{}";
   isContentFormOpen.value = true;
 }
@@ -309,12 +335,25 @@ async function deleteContent() {
 
       <UPageCard class="w-full max-w-sm">
         <UAuthForm
+          :key="mode"
           :fields="fields"
           :title="isRegistering ? 'Create an account' : 'Sign in'"
           :submit="{ label: isRegistering ? 'Create account' : 'Sign in' }"
-          :loading="busy"
+          :loading="authBusy"
           @submit="onSubmit"
         >
+          <template #slug-field>
+            <UInput
+              v-model="usernameSlug"
+              class="w-full"
+              size="md"
+              name="slug"
+              autocomplete="nickname"
+              autocapitalize="none"
+              placeholder="your-name"
+              required
+            />
+          </template>
           <template #description>
             <p class="text-sm text-muted">
               {{
@@ -363,12 +402,19 @@ async function deleteContent() {
         <UButton
           color="neutral"
           variant="outline"
-          :loading="busy"
+          :loading="signOutBusy"
           @click="signOut"
         >
           Sign out
         </UButton>
       </div>
+
+      <UAlert
+        v-if="errorMessage"
+        color="error"
+        variant="subtle"
+        :description="errorMessage"
+      />
 
       <UTabs
         v-model="activeTab"

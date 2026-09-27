@@ -7,10 +7,10 @@ import {
   groupMembership,
   resourceGrant,
   resource,
+  userProfile,
   type Resource,
 } from "../database/schema";
 import { useDatabase } from "./database";
-import { ensureUserProfile } from "./user-profile";
 
 interface ResourceAccessContext {
   userId: string;
@@ -33,8 +33,12 @@ export async function loadResourceAccessContext(
   resourceIds: string[],
 ): Promise<ResourceAccessContext> {
   const database = useDatabase();
-  const profile = await ensureUserProfile(user);
-  const [groups, games, grants, systemGroups] = await Promise.all([
+  const [profiles, groups, games, grants, systemGroups] = await Promise.all([
+    database
+      .select({ role: userProfile.role })
+      .from(userProfile)
+      .where(eq(userProfile.userId, user.id))
+      .limit(1),
     database
       .select({ groupId: groupMembership.groupId, role: groupMembership.role })
       .from(groupMembership)
@@ -71,7 +75,7 @@ export async function loadResourceAccessContext(
 
   return {
     userId: user.id,
-    isSiteAdmin: profile.role === "Admin",
+    isSiteAdmin: profiles[0]?.role === "Admin",
     groupRoles: new Map(groups.map(({ groupId, role }) => [groupId, role])),
     gameRoles: new Map(games.map(({ gameId, role }) => [gameId, role])),
     gameOwners: new Map(

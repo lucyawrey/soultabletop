@@ -129,7 +129,6 @@ export const userProfile = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     role: siteRole("role").default("Member").notNull(),
     slug: text("slug").notNull(),
-    slugIsUserChosen: boolean("slug_is_user_chosen").default(false).notNull(),
     iconImageUrl: text("icon_image_url"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

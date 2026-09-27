@@ -1,5 +1,4 @@
 import { createError, readBody } from "h3";
-import { eq } from "drizzle-orm";
 import { userProfile } from "../../database/schema";
 import { useDatabase } from "../../utils/database";
 import { requireAuthenticatedUser } from "../../utils/auth";
@@ -13,14 +12,14 @@ export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const body = await readBody<UpdateProfileBody>(event);
 
-  if (typeof body?.slug !== "string") {
+  if (typeof body?.slug !== "string" || !body.slug.trim()) {
     throw createError({
       statusCode: 400,
-      statusMessage: "slug is required",
+      statusMessage: "Username is required",
     });
   }
 
-  const slug = body.slug.toLowerCase();
+  const slug = body.slug.trim().toLowerCase();
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
     throw createError({
       statusCode: 400,
@@ -32,10 +31,10 @@ export default defineEventHandler(async (event) => {
     const database = useDatabase();
     const [profile] = await database
       .insert(userProfile)
-      .values({ userId: user.id, slug, slugIsUserChosen: true })
+      .values({ userId: user.id, slug })
       .onConflictDoUpdate({
         target: userProfile.userId,
-        set: { slug, slugIsUserChosen: true, updatedAt: new Date() },
+        set: { slug, updatedAt: new Date() },
       })
       .returning();
 
