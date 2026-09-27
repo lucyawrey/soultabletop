@@ -16,7 +16,8 @@ interface ContentItem {
 interface ContentTypeItem {
   id: string;
   name: string;
-  contentCategory: "general" | "nonPlayerCharacter" | "document" | "playerCharacter";
+  contentCategory:
+    "general" | "nonPlayerCharacter" | "document" | "playerCharacter";
 }
 
 const {
@@ -35,7 +36,9 @@ const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
 );
 
 const characterTypes = computed(() =>
-  contentTypes.value.filter((item) => item.contentCategory === "playerCharacter"),
+  contentTypes.value.filter(
+    (item) => item.contentCategory === "playerCharacter",
+  ),
 );
 
 const characterTypeOptions = computed(() =>
@@ -47,7 +50,9 @@ const characterTypeIdSet = computed(
 );
 
 const characters = computed(() =>
-  contentItems.value.filter((item) => characterTypeIdSet.value.has(item.contentTypeId)),
+  contentItems.value.filter((item) =>
+    characterTypeIdSet.value.has(item.contentTypeId),
+  ),
 );
 
 function contentTypeName(contentTypeId: string) {
@@ -140,7 +145,10 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save Character.");
+    formError.value = extractApiErrorMessage(
+      error,
+      "Could not save Character.",
+    );
   } finally {
     formBusy.value = false;
   }
@@ -186,10 +194,15 @@ async function remove() {
     </div>
 
     <p v-if="characterTypes.length === 0" class="text-sm text-muted">
-      Create a ContentType with category "playerCharacter" before adding characters.
+      Create a ContentType with category "playerCharacter" before adding
+      characters.
     </p>
 
-    <UTable :data="characters" :columns="columns" :loading="status === 'pending'">
+    <UTable
+      :data="characters"
+      :columns="columns"
+      :loading="status === 'pending'"
+    >
       <template #contentTypeId-cell="{ row }">
         {{ contentTypeName(row.original.contentTypeId) }}
       </template>
@@ -233,7 +246,12 @@ async function remove() {
       :title="editingCharacter ? 'Edit Character' : 'New Character'"
     >
       <template #body>
-        <UForm id="character-form" :state="form" class="space-y-4" @submit="submitForm">
+        <UForm
+          id="character-form"
+          :state="form"
+          class="space-y-4"
+          @submit="submitForm"
+        >
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>

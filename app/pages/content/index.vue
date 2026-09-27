@@ -16,7 +16,8 @@ interface ContentItem {
 interface ContentTypeItem {
   id: string;
   name: string;
-  contentCategory: "general" | "nonPlayerCharacter" | "document" | "playerCharacter";
+  contentCategory:
+    "general" | "nonPlayerCharacter" | "document" | "playerCharacter";
 }
 
 const {
@@ -35,11 +36,16 @@ const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
 );
 
 const standardContentTypes = computed(() =>
-  contentTypes.value.filter((item) => item.contentCategory !== "playerCharacter"),
+  contentTypes.value.filter(
+    (item) => item.contentCategory !== "playerCharacter",
+  ),
 );
 
 const contentTypeOptions = computed(() =>
-  standardContentTypes.value.map((item) => ({ label: item.name, value: item.id })),
+  standardContentTypes.value.map((item) => ({
+    label: item.name,
+    value: item.id,
+  })),
 );
 
 const contentTypeIdSet = computed(
@@ -47,13 +53,15 @@ const contentTypeIdSet = computed(
 );
 
 const contentRecords = computed(() =>
-  contentItems.value.filter((item) => contentTypeIdSet.value.has(item.contentTypeId)),
+  contentItems.value.filter((item) =>
+    contentTypeIdSet.value.has(item.contentTypeId),
+  ),
 );
 
 function contentTypeName(contentTypeId: string) {
   return (
-    standardContentTypes.value.find((item) => item.id === contentTypeId)?.name ??
-    "Unknown"
+    standardContentTypes.value.find((item) => item.id === contentTypeId)
+      ?.name ?? "Unknown"
   );
 }
 
@@ -228,7 +236,9 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No Content records yet.</p>
+        <p class="py-6 text-center text-sm text-muted">
+          No Content records yet.
+        </p>
       </template>
     </UTable>
 
@@ -237,7 +247,12 @@ async function remove() {
       :title="editingContent ? 'Edit Content' : 'New Content'"
     >
       <template #body>
-        <UForm id="content-form" :state="form" class="space-y-4" @submit="submitForm">
+        <UForm
+          id="content-form"
+          :state="form"
+          class="space-y-4"
+          @submit="submitForm"
+        >
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>

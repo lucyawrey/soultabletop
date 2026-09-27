@@ -29,7 +29,8 @@ interface ContentTypeOption {
 
 const mode = ref<AuthMode>("login");
 const registerForm = reactive({ name: "", slug: "" });
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(registerForm);
+const { onSlugInput, resetSlugTouched, slugError } =
+  useSlugFromName(registerForm);
 const authBusy = ref(false);
 const signOutBusy = ref(false);
 const errorMessage = ref("");
