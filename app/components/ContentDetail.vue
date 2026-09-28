@@ -19,6 +19,7 @@ interface ContentDetail {
   sheetId: string | null;
   data: Record<string, unknown>;
   canEdit: boolean;
+  isPubliclyReadable: boolean;
 }
 
 interface NamedItem {
@@ -46,7 +47,12 @@ const sheet = computed(() =>
 );
 
 const isFormOpen = ref(false);
-const form = reactive({ slug: "", name: "", data: "{}" });
+const form = reactive({
+  slug: "",
+  name: "",
+  isPubliclyReadable: false,
+  data: "{}",
+});
 const formBusy = ref(false);
 const formError = ref("");
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
@@ -56,6 +62,7 @@ function openEdit() {
   formError.value = "";
   form.slug = item.value.slug;
   form.name = item.value.name;
+  form.isPubliclyReadable = item.value.isPubliclyReadable;
   form.data = JSON.stringify(item.value.data, null, 2);
   resetSlugTouched(true);
   isFormOpen.value = true;
@@ -72,7 +79,12 @@ async function submitForm() {
     }
     await $fetch(`/api/content/${props.id}`, {
       method: "PATCH",
-      body: { slug: form.slug, name: form.name, data },
+      body: {
+        slug: form.slug,
+        name: form.name,
+        isPubliclyReadable: form.isPubliclyReadable,
+        data,
+      },
     });
     isFormOpen.value = false;
     await refresh();
@@ -126,6 +138,7 @@ async function remove() {
           <h1 class="text-2xl font-bold text-highlighted">{{ item.name }}</h1>
           <p class="text-sm text-muted">
             {{ item.slug }} ·
+            {{ visibilityLabel(item.isPubliclyReadable) }} ·
             <NuxtLink
               v-if="contentType"
               :to="`/types/${contentType.id}`"
@@ -200,6 +213,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UFormField name="data" label="Data (JSON)" required>
             <UTextarea v-model="form.data" class="w-full font-mono" :rows="8" />
           </UFormField>

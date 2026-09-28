@@ -13,6 +13,7 @@ interface SheetDetail {
   cssStyles: string;
   isDefault: boolean;
   canEdit: boolean;
+  isPubliclyReadable: boolean;
 }
 
 interface ContentTypeOption {
@@ -42,6 +43,7 @@ const isFormOpen = ref(false);
 const form = reactive({
   slug: "",
   name: "",
+  isPubliclyReadable: false,
   isDefault: false,
   markup: "",
   cssStyles: "",
@@ -55,6 +57,7 @@ function openEdit() {
   formError.value = "";
   form.slug = sheet.value.slug;
   form.name = sheet.value.name;
+  form.isPubliclyReadable = sheet.value.isPubliclyReadable;
   form.isDefault = sheet.value.isDefault;
   form.markup = sheet.value.markup;
   form.cssStyles = sheet.value.cssStyles;
@@ -72,6 +75,7 @@ async function submitForm() {
       body: {
         slug: form.slug,
         name: form.name,
+        isPubliclyReadable: form.isPubliclyReadable,
         markup: form.markup,
         cssStyles: form.cssStyles,
         ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
@@ -129,6 +133,7 @@ async function remove() {
           </h1>
           <p class="text-sm text-muted">
             {{ sheet.slug }} ·
+            {{ visibilityLabel(sheet.isPubliclyReadable) }} ·
             <NuxtLink
               v-if="contentType"
               :to="`/types/${contentType.id}`"
@@ -214,6 +219,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UFormField
             v-if="canSetDefault"
             name="isDefault"

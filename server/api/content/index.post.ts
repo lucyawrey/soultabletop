@@ -25,6 +25,7 @@ defineRouteMeta({
             properties: {
               slug: { type: "string" },
               name: { type: "string" },
+              isPubliclyReadable: { type: "boolean" },
               contentTypeId: { format: "uuid", type: "string" },
               sheetId: { type: ["string", "null"] },
               data: { type: "object", additionalProperties: true },
@@ -122,6 +123,7 @@ export default defineEventHandler(async (event) => {
           ownerUserId: user.id,
           slug,
           name,
+          isPubliclyReadable: body.isPubliclyReadable === true,
           createdByUserId: user.id,
           updatedByUserId: user.id,
         })
@@ -141,6 +143,7 @@ export default defineEventHandler(async (event) => {
         id: createdResource.id,
         slug: createdResource.slug,
         name: createdResource.name,
+        isPubliclyReadable: createdResource.isPubliclyReadable,
         createdAt: createdResource.createdAt,
         updatedAt: createdResource.updatedAt,
         ...createdContent,

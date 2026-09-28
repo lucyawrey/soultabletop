@@ -32,6 +32,7 @@ defineRouteMeta({
             required: ["name", "slug", "systemId"],
             properties: {
               name: { type: "string" },
+              isPubliclyReadable: { type: "boolean" },
               slug: { type: "string" },
               systemId: { type: "string", format: "uuid" },
               ownerGroupId: { type: "string", format: "uuid" },
@@ -113,6 +114,7 @@ export default defineEventHandler(async (event) => {
           ownerGroupId,
           slug,
           name,
+          isPubliclyReadable: body.isPubliclyReadable === true,
           createdByUserId: user.id,
           updatedByUserId: user.id,
         })

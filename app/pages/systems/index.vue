@@ -23,7 +23,7 @@ const {
 const columns: TableColumn<SystemItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "slug", header: "Slug" },
-  { accessorKey: "isPubliclyReadable", header: "Public" },
+  { accessorKey: "isPubliclyReadable", header: "Visibility" },
   {
     accessorKey: "updatedAt",
     header: "Updated",
@@ -154,12 +154,9 @@ async function remove() {
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
-        <UBadge
-          :color="row.original.isPubliclyReadable ? 'primary' : 'neutral'"
-          variant="subtle"
-        >
-          {{ row.original.isPubliclyReadable ? "Public" : "Private" }}
-        </UBadge>
+        <VisibilityBadge
+          :is-publicly-readable="row.original.isPubliclyReadable"
+        />
       </template>
 
       <template #actions-cell="{ row }">
@@ -225,9 +222,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
-          <UFormField name="isPubliclyReadable" label="Publicly readable">
-            <USwitch v-model="form.isPubliclyReadable" />
-          </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"

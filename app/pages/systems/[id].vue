@@ -115,7 +115,7 @@ async function remove() {
           </h1>
           <p class="text-sm text-muted">
             {{ system.slug }} ·
-            {{ system.isPubliclyReadable ? "Public" : "Private" }}
+            {{ visibilityLabel(system.isPubliclyReadable) }}
           </p>
         </div>
         <div v-if="system?.canEdit" class="flex gap-2">
@@ -206,9 +206,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
-          <UFormField name="isPubliclyReadable" label="Publicly readable">
-            <USwitch v-model="form.isPubliclyReadable" />
-          </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"

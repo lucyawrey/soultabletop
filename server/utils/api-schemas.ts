@@ -24,6 +24,7 @@ export const createContentSchema = Type.Object({
   contentTypeId: uuidSchema,
   sheetId: Type.Optional(Type.Union([uuidSchema, Type.Null()])),
   data: Type.Optional(Type.Object({}, { additionalProperties: true })),
+  isPubliclyReadable: Type.Optional(Type.Boolean()),
 });
 
 export const resourceCreateSchema = Type.Object({
@@ -62,6 +63,7 @@ export const contentTypePatchSchema = Type.Partial(
   Type.Object({
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
+    isPubliclyReadable: Type.Boolean(),
     contentCategory: Type.Union([
       Type.Literal("general"),
       Type.Literal("nonPlayerCharacter"),
@@ -87,6 +89,7 @@ export const sheetPatchSchema = Type.Partial(
   Type.Object({
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
+    isPubliclyReadable: Type.Boolean(),
     markup: Type.String(),
     cssStyles: Type.String(),
     isDefault: Type.Boolean(),

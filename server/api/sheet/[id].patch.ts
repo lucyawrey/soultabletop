@@ -26,6 +26,7 @@ defineRouteMeta({
             type: "object",
             properties: {
               name: { type: "string" },
+              isPubliclyReadable: { type: "boolean" },
               slug: { type: "string" },
               markup: { type: "string" },
               cssStyles: { type: "string" },
@@ -98,6 +99,9 @@ export default defineEventHandler(async (event) => {
     .set({
       ...(body.name !== undefined ? { name: requireName(body.name) } : {}),
       ...(body.slug !== undefined ? { slug: requireSlug(body.slug) } : {}),
+      ...(body.isPubliclyReadable !== undefined
+        ? { isPubliclyReadable: body.isPubliclyReadable }
+        : {}),
       updatedByUserId: user.id,
       updatedAt: new Date(),
     })

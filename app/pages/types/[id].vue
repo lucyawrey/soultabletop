@@ -15,6 +15,7 @@ interface ContentTypeDetail {
   hasStrictSchema: boolean;
   schema: Record<string, unknown>;
   canEdit: boolean;
+  isPubliclyReadable: boolean;
 }
 
 interface SystemOption {
@@ -66,6 +67,7 @@ const isFormOpen = ref(false);
 const form = reactive({
   slug: "",
   name: "",
+  isPubliclyReadable: false,
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
   schema: "{}",
@@ -79,6 +81,7 @@ function openEdit() {
   formError.value = "";
   form.slug = contentType.value.slug;
   form.name = contentType.value.name;
+  form.isPubliclyReadable = contentType.value.isPubliclyReadable;
   form.contentCategory = contentType.value.contentCategory;
   form.hasStrictSchema = contentType.value.hasStrictSchema;
   form.schema = JSON.stringify(contentType.value.schema, null, 2);
@@ -104,6 +107,7 @@ async function submitForm() {
       body: {
         slug: form.slug,
         name: form.name,
+        isPubliclyReadable: form.isPubliclyReadable,
         contentCategory: form.contentCategory,
         hasStrictSchema: form.hasStrictSchema,
         schema,
@@ -163,6 +167,7 @@ async function remove() {
           </h1>
           <p class="text-sm text-muted">
             {{ contentType.slug }} ·
+            {{ visibilityLabel(contentType.isPubliclyReadable) }} ·
             <NuxtLink
               v-if="system"
               :to="`/systems/${system.id}`"
@@ -273,6 +278,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UFormField name="contentCategory" label="Category" required>
             <USelect
               v-model="form.contentCategory"

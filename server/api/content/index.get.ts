@@ -40,6 +40,7 @@ export default defineEventHandler(async (event) => {
     .map(({ item, resource: resourceItem, access }) => ({
       id: resourceItem.id,
       slug: resourceItem.slug,
+      isPubliclyReadable: resourceItem.isPubliclyReadable,
       name: resourceItem.name,
       createdAt: resourceItem.createdAt,
       updatedAt: resourceItem.updatedAt,

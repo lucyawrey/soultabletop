@@ -16,6 +16,7 @@ interface ContentTypeItem {
   hasStrictSchema: boolean;
   schema: Record<string, unknown>;
   canEdit: boolean;
+  isPubliclyReadable: boolean;
 }
 
 interface SystemItem {
@@ -57,6 +58,7 @@ function systemName(systemId: string) {
 const columns: TableColumn<ContentTypeItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentCategory", header: "Category" },
   { accessorKey: "hasStrictSchema", header: "Strict Schema" },
@@ -68,6 +70,7 @@ const editingType = ref<ContentTypeItem | null>(null);
 const form = reactive({
   slug: "",
   name: "",
+  isPubliclyReadable: false,
   systemId: "",
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
@@ -86,6 +89,7 @@ function openCreate(systemId?: string) {
   formError.value = "";
   form.slug = "";
   form.name = "";
+  form.isPubliclyReadable = false;
   form.systemId = system.id;
   form.contentCategory = "general";
   form.hasStrictSchema = false;
@@ -99,6 +103,7 @@ function openEdit(item: ContentTypeItem) {
   formError.value = "";
   form.slug = item.slug;
   form.name = item.name;
+  form.isPubliclyReadable = item.isPubliclyReadable;
   form.systemId = item.systemId;
   form.contentCategory = item.contentCategory;
   form.hasStrictSchema = item.hasStrictSchema;
@@ -138,6 +143,7 @@ async function submitForm() {
     const body = {
       slug: form.slug,
       name: form.name,
+      isPubliclyReadable: form.isPubliclyReadable,
       contentCategory: form.contentCategory,
       hasStrictSchema: form.hasStrictSchema,
       schema,
@@ -249,6 +255,12 @@ async function remove() {
         {{ row.original.hasStrictSchema ? "Yes" : "No" }}
       </template>
 
+      <template #isPubliclyReadable-cell="{ row }">
+        <VisibilityBadge
+          :is-publicly-readable="row.original.isPubliclyReadable"
+        />
+      </template>
+
       <template #actions-cell="{ row }">
         <!-- Edit and delete both require edit access server-side. -->
         <UDropdownMenu
@@ -315,6 +327,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UFormField
             name="systemId"
             label="System"

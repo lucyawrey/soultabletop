@@ -14,6 +14,7 @@ interface UpdateContentBody {
   name?: unknown;
   data?: unknown;
   sheetId?: unknown;
+  isPubliclyReadable?: unknown;
 }
 
 defineRouteMeta({
@@ -29,6 +30,7 @@ defineRouteMeta({
             properties: {
               slug: { type: "string" },
               name: { type: "string" },
+              isPubliclyReadable: { type: "boolean" },
               sheetId: { type: ["string", "null"] },
               data: { type: "object", additionalProperties: true },
             },
@@ -76,7 +78,17 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const updates: { slug?: string; name?: string } = {};
+  const updates: { slug?: string; name?: string; isPubliclyReadable?: boolean } =
+    {};
+  if (body.isPubliclyReadable !== undefined) {
+    if (typeof body.isPubliclyReadable !== "boolean") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "isPubliclyReadable must be a boolean",
+      });
+    }
+    updates.isPubliclyReadable = body.isPubliclyReadable;
+  }
   if (body.slug !== undefined) {
     if (
       typeof body.slug !== "string" ||
@@ -195,6 +207,8 @@ export default defineEventHandler(async (event) => {
       id: record.resource.id,
       slug: updates.slug ?? record.resource.slug,
       name: updates.name ?? record.resource.name,
+      isPubliclyReadable:
+        updates.isPubliclyReadable ?? record.resource.isPubliclyReadable,
       createdAt: record.resource.createdAt,
       updatedAt: hasChanges ? new Date() : record.resource.updatedAt,
       ...updatedContent,

@@ -14,6 +14,7 @@ interface SheetItem {
   cssStyles: string;
   isDefault: boolean;
   canEdit: boolean;
+  isPubliclyReadable: boolean;
 }
 
 interface ContentTypeItem {
@@ -47,6 +48,7 @@ function contentTypeName(contentTypeId: string) {
 const columns: TableColumn<SheetItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Content Type" },
   { accessorKey: "isDefault", header: "Default" },
   {
@@ -62,6 +64,7 @@ const editingSheet = ref<SheetItem | null>(null);
 const form = reactive({
   slug: "",
   name: "",
+  isPubliclyReadable: false,
   contentTypeId: "",
   isDefault: false,
   markup: "",
@@ -93,6 +96,7 @@ function openCreate(contentTypeId?: string) {
   formError.value = "";
   form.slug = "";
   form.name = "";
+  form.isPubliclyReadable = false;
   form.contentTypeId = selectedType.id;
   form.isDefault = false;
   form.markup = "";
@@ -106,6 +110,7 @@ function openEdit(item: SheetItem) {
   formError.value = "";
   form.slug = item.slug;
   form.name = item.name;
+  form.isPubliclyReadable = item.isPubliclyReadable;
   form.contentTypeId = item.contentTypeId;
   form.isDefault = item.isDefault;
   form.markup = item.markup;
@@ -136,6 +141,7 @@ async function submitForm() {
     const body = {
       slug: form.slug,
       name: form.name,
+      isPubliclyReadable: form.isPubliclyReadable,
       markup: form.markup,
       cssStyles: form.cssStyles,
       ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
@@ -233,6 +239,12 @@ async function remove() {
         </UBadge>
       </template>
 
+      <template #isPubliclyReadable-cell="{ row }">
+        <VisibilityBadge
+          :is-publicly-readable="row.original.isPubliclyReadable"
+        />
+      </template>
+
       <template #actions-cell="{ row }">
         <UDropdownMenu
           v-if="row.original.canEdit"
@@ -297,6 +309,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UFormField
             name="contentTypeId"
             label="Content Type"
