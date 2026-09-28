@@ -1,17 +1,24 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
-import { content, resource } from "../../database/schema";
+import { content, contentType, resource } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
+import { loadContentRefs } from "../../utils/content-refs";
 import { useDatabase } from "../../utils/database";
 import {
   getResourceAccess,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
+import {
+  loadSheetSchemas,
+  resolveContentSheet,
+} from "../../utils/sheet-schemas";
 
 defineRouteMeta({
   openAPI: {
     tags: ["Content"],
     summary: "Get a Content record",
+    description:
+      "Includes the Sheet to render it with (`sheet`), the schemas that Sheet needs (`schemas`), and the referenced Content the viewer can read (`refs`).",
     responses: {
       200: { description: "Content record" },
       401: { description: "Authentication required" },
@@ -30,9 +37,14 @@ export default defineEventHandler(async (event) => {
 
   const database = useDatabase();
   const [record] = await database
-    .select({ item: content, resource })
+    .select({
+      item: content,
+      resource,
+      contentCategory: contentType.contentCategory,
+    })
     .from(content)
     .innerJoin(resource, eq(resource.id, content.resourceId))
+    .innerJoin(contentType, eq(contentType.resourceId, content.contentTypeId))
     .where(eq(content.resourceId, id))
     .limit(1);
 
@@ -47,6 +59,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
 
+  const schemas = await loadSheetSchemas(record.item.contentTypeId);
+  if (!schemas) {
+    throw createError({ statusCode: 404, statusMessage: "ContentType not found" });
+  }
+  const [sheet, refs] = await Promise.all([
+    resolveContentSheet(
+      user,
+      record.item.sheetId,
+      record.item.contentTypeId,
+      record.contentCategory,
+      schemas,
+    ),
+    loadContentRefs(user, record.item.data, schemas),
+  ]);
+
   return {
     id: record.resource.id,
     slug: record.resource.slug,
@@ -55,6 +82,10 @@ export default defineEventHandler(async (event) => {
     createdAt: record.resource.createdAt,
     updatedAt: record.resource.updatedAt,
     ...record.item,
+    contentCategory: record.contentCategory,
     canEdit: access.canEdit,
+    sheet,
+    schemas,
+    refs,
   };
 });
