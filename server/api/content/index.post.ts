@@ -3,7 +3,10 @@ import { eq } from "drizzle-orm";
 import { content, contentType, resource, sheet } from "../../database/schema";
 import { createContentSchema, parseBody } from "../../utils/api-schemas";
 import { requireAuthenticatedUser } from "../../utils/auth";
-import { validateContentData } from "../../utils/content-validation";
+import {
+  extractDataName,
+  validateContentData,
+} from "../../utils/content-validation";
 import { useDatabase } from "../../utils/database";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import {
@@ -75,11 +78,12 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const data = body.data;
-  const validationError = validateContentData(
+  // The body's required `name` wins over any `data.name`.
+  const { data } = extractDataName(body.data ?? {});
+  const validationError = await validateContentData(
+    user,
     data,
-    typeRecord.type.schema,
-    typeRecord.type.hasStrictSchema,
+    typeRecord.type,
   );
   if (validationError) {
     throw createError({ statusCode: 400, statusMessage: validationError });

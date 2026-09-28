@@ -2,7 +2,10 @@ import { createError, getRouterParam, readBody } from "h3";
 import { eq } from "drizzle-orm";
 import { content, contentType, resource, sheet } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
-import { validateContentData } from "../../utils/content-validation";
+import {
+  extractDataName,
+  validateContentData,
+} from "../../utils/content-validation";
 import { useDatabase } from "../../utils/database";
 import {
   getResourceAccess,
@@ -15,6 +18,7 @@ interface UpdateContentBody {
   data?: unknown;
   sheetId?: unknown;
   isPubliclyReadable?: unknown;
+  expectedUpdatedAt?: unknown;
 }
 
 defineRouteMeta({
@@ -33,6 +37,7 @@ defineRouteMeta({
               isPubliclyReadable: { type: "boolean" },
               sheetId: { type: ["string", "null"] },
               data: { type: "object", additionalProperties: true },
+              expectedUpdatedAt: { type: "string", format: "date-time" },
             },
           },
         },
@@ -42,6 +47,7 @@ defineRouteMeta({
       200: { description: "Updated Content record" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
+      409: { description: "Changed since expectedUpdatedAt" },
     },
   },
 });
@@ -120,15 +126,29 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const data = body.data as Record<string, unknown> | undefined;
-  if (data) {
-    const validationError = validateContentData(
-      data,
-      record.type.schema,
-      record.type.hasStrictSchema,
-    );
+  let data: Record<string, unknown> | undefined;
+  if (body.data !== undefined) {
+    const extracted = extractDataName(body.data as Record<string, unknown>);
+    data = extracted.data;
+    if (updates.name === undefined && extracted.name !== undefined)
+      updates.name = extracted.name;
+    const validationError = await validateContentData(user, data, record.type);
     if (validationError) {
       throw createError({ statusCode: 400, statusMessage: validationError });
+    }
+  }
+
+  let expectedUpdatedAt: Date | undefined;
+  if (body.expectedUpdatedAt !== undefined) {
+    expectedUpdatedAt =
+      typeof body.expectedUpdatedAt === "string"
+        ? new Date(body.expectedUpdatedAt)
+        : undefined;
+    if (!expectedUpdatedAt || Number.isNaN(expectedUpdatedAt.getTime())) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "expectedUpdatedAt must be a date-time string",
+      });
     }
   }
 
@@ -176,17 +196,37 @@ export default defineEventHandler(async (event) => {
   }
 
   const updated = await database.transaction(async (transaction) => {
+    if (expectedUpdatedAt) {
+      // Lock the row so a concurrent save can't slip in between the check and
+      // the update.
+      const [current] = await transaction
+        .select({ updatedAt: resource.updatedAt })
+        .from(resource)
+        .where(eq(resource.id, record.resource.id))
+        .for("update");
+      if (current?.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
+        throw createError({
+          statusCode: 409,
+          statusMessage:
+            "This Content was changed by someone else since you loaded it",
+        });
+      }
+    }
+
     const hasChanges =
       Object.keys(updates).length > 0 ||
       data !== undefined ||
       sheetId !== undefined;
+    // One timestamp for the row and the response, so clients can send it back
+    // as `expectedUpdatedAt`.
+    const now = new Date();
     if (hasChanges) {
       await transaction
         .update(resource)
         .set({
           ...updates,
           updatedByUserId: user.id,
-          updatedAt: new Date(),
+          updatedAt: now,
         })
         .where(eq(resource.id, record.resource.id));
     }
@@ -210,7 +250,7 @@ export default defineEventHandler(async (event) => {
       isPubliclyReadable:
         updates.isPubliclyReadable ?? record.resource.isPubliclyReadable,
       createdAt: record.resource.createdAt,
-      updatedAt: hasChanges ? new Date() : record.resource.updatedAt,
+      updatedAt: hasChanges ? now : record.resource.updatedAt,
       ...updatedContent,
     };
   });

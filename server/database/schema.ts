@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
+import type { ContentTypeSchema } from "../../shared/content-schema";
 import {
   boolean,
+  json,
   jsonb,
   pgTable,
   text,
@@ -107,19 +109,10 @@ export const sharePermission = pgEnum("share_permission", ["read", "edit"]);
 export const gameAudience = pgEnum("game_audience", ["members", "gms"]);
 export const groupKind = pgEnum("group_kind", ["user", "system"]);
 
-export type ContentFieldSchema =
-  | { type: "string" | "number" | "boolean" | "any"; required: boolean }
-  | { type: "array"; itemType: ContentFieldSchema; required: boolean }
-  | {
-      type: "object";
-      entries: Record<string, ContentFieldSchema>;
-      required: boolean;
-    }
-  | { type: "localType"; key: string; required: boolean }
-  | { type: "resourceRef"; required: boolean }
-  | { type: "contentType"; resourceId: string; required: boolean };
-
-export type ContentTypeSchema = Record<string, ContentFieldSchema>;
+export type {
+  ContentFieldSchema,
+  ContentTypeSchema,
+} from "../../shared/content-schema";
 
 export const userProfile = pgTable(
   "user_profile",
@@ -354,9 +347,11 @@ export const contentType = pgTable("content_type", {
     .default("general")
     .notNull(),
   hasStrictSchema: boolean("has_strict_schema").default(false).notNull(),
-  schema: jsonb("schema")
+  // `json`, not `jsonb`: jsonb reorders object keys, and field order matters
+  // for generated sheets.
+  schema: json("schema")
     .$type<ContentTypeSchema>()
-    .default(sql`'{}'::jsonb`)
+    .default(sql`'{}'::json`)
     .notNull(),
 });
 
@@ -372,6 +367,9 @@ export const sheet = pgTable(
     cssStyles: text("css_styles").default("").notNull(),
     markup: text("markup").default("").notNull(),
     isDefault: boolean("is_default").default(false).notNull(),
+    // Initial state of the Content page's Edit and Autosave switches.
+    defaultEditMode: boolean("default_edit_mode").default(false).notNull(),
+    defaultAutosave: boolean("default_autosave").default(false).notNull(),
   },
   (table) => [
     index("sheet_content_type_id_idx").on(table.contentTypeId),

@@ -31,6 +31,8 @@ defineRouteMeta({
               markup: { type: "string" },
               cssStyles: { type: "string" },
               isDefault: { type: "boolean" },
+              defaultEditMode: { type: "boolean" },
+              defaultAutosave: { type: "boolean" },
             },
           },
         },
@@ -122,6 +124,8 @@ export default defineEventHandler(async (event) => {
           markup: typeof body.markup === "string" ? body.markup : "",
           cssStyles: typeof body.cssStyles === "string" ? body.cssStyles : "",
           isDefault: body.isDefault === true,
+          defaultEditMode: body.defaultEditMode === true,
+          defaultAutosave: body.defaultAutosave === true,
         })
         .returning();
       return { ...createdResource, ...createdSheet };

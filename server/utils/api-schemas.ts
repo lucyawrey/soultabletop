@@ -42,6 +42,66 @@ export const resourcePatchSchema = Type.Partial(
   }),
 );
 
+const fieldKeySchema = Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" });
+
+const fieldMeta = {
+  required: Type.Optional(Type.Boolean()),
+  label: Type.Optional(Type.String()),
+  description: Type.Optional(Type.String()),
+};
+
+// Mirrors `ContentFieldSchema` in shared/content-schema.ts.
+export const contentFieldSchema = Type.Recursive((Self) =>
+  Type.Union([
+    Type.Object(
+      {
+        type: Type.Union([
+          Type.Literal("string"),
+          Type.Literal("number"),
+          Type.Literal("boolean"),
+          Type.Literal("any"),
+        ]),
+        ...fieldMeta,
+      },
+      { additionalProperties: false },
+    ),
+    Type.Object(
+      { type: Type.Literal("array"), itemType: Self, ...fieldMeta },
+      { additionalProperties: false },
+    ),
+    Type.Object(
+      {
+        type: Type.Literal("object"),
+        entries: Type.Record(fieldKeySchema, Self),
+        ...fieldMeta,
+      },
+      { additionalProperties: false },
+    ),
+    Type.Object(
+      { type: Type.Literal("resourceRef"), ...fieldMeta },
+      { additionalProperties: false },
+    ),
+    Type.Object(
+      {
+        type: Type.Literal("content"),
+        contentTypeId: uuidSchema,
+        allow: Type.Union([
+          Type.Literal("ref"),
+          Type.Literal("local"),
+          Type.Literal("both"),
+        ]),
+        ...fieldMeta,
+      },
+      { additionalProperties: false },
+    ),
+  ]),
+);
+
+export const contentTypeSchemaSchema = Type.Record(
+  fieldKeySchema,
+  contentFieldSchema,
+);
+
 export const contentTypeCreateSchema = Type.Intersect([
   resourceCreateSchema,
   Type.Object({
@@ -55,7 +115,7 @@ export const contentTypeCreateSchema = Type.Intersect([
       ]),
     ),
     hasStrictSchema: Type.Optional(Type.Boolean()),
-    schema: Type.Optional(Type.Object({}, { additionalProperties: true })),
+    schema: Type.Optional(contentTypeSchemaSchema),
   }),
 ]);
 
@@ -71,7 +131,7 @@ export const contentTypePatchSchema = Type.Partial(
       Type.Literal("playerCharacter"),
     ]),
     hasStrictSchema: Type.Boolean(),
-    schema: Type.Object({}, { additionalProperties: true }),
+    schema: contentTypeSchemaSchema,
   }),
 );
 
@@ -82,6 +142,8 @@ export const sheetCreateSchema = Type.Intersect([
     markup: Type.Optional(Type.String()),
     cssStyles: Type.Optional(Type.String()),
     isDefault: Type.Optional(Type.Boolean()),
+    defaultEditMode: Type.Optional(Type.Boolean()),
+    defaultAutosave: Type.Optional(Type.Boolean()),
   }),
 ]);
 
@@ -93,6 +155,8 @@ export const sheetPatchSchema = Type.Partial(
     markup: Type.String(),
     cssStyles: Type.String(),
     isDefault: Type.Boolean(),
+    defaultEditMode: Type.Boolean(),
+    defaultAutosave: Type.Boolean(),
   }),
 );
 

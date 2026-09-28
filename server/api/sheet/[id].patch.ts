@@ -31,6 +31,8 @@ defineRouteMeta({
               markup: { type: "string" },
               cssStyles: { type: "string" },
               isDefault: { type: "boolean" },
+              defaultEditMode: { type: "boolean" },
+              defaultAutosave: { type: "boolean" },
             },
           },
         },
@@ -120,6 +122,12 @@ export default defineEventHandler(async (event) => {
         : {}),
       ...(body.isDefault !== undefined
         ? { isDefault: body.isDefault === true }
+        : {}),
+      ...(body.defaultEditMode !== undefined
+        ? { defaultEditMode: body.defaultEditMode }
+        : {}),
+      ...(body.defaultAutosave !== undefined
+        ? { defaultAutosave: body.defaultAutosave }
         : {}),
     })
     .where(eq(sheet.resourceId, id))

@@ -1,0 +1,360 @@
+# Sheet System — Design
+
+## Context
+TODO.md's top item: Sheets store `markup` + `cssStyles` (`server/database/schema.ts` `sheet` table) but they are only
+displayed as raw text, and Content is edited as a raw JSON textarea (`app/components/ContentDetail.vue`). Goal: Sheet
+markup renders Content as Nuxt UI character/content sheets, in view and edit mode.
+
+Decisions so far:
+- Syntax: HTML-like component tags from a fixed allowlist, rendered by Nuxt UI components.
+- Sheets both view and edit Content data (JSON editor kept as "Advanced").
+- CSS: kept, sanitized + scoped under the sheet root.
+- Computed values: yes, but a later phase (safe expression language, never `eval`).
+- A viewer who can read Content but not its selected Sheet gets the **generated** sheet (section 4).
+- Add `vitest` (for parser, validator, CSS sanitizer).
+- Remove `localType` from `ContentFieldSchema` (`schema.ts:118`, `content-validation.ts:25`). While there, validate
+  ContentType `schema` bodies against the `ContentFieldSchema` shape — `api-schemas.ts:58` currently accepts any object.
+
+Sections: 1. markup language + parser → 2. tag catalog → 3. validation against schema → 4. generated sheets →
+5. renderer/view+edit → 6. CSS → 7. editor page → 8. implementation phases.
+
+---
+
+## 1. Markup language & parser
+
+### Pipeline (all in `shared/sheet/`, used by server and client)
+1. `parse(source) → { root, diagnostics }` — syntax only, knows nothing about tags. Error-recovering: collects all
+   errors with line/column instead of stopping at the first.
+2. `validate(root, registry, contentTypeSchema) → { tree, diagnostics }` — checks tags/attrs/children/field bindings,
+   coerces attribute strings to typed props, outputs a normalized tree the renderer consumes.
+3. Renderer only ever sees the validated tree. Only `markup` source is stored; parse+validate runs on save (reject on
+   errors) and on load (cheap; cache later if needed).
+
+### Syntax
+- Elements: `<Section title="Abilities">…</Section>`, self-closing `<Number field="str" />`.
+- Tag names: PascalCase canonical (`Section`); matched case-insensitively so `<section>` works. (decided)
+- Attributes: `name="value"` or `name='value'`; bare `name` = boolean true. No unquoted values. Duplicate attr = error.
+- Text: allowed directly inside layout tags; renders as a paragraph. Whitespace collapsed like HTML. (decided)
+- Interpolation: `{path}` in text and in attribute values → field value (path lookup only, no expressions until the
+  formulas phase). Missing value → empty. Literal braces: `\{` `\}`, literal backslash `\\`. (decided)
+- Comments: `<!-- … -->`.
+- Entities: `&lt; &gt; &amp; &quot; &apos;` and numeric `&#123;` / `&#x7B;`.
+- No raw HTML, no `on*`/event attrs, no `style` attr, no URLs (internal `Ref` links only). Everything renders as text
+  through Vue, so there is no HTML injection path.
+
+### Field paths
+- Dotted: `field="stats.str"`, numeric segments allowed (`attacks.0.name`).
+- Inside `<List field="inventory">`, paths are relative to the current item; a leading `/` means root
+  (`/name`). Same rule for `{…}` interpolation. Nested Lists: relative to the innermost item. (decided)
+
+### AST (parser output)
+```ts
+type Loc = { start: { line: number; column: number; offset: number }; end: { … } };
+type SheetNode = SheetElement | SheetText;
+interface SheetElement { type: "element"; tag: string; attrs: SheetAttr[]; children: SheetNode[]; selfClosing: boolean; loc: Loc }
+interface SheetAttr    { name: string; value: TextPart[] | true; loc: Loc }
+interface SheetText    { type: "text"; parts: TextPart[]; loc: Loc }
+type TextPart = string | { path: string; loc: Loc };
+interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc: Loc; code: string }
+```
+
+### Error recovery
+- Mismatched close tag: if it matches an open ancestor, auto-close the tags in between (one "unclosed <X>" error each);
+  otherwise report "unexpected </X>" and ignore it.
+- EOF with open tags → "unclosed <X>" pointing at the open tag.
+- Bad attribute syntax → error, skip to next `>`/whitespace, keep going.
+- Unterminated comment/string/`{` → error at its start.
+
+### Limits (enforced by parser)
+- Source ≤ 100 KB, nesting depth ≤ 32, ≤ 5,000 nodes → error beyond.
+
+### Implementation
+- Hand-written scanner + recursive-descent parser, ~200–300 lines, no dependency: `shared/sheet/parser.ts`
+  (decided over XML libraries / `htmlparser2`: our syntax isn't valid XML — valueless attrs, case-insensitive tags;
+  strict XML parsers stop at the first error and lenient ones never report errors; interpolation/escapes/limits
+  would need our own pass anyway; no DTD/entity-expansion surface).
+- Tests: `shared/sheet/parser.test.ts` (vitest) — valid trees, every error kind with exact line/col, recovery keeps
+  later valid nodes, entity/escape/interpolation handling, limits.
+
+---
+
+## 2. Tag catalog
+
+Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
+list; required; default), allowed children, and which schema field types it may bind to. Numeric/text attrs accept
+`{path}` interpolation (e.g. `max="{hpMax}"`). Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`) and
+renders a fixed hook class `sheet-<tag>`.
+
+### Layout
+| Tag | Attrs | Children | Renders |
+|---|---|---|---|
+| `Sheet` | — | any | root wrapper; optional (implicit if omitted) |
+| `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header |
+| `Grid` | `cols` (1–12, default 2), `gap` (sm/md/lg) | any | CSS grid, 1 column on mobile |
+| `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
+| `Tabs` / `Tab` | Tab: `label` (req), `icon` | Tabs: only `Tab` | `UTabs` |
+| `Divider` | `label` | none | `USeparator` |
+| `Heading` | `level` (1–4) | text | h2–h5 |
+| `Note` | — | text | muted paragraph |
+| `Callout` | `color`, `icon`, `title` | text | `UAlert` |
+| `Badge` | `color` | text | `UBadge` |
+| `Collapsible` | `title` (req), `subtitle`, `icon`, `open` | any | `UCollapsible`: clickable header, children shown on expand (e.g. one per `List` item) |
+
+`Section` also accepts `collapsible` and `collapsed`. `Table` accepts a `RowDetails` child (any content) rendered
+in `UTable`'s expandable rows.
+
+### Fields
+Common attrs: `field` (req), `label` (default: humanized last path segment, `hitPoints` → "Hit Points"), `hint`.
+View mode renders formatted values, edit mode renders the input.
+
+| Tag | Extra attrs | Binds | Edit input |
+|---|---|---|---|
+| `Text` | `multiline`, `placeholder` | string | `UInput` / `UTextarea` |
+| `Number` | `min`, `max`, `step`, `variant` (input/stat) | number | `UInputNumber`; `stat` = big centered number + small label (no separate `Stat` tag — decided) |
+| `Checkbox` / `Toggle` | — | boolean | `UCheckbox` / `USwitch` |
+| `Select` | `options` (comma list, req) | string | `USelect` |
+| `Tags` | — | array of string | `UInputTags` |
+| `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
+| `Ref` | — | resourceRef / `content` | link to the Resource; edit: picker (see "Content fields") |
+| `Value` | `format` | any | read-only in both modes |
+| `Field` | — | any | picks input from schema type (decided); generated sheets mostly use this |
+| `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
+| `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
+
+Image URLs: https only. The schema has no image type, so this is enforced where the tag is used: `Image` renders only
+https URLs, and its edit input validates client-side. Uploads later, same field shape.
+
+Label resolution: `label` attr → schema field `label` → humanized field name. `hint` falls back to schema
+`description`. (decided: `ContentFieldSchema` entries gain optional `label` and `description`.)
+
+### Content fields: references and local data (decided)
+- Schema type `{ type: "content", contentTypeId, allow: "ref" | "local" | "both", required }` replaces the old
+  `contentType` type (whose validator wrongly required the value to equal the ContentType id).
+- Value is a **string** = id of an existing Content of that ContentType (reference), or an **object** = local data
+  validated against that ContentType's schema, including its own `name`. `allow` restricts which forms are accepted.
+- Paths continue through it into that ContentType's schema: `class.hitDie`, `class.name`, `item.weight`. Works in
+  arrays: `inventory: [{ item: content(Item), qty: number }]` → `item.weight` next to `qty`.
+- Referenced values are **live and read-only** through the sheet; local values are editable. Edit mode shows a
+  searchable picker of readable Content of that type (for `ref`/`both`), a "Custom" option creating a local object
+  (for `local`/`both`), and "Make custom copy" turning a reference into local data.
+- Depth: paths may cross up to **3** content fields (`class.subclass.feature.name`); deeper is a validation error.
+- Loading: `GET /api/content/[id]` walks the data, batch-loads referenced Content one level at a time (≤ 3 queries),
+  skips cycles, caps at 300 refs, drops any the viewer can't read, and returns
+  `refs: { [id]: { name, contentTypeId, data } }`. Unreadable or missing refs render as "Restricted"/"Missing".
+- Validation: Content save checks each referenced id exists, has the right ContentType, and is readable by the
+  saving user; it validates local objects
+  against the referenced schema (recursing up to depth 3; cycles in ContentType schemas stop there).
+  The Sheet validator loads the referenced ContentType schemas (server: batch query; client: sent with the Content
+  GET / editor page as `schemas: { [contentTypeId]: schema }`).
+- Content list API gains `?contentTypeId=` filtering for the picker.
+
+### Built-in `name` field (decided)
+- Every ContentType implicitly has a required string field `name`, bound to the Content's `resource.name` rather than
+  `content.data`. No other resource/content column is exposed this way.
+- Renderer root scope is `{ ...data, name: resource.name }`; on save the `name` key is split out and sent as the PATCH
+  `name` (same request), the rest as `data`.
+- ContentType schemas may not define a `name` key (rejected on ContentType create/update).
+- If Content create/update `data` contains a `name` key, it is moved to the resource name and removed from `data`
+  (an explicit body `name` wins if both are sent). Existing test rows: same move in a migration. (decided)
+- The validator treats `name` as a known string field, so `<Text field="name" />` / `{/name}` always work.
+
+### Repeaters
+| Tag | Attrs | Children | Notes |
+|---|---|---|---|
+| `List` | `field` (array), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder; `field="."` = the item itself (arrays of primitives) |
+| `Table` / `Column` | Table: `field`; Column: `field`, `label`, `width` | Table: only `Column` | `UTable`; cell input picked from schema type |
+
+---
+
+## 3. Validation against the ContentType schema
+
+`validate()` in `shared/sheet/validate.ts`. Errors block Sheet save; warnings are shown in the editor only.
+
+Structural (errors): unknown tag; unknown attr; missing required attr; attr value not coercible (e.g. `cols="abc"`,
+enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Divider`).
+
+Field paths — resolved through the schema, following `List` scopes (relative to innermost item, `/` = root, `.` =
+the item):
+| Case | Strict schema | Non-strict schema |
+|---|---|---|
+| Path not in schema | error | warning (data may hold extra keys) |
+| Tag can't bind that field type (e.g. `Number` on a string) | error | error |
+| Field is `any` | allowed, uses `Value`-style display for `Field` | same |
+| `List`/`Table` on a non-array | error | error |
+| Relative path inside a `List` of primitives (other than `.`) | error | error |
+| `{path}` interpolation not in schema | error | warning |
+| Path crosses > 3 `content` fields | error | error |
+| Path continues into a `content` field | resolved against the referenced ContentType's schema (its strictness applies) | same |
+
+Render time (data can drift from the schema, e.g. non-strict types or older rows): a missing value renders empty,
+a wrong-typed value renders as read-only text. Neither throws.
+
+Schema edits that break Sheets (decided): ContentType PATCH validates every Sheet of that type against the new schema.
+If any gain errors and the body lacks `confirmBrokenSheets: true`, return 409 with the affected Sheets (id, name,
+first errors); the UI lists them with links and asks to confirm, then resends with the flag.
+
+Sheets with errors still render (decided): each broken node becomes a placeholder ("Unknown field `hp`") for users
+with edit access to the Sheet, and is omitted for everyone else; valid nodes render normally.
+
+---
+
+## 4. Generated sheets
+
+Generator: `generateSheetMarkup(schema)` in `shared/sheet/generate.ts`, a pure function (unit-tested) producing
+ordinary markup, so it goes through the same parse/validate/render path as authored Sheets:
+- `<Heading>{/name}</Heading>` at top (built-in name field; `<Text field="name">` in edit mode via `Field`).
+- Top-level primitive fields → one "Details" `Section` with `<Grid cols="2">` of `<Field>`s.
+- Object field → its own `Section` titled by label, recursing.
+- Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
+- Array of strings → `Tags`; other primitive arrays → `List field="."`.
+- `resourceRef` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)
+  showing the referenced ContentType's primitive fields, one level deep, plus the ref/custom picker in edit mode.
+- Order = schema key order. `content_type.schema` is `jsonb`, which does not preserve key order, so it becomes
+  `json` (decided): Drizzle `json("schema")` + migration `ALTER COLUMN "schema" SET DATA TYPE json USING "schema"::json`
+  (existing rows keep their already-scrambled order; test data only).
+
+Storage (decided): **computed, never stored.** No sheet row, no sync code.
+- Resolution for a Content: if `content.sheetId` is set → that Sheet if the viewer can read it, else generated.
+  If unset → the ContentType's default Sheet if readable, else generated.
+- Visibility: available wherever the Content is readable, which is always at least the ContentType's visibility.
+- Shown as "Generated (from schema)" in Sheet pickers; `sheetId: null` + no default = generated.
+- "Copy to new Sheet" on the ContentType/Sheet pages creates a normal Sheet prefilled with the generated markup.
+- Cost: one schema walk + normal parse/validate (sub-millisecond); no extra DB query since the Content GET already
+  loads the ContentType. If profiling ever shows a need, memoize per (sheet or contentType id, updatedAt).
+
+---
+
+## 5. Renderer, view & edit
+
+API: `GET /api/content/[id]` adds `sheet: { id | null, name, markup, css, source: "selected" | "default" |
+"generated" }` and `schema` (the ContentType schema, needed for `Field` and validation). Resolution per section 4.
+
+Components (`app/components/sheet/`):
+- `SheetRenderer.vue` — props: `markup`, `css`, `schema`, `modelValue` (data incl. `name`), `mode` (view/edit),
+  `canEditSheet`. Runs parse+validate (computed), renders the tree, emits `update:modelValue`.
+- `SheetNode.vue` — recursive; looks up the registry entry, renders the matching `Sheet*` component.
+- One small component per tag (`SheetSection.vue`, `SheetNumber.vue`, …). Field components get their value/setter
+  through a provided scope (`useSheetScope()`), which `List` re-provides per item.
+
+`ContentDetail.vue`:
+- Replaces the Data card with `<SheetRenderer>`. The existing Edit modal keeps Slug, Visibility, saved Sheet choice,
+  and the raw JSON editor ("Advanced").
+
+Edit + Autosave switches (decided):
+- Header shows two switches when `canEdit`: **Edit** and **Autosave**. Their initial state comes from the Sheet;
+  toggling is per page view (not persisted).
+- New `sheet` columns: `defaultEditMode boolean not null default false`, `defaultAutosave boolean not null default
+  false`, editable in the Sheet form/editor and accepted on Sheet create/update.
+- Generated sheets take defaults from the ContentType's `contentCategory`: `playerCharacter` → both on;
+  `nonPlayerCharacter` → edit off, autosave on; `general`/`document` → both off.
+- Edit on, Autosave off: draft copy, Save/Cancel buttons, unsaved-changes guard on navigation.
+- Edit on, Autosave on: each change saves after ~800 ms of inactivity; status indicator (Saving… / Saved / Error).
+  A validation error keeps the draft and shows the message; the next change retries.
+- Edit off: read-only view (the Autosave switch only presets how editing behaves once turned on), except `live` fields.
+- One draft model for all modes: whenever the draft differs from the saved data and autosave is off, a
+  Save/Discard bar is shown (covers `live` edits made in view mode).
+
+Per-field attributes (decided), boolean, allowed on any field tag and on `List`/`Table`:
+- `live` — editable even with Edit off (for users with `canEdit`). Saves via autosave if on, else via the Save bar.
+- `locked` — read-only even with Edit on until the user clicks the field's small pencil button, which unlocks that
+  field for the rest of the page view.
+- They compose: a field is editable when `canEdit && (editMode || live)`; if `locked`, it additionally needs its
+  unlock click. `live locked` = editable in view mode after unlocking.
+- Also allowed on layout tags, where they are inherited by every field inside; a descendant opts out with
+  `live="false"` / `locked="false"`.
+
+Concurrent edits (decided): Content PATCH accepts `expectedUpdatedAt`; if `resource.updatedAt` differs → 409. UI
+offers Reload (discard mine) or Overwrite (resend without the check). Autosave pauses on 409 until resolved, and
+updates its `expectedUpdatedAt` from each successful response.
+
+Viewer sheet switching (decided): a dropdown lists the generated sheet + every readable Sheet of the ContentType;
+the choice is local to that page view. Only editors change the saved `sheetId` (Edit modal).
+
+---
+
+## 6. Scoped CSS
+
+`shared/sheet/css.ts`, using `postcss` + `postcss-selector-parser` (new dependencies; pure JS, so the editor preview
+runs the exact same code in the browser, lazy-loaded there).
+
+- On Sheet save: parse; errors (with line/col) reject the save. Source ≤ 50 KB. Stored as authored.
+- On serve (Content GET / editor preview): every selector is prefixed with `[data-sheet="<sheetId>"]`; the sheet root
+  element gets `data-sheet`, `isolation: isolate` and `contain: paint`. `contain: paint` also makes the root the
+  containing block for `position: fixed`, so no position rules are needed — nothing can draw outside the sheet.
+- `.dark` at the start of a selector stays outside the prefix (`.dark .x` → `.dark [data-sheet] .x`) so sheets can
+  follow Nuxt UI's color mode.
+- Keyframe names are prefixed per sheet so they can't clash with the app's or other sheets'.
+- Rejected: `@import`, `@font-face`, `@namespace`, `url()`, `image-set()`, `expression()`, `-moz-binding`,
+  `behavior`. Allowed: `@media`, `@supports`, `@container`, `@layer`, `@keyframes`, CSS variables, `!important`.
+- Authors can use Nuxt UI tokens (`var(--ui-primary)`, `var(--ui-text-muted)`, …) to match the app theme.
+
+- `:root`, `html`, `body` are rewritten to the sheet root itself (decided), so `:root { --accent: red }` works.
+- Fonts (decided): curated, self-hosted list. `@nuxt/fonts` (already installed by `@nuxt/ui`) only scans the app's
+  own CSS at build time, so the sheet fonts are declared in `nuxt.config.ts` `fonts.families` with `global: true`.
+  The list lives in `shared/sheet/fonts.ts` (also used by the editor's reference panel); a `font-family` naming an
+  unlisted font is a warning, not an error. Starting set chosen at implementation time (a few display/serif fonts).
+
+---
+
+## 7. Sheet editor page
+
+Route `app/pages/sheets/[id]/edit.vue` (`middleware: "auth"`; redirects to `/sheets/[id]` when `!canEdit`). The Sheet
+detail page's Edit button goes here; its modal is removed. Creating a Sheet (list page modal) redirects here after
+create.
+
+Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
+- Left: tabs **Markup** | **CSS** | **Settings** (Name, Slug, Visibility, Default sheet, Default edit mode, Default
+  autosave), then a diagnostics list (errors + warnings, click → jump to line).
+- Right: live preview via the real `SheetRenderer` with its Edit/Autosave switches (preview edits never save), plus a
+  data picker: **Sample data** (generated from the schema: labels as text, 10 for numbers, 2 items per array) or any
+  readable Content of this ContentType.
+- Parse/validate/CSS-scope run client-side, debounced ~200 ms, with the same `shared/sheet` code the server uses.
+- Toolbar: Save (Ctrl/Cmd+S), "Insert generated markup" (replaces markup after confirmation), unsaved-changes guard.
+- Reference slide-over: every tag with its attrs (generated from the registry), the ContentType's field paths with
+  types (click to insert `field="…"`), the font list, and the Nuxt UI CSS tokens.
+
+Code editor (decided): **CodeMirror 6**, client-only, loaded only on this page. Markup via `@codemirror/lang-xml`
+with its element/attribute spec generated from the registry, plus a completion source for field paths from the
+schema; CSS via `@codemirror/lang-css`; `@codemirror/lint` shows our diagnostics inline. Themed with Nuxt UI tokens.
+Wrapped in `app/components/sheet/CodeEditor.client.vue`.
+
+---
+
+## 8. Implementation phases
+
+Each phase ends with `pnpm test && pnpm typecheck && pnpm lint`, template compilation of changed `.vue` files via
+`@vue/compiler-sfc`, and a manual dev-server check; one commit per phase.
+
+1. **Groundwork**
+   - Add `vitest` (`pnpm test`, `vitest.config.ts` covering `shared/**/*.test.ts`).
+   - `ContentFieldSchema`: remove `localType`; replace `contentType` with `content` (`contentTypeId`, `allow`);
+     add optional `label`, `description`. Update `server/utils/content-validation.ts` accordingly (ref existence,
+     type and readability; local objects against the referenced schema, depth ≤ 3) — it becomes async since it
+     loads referenced schemas/Content. Move the type to
+     `shared/content-schema.ts` (re-exported from `server/database/schema.ts`) so client code can use it.
+   - TypeBox schema for `ContentFieldSchema` in `server/utils/api-schemas.ts`, replacing the any-object `schema` in
+     `contentTypeCreateSchema`/`contentTypePatchSchema`; reject a top-level `name` key.
+   - `content_type.schema` jsonb → json; `sheet` gets `default_edit_mode`, `default_autosave`. Migration also moves
+     any `data.name` into `resource.name` for existing Content. Read the generated migration before applying.
+   - Content create/PATCH: move `data.name` to the resource name; PATCH accepts `expectedUpdatedAt` (409 on mismatch).
+2. **Parser** — `shared/sheet/parser.ts` + tests.
+3. **Registry + validator** — `shared/sheet/registry.ts`, `validate.ts` + tests. Sheet create/PATCH reject markup
+   errors (400 with diagnostics); ContentType PATCH returns 409 listing Sheets it would break unless
+   `confirmBrokenSheets: true`.
+4. **Generator** — `shared/sheet/generate.ts` + tests (generated markup must validate cleanly against its schema).
+5. **Renderer, view mode** — `app/components/sheet/*`; `GET /api/content/[id]` returns resolved sheet, schema,
+   referenced schemas and `refs`; `?contentTypeId=` filter on `GET /api/content`;
+   `ContentDetail.vue` renders it; viewer sheet switcher.
+6. **Edit mode** — draft model, Edit/Autosave switches, Save/Discard bar, autosave, `live`/`locked`, 409 handling,
+   Markdown (`UEditor`) and Image fields, content-field picker / Custom / "Make custom copy"; Content Edit modal keeps slug/visibility/sheet/raw JSON.
+7. **Scoped CSS + fonts** — `shared/sheet/css.ts` + tests (every rejected construct, prefixing, `.dark`, `:root`,
+   keyframes); Sheet save validation; curated fonts in `nuxt.config.ts`.
+8. **Sheet editor page** — `app/pages/sheets/[id]/edit.vue`, CodeMirror, preview, reference slide-over, "Copy to new
+   Sheet" from generated.
+9. **Later** — formulas (safe expression parser), image uploads, dice rolls.
+
+Also update `CLAUDE.md` (sheet system section, `shared/` code, `pnpm test`) and remove the TODO.md item once done.
+
+## Verification
+- `pnpm test` (vitest) for `shared/sheet/*`; `pnpm typecheck && pnpm lint`; compile changed templates with
+  `@vue/compiler-sfc`; manual check in the dev server once rendering exists.
