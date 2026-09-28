@@ -88,6 +88,7 @@ async function changeRole(member: Member, role: GroupRole) {
 const addForm = reactive({ username: "", role: "member" as GroupRole });
 
 async function addMember() {
+  if (!addForm.username.trim() || memberBusy.value) return;
   const added = await saveMember({
     username: addForm.username.trim(),
     role: addForm.role,
@@ -223,21 +224,26 @@ async function remove() {
         </template>
 
         <div class="space-y-4">
-          <UForm
-            v-if="isAdmin"
-            :state="addForm"
-            class="flex flex-wrap items-end gap-2"
-            @submit="addMember"
-          >
-            <UFormField name="username" label="Username" class="min-w-48 flex-1">
+          <!-- Deliberately not a <form>, and nothing says "username" in the
+               name/placeholder: Firefox treats a lone username-like field in a
+               form as a login form and autofills saved credentials, ignoring
+               autocomplete="off". -->
+          <div v-if="isAdmin" class="flex flex-wrap items-end gap-2">
+            <UFormField label="Username" class="min-w-48 flex-1">
               <UInput
                 v-model="addForm.username"
                 placeholder="their-username"
                 class="w-full"
-                required
+                autocomplete="off"
+                autocapitalize="none"
+                :spellcheck="false"
+                data-1p-ignore
+                data-lpignore="true"
+                data-bwignore
+                @keydown.enter.prevent="addMember"
               />
             </UFormField>
-            <UFormField name="role" label="Role">
+            <UFormField label="Role">
               <USelect
                 v-model="addForm.role"
                 :items="roleOptions"
@@ -245,13 +251,14 @@ async function remove() {
               />
             </UFormField>
             <UButton
-              type="submit"
               icon="i-lucide-user-plus"
               :loading="memberBusy"
+              :disabled="!addForm.username.trim()"
+              @click="addMember"
             >
               Add
             </UButton>
-          </UForm>
+          </div>
 
           <UAlert
             v-if="memberError"
