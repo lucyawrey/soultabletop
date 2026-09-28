@@ -3,7 +3,7 @@ import type { TableColumn } from "@nuxt/ui";
 import {
   extractApiErrorMessage,
   extractBrokenSheets,
-  type BrokenSheet,
+  type BrokenSheets,
 } from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
@@ -83,7 +83,7 @@ const form = reactive({
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 const formBusy = ref(false);
 const formError = ref("");
-const brokenSheets = ref<BrokenSheet[]>([]);
+const brokenSheets = ref<BrokenSheets>();
 
 function openCreate(systemId?: string) {
   const system =
@@ -92,7 +92,7 @@ function openCreate(systemId?: string) {
 
   editingType.value = null;
   formError.value = "";
-  brokenSheets.value = [];
+  brokenSheets.value = undefined;
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
@@ -107,7 +107,7 @@ function openCreate(systemId?: string) {
 function openEdit(item: ContentTypeItem) {
   editingType.value = item;
   formError.value = "";
-  brokenSheets.value = [];
+  brokenSheets.value = undefined;
   form.slug = item.slug;
   form.name = item.name;
   form.isPubliclyReadable = item.isPubliclyReadable;
@@ -136,7 +136,7 @@ watch(
 async function submitForm(confirmBrokenSheets = false) {
   formBusy.value = true;
   formError.value = "";
-  brokenSheets.value = [];
+  brokenSheets.value = undefined;
 
   try {
     const schema = JSON.parse(form.schema) as unknown;
@@ -387,8 +387,8 @@ async function remove() {
             :description="formError"
           />
           <BrokenSheetsAlert
-            v-if="brokenSheets.length"
-            :sheets="brokenSheets"
+            v-if="brokenSheets"
+            :broken="brokenSheets"
             :loading="formBusy"
             @confirm="submitForm(true)"
           />

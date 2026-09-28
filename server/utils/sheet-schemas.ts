@@ -196,26 +196,39 @@ export interface BrokenSheet {
   errors: string[];
 }
 
+export interface BrokenSheets {
+  // Broken Sheets `user` can read, with details.
+  sheets: BrokenSheet[];
+  // How many more broken Sheets `user` can't read (no details given).
+  hiddenCount: number;
+}
+
 // Sheets that would gain errors if `contentTypeId` had `rules` instead of its
 // stored schema: Sheets of that ContentType and of ContentTypes that reach it
-// through `content` fields.
+// through `content` fields. Only Sheets `user` can read are described; others
+// (which may belong to anyone) are only counted.
 export async function findSheetsBrokenBy(
+  user: Pick<User, "id" | "name">,
   contentTypeId: string,
   rules: ContentTypeRules,
-): Promise<BrokenSheet[]> {
+): Promise<BrokenSheets> {
   const typeIds = await contentTypesReaching(contentTypeId);
   const sheets = await useDatabase()
     .select({
-      id: sheet.resourceId,
-      name: resource.name,
+      resource,
       contentTypeId: sheet.contentTypeId,
       markup: sheet.markup,
     })
     .from(sheet)
     .innerJoin(resource, eq(resource.id, sheet.resourceId))
     .where(inArray(sheet.contentTypeId, typeIds));
+  const context = await loadResourceAccessContext(
+    user,
+    sheets.map((item) => item.resource.id),
+  );
 
   const broken: BrokenSheet[] = [];
+  let hiddenCount = 0;
   const schemaCache = new Map<string, [SheetSchemas, SheetSchemas] | undefined>();
   for (const item of sheets) {
     if (!item.markup.trim()) continue;
@@ -236,10 +249,13 @@ export async function findSheetsBrokenBy(
     );
     const known = new Set(errorsBefore.map((diagnostic) => diagnostic.message));
     const added = errorsAfter.filter((diagnostic) => !known.has(diagnostic.message));
-    if (added.length) {
+    if (!added.length) continue;
+    if (!getResourceAccess(item.resource, context).canRead) {
+      hiddenCount += 1;
+    } else {
       broken.push({
-        id: item.id,
-        name: item.name,
+        id: item.resource.id,
+        name: item.resource.name,
         contentTypeId: item.contentTypeId,
         errors: added.slice(0, 3).map(
           (diagnostic) =>
@@ -248,5 +264,5 @@ export async function findSheetsBrokenBy(
       });
     }
   }
-  return broken;
+  return { sheets: broken, hiddenCount };
 }
