@@ -302,6 +302,12 @@ runs the exact same code in the browser, lazy-loaded there).
   with `useHead` and marks its root with `data-sheet`, `isolate`, and `contain: paint`.
 
 - `:root`, `html`, `body` are rewritten to the sheet root itself (decided), so `:root { --accent: red }` works.
+- Selector rule (security boundary): every selector's subject must be inside the Sheet. So `:root`/`html`/`body` may
+  only start a selector (not inside `:not()`/`:is()`/`:has()`/…), nothing may follow them with `~`/`+`, top-level
+  selectors can't start with `~`/`+`, nested rules can't use `&` inside pseudo-class functions, and rules nested in a
+  root-targeting rule (`:root { … }`, `.dark { … }`) can't use `& ~`/`& +` or a leading `~`/`+`. Violations are errors
+  (the rule is dropped). The same checks run on save (no scope ID) and when scoping. Don't loosen these without
+  re-checking that nothing can style the app outside the Sheet; tests in `shared/sheet/css.test.ts`.
 - Fonts (decided): curated, self-hosted list. `@nuxt/fonts` (already installed by `@nuxt/ui`) only scans the app's
   own CSS at build time, so the sheet fonts are declared in `nuxt.config.ts` `fonts.families` with `global: true`.
   The list lives in `shared/sheet/fonts.ts` (also used by the editor's reference panel); a `font-family` naming an

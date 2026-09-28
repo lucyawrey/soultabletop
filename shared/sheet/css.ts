@@ -68,23 +68,80 @@ function scopeAttribute(scopeId: string) {
   });
 }
 
-// Limits a selector list to the Sheet: `.x` -> `[data-sheet="id"] .x`;
-// `:root`, `html`, and `body` become the Sheet root itself; a leading `.dark`
-// (Nuxt UI's color mode class) stays outside.
+// A selector the Sheet may not use; the message is shown to the author.
+export class SheetSelectorError extends Error {}
+
+type SelectorNode = selectorParser.Node;
+type SelectorItem = selectorParser.Selector;
+type SelectorChild = SelectorItem["nodes"][number];
+
+function isRootNode(node: SelectorNode) {
+  return (
+    (node.type === "pseudo" && node.value.toLowerCase() === ":root") ||
+    (node.type === "tag" && ["html", "body"].includes(node.value.toLowerCase()))
+  );
+}
+
+function isSiblingCombinator(node: SelectorNode | undefined) {
+  return node?.type === "combinator" && ["~", "+"].includes(node.value.trim());
+}
+
+// Whether `node` sits inside a pseudo-class function like :not(…) or :has(…).
+function insidePseudoFunction(node: SelectorNode, item: SelectorItem) {
+  for (let parent = node.parent; parent && parent !== item; parent = parent.parent) {
+    if (parent.type === "pseudo") return true;
+  }
+  return false;
+}
+
+// The top-level compound selectors of `item`, split at combinators.
+function compounds(item: SelectorItem) {
+  const result: SelectorChild[][] = [[]];
+  for (const node of item.nodes) {
+    if (node.type === "combinator") result.push([]);
+    else result.at(-1)!.push(node);
+  }
+  return result;
+}
+
+// Limits a selector list to the Sheet, so every selector's subject (the
+// element it styles) is inside the Sheet: `.x` -> `[data-sheet="id"] .x`;
+// `:root`, `html`, and `body` become the Sheet root itself, but only when they
+// start the selector; a leading `.dark` (Nuxt UI's color mode class) stays
+// outside. Anything that could reach outside (root selectors inside :not()
+// and friends, sibling combinators off the root, a leading ~ or +) throws a
+// SheetSelectorError.
 export function scopeSheetSelector(selector: string, scopeId: string) {
   return selectorParser((selectors) => {
     selectors.each((item) => {
-      let replacedRoot = false;
+      if (isSiblingCombinator(item.first)) {
+        throw new SheetSelectorError(
+          `"${String(item).trim()}" can't start with ${String(item.first).trim()}`,
+        );
+      }
+
+      const leading = compounds(item)[0]!;
+      const roots: SelectorNode[] = [];
       item.walk((node) => {
-        const isRoot =
-          (node.type === "pseudo" && node.value.toLowerCase() === ":root") ||
-          (node.type === "tag" && ["html", "body"].includes(node.value.toLowerCase()));
-        if (isRoot) {
-          node.replaceWith(scopeAttribute(scopeId));
-          replacedRoot = true;
+        if (!isRootNode(node)) return;
+        // Checked first: only direct children can be in `leading`.
+        if (node.parent !== item || !leading.includes(node as SelectorChild)) {
+          throw new SheetSelectorError(
+            `${node.value} can only start a selector (it means this Sheet); "${String(item).trim()}" would reach outside the Sheet`,
+          );
         }
+        roots.push(node);
       });
-      if (replacedRoot) return;
+      if (roots.length) {
+        const afterLeading = item.nodes[item.nodes.indexOf(leading.at(-1)!) + 1];
+        if (isSiblingCombinator(afterLeading)) {
+          throw new SheetSelectorError(
+            `"${String(item).trim()}" would style elements next to the Sheet, outside it`,
+          );
+        }
+        for (const node of roots) node.replaceWith(scopeAttribute(scopeId));
+        return;
+      }
 
       const [first, second] = item.nodes;
       const leadingDark =
@@ -114,6 +171,72 @@ export function scopeSheetSelector(selector: string, scopeId: string) {
       }
     });
   }).processSync(selector);
+}
+
+// Whether a scoped selector list styles the Sheet root itself (its last
+// compound holds the scope attribute), e.g. `:root` or `.dark`.
+function selectorTargetsScope(selector: string) {
+  let targets = false;
+  selectorParser((selectors) => {
+    selectors.each((item) => {
+      if (
+        compounds(item)
+          .at(-1)!
+          .some((node) => node.type === "attribute" && node.attribute === "data-sheet")
+      )
+        targets = true;
+    });
+  }).processSync(selector);
+  return targets;
+}
+
+// Checks a nested rule's selector (relative to its parent rule) and returns
+// whether it, too, styles the Sheet root. `&` inside :not()/:has()/… could
+// match elements outside the Sheet; a ~ or + off the root would reach its
+// siblings.
+function checkNestedSelector(selector: string, parentTargetsRoot: boolean) {
+  let targets = false;
+  selectorParser((selectors) => {
+    selectors.each((item) => {
+      item.walk((node) => {
+        if (node.type === "nesting" && insidePseudoFunction(node, item)) {
+          throw new SheetSelectorError(
+            `& can't be used inside :not(), :has(), or other pseudo-classes in Sheet CSS ("${String(item).trim()}")`,
+          );
+        }
+      });
+      if (!parentTargetsRoot) return;
+      const hasNesting = item.nodes.some((node) => node.type === "nesting");
+      // Without a top-level &, the selector means `& <selector>`, so only a
+      // leading ~ or + attaches to the root.
+      if (!hasNesting && isSiblingCombinator(item.first)) {
+        throw new SheetSelectorError(
+          `"${String(item).trim()}" would style elements next to the Sheet, outside it`,
+        );
+      }
+      let compoundHasNesting = false;
+      item.nodes.forEach((node) => {
+        if (node.type === "nesting") compoundHasNesting = true;
+        if (node.type !== "combinator") return;
+        if (compoundHasNesting && isSiblingCombinator(node)) {
+          throw new SheetSelectorError(
+            `"${String(item).trim()}" would style elements next to the Sheet, outside it`,
+          );
+        }
+        compoundHasNesting = false;
+      });
+      if (compounds(item).at(-1)!.some((node) => node.type === "nesting")) targets = true;
+    });
+  }).processSync(selector);
+  return targets;
+}
+
+// The nearest enclosing rule (through at-rules like @media), if any.
+function closestRule(node: CssNode): Rule | undefined {
+  for (let parent = node.parent; parent; parent = parent.parent) {
+    if (parent.type === "rule") return parent as Rule;
+  }
+  return undefined;
 }
 
 function insideKeyframes(node: CssNode) {
@@ -227,15 +350,33 @@ export function processSheetCss(source: string, scopeId?: string): SheetCssResul
     }
   });
 
+  // Rules whose subject is the Sheet root itself (`:root { … }`,
+  // `.dark { … }`): rules nested in them could reach the root's siblings.
+  const targetsRoot = new Set<Rule>();
+  // Without a scope ID (checking on save), scope with a placeholder so the
+  // same rules are enforced.
+  const scope = scopeId ?? "00000000-0000-4000-8000-000000000000";
   root.walkRules((rule: Rule) => {
-    // Keyframe steps and nested rules (relative to their parent) stay as is.
-    if (insideKeyframes(rule) || rule.parent?.type === "rule") return;
+    if (insideKeyframes(rule)) return;
+    const parent = closestRule(rule);
     try {
-      rule.selector = scopeId
-        ? scopeSheetSelector(rule.selector, scopeId)
-        : selectorParser().processSync(rule.selector);
-    } catch {
-      report(rule, "css-selector", `Invalid selector: ${rule.selector}`);
+      if (parent) {
+        // Nested rules stay relative to their parent; only check them.
+        if (checkNestedSelector(rule.selector, targetsRoot.has(parent)))
+          targetsRoot.add(rule);
+      } else {
+        const scoped = scopeSheetSelector(rule.selector, scope);
+        if (selectorTargetsScope(scoped)) targetsRoot.add(rule);
+        if (scopeId) rule.selector = scoped;
+      }
+    } catch (error) {
+      report(
+        rule,
+        "css-selector",
+        error instanceof SheetSelectorError
+          ? error.message
+          : `Invalid selector: ${rule.selector}`,
+      );
       rule.remove();
     }
   });
