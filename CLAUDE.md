@@ -8,6 +8,7 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
   `zsh -ilc 'nvm use >/dev/null 2>&1 && <command>' 2>&1 | grep -v "command not found"`
 - Quote bracketed Nuxt paths in the shell: `"app/pages/games/[id].vue"`.
 - Verify with `pnpm typecheck && pnpm lint`. **Don't run `pnpm format`** — the user formats code themselves.
+- Typecheck and lint don't catch broken template structure (e.g. a missing closing tag). After template edits, request the page from the dev server (logged out, pages behind auth return a 302; a 500 body includes the Vite compile error). The user often has `pnpm dev` running already — check `lsof -iTCP -sTCP:LISTEN -P | grep node` for its port (3000 or 3001) before starting another, and never kill a dev server you didn't start.
 
 ## Data model
 
@@ -23,7 +24,7 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 - **Enum values** (Drizzle `pgEnum` and matching TypeBox `Type.Literal`s) are camelCase: single words lowercase (`admin`, `gm`, `general`), multi-word lowerCamelCase (`nonPlayerCharacter`, `playerCharacter`, `contentType`).
 - **Slugs**: forms use `useSlugFromName` (auto-generates from Name until the user edits the slug; pass a key like `"username"` for other field names) and show `slugError` inline via `UFormField :error`. `getSlugError` returns `undefined` when valid — never `""`, because `UFormField`'s `error` prop is `[Boolean, String]` and Vue casts `""` to `true`, marking the field as errored.
 - **API errors in forms**: every form/delete `catch` uses `extractApiErrorMessage()` from `app/utils/api-error.ts` and shows the message in a `UAlert` (inside the modal for delete dialogs).
-- **Pages**: each resource kind has a list page (`/things`) and a detail page (`/things/[id]`), all behind `middleware: "auth"`. Follow the existing pages for structure. `/content/[id]` and `/characters/[id]` share `app/components/ContentDetail.vue`.
+- **Pages**: each resource kind has a list page (`/things`) and a detail page (`/things/[id]`), all behind `middleware: "auth"`. Follow the existing pages for structure. `/content/[id]` and `/characters/[id]` share `app/components/ContentDetail.vue`. `/` is the sign-in/register form when logged out and a welcome dashboard when logged in, fed by `GET /api/dashboard`: recently updated Games the user or their Groups own or that the user is a member of, and Characters/Content owned by the user or their Groups. Public or merely shared items are deliberately excluded.
 - A lone "username"-like text field inside a `<form>` makes Firefox autofill saved logins (it ignores `autocomplete="off"`); see the add-member row in `app/pages/groups/[id].vue`.
 
 ## Database and migrations
