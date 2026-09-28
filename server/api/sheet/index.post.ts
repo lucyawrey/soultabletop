@@ -15,7 +15,10 @@ import {
   assertValidSheetMarkup,
   loadSheetSchemas,
 } from "../../utils/sheet-schemas";
-import { generateSheetMarkup } from "../../../shared/sheet/generate";
+import {
+  generatedSheetDefaults,
+  generateSheetMarkup,
+} from "../../../shared/sheet/generate";
 
 defineRouteMeta({
   openAPI: {
@@ -40,8 +43,14 @@ defineRouteMeta({
               },
               cssStyles: { type: "string" },
               isDefault: { type: "boolean" },
-              defaultEditMode: { type: "boolean" },
-              defaultAutosave: { type: "boolean" },
+              defaultEditMode: {
+                type: "boolean",
+                description: "Defaults by the ContentType's content category",
+              },
+              defaultAutosave: {
+                type: "boolean",
+                description: "Defaults by the ContentType's content category",
+              },
             },
           },
         },
@@ -81,6 +90,9 @@ export default defineEventHandler(async (event) => {
     typeResource.resource.id,
   ]);
   const typeAccess = getResourceAccess(typeResource.resource, context);
+  const switchDefaults = generatedSheetDefaults(
+    typeResource.type.contentCategory,
+  );
   if (!typeAccess.canRead)
     throw createError({
       statusCode: 403,
@@ -142,8 +154,12 @@ export default defineEventHandler(async (event) => {
           markup,
           cssStyles: typeof body.cssStyles === "string" ? body.cssStyles : "",
           isDefault: body.isDefault === true,
-          defaultEditMode: body.defaultEditMode === true,
-          defaultAutosave: body.defaultAutosave === true,
+          // Unless given, the Edit/Autosave switches start as the content
+          // category suggests (characters: on), like generated sheets.
+          defaultEditMode:
+            body.defaultEditMode ?? switchDefaults.defaultEditMode,
+          defaultAutosave:
+            body.defaultAutosave ?? switchDefaults.defaultAutosave,
         })
         .returning();
       return { ...createdResource, ...createdSheet };
