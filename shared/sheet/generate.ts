@@ -11,6 +11,8 @@ import type {
 import { humanizeFieldName } from "./registry";
 import type { SheetSchemas } from "./validate";
 
+export const GENERATED_SHEET_NAME = "Generated (from schema)";
+
 export type ContentCategory =
   | "general"
   | "nonPlayerCharacter"

@@ -233,8 +233,12 @@ Components (`app/components/sheet/`):
 - `SheetRenderer.vue` — props: `markup`, `css`, `schema`, `modelValue` (data incl. `name`), `mode` (view/edit),
   `canEditSheet`. Runs parse+validate (computed), renders the tree, emits `update:modelValue`.
 - `SheetNode.vue` — recursive; looks up the registry entry, renders the matching `Sheet*` component.
-- One small component per tag (`SheetSection.vue`, `SheetNumber.vue`, …). Field components get their value/setter
-  through a provided scope (`useSheetScope()`), which `List` re-provides per item.
+- One component per layout tag (`sheet/Section.vue`, …); all field tags share `sheet/Field.vue`, which picks the
+  display from the tag (or the schema type for `Field`/`Column`). Components read values through `useSheet()`
+  (`app/composables/useSheet.ts`); `List` rows and `Table` rows re-provide the scope via `sheet/Scope.vue`.
+- Path resolution and formatting are framework-free in `shared/sheet/runtime.ts` (unit-tested). A string where
+  fields are expected is a reference: it is looked up in `refs` and everything under it is read-only.
+- `Markdown` renders as plain pre-wrapped text until phase 6 adds `UEditor`.
 
 `ContentDetail.vue`:
 - Replaces the Data card with `<SheetRenderer>`. The existing Edit modal keeps Slug, Visibility, saved Sheet choice,

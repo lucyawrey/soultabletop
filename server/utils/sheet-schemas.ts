@@ -1,11 +1,18 @@
 import { createError } from "h3";
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import type { User } from "better-auth";
 import { contentType, resource, sheet } from "../database/schema";
 import {
   MAX_CONTENT_DEPTH,
   referencedContentTypeIds,
   type ContentTypeRules,
 } from "../../shared/content-schema";
+import {
+  GENERATED_SHEET_NAME,
+  generatedSheetDefaults,
+  generateSheetMarkup,
+  type ContentCategory,
+} from "../../shared/sheet/generate";
 import type { SheetDiagnostic } from "../../shared/sheet/parser";
 import {
   compileSheet,
@@ -13,6 +20,7 @@ import {
   type SheetSchemas,
 } from "../../shared/sheet/validate";
 import { useDatabase } from "./database";
+import { getResourceAccess, loadResourceAccessContext } from "./resource-access";
 
 // Loads a ContentType's rules plus those of every ContentType reachable
 // through `content` fields, up to MAX_CONTENT_DEPTH hops. `overrides` replaces
@@ -50,6 +58,64 @@ export async function loadSheetSchemas(
   const root = loaded.get(contentTypeId);
   if (!root) return undefined;
   return { root, types: Object.fromEntries(loaded) };
+}
+
+export interface ResolvedSheet {
+  id: string | null; // null for the generated sheet
+  name: string;
+  markup: string;
+  css: string;
+  source: "selected" | "default" | "generated";
+  defaultEditMode: boolean;
+  defaultAutosave: boolean;
+  canEdit: boolean;
+}
+
+// The Sheet to render a Content with: its selected Sheet if the viewer can read
+// it, else (when none is selected) its ContentType's default Sheet if
+// readable, else one generated from the schema.
+export async function resolveContentSheet(
+  user: Pick<User, "id" | "name">,
+  selectedSheetId: string | null,
+  contentTypeId: string,
+  category: ContentCategory,
+  schemas: SheetSchemas,
+): Promise<ResolvedSheet> {
+  const [row] = await useDatabase()
+    .select({ sheet, resource })
+    .from(sheet)
+    .innerJoin(resource, eq(resource.id, sheet.resourceId))
+    .where(
+      selectedSheetId
+        ? eq(sheet.resourceId, selectedSheetId)
+        : and(eq(sheet.contentTypeId, contentTypeId), eq(sheet.isDefault, true)),
+    )
+    .limit(1);
+  if (row) {
+    const context = await loadResourceAccessContext(user, [row.resource.id]);
+    const access = getResourceAccess(row.resource, context);
+    if (access.canRead) {
+      return {
+        id: row.resource.id,
+        name: row.resource.name,
+        markup: row.sheet.markup,
+        css: row.sheet.cssStyles,
+        source: selectedSheetId ? "selected" : "default",
+        defaultEditMode: row.sheet.defaultEditMode,
+        defaultAutosave: row.sheet.defaultAutosave,
+        canEdit: access.canEdit,
+      };
+    }
+  }
+  return {
+    id: null,
+    name: GENERATED_SHEET_NAME,
+    markup: generateSheetMarkup(schemas),
+    css: "",
+    source: "generated",
+    ...generatedSheetDefaults(category),
+    canEdit: false,
+  };
 }
 
 function formatDiagnostics(diagnostics: SheetDiagnostic[]) {
