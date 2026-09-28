@@ -8,6 +8,10 @@ import {
   requireResourceEditor,
   requireSlug,
 } from "../../utils/resource-management";
+import {
+  getResourceAccess,
+  loadResourceAccessContext,
+} from "../../utils/resource-access";
 import { parseBody, sheetPatchSchema } from "../../utils/api-schemas";
 
 defineRouteMeta({
@@ -51,24 +55,44 @@ export default defineEventHandler(async (event) => {
   const item = await requireResourceEditor(user, id);
   if (item.kind !== "sheet")
     throw createError({ statusCode: 404, statusMessage: "Sheet not found" });
-  return useDatabase().transaction(async (tx) => {
-  // Only one default Sheet per ContentType (partial unique index).
-  if (body.isDefault === true) {
-    const [current] = await tx
-      .select({ contentTypeId: sheet.contentTypeId })
-      .from(sheet)
-      .where(eq(sheet.resourceId, id));
-    if (current)
-      await tx
-        .update(sheet)
-        .set({ isDefault: false })
-        .where(
-          and(
-            eq(sheet.contentTypeId, current.contentTypeId),
-            ne(sheet.resourceId, id),
-          ),
-        );
+  const database = useDatabase();
+  const [current] = await database
+    .select({ contentTypeId: sheet.contentTypeId, isDefault: sheet.isDefault })
+    .from(sheet)
+    .where(eq(sheet.resourceId, id));
+  if (!current)
+    throw createError({ statusCode: 404, statusMessage: "Sheet not found" });
+  // The default Sheet belongs to the ContentType, so changing it (either way)
+  // needs edit access there, not just on this Sheet.
+  const isDefaultChanging =
+    body.isDefault !== undefined && body.isDefault !== current.isDefault;
+  if (isDefaultChanging) {
+    const [typeResource] = await database
+      .select()
+      .from(resource)
+      .where(eq(resource.id, current.contentTypeId));
+    const context = typeResource
+      ? await loadResourceAccessContext(user, [typeResource.id])
+      : null;
+    if (!typeResource || !context || !getResourceAccess(typeResource, context).canEdit)
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          "Only editors of the ContentType can change its default Sheet",
+      });
   }
+  return database.transaction(async (tx) => {
+  // Only one default Sheet per ContentType (partial unique index).
+  if (isDefaultChanging && body.isDefault === true)
+    await tx
+      .update(sheet)
+      .set({ isDefault: false })
+      .where(
+        and(
+          eq(sheet.contentTypeId, current.contentTypeId),
+          ne(sheet.resourceId, id),
+        ),
+      );
   const [updatedResource] = await tx
     .update(resource)
     .set({
