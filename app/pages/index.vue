@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { AuthFormField, FormSubmitEvent, TableColumn } from "@nuxt/ui";
+import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
 import { authClient } from "~/utils/auth-client";
-import { extractApiErrorMessage } from "~/utils/api-error";
 
 type AuthMode = "login" | "register";
 type AuthFormData = {
@@ -10,21 +9,16 @@ type AuthFormData = {
   password: string;
 };
 
-type DataTab = "content" | "characters";
-
-interface ContentItem {
+interface RecentItem {
   id: string;
-  slug: string;
   name: string;
-  createdAt: string;
   updatedAt: string;
-  contentTypeId: string;
-  data: Record<string, unknown>;
 }
 
-interface ContentTypeOption {
-  id: string;
-  name: string;
+interface Dashboard {
+  games: RecentItem[];
+  characters: RecentItem[];
+  content: RecentItem[];
 }
 
 const mode = ref<AuthMode>("login");
@@ -179,156 +173,75 @@ async function signOut() {
   }
 }
 
-// Games, Content, and Characters each have dedicated routes.
-const dataTabs = [
-  {
-    label: "Content",
-    value: "content" as DataTab,
-    icon: "i-lucide-file-text",
-  },
-  {
-    label: "Characters",
-    value: "characters" as DataTab,
-    icon: "i-lucide-users",
-  },
-];
-const activeTab = ref<DataTab>("content");
-
+// Welcome dashboard: recently updated Games the user or their Groups own or
+// play in, and Characters/Content they or their Groups own (never merely
+// public or shared items). Fetched only once signed in.
 const {
-  data: contentItems,
-  status: contentStatus,
-  refresh: refreshContent,
-} = useLazyFetch<ContentItem[]>("/api/content", {
-  default: () => [],
+  data: dashboard,
+  status: dashboardStatus,
+  refresh: refreshDashboard,
+} = useLazyFetch<Dashboard>("/api/dashboard", {
+  default: () => ({ games: [], characters: [], content: [] }),
   immediate: false,
 });
-const { data: contentTypes, refresh: refreshContentTypes } = useLazyFetch<
-  ContentTypeOption[]
->("/api/content-type", {
-  default: () => [],
-  immediate: false,
-});
-
-const contentTypeOptions = computed(() =>
-  contentTypes.value.map((type) => ({ label: type.name, value: type.id })),
-);
 
 watch(
   [isLoggedIn, authBusy],
   ([loggedIn, submittingAuth]) => {
-    if (loggedIn && !submittingAuth) {
-      refreshContent();
-      refreshContentTypes();
-    }
+    if (loggedIn && !submittingAuth) refreshDashboard();
   },
   { immediate: true },
 );
 
-const contentColumns: TableColumn<ContentItem>[] = [
-  { accessorKey: "name", header: "Name" },
-  { accessorKey: "slug", header: "Slug" },
-  {
-    accessorKey: "updatedAt",
-    header: "Updated",
-    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString(),
-  },
-  { id: "actions" },
+const recentSections = computed(() => {
+  const loading = dashboardStatus.value === "pending";
+  return [
+    {
+      title: "Games",
+      icon: "i-lucide-swords",
+      path: "/games",
+      empty: "No Games yet.",
+      items: dashboard.value.games,
+      loading,
+    },
+    {
+      title: "Characters",
+      icon: "i-lucide-users",
+      path: "/characters",
+      empty: "No Characters yet.",
+      items: dashboard.value.characters,
+      loading,
+    },
+    {
+      title: "Content",
+      icon: "i-lucide-file-text",
+      path: "/content",
+      empty: "No Content yet.",
+      items: dashboard.value.content,
+      loading,
+    },
+  ];
+});
+
+const relativeTime = new Intl.RelativeTimeFormat(undefined, {
+  numeric: "auto",
+});
+const timeUnits: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["year", 31_536_000],
+  ["month", 2_592_000],
+  ["week", 604_800],
+  ["day", 86_400],
+  ["hour", 3_600],
+  ["minute", 60],
 ];
 
-const isContentFormOpen = ref(false);
-const editingContent = ref<ContentItem | null>(null);
-const contentForm = reactive({
-  slug: "",
-  name: "",
-  contentTypeId: "",
-  data: "{}",
-});
-const contentFormBusy = ref(false);
-const contentFormError = ref("");
-
-function openCreateContent() {
-  const firstContentType = contentTypes.value[0];
-  if (!firstContentType) return;
-  editingContent.value = null;
-  contentFormError.value = "";
-  contentForm.slug = "";
-  contentForm.name = "";
-  contentForm.contentTypeId = firstContentType.id;
-  contentForm.data = "{}";
-  isContentFormOpen.value = true;
-}
-
-function openEditContent(item: ContentItem) {
-  editingContent.value = item;
-  contentFormError.value = "";
-  contentForm.slug = item.slug;
-  contentForm.name = item.name;
-  contentForm.contentTypeId = item.contentTypeId;
-  contentForm.data = JSON.stringify(item.data, null, 2);
-  isContentFormOpen.value = true;
-}
-
-async function submitContentForm() {
-  contentFormBusy.value = true;
-  contentFormError.value = "";
-
-  try {
-    const data = JSON.parse(contentForm.data) as unknown;
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      throw new Error("Content data must be a JSON object.");
-    }
-
-    if (editingContent.value) {
-      await $fetch(`/api/content/${editingContent.value.id}`, {
-        method: "PATCH",
-        body: { slug: contentForm.slug, name: contentForm.name, data },
-      });
-    } else {
-      await $fetch("/api/content", {
-        method: "POST",
-        body: {
-          slug: contentForm.slug,
-          name: contentForm.name,
-          contentTypeId: contentForm.contentTypeId,
-          data,
-        },
-      });
-    }
-
-    isContentFormOpen.value = false;
-    await refreshContent();
-  } catch (error) {
-    contentFormError.value = extractApiErrorMessage(
-      error,
-      "Could not save content.",
-    );
-  } finally {
-    contentFormBusy.value = false;
+function formatUpdated(updatedAt: string) {
+  const seconds = (Date.parse(updatedAt) - Date.now()) / 1000;
+  for (const [unit, size] of timeUnits) {
+    if (Math.abs(seconds) >= size)
+      return relativeTime.format(Math.round(seconds / size), unit);
   }
-}
-
-const isDeleteContentOpen = ref(false);
-const deletingContent = ref<ContentItem | null>(null);
-const deleteContentBusy = ref(false);
-
-function confirmDeleteContent(item: ContentItem) {
-  deletingContent.value = item;
-  isDeleteContentOpen.value = true;
-}
-
-async function deleteContent() {
-  if (!deletingContent.value) return;
-  deleteContentBusy.value = true;
-
-  try {
-    await $fetch(`/api/content/${deletingContent.value.id}`, {
-      method: "DELETE",
-    });
-    isDeleteContentOpen.value = false;
-    await refreshContent();
-  } finally {
-    deleteContentBusy.value = false;
-  }
+  return "just now";
 }
 </script>
 
@@ -423,10 +336,10 @@ async function deleteContent() {
     <div v-else class="space-y-6 py-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-highlighted">Dashboard</h1>
-          <p class="text-sm text-muted">
-            Signed in as {{ sessionState.data.value?.user.name }}
-          </p>
+          <h1 class="text-2xl font-bold text-highlighted">
+            Welcome back, {{ sessionState.data.value?.user.name }}
+          </h1>
+          <p class="text-sm text-muted">Pick up where you left off.</p>
         </div>
         <UButton
           color="neutral"
@@ -445,163 +358,56 @@ async function deleteContent() {
         :description="errorMessage"
       />
 
-      <UTabs
-        v-model="activeTab"
-        :items="dataTabs"
-        :content="false"
-        class="w-full"
-      />
-
-      <UPageCard v-if="activeTab === 'content'">
-        <template #header>
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="text-lg font-semibold text-highlighted">Content</h2>
-            <UButton
-              icon="i-lucide-plus"
-              size="sm"
-              :disabled="contentTypes.length === 0"
-              @click="openCreateContent"
-            >
-              New content
-            </UButton>
-          </div>
-          <p v-if="contentTypes.length === 0" class="mt-2 text-sm text-muted">
-            Create a System and ContentType before adding content records.
-          </p>
-        </template>
-
-        <UTable
-          :data="contentItems"
-          :columns="contentColumns"
-          :loading="contentStatus === 'pending'"
-        >
-          <template #actions-cell="{ row }">
-            <UDropdownMenu
-              :items="[
-                [
-                  {
-                    label: 'Edit',
-                    icon: 'i-lucide-pencil',
-                    onSelect: () => openEditContent(row.original),
-                  },
-                ],
-                [
-                  {
-                    label: 'Delete',
-                    icon: 'i-lucide-trash',
-                    color: 'error',
-                    onSelect: () => confirmDeleteContent(row.original),
-                  },
-                ],
-              ]"
-            >
+      <div class="grid gap-6 lg:grid-cols-3">
+        <UPageCard v-for="section in recentSections" :key="section.title">
+          <template #header>
+            <div class="flex items-center justify-between gap-4">
+              <h2
+                class="flex items-center gap-2 text-lg font-semibold text-highlighted"
+              >
+                <UIcon :name="section.icon" class="size-5 text-primary" />
+                Recent {{ section.title }}
+              </h2>
               <UButton
-                icon="i-lucide-ellipsis"
+                :to="section.path"
                 color="neutral"
-                variant="ghost"
+                variant="link"
                 size="sm"
-              />
-            </UDropdownMenu>
+                trailing-icon="i-lucide-arrow-right"
+              >
+                View all
+              </UButton>
+            </div>
           </template>
 
-          <template #empty>
-            <p class="py-6 text-center text-sm text-muted">
-              No content records yet.
-            </p>
-          </template>
-        </UTable>
-      </UPageCard>
-
-      <UPageCard v-else>
-        <div class="flex flex-col items-center gap-3 py-12 text-center">
-          <UIcon name="i-lucide-users" class="size-10 text-muted" />
-          <p class="text-muted">
-            Character management now has a dedicated page.
+          <ul v-if="section.items.length" class="divide-y divide-default">
+            <li
+              v-for="item in section.items"
+              :key="item.id"
+              class="flex items-center justify-between gap-2 py-2"
+            >
+              <NuxtLink
+                :to="`${section.path}/${item.id}`"
+                class="truncate font-medium text-highlighted hover:underline"
+              >
+                {{ item.name }}
+              </NuxtLink>
+              <span class="shrink-0 text-sm text-muted">
+                {{ formatUpdated(item.updatedAt) }}
+              </span>
+            </li>
+          </ul>
+          <p v-else-if="section.loading" class="py-6 text-center text-sm text-muted">
+            Loading…
           </p>
-          <UButton to="/characters" color="neutral" variant="soft" size="sm">
-            Open Characters
-          </UButton>
-        </div>
-      </UPageCard>
+          <p v-else class="py-6 text-center text-sm text-muted">
+            {{ section.empty }}
+            <NuxtLink :to="section.path" class="text-primary hover:underline">
+              Create one
+            </NuxtLink>
+          </p>
+        </UPageCard>
+      </div>
     </div>
-
-    <UModal
-      v-model:open="isContentFormOpen"
-      :title="editingContent ? 'Edit content' : 'New content'"
-    >
-      <template #body>
-        <UForm
-          id="content-form"
-          :state="contentForm"
-          class="space-y-4"
-          @submit="submitContentForm"
-        >
-          <UFormField name="name" label="Name" required>
-            <UInput v-model="contentForm.name" class="w-full" required />
-          </UFormField>
-          <UFormField name="slug" label="Slug" required>
-            <UInput v-model="contentForm.slug" class="w-full" required />
-          </UFormField>
-          <UFormField name="contentTypeId" label="Content type" required>
-            <USelect
-              v-model="contentForm.contentTypeId"
-              :items="contentTypeOptions"
-              class="w-full"
-              :disabled="!!editingContent"
-            />
-          </UFormField>
-          <UFormField name="data" label="Data (JSON)" required>
-            <UTextarea
-              v-model="contentForm.data"
-              class="w-full font-mono"
-              :rows="8"
-            />
-          </UFormField>
-          <UAlert
-            v-if="contentFormError"
-            color="error"
-            variant="subtle"
-            :description="contentFormError"
-          />
-        </UForm>
-      </template>
-
-      <template #footer="{ close }">
-        <UButton
-          label="Cancel"
-          color="neutral"
-          variant="outline"
-          @click="close"
-        />
-        <UButton
-          type="submit"
-          form="content-form"
-          label="Save"
-          :loading="contentFormBusy"
-        />
-      </template>
-    </UModal>
-
-    <UModal
-      v-model:open="isDeleteContentOpen"
-      title="Delete content"
-      :description="`Are you sure you want to delete &quot;${deletingContent?.name}&quot;? This action cannot be undone.`"
-      :ui="{ footer: 'justify-end' }"
-    >
-      <template #footer="{ close }">
-        <UButton
-          label="Cancel"
-          color="neutral"
-          variant="outline"
-          @click="close"
-        />
-        <UButton
-          label="Delete"
-          color="error"
-          :loading="deleteContentBusy"
-          @click="deleteContent"
-        />
-      </template>
-    </UModal>
   </div>
 </template>
