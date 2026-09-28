@@ -1,0 +1,444 @@
+// Every tag Sheet markup may use: its attributes, what it may contain, and
+// which schema field types it can bind to. The validator enforces this; the
+// renderer maps each tag to a component; the editor's reference panel and
+// autocomplete are generated from it. See docs/sheet-system.md, section 2.
+
+export type AttrType =
+  // Free text; may contain {path} interpolation.
+  | { kind: "text" }
+  // A number, or a single {path} resolved when rendering.
+  | { kind: "number"; min?: number; max?: number; integer?: boolean }
+  // Bare attribute, "true", or "false".
+  | { kind: "boolean" }
+  | { kind: "enum"; values: readonly string[] }
+  // A field path, resolved against the schema.
+  | { kind: "field" }
+  // Comma-separated values.
+  | { kind: "list" }
+  // Iconify name, e.g. i-lucide-sword.
+  | { kind: "icon" }
+  // Space-separated CSS class names for the Sheet's own CSS.
+  | { kind: "className" };
+
+export interface AttrSpec {
+  type: AttrType;
+  required?: boolean;
+  description: string;
+}
+
+// Schema field kinds a tag's `field` may point at. `any` fields (and paths the
+// schema doesn't know about) are accepted by every field tag.
+export type BindKind =
+  | "string"
+  | "number"
+  | "boolean"
+  | "resourceRef"
+  | "content"
+  | "array"
+  | "stringArray"
+  | "objectArray"
+  | "anyValue";
+
+export type ChildrenRule =
+  | "any" // tags and text
+  | "text" // text only (with {path} interpolation)
+  | "none"
+  | { only: readonly string[] };
+
+export interface TagSpec {
+  name: string;
+  category: "layout" | "field" | "repeater";
+  description: string;
+  attrs: Record<string, AttrSpec>;
+  children: ChildrenRule;
+  // Tags this one may appear directly inside (default: anywhere; [] means
+  // top level only).
+  parents?: readonly string[];
+  // For tags with a `field` attribute: what it may bind to.
+  binds?: readonly BindKind[];
+  // Children are resolved against each item of the bound array.
+  itemScope?: boolean;
+}
+
+export const colors = [
+  "primary",
+  "secondary",
+  "success",
+  "info",
+  "warning",
+  "error",
+  "neutral",
+] as const;
+const gaps = ["none", "sm", "md", "lg"] as const;
+
+const text = (description: string, required = false): AttrSpec => ({
+  type: { kind: "text" },
+  description,
+  required,
+});
+const bool = (description: string): AttrSpec => ({
+  type: { kind: "boolean" },
+  description,
+});
+const oneOf = (values: readonly string[], description: string): AttrSpec => ({
+  type: { kind: "enum", values },
+  description,
+});
+const icon: AttrSpec = {
+  type: { kind: "icon" },
+  description: "Icon name, e.g. i-lucide-sword",
+};
+
+// Accepted by every tag.
+export const commonAttrs: Record<string, AttrSpec> = {
+  class: {
+    type: { kind: "className" },
+    description: "Class names your Sheet CSS can target",
+  },
+  live: bool(
+    "Fields inside stay editable with Edit off; live=\"false\" opts out",
+  ),
+  locked: bool(
+    "Fields inside need their pencil button clicked before editing; locked=\"false\" opts out",
+  ),
+};
+
+const fieldAttrs: Record<string, AttrSpec> = {
+  field: {
+    type: { kind: "field" },
+    required: true,
+    description: "Path of the field this shows, e.g. stats.strength",
+  },
+  label: text(
+    "Label; defaults to the schema label, then the field name",
+  ),
+  hint: text("Help text; defaults to the schema description"),
+};
+
+const tagList: TagSpec[] = [
+  // Layout
+  {
+    name: "Sheet",
+    category: "layout",
+    description: "Optional root wrapping the whole Sheet",
+    attrs: {},
+    children: "any",
+    parents: [],
+  },
+  {
+    name: "Section",
+    category: "layout",
+    description: "A card with an optional title",
+    attrs: {
+      title: text("Heading of the card"),
+      description: text("Text under the title"),
+      icon,
+      span: {
+        type: { kind: "number", min: 1, max: 12, integer: true },
+        description: "Columns to span inside a Grid",
+      },
+      collapsible: bool("Can be collapsed by clicking the title"),
+      collapsed: bool("Starts collapsed (implies collapsible)"),
+    },
+    children: "any",
+  },
+  {
+    name: "Grid",
+    category: "layout",
+    description: "Columns of equal width; one column on phones",
+    attrs: {
+      cols: {
+        type: { kind: "number", min: 1, max: 12, integer: true },
+        description: "Number of columns (default 2)",
+      },
+      gap: oneOf(gaps, "Space between items (default md)"),
+    },
+    children: "any",
+  },
+  {
+    name: "Stack",
+    category: "layout",
+    description: "Items in a row or a column",
+    attrs: {
+      direction: oneOf(["row", "column"], "Row or column (default column)"),
+      gap: oneOf(gaps, "Space between items (default md)"),
+      align: oneOf(
+        ["start", "center", "end", "stretch"],
+        "Cross-axis alignment",
+      ),
+      wrap: bool("Wrap onto more lines when out of room"),
+    },
+    children: "any",
+  },
+  {
+    name: "Tabs",
+    category: "layout",
+    description: "Tabbed panels; contains only Tab tags",
+    attrs: {},
+    children: { only: ["Tab"] },
+  },
+  {
+    name: "Tab",
+    category: "layout",
+    description: "One panel of Tabs",
+    attrs: { label: text("Tab title", true), icon },
+    children: "any",
+    parents: ["Tabs"],
+  },
+  {
+    name: "Divider",
+    category: "layout",
+    description: "A horizontal line with an optional label",
+    attrs: { label: text("Text in the middle of the line") },
+    children: "none",
+  },
+  {
+    name: "Heading",
+    category: "layout",
+    description: "A heading",
+    attrs: {
+      level: {
+        type: { kind: "number", min: 1, max: 4, integer: true },
+        description: "1 (largest) to 4 (default 1)",
+      },
+    },
+    children: "text",
+  },
+  {
+    name: "Note",
+    category: "layout",
+    description: "Muted text",
+    attrs: {},
+    children: "text",
+  },
+  {
+    name: "Callout",
+    category: "layout",
+    description: "A highlighted box",
+    attrs: {
+      color: oneOf(colors, "Color (default info)"),
+      icon,
+      title: text("Bold first line"),
+    },
+    children: "text",
+  },
+  {
+    name: "Badge",
+    category: "layout",
+    description: "A small label",
+    attrs: { color: oneOf(colors, "Color (default primary)") },
+    children: "text",
+  },
+  {
+    name: "Collapsible",
+    category: "layout",
+    description: "A header that shows or hides its content when clicked",
+    attrs: {
+      title: text("Header text", true),
+      subtitle: text("Smaller text after the title"),
+      icon,
+      open: bool("Starts expanded"),
+    },
+    children: "any",
+  },
+
+  // Fields
+  {
+    name: "Field",
+    category: "field",
+    description: "Picks the input from the field's schema type",
+    attrs: { ...fieldAttrs },
+    children: "none",
+    binds: ["string", "number", "boolean", "resourceRef", "content", "stringArray"],
+  },
+  {
+    name: "Text",
+    category: "field",
+    description: "A text field",
+    attrs: {
+      ...fieldAttrs,
+      multiline: bool("Several lines"),
+      placeholder: text("Shown when empty while editing"),
+    },
+    children: "none",
+    binds: ["string"],
+  },
+  {
+    name: "Number",
+    category: "field",
+    description: "A number field",
+    attrs: {
+      ...fieldAttrs,
+      min: { type: { kind: "number" }, description: "Smallest value" },
+      max: { type: { kind: "number" }, description: "Largest value" },
+      step: { type: { kind: "number" }, description: "Increment" },
+      variant: oneOf(
+        ["input", "stat"],
+        "stat shows a large number with a small label",
+      ),
+    },
+    children: "none",
+    binds: ["number"],
+  },
+  {
+    name: "Checkbox",
+    category: "field",
+    description: "A checkbox",
+    attrs: { ...fieldAttrs },
+    children: "none",
+    binds: ["boolean"],
+  },
+  {
+    name: "Toggle",
+    category: "field",
+    description: "An on/off switch",
+    attrs: { ...fieldAttrs },
+    children: "none",
+    binds: ["boolean"],
+  },
+  {
+    name: "Select",
+    category: "field",
+    description: "A choice from a list",
+    attrs: {
+      ...fieldAttrs,
+      options: {
+        type: { kind: "list" },
+        required: true,
+        description: "Comma-separated choices",
+      },
+    },
+    children: "none",
+    binds: ["string"],
+  },
+  {
+    name: "Tags",
+    category: "field",
+    description: "A list of short texts",
+    attrs: { ...fieldAttrs },
+    children: "none",
+    binds: ["stringArray"],
+  },
+  {
+    name: "Tracker",
+    category: "field",
+    description: "A current value out of a maximum, as a bar or boxes",
+    attrs: {
+      ...fieldAttrs,
+      max: {
+        type: { kind: "number", min: 1 },
+        required: true,
+        description: "Maximum, a number or {field}",
+      },
+      style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
+    },
+    children: "none",
+    binds: ["number"],
+  },
+  {
+    name: "Ref",
+    category: "field",
+    description: "A link to another Resource or Content",
+    attrs: { ...fieldAttrs },
+    children: "none",
+    binds: ["resourceRef", "content"],
+  },
+  {
+    name: "Value",
+    category: "field",
+    description: "Shows a value; never editable",
+    attrs: {
+      ...fieldAttrs,
+      format: oneOf(["plain", "signed"], "signed shows +2 for positive numbers"),
+    },
+    children: "none",
+    binds: ["anyValue"],
+  },
+  {
+    name: "Markdown",
+    category: "field",
+    description: "Formatted long text",
+    attrs: { ...fieldAttrs },
+    children: "none",
+    binds: ["string"],
+  },
+  {
+    name: "Image",
+    category: "field",
+    description: "An image from an https URL",
+    attrs: {
+      ...fieldAttrs,
+      alt: text("Description for screen readers"),
+      size: oneOf(["sm", "md", "lg", "full"], "Size (default md)"),
+    },
+    children: "none",
+    binds: ["string"],
+  },
+
+  // Repeaters
+  {
+    name: "List",
+    category: "repeater",
+    description:
+      "Repeats its content for each item of an array; paths inside are relative to the item",
+    attrs: {
+      field: fieldAttrs.field!,
+      label: fieldAttrs.label!,
+      layout: oneOf(["stack", "grid"], "stack (default) or grid"),
+      cols: {
+        type: { kind: "number", min: 1, max: 12, integer: true },
+        description: "Columns for layout=\"grid\"",
+      },
+      addLabel: text("Text of the add button (default \"Add\")"),
+    },
+    children: "any",
+    binds: ["array"],
+    itemScope: true,
+  },
+  {
+    name: "Table",
+    category: "repeater",
+    description: "An array of objects as a table; contains Column tags",
+    attrs: { field: fieldAttrs.field!, label: fieldAttrs.label! },
+    children: { only: ["Column", "RowDetails"] },
+    binds: ["objectArray"],
+    itemScope: true,
+  },
+  {
+    name: "Column",
+    category: "field",
+    description: "One column of a Table",
+    attrs: {
+      ...fieldAttrs,
+      width: oneOf(["auto", "xs", "sm", "md", "lg"], "Column width"),
+    },
+    children: "none",
+    parents: ["Table"],
+    binds: ["string", "number", "boolean", "resourceRef", "content"],
+  },
+  {
+    name: "RowDetails",
+    category: "layout",
+    description: "Content shown when a Table row is expanded",
+    attrs: {},
+    children: "any",
+    parents: ["Table"],
+  },
+];
+
+export const sheetTags: ReadonlyMap<string, TagSpec> = new Map(
+  tagList.map((spec) => [spec.name.toLowerCase(), spec]),
+);
+
+export function findTag(name: string) {
+  return sheetTags.get(name.toLowerCase());
+}
+
+// "hitPoints" / "hit_points" -> "Hit Points"
+export function humanizeFieldName(key: string) {
+  return key
+    .replace(/_+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}

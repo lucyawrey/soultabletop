@@ -4,6 +4,7 @@ import { contentType, resource } from "../../database/schema";
 import type { ContentTypeSchema } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { assertContentTypeSchema } from "../../utils/content-validation";
+import { findSheetsBrokenBy } from "../../utils/sheet-schemas";
 import { useDatabase } from "../../utils/database";
 import {
   requireName,
@@ -37,6 +38,7 @@ defineRouteMeta({
               },
               hasStrictSchema: { type: "boolean" },
               schema: { type: "object", additionalProperties: true },
+              confirmBrokenSheets: { type: "boolean" },
             },
           },
         },
@@ -46,6 +48,10 @@ defineRouteMeta({
       200: { description: "Updated ContentType" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
+      409: {
+        description:
+          "The change breaks existing Sheets (listed in data.brokenSheets); resend with confirmBrokenSheets",
+      },
     },
   },
 });
@@ -68,6 +74,30 @@ export default defineEventHandler(async (event) => {
   if (body.schema !== undefined)
     await assertContentTypeSchema(user, body.schema as ContentTypeSchema);
   const database = useDatabase();
+  if (
+    (body.schema !== undefined || body.hasStrictSchema !== undefined) &&
+    body.confirmBrokenSheets !== true
+  ) {
+    const [current] = await database
+      .select({
+        schema: contentType.schema,
+        hasStrictSchema: contentType.hasStrictSchema,
+      })
+      .from(contentType)
+      .where(eq(contentType.resourceId, id));
+    if (current) {
+      const brokenSheets = await findSheetsBrokenBy(id, {
+        schema: (body.schema as ContentTypeSchema | undefined) ?? current.schema,
+        hasStrictSchema: body.hasStrictSchema ?? current.hasStrictSchema,
+      });
+      if (brokenSheets.length)
+        throw createError({
+          statusCode: 409,
+          statusMessage: `This change would break ${brokenSheets.length} Sheet${brokenSheets.length === 1 ? "" : "s"}`,
+          data: { brokenSheets },
+        });
+    }
+  }
   const [updatedResource] = await database
     .update(resource)
     .set({

@@ -10,6 +10,7 @@ import {
 import { requireName, requireSlug } from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import { parseBody, sheetCreateSchema } from "../../utils/api-schemas";
+import { assertValidSheetMarkup } from "../../utils/sheet-schemas";
 
 defineRouteMeta({
   openAPI: {
@@ -40,7 +41,7 @@ defineRouteMeta({
     },
     responses: {
       201: { description: "Created Sheet" },
-      400: { description: "Invalid request" },
+      400: { description: "Invalid request or markup errors" },
       401: { description: "Authentication required" },
     },
   },
@@ -83,6 +84,8 @@ export default defineEventHandler(async (event) => {
       statusMessage:
         "Only editors of the ContentType can set its default Sheet",
     });
+  if (typeof body.markup === "string")
+    await assertValidSheetMarkup(body.markup, body.contentTypeId);
   const ownerGroupId =
     typeof body.ownerGroupId === "string" ? body.ownerGroupId : null;
   if (

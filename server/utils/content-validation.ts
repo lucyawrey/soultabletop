@@ -7,7 +7,9 @@ import {
   MAX_CONTENT_DEPTH,
   MAX_CONTENT_REFS,
   NAME_FIELD,
+  referencedContentTypeIds,
   type ContentFieldSchema,
+  type ContentTypeRules,
   type ContentTypeSchema,
 } from "../../shared/content-schema";
 import { useDatabase } from "./database";
@@ -16,11 +18,6 @@ import {
   loadResourceAccessContext,
 } from "./resource-access";
 import { uuidPattern } from "./resource-management";
-
-interface ContentTypeRules {
-  schema: ContentTypeSchema;
-  hasStrictSchema: boolean;
-}
 
 // `content` field values found while walking data, checked afterwards in
 // batches because they need database lookups.
@@ -242,13 +239,12 @@ export function extractDataName(data: Record<string, unknown>) {
   return { data: rest, name: name.trim() };
 }
 
-// Returns the ContentType IDs referenced by `content` fields. Also rejects
-// field keys that aren't identifiers (TypeBox's Record ignores key patterns).
-function collectContentTypeIds(schema: ContentTypeSchema, ids: Set<string>) {
+// Rejects field keys that aren't identifiers (TypeBox's Record ignores key
+// patterns), at every nesting level.
+function assertFieldKeys(schema: ContentTypeSchema) {
   const visit = (field: ContentFieldSchema) => {
-    if (field.type === "content") ids.add(field.contentTypeId);
-    else if (field.type === "array") visit(field.itemType);
-    else if (field.type === "object") collectContentTypeIds(field.entries, ids);
+    if (field.type === "array") visit(field.itemType);
+    else if (field.type === "object") assertFieldKeys(field.entries);
   };
   for (const [key, field] of Object.entries(schema)) {
     if (!fieldKeyPattern.test(key)) {
@@ -259,7 +255,6 @@ function collectContentTypeIds(schema: ContentTypeSchema, ids: Set<string>) {
     }
     visit(field);
   }
-  return ids;
 }
 
 // Checks a ContentType schema beyond its shape (see `contentTypeSchemaSchema`):
@@ -269,6 +264,7 @@ export async function assertContentTypeSchema(
   user: Pick<User, "id" | "name">,
   schema: ContentTypeSchema,
 ) {
+  assertFieldKeys(schema);
   if (NAME_FIELD in schema) {
     throw createError({
       statusCode: 400,
@@ -277,7 +273,7 @@ export async function assertContentTypeSchema(
     });
   }
 
-  const ids = [...collectContentTypeIds(schema, new Set())];
+  const ids = [...referencedContentTypeIds(schema)];
   if (!ids.length) return;
   const rows = await useDatabase()
     .select()
