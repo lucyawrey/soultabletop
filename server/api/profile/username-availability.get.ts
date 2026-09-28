@@ -9,25 +9,25 @@ defineRouteMeta({
     summary: "Check username availability",
     responses: {
       200: { description: "Availability result" },
-      400: { description: "Invalid slug" },
+      400: { description: "Invalid username" },
     },
   },
 });
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  if (typeof query.slug !== "string") {
+  if (typeof query.username !== "string") {
     throw createError({
       statusCode: 400,
-      statusMessage: "slug is required",
+      statusMessage: "username is required",
     });
   }
 
-  const slug = query.slug.trim().toLowerCase();
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+  const username = query.username.trim().toLowerCase();
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(username)) {
     throw createError({
       statusCode: 400,
-      statusMessage: "slug must use lowercase letters, numbers, and hyphens",
+      statusMessage: "username must use lowercase letters, numbers, and hyphens",
     });
   }
 
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
   const [existingProfile] = await database
     .select({ userId: userProfile.userId })
     .from(userProfile)
-    .where(sql`lower(${userProfile.slug}) = ${slug}`)
+    .where(sql`lower(${userProfile.username}) = ${username}`)
     .limit(1);
 
   return { available: !existingProfile };

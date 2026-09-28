@@ -28,9 +28,11 @@ interface ContentTypeOption {
 }
 
 const mode = ref<AuthMode>("login");
-const registerForm = reactive({ name: "", slug: "" });
-const { onSlugInput, resetSlugTouched, slugError } =
-  useSlugFromName(registerForm);
+const registerForm = reactive({ name: "", username: "" });
+const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(
+  registerForm,
+  "username",
+);
 const authBusy = ref(false);
 const signOutBusy = ref(false);
 const errorMessage = ref("");
@@ -51,7 +53,7 @@ const fields = computed<AuthFormField[]>(() => [
           required: true,
         } satisfies AuthFormField,
         {
-          name: "slug",
+          name: "username",
           type: "text",
           label: "Username",
           description:
@@ -83,7 +85,7 @@ function setMode(nextMode: AuthMode) {
   mode.value = nextMode;
   if (nextMode === "register") {
     registerForm.name = "";
-    registerForm.slug = "";
+    registerForm.username = "";
     resetSlugTouched(false);
   }
   errorMessage.value = "";
@@ -95,13 +97,13 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
   errorMessage.value = "";
 
   try {
-    const slug = registerForm.slug.trim().toLowerCase();
+    const username = registerForm.username.trim().toLowerCase();
     if (registering) {
-      if (!slug) {
+      if (!username) {
         errorMessage.value = "Username is required.";
         return;
       }
-      if (getSlugError(slug)) {
+      if (getSlugError(username)) {
         errorMessage.value =
           "Username must use lowercase letters, numbers, and hyphens only.";
         return;
@@ -109,7 +111,7 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
 
       const availability = await $fetch<{ available: boolean }>(
         "/api/profile/username-availability",
-        { query: { slug } },
+        { query: { username } },
       );
       if (!availability.available) {
         errorMessage.value = "That username is already in use.";
@@ -124,7 +126,7 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
           name: registerForm.name.trim(),
           email: event.data.email.trim(),
           password: event.data.password,
-          slug,
+          username,
         },
       });
       const session = await authClient.getSession();
@@ -368,12 +370,12 @@ async function deleteContent() {
               required
             />
           </template>
-          <template #slug-field>
+          <template #username-field>
             <UInput
-              :model-value="registerForm.slug"
+              :model-value="registerForm.username"
               class="w-full"
               size="md"
-              name="slug"
+              name="username"
               autocomplete="nickname"
               autocapitalize="none"
               placeholder="your-name"

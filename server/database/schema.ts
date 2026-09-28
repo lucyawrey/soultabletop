@@ -128,7 +128,7 @@ export const userProfile = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     role: siteRole("role").default("member").notNull(),
-    slug: text("slug").notNull(),
+    username: text("username").notNull(),
     iconImageUrl: text("icon_image_url"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -139,10 +139,10 @@ export const userProfile = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("user_profile_slug_unique").on(sql`lower(${table.slug})`),
+    uniqueIndex("user_profile_username_unique").on(sql`lower(${table.username})`),
     check(
-      "user_profile_slug_format_check",
-      sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`,
+      "user_profile_username_format_check",
+      sql`${table.username} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`,
     ),
   ],
 );
