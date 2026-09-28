@@ -8,9 +8,9 @@ export function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+// Returns undefined (not "") when valid: UFormField's `error` prop is typed
+// [Boolean, String], so Vue casts "" to `true` and the field renders as errored.
 export function getSlugError(slug: string) {
-  if (!slug) return "";
-  return slugPattern.test(slug)
-    ? ""
-    : "Use lowercase letters, numbers, and hyphens only.";
+  if (!slug || slugPattern.test(slug)) return undefined;
+  return "Use lowercase letters, numbers, and hyphens only.";
 }

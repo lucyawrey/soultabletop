@@ -40,7 +40,7 @@ useSeoMeta({
         <UButton to="/content" color="neutral" variant="link">
           Content
         </UButton>
-        <UButton href="#" color="neutral" variant="link" @click.prevent>
+        <UButton to="/types" color="neutral" variant="link">
           Types
         </UButton>
         <UButton to="/systems" color="neutral" variant="link"
@@ -60,7 +60,7 @@ useSeoMeta({
           <UButton to="/content" color="neutral" variant="link">
             Content
           </UButton>
-          <UButton href="#" color="neutral" variant="link" @click.prevent>
+          <UButton to="/types" color="neutral" variant="link">
             Types
           </UButton>
           <UButton to="/systems" color="neutral" variant="link"
