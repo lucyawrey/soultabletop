@@ -172,3 +172,17 @@ export function getResourceAccess(
 
   return { canRead, canEdit, canDelete: false };
 }
+
+// Like getResourceAccess, but for routes that allow anonymous visitors (no
+// context): they can read public, non-hidden Resources and edit nothing.
+export function getResourceAccessOrPublic(
+  resource: Resource,
+  context: ResourceAccessContext | null,
+): ResourceAccess {
+  if (context) return getResourceAccess(resource, context);
+  return {
+    canRead: resource.isPubliclyReadable && !resource.isAdminHidden,
+    canEdit: false,
+    canDelete: false,
+  };
+}

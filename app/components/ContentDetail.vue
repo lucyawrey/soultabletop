@@ -1,52 +1,62 @@
 <script setup lang="ts">
 import { extractApiErrorMessage } from "~/utils/api-error";
 
-definePageMeta({ middleware: "auth" });
+// Shared by /content/[id] and /characters/[id]: both are `content` Resources,
+// differing only in their ContentType's category and where "back" goes.
+const props = defineProps<{
+  id: string;
+  label: string;
+  listPath: string;
+  listLabel: string;
+}>();
 
-interface SystemDetail {
+interface ContentDetail {
   id: string;
   slug: string;
   name: string;
-  isPubliclyReadable: boolean;
   updatedAt: string;
+  contentTypeId: string;
+  sheetId: string | null;
+  data: Record<string, unknown>;
   canEdit: boolean;
 }
 
-interface ContentTypeOption {
+interface NamedItem {
   id: string;
   name: string;
-  slug: string;
-  systemId: string;
 }
 
-const route = useRoute();
-const id = route.params.id as string;
-
-const { data: system, refresh } = await useFetch<SystemDetail>(
-  `/api/system/${id}`,
+const { data: item, refresh } = await useFetch<ContentDetail>(
+  `/api/content/${props.id}`,
 );
 
-const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
+const { data: contentTypes } = await useLazyFetch<NamedItem[]>(
   "/api/content-type",
   { default: () => [] },
 );
+const { data: sheets } = await useLazyFetch<NamedItem[]>("/api/sheet", {
+  default: () => [],
+});
 
-const systemContentTypes = computed(() =>
-  contentTypes.value.filter((type) => type.systemId === id),
+const contentType = computed(() =>
+  contentTypes.value.find((type) => type.id === item.value?.contentTypeId),
+);
+const sheet = computed(() =>
+  sheets.value.find((entry) => entry.id === item.value?.sheetId),
 );
 
 const isFormOpen = ref(false);
-const form = reactive({ slug: "", name: "", isPubliclyReadable: false });
+const form = reactive({ slug: "", name: "", data: "{}" });
 const formBusy = ref(false);
 const formError = ref("");
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 
 function openEdit() {
-  if (!system.value) return;
+  if (!item.value) return;
   formError.value = "";
-  form.slug = system.value.slug;
-  form.name = system.value.name;
-  form.isPubliclyReadable = system.value.isPubliclyReadable;
+  form.slug = item.value.slug;
+  form.name = item.value.name;
+  form.data = JSON.stringify(item.value.data, null, 2);
   resetSlugTouched(true);
   isFormOpen.value = true;
 }
@@ -56,18 +66,21 @@ async function submitForm() {
   formError.value = "";
 
   try {
-    await $fetch(`/api/system/${id}`, {
+    const data = JSON.parse(form.data) as unknown;
+    if (typeof data !== "object" || data === null || Array.isArray(data)) {
+      throw new Error("Data must be a JSON object.");
+    }
+    await $fetch(`/api/content/${props.id}`, {
       method: "PATCH",
-      body: {
-        slug: form.slug,
-        name: form.name,
-        isPubliclyReadable: form.isPubliclyReadable,
-      },
+      body: { slug: form.slug, name: form.name, data },
     });
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save System.");
+    formError.value = extractApiErrorMessage(
+      error,
+      `Could not save ${props.label}.`,
+    );
   } finally {
     formBusy.value = false;
   }
@@ -82,12 +95,12 @@ async function remove() {
   deleteError.value = "";
 
   try {
-    await $fetch(`/api/system/${id}`, { method: "DELETE" });
-    await navigateTo("/systems");
+    await $fetch(`/api/content/${props.id}`, { method: "DELETE" });
+    await navigateTo(props.listPath);
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete System.",
+      `Could not delete ${props.label}.`,
     );
   } finally {
     deleteBusy.value = false;
@@ -98,27 +111,38 @@ async function remove() {
 <template>
   <div class="mx-auto w-full max-w-(--ui-container) space-y-6 p-4 py-8">
     <UButton
-      to="/systems"
+      :to="listPath"
       icon="i-lucide-arrow-left"
       color="neutral"
       variant="link"
       size="sm"
     >
-      Back to Systems
+      Back to {{ listLabel }}
     </UButton>
 
-    <template v-if="system">
+    <template v-if="item">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-highlighted">
-            {{ system.name }}
-          </h1>
+          <h1 class="text-2xl font-bold text-highlighted">{{ item.name }}</h1>
           <p class="text-sm text-muted">
-            {{ system.slug }} ·
-            {{ system.isPubliclyReadable ? "Public" : "Private" }}
+            {{ item.slug }} ·
+            <NuxtLink
+              v-if="contentType"
+              :to="`/types/${contentType.id}`"
+              class="hover:underline"
+            >
+              {{ contentType.name }}
+            </NuxtLink>
+            <template v-if="sheet">
+              ·
+              <NuxtLink :to="`/sheets/${sheet.id}`" class="hover:underline">
+                {{ sheet.name }} sheet
+              </NuxtLink>
+            </template>
+            · Updated {{ new Date(item.updatedAt).toLocaleString() }}
           </p>
         </div>
-        <div v-if="system?.canEdit" class="flex gap-2">
+        <div v-if="item.canEdit" class="flex gap-2">
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
@@ -143,48 +167,18 @@ async function remove() {
 
       <UPageCard>
         <template #header>
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="text-lg font-semibold text-highlighted">
-              Content Types
-            </h2>
-            <UButton
-              :to="{ path: '/types', query: { systemId: id } }"
-              icon="i-lucide-plus"
-              size="sm"
-            >
-              New Content Type
-            </UButton>
-          </div>
+          <h2 class="text-lg font-semibold text-highlighted">Data</h2>
         </template>
-
-        <ul
-          v-if="systemContentTypes.length"
-          class="divide-y divide-default"
-        >
-          <li
-            v-for="type in systemContentTypes"
-            :key="type.id"
-            class="flex items-center justify-between py-2"
-          >
-            <NuxtLink
-              :to="`/types/${type.id}`"
-              class="font-medium text-highlighted hover:underline"
-            >
-              {{ type.name }}
-            </NuxtLink>
-            <span class="text-sm text-muted">{{ type.slug }}</span>
-          </li>
-        </ul>
-        <p v-else class="py-6 text-center text-sm text-muted">
-          No Content Types for this System yet.
-        </p>
+        <pre class="overflow-x-auto text-sm font-mono">{{
+          JSON.stringify(item.data, null, 2)
+        }}</pre>
       </UPageCard>
     </template>
 
-    <UModal v-model:open="isFormOpen" title="Edit System">
+    <UModal v-model:open="isFormOpen" :title="`Edit ${label}`">
       <template #body>
         <UForm
-          id="system-detail-form"
+          id="content-detail-form"
           :state="form"
           class="space-y-4"
           @submit="submitForm"
@@ -206,8 +200,8 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
-          <UFormField name="isPubliclyReadable" label="Publicly readable">
-            <USwitch v-model="form.isPubliclyReadable" />
+          <UFormField name="data" label="Data (JSON)" required>
+            <UTextarea v-model="form.data" class="w-full font-mono" :rows="8" />
           </UFormField>
           <UAlert
             v-if="formError"
@@ -227,7 +221,7 @@ async function remove() {
         />
         <UButton
           type="submit"
-          form="system-detail-form"
+          form="content-detail-form"
           label="Save"
           :loading="formBusy"
         />
@@ -236,8 +230,8 @@ async function remove() {
 
     <UModal
       v-model:open="isDeleteOpen"
-      title="Delete System"
-      :description="`Are you sure you want to delete &quot;${system?.name}&quot;? This action cannot be undone.`"
+      :title="`Delete ${label}`"
+      :description="`Are you sure you want to delete &quot;${item?.name}&quot;? This action cannot be undone.`"
       :ui="{ footer: 'justify-end' }"
     >
       <template v-if="deleteError" #body>

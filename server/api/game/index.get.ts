@@ -3,7 +3,7 @@ import { game, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
-  getResourceAccess,
+  getResourceAccessOrPublic,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 
@@ -33,10 +33,14 @@ export default defineEventHandler(async (event) => {
       )
     : null;
   return rows
-    .filter(({ resource: item }) =>
-      context
-        ? getResourceAccess(item, context).canRead
-        : item.isPubliclyReadable && !item.isAdminHidden,
-    )
-    .map(({ game: item, resource: owner }) => ({ ...owner, ...item }));
+    .map((row) => ({
+      ...row,
+      access: getResourceAccessOrPublic(row.resource, context),
+    }))
+    .filter(({ access }) => access.canRead)
+    .map(({ game: item, resource: owner, access }) => ({
+      ...owner,
+      ...item,
+      canEdit: access.canEdit,
+    }));
 });

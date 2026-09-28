@@ -13,6 +13,7 @@ interface SheetItem {
   markup: string;
   cssStyles: string;
   isDefault: boolean;
+  canEdit: boolean;
 }
 
 interface ContentTypeItem {
@@ -82,15 +83,17 @@ watch(canSetDefault, (allowed) => {
 const formBusy = ref(false);
 const formError = ref("");
 
-function openCreate() {
-  const firstContentType = contentTypes.value[0];
-  if (!firstContentType) return;
+function openCreate(contentTypeId?: string) {
+  const selectedType =
+    contentTypes.value.find((item) => item.id === contentTypeId) ??
+    contentTypes.value[0];
+  if (!selectedType) return;
 
   editingSheet.value = null;
   formError.value = "";
   form.slug = "";
   form.name = "";
-  form.contentTypeId = firstContentType.id;
+  form.contentTypeId = selectedType.id;
   form.isDefault = false;
   form.markup = "";
   form.cssStyles = "";
@@ -110,6 +113,20 @@ function openEdit(item: SheetItem) {
   resetSlugTouched(true);
   isFormOpen.value = true;
 }
+
+// `/sheets?contentTypeId=…` (from a Content Type's detail page) opens the
+// create form with that type preselected, then drops the query.
+const route = useRoute();
+watch(
+  contentTypes,
+  (items) => {
+    const contentTypeId = route.query.contentTypeId;
+    if (typeof contentTypeId !== "string" || items.length === 0) return;
+    openCreate(contentTypeId);
+    navigateTo({ query: {} }, { replace: true });
+  },
+  { immediate: true },
+);
 
 async function submitForm() {
   formBusy.value = true;
@@ -186,7 +203,7 @@ async function remove() {
         icon="i-lucide-plus"
         size="sm"
         :disabled="contentTypes.length === 0"
-        @click="openCreate"
+        @click="openCreate()"
       >
         New Sheet
       </UButton>
@@ -197,6 +214,15 @@ async function remove() {
     </p>
 
     <UTable :data="sheets" :columns="columns" :loading="status === 'pending'">
+      <template #name-cell="{ row }">
+        <NuxtLink
+          :to="`/sheets/${row.original.id}`"
+          class="font-medium text-highlighted hover:underline"
+        >
+          {{ row.original.name }}
+        </NuxtLink>
+      </template>
+
       <template #contentTypeId-cell="{ row }">
         {{ contentTypeName(row.original.contentTypeId) }}
       </template>
@@ -209,6 +235,7 @@ async function remove() {
 
       <template #actions-cell="{ row }">
         <UDropdownMenu
+          v-if="row.original.canEdit"
           :items="[
             [
               {

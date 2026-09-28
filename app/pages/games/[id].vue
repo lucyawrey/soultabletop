@@ -10,6 +10,7 @@ interface GameDetail {
   isPubliclyReadable: boolean;
   updatedAt: string;
   systemId?: string;
+  canEdit: boolean;
 }
 
 interface SystemOption {
@@ -70,13 +71,20 @@ async function submitForm() {
 
 const isDeleteOpen = ref(false);
 const deleteBusy = ref(false);
+const deleteError = ref("");
 
 async function remove() {
   deleteBusy.value = true;
+  deleteError.value = "";
 
   try {
     await $fetch(`/api/game/${id}`, { method: "DELETE" });
     await navigateTo("/games");
+  } catch (error) {
+    deleteError.value = extractApiErrorMessage(
+      error,
+      "Could not delete Game.",
+    );
   } finally {
     deleteBusy.value = false;
   }
@@ -113,7 +121,7 @@ async function remove() {
             </NuxtLink>
           </p>
         </div>
-        <div class="flex gap-2">
+        <div v-if="game?.canEdit" class="flex gap-2">
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
@@ -126,7 +134,10 @@ async function remove() {
             icon="i-lucide-trash"
             color="error"
             variant="outline"
-            @click="isDeleteOpen = true"
+            @click="
+              deleteError = '';
+              isDeleteOpen = true;
+            "
           >
             Delete
           </UButton>
@@ -193,6 +204,10 @@ async function remove() {
       :description="`Are you sure you want to delete &quot;${game?.name}&quot;? This action cannot be undone.`"
       :ui="{ footer: 'justify-end' }"
     >
+      <template v-if="deleteError" #body>
+        <UAlert color="error" variant="subtle" :description="deleteError" />
+      </template>
+
       <template #footer="{ close }">
         <UButton
           label="Cancel"
