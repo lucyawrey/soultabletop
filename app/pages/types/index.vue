@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
-import { extractApiErrorMessage } from "~/utils/api-error";
+import {
+  extractApiErrorMessage,
+  extractBrokenSheets,
+  type BrokenSheet,
+} from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
 
@@ -79,6 +83,7 @@ const form = reactive({
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 const formBusy = ref(false);
 const formError = ref("");
+const brokenSheets = ref<BrokenSheet[]>([]);
 
 function openCreate(systemId?: string) {
   const system =
@@ -87,6 +92,7 @@ function openCreate(systemId?: string) {
 
   editingType.value = null;
   formError.value = "";
+  brokenSheets.value = [];
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
@@ -101,6 +107,7 @@ function openCreate(systemId?: string) {
 function openEdit(item: ContentTypeItem) {
   editingType.value = item;
   formError.value = "";
+  brokenSheets.value = [];
   form.slug = item.slug;
   form.name = item.name;
   form.isPubliclyReadable = item.isPubliclyReadable;
@@ -126,9 +133,10 @@ watch(
   { immediate: true },
 );
 
-async function submitForm() {
+async function submitForm(confirmBrokenSheets = false) {
   formBusy.value = true;
   formError.value = "";
+  brokenSheets.value = [];
 
   try {
     const schema = JSON.parse(form.schema) as unknown;
@@ -152,7 +160,10 @@ async function submitForm() {
     if (editingType.value) {
       await $fetch(`/api/content-type/${editingType.value.id}`, {
         method: "PATCH",
-        body,
+        body: {
+          ...body,
+          ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
+        },
       });
     } else {
       await $fetch("/api/content-type", {
@@ -164,10 +175,13 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(
-      error,
-      "Could not save Content Type.",
-    );
+    const broken = extractBrokenSheets(error);
+    if (broken) brokenSheets.value = broken;
+    else
+      formError.value = extractApiErrorMessage(
+        error,
+        "Could not save Content Type.",
+      );
   } finally {
     formBusy.value = false;
   }
@@ -308,7 +322,7 @@ async function remove() {
           id="content-type-form"
           :state="form"
           class="space-y-4"
-          @submit="submitForm"
+          @submit="submitForm()"
         >
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
@@ -371,6 +385,12 @@ async function remove() {
             color="error"
             variant="subtle"
             :description="formError"
+          />
+          <BrokenSheetsAlert
+            v-if="brokenSheets.length"
+            :sheets="brokenSheets"
+            :loading="formBusy"
+            @confirm="submitForm(true)"
           />
         </UForm>
       </template>

@@ -132,6 +132,8 @@ export const contentTypePatchSchema = Type.Partial(
     ]),
     hasStrictSchema: Type.Boolean(),
     schema: contentTypeSchemaSchema,
+    // Save even if the change breaks existing Sheets (otherwise 409).
+    confirmBrokenSheets: Type.Boolean(),
   }),
 );
 

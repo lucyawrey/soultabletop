@@ -34,3 +34,22 @@ export const MAX_CONTENT_DEPTH = 3;
 
 // Upper bound on referenced Content per Content record.
 export const MAX_CONTENT_REFS = 300;
+
+export interface ContentTypeRules {
+  schema: ContentTypeSchema;
+  hasStrictSchema: boolean;
+}
+
+// IDs of the ContentTypes that `content` fields in `schema` point at.
+export function referencedContentTypeIds(
+  schema: ContentTypeSchema,
+  ids = new Set<string>(),
+) {
+  const visit = (field: ContentFieldSchema) => {
+    if (field.type === "content") ids.add(field.contentTypeId);
+    else if (field.type === "array") visit(field.itemType);
+    else if (field.type === "object") referencedContentTypeIds(field.entries, ids);
+  };
+  Object.values(schema).forEach(visit);
+  return ids;
+}

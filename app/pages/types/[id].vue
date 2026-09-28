@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { extractApiErrorMessage } from "~/utils/api-error";
+import {
+  extractApiErrorMessage,
+  extractBrokenSheets,
+  type BrokenSheet,
+} from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
 
@@ -74,11 +78,13 @@ const form = reactive({
 });
 const formBusy = ref(false);
 const formError = ref("");
+const brokenSheets = ref<BrokenSheet[]>([]);
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 
 function openEdit() {
   if (!contentType.value) return;
   formError.value = "";
+  brokenSheets.value = [];
   form.slug = contentType.value.slug;
   form.name = contentType.value.name;
   form.isPubliclyReadable = contentType.value.isPubliclyReadable;
@@ -89,9 +95,10 @@ function openEdit() {
   isFormOpen.value = true;
 }
 
-async function submitForm() {
+async function submitForm(confirmBrokenSheets = false) {
   formBusy.value = true;
   formError.value = "";
+  brokenSheets.value = [];
 
   try {
     const schema = JSON.parse(form.schema) as unknown;
@@ -111,15 +118,19 @@ async function submitForm() {
         contentCategory: form.contentCategory,
         hasStrictSchema: form.hasStrictSchema,
         schema,
+        ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
       },
     });
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(
-      error,
-      "Could not save Content Type.",
-    );
+    const broken = extractBrokenSheets(error);
+    if (broken) brokenSheets.value = broken;
+    else
+      formError.value = extractApiErrorMessage(
+        error,
+        "Could not save Content Type.",
+      );
   } finally {
     formBusy.value = false;
   }
@@ -259,7 +270,7 @@ async function remove() {
           id="content-type-detail-form"
           :state="form"
           class="space-y-4"
-          @submit="submitForm"
+          @submit="submitForm()"
         >
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
@@ -305,6 +316,12 @@ async function remove() {
             color="error"
             variant="subtle"
             :description="formError"
+          />
+          <BrokenSheetsAlert
+            v-if="brokenSheets.length"
+            :sheets="brokenSheets"
+            :loading="formBusy"
+            @confirm="submitForm(true)"
           />
         </UForm>
       </template>
