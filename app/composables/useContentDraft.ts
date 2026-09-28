@@ -131,17 +131,7 @@ export function useContentDraft(
   );
   onBeforeUnmount(() => clearTimeout(timer));
 
-  // Warn before losing unsaved changes.
-  onBeforeRouteLeave(() =>
-    dirty.value
-      ? window.confirm("You have unsaved changes. Leave anyway?")
-      : true,
-  );
-  const warnOnUnload = (event: BeforeUnloadEvent) => {
-    if (dirty.value) event.preventDefault();
-  };
-  onMounted(() => window.addEventListener("beforeunload", warnOnUnload));
-  onBeforeUnmount(() => window.removeEventListener("beforeunload", warnOnUnload));
+  useUnsavedChangesGuard(dirty);
 
   return { draft, dirty, status, error, save, discard, reset };
 }

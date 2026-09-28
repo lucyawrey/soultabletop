@@ -25,7 +25,7 @@ interface ContentTypeOption {
 const route = useRoute();
 const id = route.params.id as string;
 
-const { data: sheet, refresh } = await useFetch<SheetDetail>(
+const { data: sheet } = await useFetch<SheetDetail>(
   `/api/sheet/${id}`,
 );
 
@@ -36,60 +36,6 @@ const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
 const contentType = computed(() =>
   contentTypes.value.find((item) => item.id === sheet.value?.contentTypeId),
 );
-// Only editors of the ContentType may change its default Sheet.
-const canSetDefault = computed(() => contentType.value?.canEdit ?? false);
-
-const isFormOpen = ref(false);
-const form = reactive({
-  slug: "",
-  name: "",
-  isPubliclyReadable: false,
-  isDefault: false,
-  markup: "",
-  cssStyles: "",
-});
-const formBusy = ref(false);
-const formError = ref("");
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
-
-function openEdit() {
-  if (!sheet.value) return;
-  formError.value = "";
-  form.slug = sheet.value.slug;
-  form.name = sheet.value.name;
-  form.isPubliclyReadable = sheet.value.isPubliclyReadable;
-  form.isDefault = sheet.value.isDefault;
-  form.markup = sheet.value.markup;
-  form.cssStyles = sheet.value.cssStyles;
-  resetSlugTouched(true);
-  isFormOpen.value = true;
-}
-
-async function submitForm() {
-  formBusy.value = true;
-  formError.value = "";
-
-  try {
-    await $fetch(`/api/sheet/${id}`, {
-      method: "PATCH",
-      body: {
-        slug: form.slug,
-        name: form.name,
-        isPubliclyReadable: form.isPubliclyReadable,
-        markup: form.markup,
-        cssStyles: form.cssStyles,
-        ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
-      },
-    });
-    isFormOpen.value = false;
-    await refresh();
-  } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save Sheet.");
-  } finally {
-    formBusy.value = false;
-  }
-}
-
 const isDeleteOpen = ref(false);
 const deleteBusy = ref(false);
 const deleteError = ref("");
@@ -146,10 +92,10 @@ async function remove() {
         </div>
         <div v-if="sheet.canEdit" class="flex gap-2">
           <UButton
+            :to="`/sheets/${id}/edit`"
             icon="i-lucide-pencil"
             color="neutral"
             variant="outline"
-            @click="openEdit"
           >
             Edit
           </UButton>
@@ -189,83 +135,6 @@ async function remove() {
         <p v-else class="py-6 text-center text-sm text-muted">No CSS yet.</p>
       </UPageCard>
     </template>
-
-    <UModal
-      v-model:open="isFormOpen"
-      title="Edit Sheet"
-      :ui="{ content: 'sm:max-w-3xl' }"
-    >
-      <template #body>
-        <UForm
-          id="sheet-detail-form"
-          :state="form"
-          class="space-y-4"
-          @submit="submitForm"
-        >
-          <UFormField name="name" label="Name" required>
-            <UInput v-model="form.name" class="w-full" required />
-          </UFormField>
-          <UFormField
-            name="slug"
-            label="Slug"
-            description="Auto-generated from the name — edit if you need something different or unique."
-            :error="slugError"
-            required
-          >
-            <UInput
-              :model-value="form.slug"
-              class="w-full"
-              required
-              @update:model-value="onSlugInput"
-            />
-          </UFormField>
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <UFormField
-            v-if="canSetDefault"
-            name="isDefault"
-            label="Default sheet"
-            description="Used for Content of this type that doesn't pick a Sheet. Replaces any existing default."
-          >
-            <USwitch v-model="form.isDefault" />
-          </UFormField>
-          <UFormField name="markup" label="Markup">
-            <UTextarea
-              v-model="form.markup"
-              class="w-full font-mono"
-              :rows="12"
-            />
-          </UFormField>
-          <UFormField name="cssStyles" label="CSS">
-            <UTextarea
-              v-model="form.cssStyles"
-              class="w-full font-mono"
-              :rows="6"
-            />
-          </UFormField>
-          <UAlert
-            v-if="formError"
-            color="error"
-            variant="subtle"
-            :description="formError"
-          />
-        </UForm>
-      </template>
-
-      <template #footer="{ close }">
-        <UButton
-          label="Cancel"
-          color="neutral"
-          variant="outline"
-          @click="close"
-        />
-        <UButton
-          type="submit"
-          form="sheet-detail-form"
-          label="Save"
-          :loading="formBusy"
-        />
-      </template>
-    </UModal>
 
     <UModal
       v-model:open="isDeleteOpen"
