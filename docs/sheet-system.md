@@ -23,9 +23,9 @@ Sections: 1. markup language + parser → 2. tag catalog → 3. validation again
 ## 1. Markup language & parser
 
 ### Pipeline (all in `shared/sheet/`, used by server and client)
-1. `parse(source) → { root, diagnostics }` — syntax only, knows nothing about tags. Error-recovering: collects all
+1. `parseSheetMarkup(source) → { nodes, diagnostics }` (top-level nodes; `<Sheet>` is optional) — syntax only, knows nothing about tags. Error-recovering: collects all
    errors with line/column instead of stopping at the first.
-2. `validate(root, registry, contentTypeSchema) → { tree, diagnostics }` — checks tags/attrs/children/field bindings,
+2. `validate(nodes, registry, contentTypeSchema) → { tree, diagnostics }` — checks tags/attrs/children/field bindings,
    coerces attribute strings to typed props, outputs a normalized tree the renderer consumes.
 3. Renderer only ever sees the validated tree. Only `markup` source is stored; parse+validate runs on save (reject on
    errors) and on load (cheap; cache later if needed).
