@@ -23,7 +23,8 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 - A `content` schema field holds either the ID of existing Content of `contentTypeId` (a reference) or an object of local data validated against that ContentType (with its own `name`); `allow` restricts which. `validateContentData` in `server/utils/content-validation.ts` is async because it checks references and loads referenced schemas.
 - Content PATCH accepts `expectedUpdatedAt` and returns 409 if the Content changed since; the returned `updatedAt` can be sent back as the next `expectedUpdatedAt`.
 - Code shared by client and server lives in `shared/`; server code imports it with relative paths (drizzle-kit loads `server/database/schema.ts` without Nuxt aliases).
-- The Sheet system (markup language, rendering, editing) is being built in phases; the agreed design is `docs/sheet-system.md`. Follow it, and update it when a decision changes.
+- The Sheet system (markup language, rendering, editing, CSS) is designed in `docs/sheet-system.md`; follow it and update it when a decision changes. Framework-free logic (parser, tag registry, validator, generator, runtime path resolution, CSS scoping) is in `shared/sheet/` with vitest tests; Vue components are in `app/components/sheet/` (`SheetRenderer`, one component per layout tag, `Field`/`FieldInput` for all field tags); the Sheet editor is `/sheets/[id]/edit` (CodeMirror, client-only). When adding a tag, add it to `shared/sheet/registry.ts` and render it in `sheet/Node.vue` (layout) or `sheet/Field.vue` + `sheet/FieldInput.vue` (fields).
+- `sheet-*` classes are hooks for Sheet CSS, not Tailwind (ESLint ignores them).
 
 ## Conventions
 

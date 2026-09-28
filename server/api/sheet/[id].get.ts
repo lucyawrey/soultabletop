@@ -1,14 +1,17 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
-import { sheet } from "../../database/schema";
+import { contentType, sheet } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { requireResourceReader } from "../../utils/resource-management";
+import { loadSheetSchemas } from "../../utils/sheet-schemas";
 
 defineRouteMeta({
   openAPI: {
     tags: ["Sheet"],
     summary: "Get a Sheet",
+    description:
+      "Includes the schemas its markup is checked against (`schemas`) and its ContentType's `contentCategory`.",
     responses: {
       200: { description: "Sheet" },
       404: { description: "Sheet not found" },
@@ -28,11 +31,18 @@ export default defineEventHandler(async (event) => {
   if (item.kind !== "sheet")
     throw createError({ statusCode: 404, statusMessage: "Sheet not found" });
   const [row] = await useDatabase()
-    .select()
+    .select({ sheet, contentCategory: contentType.contentCategory })
     .from(sheet)
+    .innerJoin(contentType, eq(contentType.resourceId, sheet.contentTypeId))
     .where(eq(sheet.resourceId, id))
     .limit(1);
   if (!row)
     throw createError({ statusCode: 404, statusMessage: "Sheet not found" });
-  return { ...item, ...row };
+  const schemas = await loadSheetSchemas(row.sheet.contentTypeId);
+  return {
+    ...item,
+    ...row.sheet,
+    contentCategory: row.contentCategory,
+    schemas,
+  };
 });

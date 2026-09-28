@@ -60,15 +60,12 @@ const columns: TableColumn<SheetItem>[] = [
 ];
 
 const isFormOpen = ref(false);
-const editingSheet = ref<SheetItem | null>(null);
 const form = reactive({
   slug: "",
   name: "",
   isPubliclyReadable: false,
   contentTypeId: "",
   isDefault: false,
-  markup: "",
-  cssStyles: "",
 });
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 
@@ -80,7 +77,7 @@ const canSetDefault = computed(
       ?.canEdit ?? false,
 );
 watch(canSetDefault, (allowed) => {
-  if (!allowed && !editingSheet.value) form.isDefault = false;
+  if (!allowed) form.isDefault = false;
 });
 
 const formBusy = ref(false);
@@ -92,30 +89,13 @@ function openCreate(contentTypeId?: string) {
     contentTypes.value[0];
   if (!selectedType) return;
 
-  editingSheet.value = null;
   formError.value = "";
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.contentTypeId = selectedType.id;
   form.isDefault = false;
-  form.markup = "";
-  form.cssStyles = "";
   resetSlugTouched(false);
-  isFormOpen.value = true;
-}
-
-function openEdit(item: SheetItem) {
-  editingSheet.value = item;
-  formError.value = "";
-  form.slug = item.slug;
-  form.name = item.name;
-  form.isPubliclyReadable = item.isPubliclyReadable;
-  form.contentTypeId = item.contentTypeId;
-  form.isDefault = item.isDefault;
-  form.markup = item.markup;
-  form.cssStyles = item.cssStyles;
-  resetSlugTouched(true);
   isFormOpen.value = true;
 }
 
@@ -138,29 +118,20 @@ async function submitForm() {
   formError.value = "";
 
   try {
-    const body = {
-      slug: form.slug,
-      name: form.name,
-      isPubliclyReadable: form.isPubliclyReadable,
-      markup: form.markup,
-      cssStyles: form.cssStyles,
-      ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
-    };
-
-    if (editingSheet.value) {
-      await $fetch(`/api/sheet/${editingSheet.value.id}`, {
-        method: "PATCH",
-        body,
-      });
-    } else {
-      await $fetch("/api/sheet", {
-        method: "POST",
-        body: { ...body, contentTypeId: form.contentTypeId },
-      });
-    }
-
+    // New Sheets start from markup generated from the schema; continue in
+    // the editor.
+    const created = await $fetch<{ id: string }>("/api/sheet", {
+      method: "POST",
+      body: {
+        slug: form.slug,
+        name: form.name,
+        isPubliclyReadable: form.isPubliclyReadable,
+        contentTypeId: form.contentTypeId,
+        ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
+      },
+    });
     isFormOpen.value = false;
-    await refresh();
+    await navigateTo(`/sheets/${created.id}/edit`);
   } catch (error) {
     formError.value = extractApiErrorMessage(error, "Could not save Sheet.");
   } finally {
@@ -253,7 +224,7 @@ async function remove() {
               {
                 label: 'Edit',
                 icon: 'i-lucide-pencil',
-                onSelect: () => openEdit(row.original),
+                to: `/sheets/${row.original.id}/edit`,
               },
             ],
             [
@@ -282,8 +253,8 @@ async function remove() {
 
     <UModal
       v-model:open="isFormOpen"
-      :title="editingSheet ? 'Edit Sheet' : 'New Sheet'"
-      :ui="{ content: 'sm:max-w-3xl' }"
+      title="New Sheet"
+      description="It starts with markup generated from the Content Type's schema; you'll customize it in the editor next."
     >
       <template #body>
         <UForm
@@ -313,18 +284,13 @@ async function remove() {
           <UFormField
             name="contentTypeId"
             label="Content Type"
-            :description="
-              editingSheet
-                ? 'The Content Type cannot be changed after creation.'
-                : undefined
-            "
+            description="Can't be changed after creation."
             required
           >
             <USelect
               v-model="form.contentTypeId"
               :items="contentTypeOptions"
               class="w-full"
-              :disabled="!!editingSheet"
             />
           </UFormField>
           <UFormField
@@ -334,20 +300,6 @@ async function remove() {
             description="Used for Content of this type that doesn't pick a Sheet. Replaces any existing default."
           >
             <USwitch v-model="form.isDefault" />
-          </UFormField>
-          <UFormField name="markup" label="Markup">
-            <UTextarea
-              v-model="form.markup"
-              class="w-full font-mono"
-              :rows="12"
-            />
-          </UFormField>
-          <UFormField name="cssStyles" label="CSS">
-            <UTextarea
-              v-model="form.cssStyles"
-              class="w-full font-mono"
-              :rows="6"
-            />
           </UFormField>
           <UAlert
             v-if="formError"
@@ -368,7 +320,7 @@ async function remove() {
         <UButton
           type="submit"
           form="sheet-form"
-          label="Save"
+          label="Create and edit"
           :loading="formBusy"
         />
       </template>

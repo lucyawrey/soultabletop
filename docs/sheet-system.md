@@ -312,8 +312,10 @@ runs the exact same code in the browser, lazy-loaded there).
 ## 7. Sheet editor page
 
 Route `app/pages/sheets/[id]/edit.vue` (`middleware: "auth"`; redirects to `/sheets/[id]` when `!canEdit`). The Sheet
-detail page's Edit button goes here; its modal is removed. Creating a Sheet (list page modal) redirects here after
-create.
+detail page moved to `sheets/[id]/index.vue` so the editor is a sibling route, not a child. The detail page's and the
+list's Edit go here; the edit modals are gone. The list's create modal only asks for name, slug, visibility,
+ContentType, and default, then opens the editor: a Sheet created without markup starts with the generated markup
+(this is the "Copy to new Sheet" path). `GET /api/sheet/[id]` includes `schemas` and `contentCategory`.
 
 Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
 - Left: tabs **Markup** | **CSS** | **Settings** (Name, Slug, Visibility, Default sheet, Default edit mode, Default
@@ -329,7 +331,9 @@ Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
 Code editor (decided): **CodeMirror 6**, client-only, loaded only on this page. Markup via `@codemirror/lang-xml`
 with its element/attribute spec generated from the registry, plus a completion source for field paths from the
 schema; CSS via `@codemirror/lang-css`; `@codemirror/lint` shows our diagnostics inline. Themed with Nuxt UI tokens.
-Wrapped in `app/components/sheet/CodeEditor.client.vue`.
+Wrapped in `app/components/sheet/CodeEditor.client.vue`. Field-path completion inside `field="…"` and `{…}`; List
+item paths are offered by their tail (`name` for `attacks[].name`). Schema-derived helpers (field paths, sample
+preview data) are in `shared/sheet/editor.ts`. Syntax colors use CodeMirror's default (light) highlight style.
 
 ---
 

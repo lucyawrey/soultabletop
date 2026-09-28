@@ -13,7 +13,9 @@ import { parseBody, sheetCreateSchema } from "../../utils/api-schemas";
 import {
   assertValidSheetCss,
   assertValidSheetMarkup,
+  loadSheetSchemas,
 } from "../../utils/sheet-schemas";
+import { generateSheetMarkup } from "../../../shared/sheet/generate";
 
 defineRouteMeta({
   openAPI: {
@@ -32,7 +34,10 @@ defineRouteMeta({
               slug: { type: "string" },
               contentTypeId: { type: "string", format: "uuid" },
               ownerGroupId: { type: "string", format: "uuid" },
-              markup: { type: "string" },
+              markup: {
+                type: "string",
+                description: "Defaults to markup generated from the schema",
+              },
               cssStyles: { type: "string" },
               isDefault: { type: "boolean" },
               defaultEditMode: { type: "boolean" },
@@ -87,8 +92,14 @@ export default defineEventHandler(async (event) => {
       statusMessage:
         "Only editors of the ContentType can set its default Sheet",
     });
-  if (typeof body.markup === "string")
-    await assertValidSheetMarkup(body.markup, body.contentTypeId);
+  // New Sheets without markup start from the one generated from the schema.
+  let markup = body.markup;
+  if (markup === undefined) {
+    const schemas = await loadSheetSchemas(body.contentTypeId);
+    markup = schemas ? generateSheetMarkup(schemas) : "";
+  } else {
+    await assertValidSheetMarkup(markup, body.contentTypeId);
+  }
   if (typeof body.cssStyles === "string") assertValidSheetCss(body.cssStyles);
   const ownerGroupId =
     typeof body.ownerGroupId === "string" ? body.ownerGroupId : null;
@@ -128,7 +139,7 @@ export default defineEventHandler(async (event) => {
         .values({
           resourceId: createdResource.id,
           contentTypeId: body.contentTypeId as string,
-          markup: typeof body.markup === "string" ? body.markup : "",
+          markup,
           cssStyles: typeof body.cssStyles === "string" ? body.cssStyles : "",
           isDefault: body.isDefault === true,
           defaultEditMode: body.defaultEditMode === true,
