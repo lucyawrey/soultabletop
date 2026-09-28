@@ -132,9 +132,18 @@ async function remove() {
 
       <UPageCard>
         <template #header>
-          <h2 class="text-lg font-semibold text-highlighted">
-            Content Types
-          </h2>
+          <div class="flex items-center justify-between gap-4">
+            <h2 class="text-lg font-semibold text-highlighted">
+              Content Types
+            </h2>
+            <UButton
+              :to="{ path: '/types', query: { systemId: id } }"
+              icon="i-lucide-plus"
+              size="sm"
+            >
+              New Content Type
+            </UButton>
+          </div>
         </template>
 
         <ul

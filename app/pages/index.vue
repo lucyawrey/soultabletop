@@ -58,7 +58,7 @@ const fields = computed<AuthFormField[]>(() => [
             "Auto-generated from your display name — edit if you need something different or unique.",
           placeholder: "your-name",
           required: true,
-          error: slugError.value || undefined,
+          error: slugError.value,
         } satisfies AuthFormField,
       ]
     : []),
