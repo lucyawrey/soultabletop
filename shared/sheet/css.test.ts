@@ -31,6 +31,64 @@ describe("scopeSheetSelector", () => {
   });
 });
 
+describe("selectors that would reach outside the Sheet", () => {
+  // Each of these used to scope to something matching elements outside the
+  // Sheet (found in the security review).
+  it.each([
+    "div:not(:root) { display: none }",
+    "*:not(html) { opacity: 0 }",
+    "*:has(:root) { background: red }",
+    ":is(html) button::after { content: 'x' }",
+    ":root ~ * { display: none }",
+    ":root + div { display: none }",
+    "html.x ~ * { color: red }",
+    "@layer a { body ~ * { color: red } }",
+    "@media (min-width: 1px) { .a:not(:root) { color: red } }",
+    "~ .x { color: red }",
+    "+ .x { color: red }",
+    ".x { *:not(&) { outline: 5px solid red } }",
+    ".x { *:has(&) { color: red } }",
+    ".x { :is(&) ~ * { color: red } }",
+    ":root { & ~ * { display: none } }",
+    ":root { ~ * { display: none } }",
+    ":root { &:hover + * { color: red } }",
+    ":root { &:hover { & ~ * { color: red } } }",
+    ".dark { & ~ * { color: red } }",
+    ":root { @media (min-width: 1px) { & ~ * { color: red } } }",
+  ])("rejects %s", (css) => {
+    const result = scoped(css);
+    expect(result.diagnostics.map((item) => `${item.severity} ${item.code}`)).toContain("error css-selector");
+    // Nothing unscoped survives: every remaining rule is inside the Sheet.
+    expect(result.css).not.toMatch(/:not\(\[data-sheet|:has\(\[data-sheet|\[data-sheet="[^"]+"\]\s*[~+]|&\s*[~+]|:not\(&\)|:has\(&\)/);
+    // The same CSS is rejected when only checking (as on save).
+    expect(processSheetCss(css).diagnostics.map((item) => item.code)).toContain("css-selector");
+  });
+
+  it.each([
+    [":root { --accent: red }", `${scope} { --accent: red }`],
+    ["html .x { color: red }", `${scope} .x { color: red }`],
+    [":root > .x { color: red }", `${scope} > .x { color: red }`],
+    [".a ~ .b { color: red }", `${scope} .a ~ .b { color: red }`],
+    [".x { &:hover { color: red } }", `${scope} .x { &:hover { color: red } }`],
+    [".x { & ~ .y { color: red } }", `${scope} .x { & ~ .y { color: red } }`],
+    [".x { .y + .z { color: red } }", `${scope} .x { .y + .z { color: red } }`],
+    [":root { .a ~ .b { color: red } }", `${scope} { .a ~ .b { color: red } }`],
+    [":root { & > .x { color: red } }", `${scope} { & > .x { color: red } }`],
+    [".dark .x { color: red }", `.dark ${scope} .x { color: red }`],
+    [".a:not(.b) { color: red }", `${scope} .a:not(.b) { color: red }`],
+  ])("still allows %s", (css, expected) => {
+    const result = scoped(css);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.css).toBe(expected);
+  });
+
+  it("explains why a selector was rejected", () => {
+    expect(scoped("div:not(:root) { color: red }").diagnostics[0]?.message).toContain(
+      ":root can only start a selector",
+    );
+  });
+});
+
 describe("processSheetCss", () => {
   it("scopes rules, including inside allowed at-rules", () => {
     const result = scoped(
