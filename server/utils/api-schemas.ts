@@ -112,8 +112,10 @@ export const gameMembershipSchema = Type.Object({
   role: Type.Union([Type.Literal("gm"), Type.Literal("player")]),
 });
 
+// Identify the member by `userId` or by username (`slug`); one is required.
 export const groupMembershipSchema = Type.Object({
-  userId: Type.String({ minLength: 1 }),
+  userId: Type.Optional(Type.String({ minLength: 1 })),
+  slug: Type.Optional(Type.String({ minLength: 1 })),
   role: Type.Union([
     Type.Literal("admin"),
     Type.Literal("editor"),
