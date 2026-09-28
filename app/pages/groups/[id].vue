@@ -16,7 +16,7 @@ interface GroupDetail {
 interface Member {
   userId: string;
   name: string;
-  slug: string | null;
+  username: string | null;
   role: GroupRole;
 }
 
@@ -47,7 +47,7 @@ const {
 
 const memberColumns = computed<TableColumn<Member>[]>(() => [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "slug", header: "Username" },
+  { accessorKey: "username", header: "Username" },
   { accessorKey: "role", header: "Role" },
   ...(isAdmin.value ? [{ id: "actions" }] : []),
 ]);
@@ -58,7 +58,7 @@ const memberBusy = ref(false);
 
 async function saveMember(body: {
   userId?: string;
-  slug?: string;
+  username?: string;
   role: GroupRole;
 }) {
   memberBusy.value = true;
@@ -85,15 +85,15 @@ async function changeRole(member: Member, role: GroupRole) {
   if (member.userId === currentUserId.value) await refresh();
 }
 
-const addForm = reactive({ slug: "", role: "member" as GroupRole });
+const addForm = reactive({ username: "", role: "member" as GroupRole });
 
 async function addMember() {
   const added = await saveMember({
-    slug: addForm.slug.trim(),
+    username: addForm.username.trim(),
     role: addForm.role,
   });
   if (added) {
-    addForm.slug = "";
+    addForm.username = "";
     addForm.role = "member";
   }
 }
@@ -229,9 +229,9 @@ async function remove() {
             class="flex flex-wrap items-end gap-2"
             @submit="addMember"
           >
-            <UFormField name="slug" label="Username" class="min-w-48 flex-1">
+            <UFormField name="username" label="Username" class="min-w-48 flex-1">
               <UInput
-                v-model="addForm.slug"
+                v-model="addForm.username"
                 placeholder="their-username"
                 class="w-full"
                 required
@@ -265,8 +265,8 @@ async function remove() {
             :columns="memberColumns"
             :loading="membersStatus === 'pending'"
           >
-            <template #slug-cell="{ row }">
-              <span class="text-muted">{{ row.original.slug ?? "—" }}</span>
+            <template #username-cell="{ row }">
+              <span class="text-muted">{{ row.original.username ?? "—" }}</span>
             </template>
 
             <template #role-cell="{ row }">

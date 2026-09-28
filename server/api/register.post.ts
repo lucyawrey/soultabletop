@@ -9,7 +9,7 @@ interface RegisterBody {
   name?: unknown;
   email?: unknown;
   password?: unknown;
-  slug?: unknown;
+  username?: unknown;
 }
 
 defineRouteMeta({
@@ -22,12 +22,12 @@ defineRouteMeta({
         "application/json": {
           schema: {
             type: "object",
-            required: ["name", "email", "password", "slug"],
+            required: ["name", "email", "password", "username"],
             properties: {
               name: { type: "string" },
               email: { type: "string", format: "email" },
               password: { type: "string" },
-              slug: { type: "string" },
+              username: { type: "string" },
             },
           },
         },
@@ -46,16 +46,16 @@ export default defineEventHandler(async (event) => {
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const email = typeof body?.email === "string" ? body.email.trim() : "";
   const password = typeof body?.password === "string" ? body.password : "";
-  const slug =
-    typeof body?.slug === "string" ? body.slug.trim().toLowerCase() : "";
+  const username =
+    typeof body?.username === "string" ? body.username.trim().toLowerCase() : "";
 
-  if (!name || !email || !password || !slug) {
+  if (!name || !email || !password || !username) {
     throw createError({
       statusCode: 400,
       statusMessage: "Display name, email, password, and username are required",
     });
   }
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(username)) {
     throw createError({
       statusCode: 400,
       statusMessage:
@@ -67,7 +67,7 @@ export default defineEventHandler(async (event) => {
   const [existingProfile] = await database
     .select({ userId: userProfile.userId })
     .from(userProfile)
-    .where(sql`lower(${userProfile.slug}) = ${slug}`)
+    .where(sql`lower(${userProfile.username}) = ${username}`)
     .limit(1);
   if (existingProfile) {
     throw createError({
@@ -86,7 +86,7 @@ export default defineEventHandler(async (event) => {
 
     const [profile] = await database
       .insert(userProfile)
-      .values({ userId: signup.response.user.id, slug })
+      .values({ userId: signup.response.user.id, username })
       .returning();
 
     for (const cookie of signup.headers.getSetCookie()) {

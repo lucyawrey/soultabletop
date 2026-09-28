@@ -13,7 +13,7 @@ export const slugSchema = Type.String({
 
 export const profilePatchSchema = Type.Partial(
   Type.Object({
-    slug: slugSchema,
+    username: slugSchema,
     iconImageUrl: Type.Union([Type.String(), Type.Null()]),
   }),
 );
@@ -112,10 +112,10 @@ export const gameMembershipSchema = Type.Object({
   role: Type.Union([Type.Literal("gm"), Type.Literal("player")]),
 });
 
-// Identify the member by `userId` or by username (`slug`); one is required.
+// Identify the member by `userId` or by `username`; one is required.
 export const groupMembershipSchema = Type.Object({
   userId: Type.Optional(Type.String({ minLength: 1 })),
-  slug: Type.Optional(Type.String({ minLength: 1 })),
+  username: Type.Optional(Type.String({ minLength: 1 })),
   role: Type.Union([
     Type.Literal("admin"),
     Type.Literal("editor"),

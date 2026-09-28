@@ -4,7 +4,7 @@ import type { User } from "better-auth";
 import { userProfile } from "../database/schema";
 import { useDatabase } from "./database";
 
-function slugBase(name: string) {
+function usernameBase(name: string) {
   const normalized = name
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -26,10 +26,10 @@ export async function ensureUserProfile(user: Pick<User, "id" | "name">) {
   if (existingProfile) return existingProfile;
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const slug = `${slugBase(user.name)}-${randomUUID().slice(0, 8)}`;
+    const username = `${usernameBase(user.name)}-${randomUUID().slice(0, 8)}`;
     const [createdProfile] = await database
       .insert(userProfile)
-      .values({ userId: user.id, slug })
+      .values({ userId: user.id, username })
       .onConflictDoNothing()
       .returning();
 
@@ -44,7 +44,7 @@ export async function ensureUserProfile(user: Pick<User, "id" | "name">) {
     if (concurrentProfile) return concurrentProfile;
   }
 
-  throw new Error("Could not create a unique default username slug.");
+  throw new Error("Could not create a unique default username.");
 }
 
 export function isUniqueConstraintError(error: unknown) {

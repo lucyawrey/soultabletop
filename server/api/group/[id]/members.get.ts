@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
       role: groupMembership.role,
       joinedAt: groupMembership.createdAt,
       name: user.name,
-      slug: userProfile.slug,
+      username: userProfile.username,
     })
     .from(groupMembership)
     .innerJoin(user, eq(user.id, groupMembership.userId))

@@ -36,6 +36,13 @@
       "when": 1790536475498,
       "tag": "0004_cute_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790557457726,
+      "tag": "0005_rename_profile_slug_to_username",
+      "breakpoints": true
     }
   ]
 }

@@ -20,7 +20,7 @@ defineRouteMeta({
           schema: {
             type: "object",
             properties: {
-              slug: { type: "string" },
+              username: { type: "string" },
               iconImageUrl: { type: ["string", "null"] },
             },
           },
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const body = await parseBody(event, profilePatchSchema);
 
-  if (body.slug === undefined && body.iconImageUrl === undefined)
+  if (body.username === undefined && body.iconImageUrl === undefined)
     throw createError({
       statusCode: 400,
       statusMessage: "No profile fields provided",
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
     const [profile] = await database
       .update(userProfile)
       .set({
-        ...(body.slug !== undefined ? { slug: body.slug } : {}),
+        ...(body.username !== undefined ? { username: body.username } : {}),
         ...(body.iconImageUrl !== undefined
           ? { iconImageUrl: body.iconImageUrl }
           : {}),

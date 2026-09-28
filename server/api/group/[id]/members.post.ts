@@ -19,7 +19,7 @@ defineRouteMeta({
             required: ["role"],
             properties: {
               userId: { type: "string" },
-              slug: { type: "string", description: "Username; alternative to userId" },
+              username: { type: "string", description: "Alternative to userId" },
               role: { type: "string", enum: ["admin", "editor", "member"] },
             },
           },
@@ -28,7 +28,7 @@ defineRouteMeta({
     },
     responses: {
       200: { description: "Updated membership" },
-      400: { description: "userId or slug is required" },
+      400: { description: "userId or username is required" },
       401: { description: "Authentication required" },
       403: { description: "Group admin access required" },
       404: { description: "User not found" },
@@ -54,15 +54,15 @@ export default defineEventHandler(async (event) => {
   const database = useDatabase();
 
   let userId = body.userId;
-  if (!userId && body.slug) {
+  if (!userId && body.username) {
     const [profile] = await database
       .select({ userId: userProfile.userId })
       .from(userProfile)
-      .where(sql`lower(${userProfile.slug}) = ${body.slug.toLowerCase()}`);
+      .where(sql`lower(${userProfile.username}) = ${body.username.toLowerCase()}`);
     if (!profile)
       throw createError({
         statusCode: 404,
-        statusMessage: `No user with username "${body.slug}"`,
+        statusMessage: `No user with username "${body.username}"`,
       });
     userId = profile.userId;
   }
