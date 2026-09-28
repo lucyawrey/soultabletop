@@ -7,11 +7,16 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 // and an expandable row per item when there is a <RowDetails>.
 const props = defineProps<{ node: ValidatedElement }>();
 
-const { items } = useSheet();
+const { items, resolve } = useSheet();
 const attrText = useSheetAttrText();
 
 const label = computed(() => attrText(props.node.attrs.label));
+const list = computed(() => resolve(props.node.binding!.path));
 const rows = computed(() => items(props.node.binding!.path));
+const { editable, lockedEditable, unlock, remove, move } = useSheetListEditing(
+  () => props.node,
+  list,
+);
 const columnNodes = computed(() =>
   props.node.children.filter(
     (child): child is ValidatedElement =>
@@ -45,13 +50,60 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
       },
     },
   })),
+  ...(editable.value
+    ? [{ id: "actions", header: "", meta: { class: { td: "w-28 text-right" } } }]
+    : []),
 ]);
 </script>
 
 <template>
   <div :class="[sheetClasses(node), 'space-y-2']">
-    <div v-if="label" class="text-xs font-medium text-muted">{{ label }}</div>
+    <div
+      v-if="label || lockedEditable"
+      class="flex items-center gap-1 text-xs font-medium text-muted"
+    >
+      <span>{{ label }}</span>
+      <UButton
+        v-if="lockedEditable"
+        icon="i-lucide-pencil"
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        :aria-label="`Edit ${label || 'table'}`"
+        @click="unlock"
+      />
+    </div>
     <UTable :data="rows" :columns="columns" class="w-full">
+      <template #actions-cell="{ row }">
+        <div class="flex justify-end gap-1">
+          <UButton
+            icon="i-lucide-arrow-up"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            aria-label="Move up"
+            :disabled="row.index === 0"
+            @click="move(row.index, -1)"
+          />
+          <UButton
+            icon="i-lucide-arrow-down"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            aria-label="Move down"
+            :disabled="row.index === rows.length - 1"
+            @click="move(row.index, 1)"
+          />
+          <UButton
+            icon="i-lucide-trash"
+            color="error"
+            variant="ghost"
+            size="xs"
+            aria-label="Remove"
+            @click="remove(row.index)"
+          />
+        </div>
+      </template>
       <template #expand-cell="{ row }">
         <UButton
           color="neutral"
@@ -82,5 +134,11 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
         <span class="text-sm text-dimmed">None</span>
       </template>
     </UTable>
+    <SheetListAdd
+      v-if="editable"
+      :node="node"
+      :label="attrText(node.attrs.addLabel) || 'Add row'"
+      :list="list"
+    />
   </div>
 </template>

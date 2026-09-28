@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { ValidatedElement } from "#shared/sheet/validate";
 
-// Every field tag (Text, Number, Field, Column, ...), in view mode.
+// Every field tag (Text, Number, Field, Column, ...): its value, or its input
+// (FieldInput.vue) when editable.
 const props = defineProps<{ node: ValidatedElement; compact?: boolean }>();
 
 const { context, resolve, format, number } = useSheet();
@@ -12,61 +13,17 @@ const value = computed(() => resolved.value.value);
 const label = computed(
   () => attrText(props.node.attrs.label) || props.node.binding?.label || "",
 );
+const hint = computed(
+  () => attrText(props.node.attrs.hint) || props.node.binding?.description || "",
+);
 
-// How to show the value: the tag's own display, or for <Field> and <Column>
-// one picked from the schema type.
-type Display =
-  | "text"
-  | "number"
-  | "stat"
-  | "boolean"
-  | "tags"
-  | "tracker"
-  | "ref"
-  | "value"
-  | "markdown"
-  | "image";
+const display = computed(() => sheetFieldDisplay(props.node));
 
-const display = computed<Display>(() => {
-  const { tag, attrs, binding } = props.node;
-  switch (tag) {
-    case "Text":
-    case "Select":
-      return "text";
-    case "Number":
-      return attrs.variant === "stat" ? "stat" : "number";
-    case "Checkbox":
-    case "Toggle":
-      return "boolean";
-    case "Tags":
-      return "tags";
-    case "Tracker":
-      return "tracker";
-    case "Ref":
-      return "ref";
-    case "Markdown":
-      return "markdown";
-    case "Image":
-      return "image";
-    case "Value":
-      return "value";
-  }
-  switch (binding?.field?.type) {
-    case "string":
-      return "text";
-    case "number":
-      return "number";
-    case "boolean":
-      return "boolean";
-    case "resourceRef":
-    case "content":
-      return "ref";
-    case "array":
-      return "tags";
-    default:
-      return "value";
-  }
-});
+// Fields of unknown type (`any`) are edited with the raw JSON editor.
+const { editable, lockedEditable, unlock } = useSheetEditable(
+  () => props.node,
+  () => (display.value === "value" ? null : resolved.value.path),
+);
 
 const text = computed(() =>
   format(value.value, props.node.attrs.format === "signed" ? "signed" : "plain"),
@@ -120,15 +77,39 @@ const imageSize = computed(
 </script>
 
 <template>
-  <div :class="[sheetClasses(node), display === 'stat' ? 'text-center' : '']">
+  <div
+    :class="[
+      sheetClasses(node),
+      display === 'stat' && !editable ? 'text-center' : '',
+    ]"
+  >
     <div
-      v-if="label && !compact && display !== 'stat'"
-      class="text-xs font-medium text-muted"
+      v-if="(label && !compact && (display !== 'stat' || editable)) || lockedEditable"
+      class="flex items-center gap-1 text-xs font-medium text-muted"
     >
-      {{ label }}
+      <span v-if="!compact || editable">{{ label }}</span>
+      <UButton
+        v-if="lockedEditable"
+        icon="i-lucide-pencil"
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        :aria-label="`Edit ${label}`"
+        @click="unlock"
+      />
     </div>
 
-    <span v-if="resolved.unavailable" class="text-sm text-dimmed">
+    <template v-if="editable && resolved.path">
+      <SheetFieldInput
+        :node="node"
+        :value="value"
+        :path="resolved.path"
+        :label="label"
+      />
+      <p v-if="hint && !compact" class="mt-1 text-xs text-dimmed">{{ hint }}</p>
+    </template>
+
+    <span v-else-if="resolved.unavailable" class="text-sm text-dimmed">
       Unavailable
     </span>
 
@@ -198,9 +179,17 @@ const imageSize = computed(
       <span v-else class="text-dimmed">—</span>
     </template>
 
-    <p v-else-if="display === 'markdown'" class="whitespace-pre-wrap">
-      {{ text || "—" }}
-    </p>
+    <template v-else-if="display === 'markdown'">
+      <UEditor
+        v-if="typeof value === 'string' && value"
+        :model-value="value"
+        content-type="markdown"
+        :editable="false"
+        :image="false"
+        :mention="false"
+      />
+      <span v-else class="text-dimmed">—</span>
+    </template>
 
     <template v-else-if="display === 'image'">
       <img
