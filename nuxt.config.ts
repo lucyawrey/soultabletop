@@ -1,3 +1,5 @@
+import { sheetFonts } from "./shared/sheet/fonts";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: ["@nuxt/eslint", "@nuxt/ui", "@scalar/nuxt"],
@@ -28,6 +30,16 @@ export default defineNuxtConfig({
         braceStyle: "1tbs",
       },
     },
+  },
+
+  // Fonts Sheet CSS can use (see shared/sheet/fonts.ts). `global` loads them
+  // even though no app CSS mentions them.
+  fonts: {
+    families: sheetFonts.map(({ name }) => ({
+      name,
+      provider: "google",
+      global: true,
+    })),
   },
 
   scalar: {

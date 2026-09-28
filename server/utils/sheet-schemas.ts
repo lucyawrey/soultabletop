@@ -13,6 +13,7 @@ import {
   generateSheetMarkup,
   type ContentCategory,
 } from "../../shared/sheet/generate";
+import { processSheetCss } from "../../shared/sheet/css";
 import type { SheetDiagnostic } from "../../shared/sheet/parser";
 import {
   compileSheet,
@@ -64,6 +65,7 @@ export interface ResolvedSheet {
   id: string | null; // null for the generated sheet
   name: string;
   markup: string;
+  // Scoped to `[data-sheet="<id>"]`, ready to use.
   css: string;
   source: "selected" | "default" | "generated";
   defaultEditMode: boolean;
@@ -99,7 +101,7 @@ export async function resolveContentSheet(
         id: row.resource.id,
         name: row.resource.name,
         markup: row.sheet.markup,
-        css: row.sheet.cssStyles,
+        css: processSheetCss(row.sheet.cssStyles, row.resource.id).css,
         source: selectedSheetId ? "selected" : "default",
         defaultEditMode: row.sheet.defaultEditMode,
         defaultAutosave: row.sheet.defaultAutosave,
@@ -118,15 +120,27 @@ export async function resolveContentSheet(
   };
 }
 
-function formatDiagnostics(diagnostics: SheetDiagnostic[]) {
+function formatDiagnostics(diagnostics: SheetDiagnostic[], where = "line") {
   return diagnostics
     .filter((item) => item.severity === "error")
     .map((item) => ({
-      path: `line ${item.loc.start.line}:${item.loc.start.column}`,
+      path: `${where} ${item.loc.start.line}:${item.loc.start.column}`,
       message: item.message,
       code: item.code,
       loc: item.loc,
     }));
+}
+
+// Rejects Sheet CSS with errors (see shared/sheet/css.ts) with a 400.
+export function assertValidSheetCss(css: string) {
+  const { diagnostics } = processSheetCss(css);
+  if (hasErrors(diagnostics)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Sheet CSS has errors",
+      data: formatDiagnostics(diagnostics, "CSS line"),
+    });
+  }
 }
 
 // Rejects Sheet markup with errors (warnings are allowed) with a 400 listing

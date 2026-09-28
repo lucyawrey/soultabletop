@@ -13,7 +13,10 @@ import {
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 import { parseBody, sheetPatchSchema } from "../../utils/api-schemas";
-import { assertValidSheetMarkup } from "../../utils/sheet-schemas";
+import {
+  assertValidSheetCss,
+  assertValidSheetMarkup,
+} from "../../utils/sheet-schemas";
 
 defineRouteMeta({
   openAPI: {
@@ -69,6 +72,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: "Sheet not found" });
   if (body.markup !== undefined)
     await assertValidSheetMarkup(body.markup, current.contentTypeId);
+  if (body.cssStyles !== undefined) assertValidSheetCss(body.cssStyles);
   // The default Sheet belongs to the ContentType, so changing it (either way)
   // needs edit access there, not just on this Sheet.
   const isDefaultChanging =

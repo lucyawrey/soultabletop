@@ -294,6 +294,12 @@ runs the exact same code in the browser, lazy-loaded there).
 - Rejected: `@import`, `@font-face`, `@namespace`, `url()`, `image-set()`, `expression()`, `-moz-binding`,
   `behavior`. Allowed: `@media`, `@supports`, `@container`, `@layer`, `@keyframes`, CSS variables, `!important`.
 - Authors can use Nuxt UI tokens (`var(--ui-primary)`, `var(--ui-text-muted)`, …) to match the app theme.
+- Also rejected: other file-loading functions (`image()`, `cross-fade()`, `element()`, `paint()`), CSS escapes are
+  decoded before checking, and `<` in the output is escaped (`\3c `) so CSS can't close its `<style>` element in SSR.
+  Nested rules (CSS nesting) are left relative to their parent.
+- Implementation: `shared/sheet/css.ts` (`processSheetCss`); the Content GET returns the chosen Sheet's CSS scoped;
+  a Sheet picked in "View with" is scoped in the browser (the module is imported on demand). The renderer injects it
+  with `useHead` and marks its root with `data-sheet`, `isolate`, and `contain: paint`.
 
 - `:root`, `html`, `body` are rewritten to the sheet root itself (decided), so `:root { --accent: red }` works.
 - Fonts (decided): curated, self-hosted list. `@nuxt/fonts` (already installed by `@nuxt/ui`) only scans the app's

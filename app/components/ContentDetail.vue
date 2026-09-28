@@ -105,6 +105,27 @@ const viewSheet = computed(() => {
   return typeSheets.value.find((sheetItem) => sheetItem.id === chosen);
 });
 
+// Scoped CSS of the viewed Sheet. The server's choice arrives scoped; a Sheet
+// picked here is scoped in the browser (postcss loads only when needed).
+const viewCss = ref("");
+watch(
+  viewSheet,
+  async (current) => {
+    if (!current || current.id === item.value?.sheet.id) {
+      viewCss.value = item.value?.sheet.css ?? "";
+      return;
+    }
+    const raw = "cssStyles" in current ? current.cssStyles : "";
+    if (!raw || !current.id) {
+      viewCss.value = "";
+      return;
+    }
+    const { processSheetCss } = await import("#shared/sheet/css");
+    viewCss.value = processSheetCss(raw, current.id).css;
+  },
+  { immediate: true },
+);
+
 // Edit and Autosave switches start as the viewed Sheet says.
 const editMode = ref(false);
 const autosave = ref(false);
@@ -316,6 +337,8 @@ async function remove() {
         v-if="viewSheet"
         :key="viewSheet.id ?? GENERATED"
         :markup="viewSheet.markup"
+        :css="viewCss"
+        :scope-id="viewSheet.id"
         :schemas="item.schemas"
         :data="draft"
         :refs="refs"
