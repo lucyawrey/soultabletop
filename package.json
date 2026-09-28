@@ -27,6 +27,8 @@
     "drizzle-orm": "^0.45.3",
     "nuxt": "^4.5.2",
     "pg": "^8.23.0",
+    "postcss": "^8.5.28",
+    "postcss-selector-parser": "^7.1.6",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {

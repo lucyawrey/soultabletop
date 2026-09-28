@@ -11,6 +11,10 @@ const props = defineProps<{
   // so pass the draft copy.
   data: Record<string, unknown>;
   refs: SheetRefs;
+  // The Sheet's CSS, already scoped to `[data-sheet="<scopeId>"]` (see
+  // shared/sheet/css.ts).
+  css?: string;
+  scopeId?: string | null;
   // Show placeholders for broken tags (users who can edit the Sheet).
   canEditSheet?: boolean;
   // The viewer may edit the Content.
@@ -18,6 +22,14 @@ const props = defineProps<{
   // The Edit switch.
   editMode?: boolean;
 }>();
+
+useHead({
+  style: computed(() =>
+    props.css && props.scopeId
+      ? [{ key: `sheet-css-${props.scopeId}`, textContent: props.css }]
+      : [],
+  ),
+});
 
 const emit = defineEmits<{
   // Content picked in a reference field, to keep for display.
@@ -40,7 +52,11 @@ provideSheetContext({
 </script>
 
 <template>
-  <div class="sheet-root space-y-4">
+  <!-- `contain: paint` keeps Sheet CSS (even position: fixed) inside this box. -->
+  <div
+    class="sheet-root isolate space-y-4 [contain:paint]"
+    :data-sheet="scopeId ?? undefined"
+  >
     <SheetNodes :nodes="compiled.nodes" />
   </div>
 </template>

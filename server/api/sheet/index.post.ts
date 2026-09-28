@@ -10,7 +10,10 @@ import {
 import { requireName, requireSlug } from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import { parseBody, sheetCreateSchema } from "../../utils/api-schemas";
-import { assertValidSheetMarkup } from "../../utils/sheet-schemas";
+import {
+  assertValidSheetCss,
+  assertValidSheetMarkup,
+} from "../../utils/sheet-schemas";
 
 defineRouteMeta({
   openAPI: {
@@ -86,6 +89,7 @@ export default defineEventHandler(async (event) => {
     });
   if (typeof body.markup === "string")
     await assertValidSheetMarkup(body.markup, body.contentTypeId);
+  if (typeof body.cssStyles === "string") assertValidSheetCss(body.cssStyles);
   const ownerGroupId =
     typeof body.ownerGroupId === "string" ? body.ownerGroupId : null;
   if (
