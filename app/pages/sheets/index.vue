@@ -18,6 +18,7 @@ interface SheetItem {
 interface ContentTypeItem {
   id: string;
   name: string;
+  canEdit: boolean;
 }
 
 const {
@@ -66,6 +67,18 @@ const form = reactive({
   cssStyles: "",
 });
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+
+// Only editors of the ContentType may change its default Sheet (enforced
+// server-side too), so the switch is hidden for everyone else.
+const canSetDefault = computed(
+  () =>
+    contentTypes.value.find((item) => item.id === form.contentTypeId)
+      ?.canEdit ?? false,
+);
+watch(canSetDefault, (allowed) => {
+  if (!allowed && !editingSheet.value) form.isDefault = false;
+});
+
 const formBusy = ref(false);
 const formError = ref("");
 
@@ -106,9 +119,9 @@ async function submitForm() {
     const body = {
       slug: form.slug,
       name: form.name,
-      isDefault: form.isDefault,
       markup: form.markup,
       cssStyles: form.cssStyles,
+      ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
     };
 
     if (editingSheet.value) {
@@ -275,6 +288,7 @@ async function remove() {
             />
           </UFormField>
           <UFormField
+            v-if="canSetDefault"
             name="isDefault"
             label="Default sheet"
             description="Used for Content of this type that doesn't pick a Sheet. Replaces any existing default."

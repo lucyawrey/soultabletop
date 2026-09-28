@@ -68,10 +68,17 @@ export default defineEventHandler(async (event) => {
   const context = await loadResourceAccessContext(user, [
     typeResource.resource.id,
   ]);
-  if (!getResourceAccess(typeResource.resource, context).canRead)
+  const typeAccess = getResourceAccess(typeResource.resource, context);
+  if (!typeAccess.canRead)
     throw createError({
       statusCode: 403,
       statusMessage: "ContentType is not accessible",
+    });
+  if (body.isDefault === true && !typeAccess.canEdit)
+    throw createError({
+      statusCode: 403,
+      statusMessage:
+        "Only editors of the ContentType can set its default Sheet",
     });
   const ownerGroupId =
     typeof body.ownerGroupId === "string" ? body.ownerGroupId : null;

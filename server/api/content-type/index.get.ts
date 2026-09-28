@@ -34,12 +34,19 @@ export default defineEventHandler(async (event) => {
     : null;
 
   return records
-    .filter(({ resource: item }) =>
-      context
-        ? getResourceAccess(item, context).canRead
-        : item.isPubliclyReadable && !item.isAdminHidden,
-    )
-    .map(({ type, resource: item }) => ({
+    .map((record) => ({
+      ...record,
+      access: context
+        ? getResourceAccess(record.resource, context)
+        : {
+            canRead:
+              record.resource.isPubliclyReadable &&
+              !record.resource.isAdminHidden,
+            canEdit: false,
+          },
+    }))
+    .filter(({ access }) => access.canRead)
+    .map(({ type, resource: item, access }) => ({
       id: item.id,
       slug: item.slug,
       name: item.name,
@@ -47,5 +54,6 @@ export default defineEventHandler(async (event) => {
       contentCategory: type.contentCategory,
       hasStrictSchema: type.hasStrictSchema,
       schema: type.schema,
+      canEdit: access.canEdit,
     }));
 });

@@ -15,6 +15,7 @@ interface ContentTypeItem {
   contentCategory: ContentCategory;
   hasStrictSchema: boolean;
   schema: Record<string, unknown>;
+  canEdit: boolean;
 }
 
 interface SystemItem {
@@ -240,7 +241,9 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
+        <!-- Edit and delete both require edit access server-side. -->
         <UDropdownMenu
+          v-if="row.original.canEdit"
           :items="[
             [
               {
