@@ -21,6 +21,7 @@ import SheetWrapper from "./Wrapper.vue";
 const props = defineProps<{ node: ValidatedNode; compact?: boolean }>();
 
 const { context, text } = useSheet();
+provideSheetFlags(() => props.node);
 
 // Tags not listed here (Tab, Column, RowDetails) are rendered by their parent.
 const components: Record<string, Component> = {

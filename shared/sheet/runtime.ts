@@ -2,8 +2,13 @@
 // against the data (following references into loaded Content), and formatting
 // values as text. Framework-free so it can be unit-tested.
 
+import type { ContentFieldSchema } from "../content-schema";
 import type { TextPart } from "./parser";
-import { parseSheetPath, type SheetPath } from "./validate";
+import {
+  parseSheetPath,
+  type SheetPath,
+  type SheetSchemas,
+} from "./validate";
 
 export interface SheetRef {
   name: string;
@@ -93,6 +98,63 @@ export function formatSheetValue(
       .join(", ");
   if (isRecord(value) && typeof value.name === "string") return value.name;
   return JSON.stringify(value);
+}
+
+// Writes `value` at `path` inside `root`, creating missing objects and arrays
+// on the way (an array when the next key is a number). Mutates `root`.
+export function setSheetValue(
+  root: Record<string, unknown>,
+  path: (string | number)[],
+  value: unknown,
+) {
+  if (!path.length) return;
+  let container: Record<string | number, unknown> = root;
+  for (let index = 0; index < path.length - 1; index += 1) {
+    const key = path[index]!;
+    let next = container[key];
+    if (typeof next !== "object" || next === null) {
+      next = typeof path[index + 1] === "number" ? [] : {};
+      container[key] = next;
+    }
+    container = next as Record<string | number, unknown>;
+  }
+  container[path.at(-1)!] = value;
+}
+
+// A starting value for a new field or List item: empty values, with required
+// fields of objects and local Content filled in.
+export function defaultSheetValue(
+  field: ContentFieldSchema | undefined,
+  schemas: SheetSchemas,
+  depth = 0,
+): unknown {
+  const fill = (entries: Record<string, ContentFieldSchema>) =>
+    Object.fromEntries(
+      Object.entries(entries)
+        .filter(([, entry]) => entry.required)
+        .map(([key, entry]) => [key, defaultSheetValue(entry, schemas, depth + 1)]),
+    );
+  switch (field?.type) {
+    case "string":
+      return "";
+    case "number":
+      return 0;
+    case "boolean":
+      return false;
+    case "array":
+      return [];
+    case "object":
+      return depth > 8 ? {} : fill(field.entries);
+    case "content": {
+      const rules = schemas.types[field.contentTypeId];
+      return {
+        name: "",
+        ...(rules && depth <= 8 ? fill(rules.schema) : {}),
+      };
+    }
+    default:
+      return null;
+  }
 }
 
 export function interpolateSheetText(

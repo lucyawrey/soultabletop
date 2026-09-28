@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { ContentFieldSchema } from "../content-schema";
 import { parseSheetMarkup, type SheetText } from "./parser";
 import {
+  defaultSheetValue,
+  setSheetValue,
   formatSheetValue,
   interpolateSheetText,
   itemScopes,
@@ -8,7 +11,7 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "./runtime";
-import { parseSheetPath } from "./validate";
+import { parseSheetPath, type SheetSchemas } from "./validate";
 
 const refs: SheetRefs = {
   "rope-id": { name: "Rope", contentTypeId: "item", data: { weight: 5 } },
@@ -99,6 +102,67 @@ describe("formatSheetValue", () => {
     expect(formatSheetValue(2, refs, "signed")).toBe("+2");
     expect(formatSheetValue(0, refs, "signed")).toBe("0");
     expect(formatSheetValue(-1, refs, "signed")).toBe("-1");
+  });
+});
+
+describe("setSheetValue", () => {
+  it("sets existing values and creates missing objects and arrays", () => {
+    const target: Record<string, unknown> = { stats: { str: 1 }, list: [{ a: 1 }] };
+    setSheetValue(target, ["stats", "str"], 2);
+    setSheetValue(target, ["list", 0, "a"], 3);
+    setSheetValue(target, ["new", "deep"], true);
+    setSheetValue(target, ["rows", 1, "x"], "y");
+    expect(target).toEqual({
+      stats: { str: 2 },
+      list: [{ a: 3 }],
+      new: { deep: true },
+      rows: [undefined, { x: "y" }],
+    });
+  });
+
+  it("ignores an empty path", () => {
+    const target = { a: 1 };
+    setSheetValue(target, [], 2);
+    expect(target).toEqual({ a: 1 });
+  });
+});
+
+describe("defaultSheetValue", () => {
+  const schemas: SheetSchemas = {
+    root: { hasStrictSchema: true, schema: {} },
+    types: {
+      item: {
+        hasStrictSchema: true,
+        schema: { weight: { type: "number", required: true }, note: { type: "string" } },
+      },
+    },
+  };
+
+  it.each([
+    [{ type: "string" }, ""],
+    [{ type: "number" }, 0],
+    [{ type: "boolean" }, false],
+    [{ type: "array", itemType: { type: "string" } }, []],
+    [{ type: "any" }, null],
+    [{ type: "resourceRef" }, null],
+    [undefined, null],
+  ] as const)("%j -> %j", (field, value) => {
+    expect(defaultSheetValue(field as ContentFieldSchema | undefined, schemas)).toEqual(value);
+  });
+
+  it("fills required fields of objects and local Content", () => {
+    expect(
+      defaultSheetValue(
+        {
+          type: "object",
+          entries: { a: { type: "number", required: true }, b: { type: "string" } },
+        },
+        schemas,
+      ),
+    ).toEqual({ a: 0 });
+    expect(
+      defaultSheetValue({ type: "content", contentTypeId: "item", allow: "both" }, schemas),
+    ).toEqual({ name: "", weight: 0 });
   });
 });
 

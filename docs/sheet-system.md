@@ -241,8 +241,11 @@ Components (`app/components/sheet/`):
 - `Markdown` renders as plain pre-wrapped text until phase 6 adds `UEditor`.
 
 `ContentDetail.vue`:
-- Replaces the Data card with `<SheetRenderer>`. The existing Edit modal keeps Slug, Visibility, saved Sheet choice,
-  and the raw JSON editor ("Advanced").
+- Replaces the Data card with `<SheetRenderer>`. The header's former Edit button is now **Settings** (so it isn't
+  confused with the Edit switch); its modal keeps Name, Slug, Visibility, the saved Sheet, and the raw JSON editor.
+- The draft lives in `app/composables/useContentDraft.ts` (compares with sorted keys, since `content.data` is jsonb).
+  Editing controls are `sheet/FieldInput.vue`; List/Table add/remove/reorder use `useSheetListEditing` and
+  `sheet/ListAdd.vue`; `sheet/ContentPicker.vue` picks referenced Content.
 
 Edit + Autosave switches (decided):
 - Header shows two switches when `canEdit`: **Edit** and **Autosave**. Their initial state comes from the Sheet;

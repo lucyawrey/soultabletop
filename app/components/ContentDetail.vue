@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   GENERATED_SHEET_NAME,
+  generatedSheetDefaults,
   generateSheetMarkup,
   type ContentCategory,
 } from "#shared/sheet/generate";
@@ -55,6 +56,8 @@ interface SheetItem {
   contentTypeId: string;
   markup: string;
   cssStyles: string;
+  defaultEditMode: boolean;
+  defaultAutosave: boolean;
   canEdit: boolean;
 }
 
@@ -89,30 +92,59 @@ const viewSheet = computed(() => {
   const content = item.value;
   if (!content) return undefined;
   const chosen = viewSheetId.value;
-  if (!chosen || chosen === (content.sheet.id ?? GENERATED)) {
-    return {
-      id: content.sheet.id,
-      name: content.sheet.name,
-      markup: content.sheet.markup,
-      canEdit: content.sheet.canEdit,
-    };
-  }
+  if (!chosen || chosen === (content.sheet.id ?? GENERATED)) return content.sheet;
   if (chosen === GENERATED) {
     return {
       id: null,
       name: GENERATED_SHEET_NAME,
       markup: generateSheetMarkup(content.schemas),
       canEdit: false,
+      ...generatedSheetDefaults(content.contentCategory),
     };
   }
-  const entry = typeSheets.value.find((sheetItem) => sheetItem.id === chosen);
-  return entry
-    ? { id: entry.id, name: entry.name, markup: entry.markup, canEdit: entry.canEdit }
-    : undefined;
+  return typeSheets.value.find((sheetItem) => sheetItem.id === chosen);
 });
-const sheetData = computed(() =>
-  item.value ? { ...item.value.data, name: item.value.name } : {},
+
+// Edit and Autosave switches start as the viewed Sheet says.
+const editMode = ref(false);
+const autosave = ref(false);
+watch(
+  () => viewSheet.value?.id ?? GENERATED,
+  () => {
+    editMode.value = viewSheet.value?.defaultEditMode ?? false;
+    autosave.value = viewSheet.value?.defaultAutosave ?? false;
+  },
+  { immediate: true },
 );
+
+const {
+  draft,
+  dirty,
+  status: saveStatus,
+  error: saveError,
+  save,
+  discard,
+  reset: resetDraft,
+} = useContentDraft(item, autosave);
+
+async function reload() {
+  await refresh();
+  resetDraft();
+}
+
+// Content picked in reference fields, shown before the next save reloads refs.
+const pickedRefs = ref<SheetRefs>({});
+const refs = computed(() => ({ ...item.value?.refs, ...pickedRefs.value }));
+function addRef(id: string, ref: SheetRefs[string]) {
+  pickedRefs.value = { ...pickedRefs.value, [id]: ref };
+}
+
+const statusText = computed(() => {
+  if (saveStatus.value === "saving") return "Saving…";
+  if (dirty.value) return autosave.value ? "Unsaved changes…" : "Unsaved changes";
+  if (saveStatus.value === "saved") return "Saved";
+  return "";
+});
 
 // Select values can't be empty strings (Reka UI), hence a sentinel.
 const TYPE_DEFAULT = "type-default";
@@ -136,11 +168,13 @@ const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 function openEdit() {
   if (!item.value) return;
   formError.value = "";
+  // Start from the draft so unsaved sheet edits aren't lost.
+  const { name, ...data } = draft.value;
   form.slug = item.value.slug;
-  form.name = item.value.name;
+  form.name = typeof name === "string" ? name : item.value.name;
   form.isPubliclyReadable = item.value.isPubliclyReadable;
   form.sheetId = item.value.sheetId ?? TYPE_DEFAULT;
-  form.data = JSON.stringify(item.value.data, null, 2);
+  form.data = JSON.stringify(data, null, 2);
   resetSlugTouched(true);
   isFormOpen.value = true;
 }
@@ -166,7 +200,7 @@ async function submitForm() {
     });
     isFormOpen.value = false;
     viewSheetId.value = null;
-    await refresh();
+    await reload();
   } catch (error) {
     formError.value = extractApiErrorMessage(
       error,
@@ -230,12 +264,12 @@ async function remove() {
         </div>
         <div v-if="item.canEdit" class="flex gap-2">
           <UButton
-            icon="i-lucide-pencil"
+            icon="i-lucide-settings"
             color="neutral"
             variant="outline"
             @click="openEdit"
           >
-            Edit
+            Settings
           </UButton>
           <UButton
             icon="i-lucide-trash"
@@ -251,24 +285,31 @@ async function remove() {
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center justify-end gap-2 text-sm">
-        <span class="text-muted">View with</span>
-        <USelect
-          :model-value="viewSheetId ?? item.sheet.id ?? GENERATED"
-          :items="sheetOptions"
-          class="w-56"
-          aria-label="Sheet to view with"
-          @update:model-value="viewSheetId = $event as string"
-        />
-        <UButton
-          v-if="viewSheet?.id"
-          :to="`/sheets/${viewSheet.id}`"
-          icon="i-lucide-external-link"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          aria-label="Open Sheet"
-        />
+      <div class="flex flex-wrap items-center justify-between gap-4 text-sm">
+        <div v-if="item.canEdit" class="flex flex-wrap items-center gap-4">
+          <USwitch v-model="editMode" label="Edit" />
+          <USwitch v-model="autosave" label="Autosave" />
+          <span class="text-muted" aria-live="polite">{{ statusText }}</span>
+        </div>
+        <div class="ms-auto flex items-center gap-2">
+          <span class="text-muted">View with</span>
+          <USelect
+            :model-value="viewSheetId ?? item.sheet.id ?? GENERATED"
+            :items="sheetOptions"
+            class="w-56"
+            aria-label="Sheet to view with"
+            @update:model-value="viewSheetId = $event as string"
+          />
+          <UButton
+            v-if="viewSheet?.id"
+            :to="`/sheets/${viewSheet.id}`"
+            icon="i-lucide-external-link"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            aria-label="Open Sheet"
+          />
+        </div>
       </div>
 
       <SheetRenderer
@@ -276,13 +317,53 @@ async function remove() {
         :key="viewSheet.id ?? GENERATED"
         :markup="viewSheet.markup"
         :schemas="item.schemas"
-        :data="sheetData"
-        :refs="item.refs"
+        :data="draft"
+        :refs="refs"
         :can-edit-sheet="viewSheet.canEdit"
+        :can-edit="item.canEdit"
+        :edit-mode="editMode"
+        @add-ref="addRef"
       />
+
+      <div
+        v-if="
+          item.canEdit &&
+          ((dirty && !autosave) ||
+            saveStatus === 'error' ||
+            saveStatus === 'conflict')
+        "
+        class="sticky bottom-[env(safe-area-inset-bottom,0px)] z-10"
+      >
+        <UAlert
+          v-if="saveStatus === 'conflict'"
+          color="warning"
+          variant="solid"
+          icon="i-lucide-triangle-alert"
+          title="Someone else changed this since you loaded it"
+          description="Reload to see their changes (yours are discarded), or overwrite them with yours."
+          :actions="[
+            { label: 'Reload', color: 'neutral', variant: 'subtle', onClick: reload },
+            { label: 'Overwrite', color: 'neutral', variant: 'outline', onClick: () => save(true) },
+          ]"
+        />
+        <UAlert
+          v-else
+          :color="saveStatus === 'error' ? 'error' : 'neutral'"
+          variant="solid"
+          :icon="saveStatus === 'error' ? 'i-lucide-circle-alert' : 'i-lucide-pencil'"
+          :title="saveStatus === 'error' ? 'Could not save' : 'Unsaved changes'"
+          :description="saveStatus === 'error' ? saveError : undefined"
+          :actions="[
+            ...(autosave
+              ? []
+              : [{ label: 'Save', color: 'primary' as const, loading: saveStatus === 'saving', onClick: () => save() }]),
+            { label: 'Discard', color: 'neutral', variant: 'subtle', onClick: discard },
+          ]"
+        />
+      </div>
     </template>
 
-    <UModal v-model:open="isFormOpen" :title="`Edit ${label}`">
+    <UModal v-model:open="isFormOpen" :title="`${label} settings`">
       <template #body>
         <UForm
           id="content-detail-form"
