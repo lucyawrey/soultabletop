@@ -99,6 +99,12 @@ export default defineEventHandler(async (event) => {
         })
         .returning();
       if (!createdResource) throw new Error("Sheet Resource was not created");
+      // Only one default Sheet per ContentType (partial unique index).
+      if (body.isDefault === true)
+        await tx
+          .update(sheet)
+          .set({ isDefault: false })
+          .where(eq(sheet.contentTypeId, body.contentTypeId as string));
       const [createdSheet] = await tx
         .insert(sheet)
         .values({
