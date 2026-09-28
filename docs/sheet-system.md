@@ -202,8 +202,8 @@ with edit access to the Sheet, and is omitted for everyone else; valid nodes ren
 
 Generator: `generateSheetMarkup(schema)` in `shared/sheet/generate.ts`, a pure function (unit-tested) producing
 ordinary markup, so it goes through the same parse/validate/render path as authored Sheets:
-- `<Heading>{/name}</Heading>` at top (built-in name field; `<Text field="name">` in edit mode via `Field`).
-- Top-level primitive fields → one "Details" `Section` with `<Grid cols="2">` of `<Field>`s.
+- Top-level simple fields → one "Details" `Section` with `<Grid cols="2">`, starting with `<Text field="name" />`
+  (the page header already shows the name, so no heading), then a `<Field>` per field.
 - Object field → its own `Section` titled by label, recursing.
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
 - Array of strings → `Tags`; other primitive arrays → `List field="."`.
