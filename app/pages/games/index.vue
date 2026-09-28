@@ -11,6 +11,7 @@ interface GameItem {
   systemId: string;
   isPubliclyReadable: boolean;
   updatedAt: string;
+  canEdit: boolean;
 }
 
 interface SystemOption {
@@ -124,8 +125,10 @@ async function submitForm() {
 const isDeleteOpen = ref(false);
 const deletingGame = ref<GameItem | null>(null);
 const deleteBusy = ref(false);
+const deleteError = ref("");
 
 function confirmDelete(item: GameItem) {
+  deleteError.value = "";
   deletingGame.value = item;
   isDeleteOpen.value = true;
 }
@@ -133,11 +136,17 @@ function confirmDelete(item: GameItem) {
 async function remove() {
   if (!deletingGame.value) return;
   deleteBusy.value = true;
+  deleteError.value = "";
 
   try {
     await $fetch(`/api/game/${deletingGame.value.id}`, { method: "DELETE" });
     isDeleteOpen.value = false;
     await refresh();
+  } catch (error) {
+    deleteError.value = extractApiErrorMessage(
+      error,
+      "Could not delete Game.",
+    );
   } finally {
     deleteBusy.value = false;
   }
@@ -186,6 +195,7 @@ async function remove() {
 
       <template #actions-cell="{ row }">
         <UDropdownMenu
+          v-if="row.original.canEdit"
           :items="[
             [
               {
@@ -288,6 +298,10 @@ async function remove() {
       :description="`Are you sure you want to delete &quot;${deletingGame?.name}&quot;? This action cannot be undone.`"
       :ui="{ footer: 'justify-end' }"
     >
+      <template v-if="deleteError" #body>
+        <UAlert color="error" variant="subtle" :description="deleteError" />
+      </template>
+
       <template #footer="{ close }">
         <UButton
           label="Cancel"

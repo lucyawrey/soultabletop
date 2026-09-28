@@ -3,7 +3,7 @@ import { contentType, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
-  getResourceAccess,
+  getResourceAccessOrPublic,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 
@@ -36,14 +36,7 @@ export default defineEventHandler(async (event) => {
   return records
     .map((record) => ({
       ...record,
-      access: context
-        ? getResourceAccess(record.resource, context)
-        : {
-            canRead:
-              record.resource.isPubliclyReadable &&
-              !record.resource.isAdminHidden,
-            canEdit: false,
-          },
+      access: getResourceAccessOrPublic(record.resource, context),
     }))
     .filter(({ access }) => access.canRead)
     .map(({ type, resource: item, access }) => ({

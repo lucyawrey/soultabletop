@@ -11,6 +11,7 @@ interface ContentItem {
   updatedAt: string;
   contentTypeId: string;
   data: Record<string, unknown>;
+  canEdit: boolean;
 }
 
 interface ContentTypeItem {
@@ -157,8 +158,10 @@ async function submitForm() {
 const isDeleteOpen = ref(false);
 const deletingCharacter = ref<ContentItem | null>(null);
 const deleteBusy = ref(false);
+const deleteError = ref("");
 
 function confirmDelete(item: ContentItem) {
+  deleteError.value = "";
   deletingCharacter.value = item;
   isDeleteOpen.value = true;
 }
@@ -166,6 +169,7 @@ function confirmDelete(item: ContentItem) {
 async function remove() {
   if (!deletingCharacter.value) return;
   deleteBusy.value = true;
+  deleteError.value = "";
 
   try {
     await $fetch(`/api/content/${deletingCharacter.value.id}`, {
@@ -173,6 +177,11 @@ async function remove() {
     });
     isDeleteOpen.value = false;
     await refresh();
+  } catch (error) {
+    deleteError.value = extractApiErrorMessage(
+      error,
+      "Could not delete Character.",
+    );
   } finally {
     deleteBusy.value = false;
   }
@@ -203,12 +212,22 @@ async function remove() {
       :columns="columns"
       :loading="status === 'pending'"
     >
+      <template #name-cell="{ row }">
+        <NuxtLink
+          :to="`/characters/${row.original.id}`"
+          class="font-medium text-highlighted hover:underline"
+        >
+          {{ row.original.name }}
+        </NuxtLink>
+      </template>
+
       <template #contentTypeId-cell="{ row }">
         {{ contentTypeName(row.original.contentTypeId) }}
       </template>
 
       <template #actions-cell="{ row }">
         <UDropdownMenu
+          v-if="row.original.canEdit"
           :items="[
             [
               {
@@ -311,6 +330,10 @@ async function remove() {
       :description="`Are you sure you want to delete &quot;${deletingCharacter?.name}&quot;? This action cannot be undone.`"
       :ui="{ footer: 'justify-end' }"
     >
+      <template v-if="deleteError" #body>
+        <UAlert color="error" variant="subtle" :description="deleteError" />
+      </template>
+
       <template #footer="{ close }">
         <UButton
           label="Cancel"

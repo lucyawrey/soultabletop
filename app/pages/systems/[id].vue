@@ -9,6 +9,7 @@ interface SystemDetail {
   name: string;
   isPubliclyReadable: boolean;
   updatedAt: string;
+  canEdit: boolean;
 }
 
 interface ContentTypeOption {
@@ -74,13 +75,20 @@ async function submitForm() {
 
 const isDeleteOpen = ref(false);
 const deleteBusy = ref(false);
+const deleteError = ref("");
 
 async function remove() {
   deleteBusy.value = true;
+  deleteError.value = "";
 
   try {
     await $fetch(`/api/system/${id}`, { method: "DELETE" });
     await navigateTo("/systems");
+  } catch (error) {
+    deleteError.value = extractApiErrorMessage(
+      error,
+      "Could not delete System.",
+    );
   } finally {
     deleteBusy.value = false;
   }
@@ -110,7 +118,7 @@ async function remove() {
             {{ system.isPubliclyReadable ? "Public" : "Private" }}
           </p>
         </div>
-        <div class="flex gap-2">
+        <div v-if="system?.canEdit" class="flex gap-2">
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
@@ -123,7 +131,10 @@ async function remove() {
             icon="i-lucide-trash"
             color="error"
             variant="outline"
-            @click="isDeleteOpen = true"
+            @click="
+              deleteError = '';
+              isDeleteOpen = true;
+            "
           >
             Delete
           </UButton>
@@ -155,7 +166,12 @@ async function remove() {
             :key="type.id"
             class="flex items-center justify-between py-2"
           >
-            <span>{{ type.name }}</span>
+            <NuxtLink
+              :to="`/types/${type.id}`"
+              class="font-medium text-highlighted hover:underline"
+            >
+              {{ type.name }}
+            </NuxtLink>
             <span class="text-sm text-muted">{{ type.slug }}</span>
           </li>
         </ul>
@@ -224,6 +240,10 @@ async function remove() {
       :description="`Are you sure you want to delete &quot;${system?.name}&quot;? This action cannot be undone.`"
       :ui="{ footer: 'justify-end' }"
     >
+      <template v-if="deleteError" #body>
+        <UAlert color="error" variant="subtle" :description="deleteError" />
+      </template>
+
       <template #footer="{ close }">
         <UButton
           label="Cancel"

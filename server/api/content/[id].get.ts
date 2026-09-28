@@ -42,7 +42,8 @@ export default defineEventHandler(async (event) => {
 
   const user = await requireAuthenticatedUser(event);
   const context = await loadResourceAccessContext(user, [record.resource.id]);
-  if (!getResourceAccess(record.resource, context).canRead) {
+  const access = getResourceAccess(record.resource, context);
+  if (!access.canRead) {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
 
@@ -53,5 +54,6 @@ export default defineEventHandler(async (event) => {
     createdAt: record.resource.createdAt,
     updatedAt: record.resource.updatedAt,
     ...record.item,
+    canEdit: access.canEdit,
   };
 });

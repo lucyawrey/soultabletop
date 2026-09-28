@@ -5,6 +5,7 @@ import { resource } from "../database/schema";
 import { useDatabase } from "./database";
 import {
   getResourceAccess,
+  getResourceAccessOrPublic,
   loadResourceAccessContext,
 } from "./resource-access";
 
@@ -79,16 +80,14 @@ export async function requireResourceReader(
   if (!item)
     throw createError({ statusCode: 404, statusMessage: "Resource not found" });
 
-  const canRead = user
-    ? getResourceAccess(
-        item,
-        await loadResourceAccessContext(user, [resourceId]),
-      ).canRead
-    : item.isPubliclyReadable && !item.isAdminHidden;
-  if (!canRead) {
+  const access = getResourceAccessOrPublic(
+    item,
+    user ? await loadResourceAccessContext(user, [resourceId]) : null,
+  );
+  if (!access.canRead) {
     throw createError({ statusCode: 404, statusMessage: "Resource not found" });
   }
-  return item;
+  return { ...item, canEdit: access.canEdit };
 }
 
 export function requireOwnerTarget(

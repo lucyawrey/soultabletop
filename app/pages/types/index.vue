@@ -223,6 +223,15 @@ async function remove() {
       :columns="columns"
       :loading="status === 'pending'"
     >
+      <template #name-cell="{ row }">
+        <NuxtLink
+          :to="`/types/${row.original.id}`"
+          class="font-medium text-highlighted hover:underline"
+        >
+          {{ row.original.name }}
+        </NuxtLink>
+      </template>
+
       <template #systemId-cell="{ row }">
         <NuxtLink
           :to="`/systems/${row.original.systemId}`"

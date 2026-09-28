@@ -32,10 +32,12 @@ export default defineEventHandler(async (event) => {
   );
 
   return records
-    .filter(
-      ({ resource: item }) => getResourceAccess(item, accessContext).canRead,
-    )
-    .map(({ item, resource: resourceItem }) => ({
+    .map((record) => ({
+      ...record,
+      access: getResourceAccess(record.resource, accessContext),
+    }))
+    .filter(({ access }) => access.canRead)
+    .map(({ item, resource: resourceItem, access }) => ({
       id: resourceItem.id,
       slug: resourceItem.slug,
       name: resourceItem.name,
@@ -44,5 +46,6 @@ export default defineEventHandler(async (event) => {
       contentTypeId: item.contentTypeId,
       sheetId: item.sheetId,
       data: item.data,
+      canEdit: access.canEdit,
     }));
 });
