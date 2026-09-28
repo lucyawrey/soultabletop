@@ -43,7 +43,7 @@ const columns: TableColumn<GameItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "slug", header: "Slug" },
   { accessorKey: "systemId", header: "System" },
-  { accessorKey: "isPubliclyReadable", header: "Public" },
+  { accessorKey: "isPubliclyReadable", header: "Visibility" },
   {
     accessorKey: "updatedAt",
     header: "Updated",
@@ -185,12 +185,9 @@ async function remove() {
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
-        <UBadge
-          :color="row.original.isPubliclyReadable ? 'primary' : 'neutral'"
-          variant="subtle"
-        >
-          {{ row.original.isPubliclyReadable ? "Public" : "Private" }}
-        </UBadge>
+        <VisibilityBadge
+          :is-publicly-readable="row.original.isPubliclyReadable"
+        />
       </template>
 
       <template #actions-cell="{ row }">
@@ -256,6 +253,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UFormField name="systemId" label="System" required>
             <USelect
               v-model="form.systemId"
@@ -263,9 +261,6 @@ async function remove() {
               class="w-full"
               :disabled="!!editingGame"
             />
-          </UFormField>
-          <UFormField name="isPubliclyReadable" label="Publicly readable">
-            <USwitch v-model="form.isPubliclyReadable" />
           </UFormField>
           <UAlert
             v-if="formError"

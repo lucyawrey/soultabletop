@@ -109,7 +109,7 @@ async function remove() {
           <h1 class="text-2xl font-bold text-highlighted">{{ game.name }}</h1>
           <p class="text-sm text-muted">
             {{ game.slug }} ·
-            {{ game.isPubliclyReadable ? "Public" : "Private" }}
+            {{ visibilityLabel(game.isPubliclyReadable) }}
           </p>
           <p v-if="system" class="mt-1 text-sm">
             System:
@@ -170,9 +170,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
-          <UFormField name="isPubliclyReadable" label="Publicly readable">
-            <USwitch v-model="form.isPubliclyReadable" />
-          </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"

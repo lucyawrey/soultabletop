@@ -50,6 +50,7 @@ export default defineEventHandler(async (event) => {
   return {
     id: record.resource.id,
     slug: record.resource.slug,
+    isPubliclyReadable: record.resource.isPubliclyReadable,
     name: record.resource.name,
     createdAt: record.resource.createdAt,
     updatedAt: record.resource.updatedAt,

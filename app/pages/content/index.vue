@@ -12,6 +12,7 @@ interface ContentItem {
   contentTypeId: string;
   data: Record<string, unknown>;
   canEdit: boolean;
+  isPubliclyReadable: boolean;
 }
 
 interface ContentTypeItem {
@@ -69,6 +70,7 @@ function contentTypeName(contentTypeId: string) {
 const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Type" },
   {
     accessorKey: "updatedAt",
@@ -83,6 +85,7 @@ const editingContent = ref<ContentItem | null>(null);
 const form = reactive({
   slug: "",
   name: "",
+  isPubliclyReadable: false,
   contentTypeId: "",
   data: "{}",
 });
@@ -98,6 +101,7 @@ function openCreate() {
   formError.value = "";
   form.slug = "";
   form.name = "";
+  form.isPubliclyReadable = false;
   form.contentTypeId = firstContentType.id;
   form.data = "{}";
   resetSlugTouched(false);
@@ -109,6 +113,7 @@ function openEdit(item: ContentItem) {
   formError.value = "";
   form.slug = item.slug;
   form.name = item.name;
+  form.isPubliclyReadable = item.isPubliclyReadable;
   form.contentTypeId = item.contentTypeId;
   form.data = JSON.stringify(item.data, null, 2);
   resetSlugTouched(true);
@@ -131,6 +136,7 @@ async function submitForm() {
         body: {
           slug: form.slug,
           name: form.name,
+          isPubliclyReadable: form.isPubliclyReadable,
           data,
         },
       });
@@ -140,6 +146,7 @@ async function submitForm() {
         body: {
           slug: form.slug,
           name: form.name,
+          isPubliclyReadable: form.isPubliclyReadable,
           contentTypeId: form.contentTypeId,
           data,
         },
@@ -224,6 +231,12 @@ async function remove() {
         {{ contentTypeName(row.original.contentTypeId) }}
       </template>
 
+      <template #isPubliclyReadable-cell="{ row }">
+        <VisibilityBadge
+          :is-publicly-readable="row.original.isPubliclyReadable"
+        />
+      </template>
+
       <template #actions-cell="{ row }">
         <UDropdownMenu
           v-if="row.original.canEdit"
@@ -289,6 +302,7 @@ async function remove() {
               @update:model-value="onSlugInput"
             />
           </UFormField>
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UFormField name="contentTypeId" label="Type" required>
             <USelect
               v-model="form.contentTypeId"
