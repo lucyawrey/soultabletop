@@ -47,11 +47,22 @@ export async function ensureUserProfile(user: Pick<User, "id" | "name">) {
   throw new Error("Could not create a unique default username.");
 }
 
+// Postgres error code, looking through Drizzle's DrizzleQueryError, which
+// wraps the driver error in `cause`.
+function postgresErrorCode(error: unknown): unknown {
+  for (let current = error; typeof current === "object" && current !== null; ) {
+    if ("code" in current && typeof current.code === "string")
+      return current.code;
+    current = "cause" in current ? current.cause : undefined;
+  }
+  return undefined;
+}
+
 export function isUniqueConstraintError(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "23505"
-  );
+  return postgresErrorCode(error) === "23505";
+}
+
+// A row is still referenced through an `ON DELETE RESTRICT` foreign key.
+export function isForeignKeyConstraintError(error: unknown) {
+  return postgresErrorCode(error) === "23503";
 }
