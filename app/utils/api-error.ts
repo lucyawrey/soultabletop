@@ -5,18 +5,31 @@ export interface BrokenSheet {
   errors: string[];
 }
 
+export interface BrokenSheets {
+  // Sheets you can read, with details.
+  sheets: BrokenSheet[];
+  // Other broken Sheets you can't read.
+  hiddenCount: number;
+}
+
 // The Sheets a ContentType schema change would break, from the 409 that
 // `PATCH /api/content-type/[id]` returns without `confirmBrokenSheets`.
-export function extractBrokenSheets(error: unknown): BrokenSheet[] | undefined {
+export function extractBrokenSheets(error: unknown): BrokenSheets | undefined {
   if (!error || typeof error !== "object" || !("data" in error)) return;
   const data = (error as { data?: { statusCode?: unknown; data?: unknown } })
     .data;
   if (data?.statusCode !== 409) return;
-  const details = data.data;
-  if (details && typeof details === "object" && "brokenSheets" in details) {
-    const sheets = (details as { brokenSheets?: unknown }).brokenSheets;
-    if (Array.isArray(sheets)) return sheets as BrokenSheet[];
-  }
+  const details = data.data as
+    | { brokenSheets?: unknown; hiddenBrokenSheets?: unknown }
+    | undefined;
+  if (!details || !Array.isArray(details.brokenSheets)) return;
+  return {
+    sheets: details.brokenSheets as BrokenSheet[],
+    hiddenCount:
+      typeof details.hiddenBrokenSheets === "number"
+        ? details.hiddenBrokenSheets
+        : 0,
+  };
 }
 
 interface ValidationErrorDetail {

@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import type { BrokenSheet } from "~/utils/api-error";
+import type { BrokenSheets } from "~/utils/api-error";
 
 // Shown when a ContentType schema change would break existing Sheets; the
 // parent resends the save with `confirmBrokenSheets: true` on confirm.
-const props = defineProps<{ sheets: BrokenSheet[]; loading?: boolean }>();
+const props = defineProps<{ broken: BrokenSheets; loading?: boolean }>();
 const emit = defineEmits<{ confirm: [] }>();
 
+const total = computed(
+  () => props.broken.sheets.length + props.broken.hiddenCount,
+);
 const title = computed(
-  () =>
-    `Saving will break ${props.sheets.length} Sheet${props.sheets.length === 1 ? "" : "s"}`,
+  () => `Saving will break ${total.value} Sheet${total.value === 1 ? "" : "s"}`,
 );
 </script>
 
@@ -29,7 +31,7 @@ const title = computed(
   >
     <template #description>
       <ul class="mt-1 space-y-2">
-        <li v-for="sheet in sheets" :key="sheet.id">
+        <li v-for="sheet in broken.sheets" :key="sheet.id">
           <NuxtLink
             :to="`/sheets/${sheet.id}`"
             target="_blank"
@@ -42,6 +44,11 @@ const title = computed(
               {{ message }}
             </li>
           </ul>
+        </li>
+        <li v-if="broken.hiddenCount">
+          {{ broken.sheets.length ? "And " : "" }}{{ broken.hiddenCount }}
+          {{ broken.sheets.length ? "other " : "" }}Sheet{{ broken.hiddenCount === 1 ? "" : "s" }}
+          you can't see.
         </li>
       </ul>
       <p class="mt-2">

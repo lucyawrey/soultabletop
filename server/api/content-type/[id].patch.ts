@@ -50,7 +50,7 @@ defineRouteMeta({
       403: { description: "Not editable" },
       409: {
         description:
-          "The change breaks existing Sheets (listed in data.brokenSheets); resend with confirmBrokenSheets",
+          "The change breaks existing Sheets (readable ones listed in data.brokenSheets, the rest counted in data.hiddenBrokenSheets); resend with confirmBrokenSheets",
       },
     },
   },
@@ -86,15 +86,20 @@ export default defineEventHandler(async (event) => {
       .from(contentType)
       .where(eq(contentType.resourceId, id));
     if (current) {
-      const brokenSheets = await findSheetsBrokenBy(id, {
+      const broken = await findSheetsBrokenBy(user, id, {
         schema: (body.schema as ContentTypeSchema | undefined) ?? current.schema,
         hasStrictSchema: body.hasStrictSchema ?? current.hasStrictSchema,
       });
-      if (brokenSheets.length)
+      const total = broken.sheets.length + broken.hiddenCount;
+      if (total)
         throw createError({
           statusCode: 409,
-          statusMessage: `This change would break ${brokenSheets.length} Sheet${brokenSheets.length === 1 ? "" : "s"}`,
-          data: { brokenSheets },
+          statusMessage: `This change would break ${total} Sheet${total === 1 ? "" : "s"}`,
+          // Details only for Sheets the editor can read; the rest are counted.
+          data: {
+            brokenSheets: broken.sheets,
+            hiddenBrokenSheets: broken.hiddenCount,
+          },
         });
     }
   }
