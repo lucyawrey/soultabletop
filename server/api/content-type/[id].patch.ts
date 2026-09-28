@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { contentType, resource } from "../../database/schema";
 import type { ContentTypeSchema } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
+import { assertContentTypeSchema } from "../../utils/content-validation";
 import { useDatabase } from "../../utils/database";
 import {
   requireName,
@@ -64,6 +65,8 @@ export default defineEventHandler(async (event) => {
       statusCode: 404,
       statusMessage: "ContentType not found",
     });
+  if (body.schema !== undefined)
+    await assertContentTypeSchema(user, body.schema as ContentTypeSchema);
   const database = useDatabase();
   const [updatedResource] = await database
     .update(resource)

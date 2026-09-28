@@ -13,7 +13,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "typecheck": "nuxt typecheck",
-    "check": "pnpm run typecheck && pnpm run lint && pnpm run format:check"
+    "test": "vitest run",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run format:check"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.6",
@@ -38,6 +39,7 @@
     "eslint-plugin-better-tailwindcss": "^4.7.0",
     "prettier": "^3.9.9",
     "typescript": "^6.0.3",
+    "vitest": "^5.0.2",
     "vue-tsc": "^3.3.11"
   },
   "packageManager": "pnpm@12.5.1"

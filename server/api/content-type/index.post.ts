@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { contentType, resource } from "../../database/schema";
 import type { ContentTypeSchema } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
+import { assertContentTypeSchema } from "../../utils/content-validation";
 import { useDatabase } from "../../utils/database";
 import {
   getResourceAccess,
@@ -79,6 +80,8 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: "Invalid contentCategory",
     });
+  const schema = (body.schema ?? {}) as ContentTypeSchema;
+  await assertContentTypeSchema(user, schema);
   const database = useDatabase();
   const [systemResource] = await database
     .select()
@@ -133,7 +136,7 @@ export default defineEventHandler(async (event) => {
               | "document"
               | "playerCharacter") ?? "general",
           hasStrictSchema: body.hasStrictSchema === true,
-          schema: (body.schema ?? {}) as ContentTypeSchema,
+          schema,
         })
         .returning();
       return { ...createdResource, ...createdType };

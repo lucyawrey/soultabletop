@@ -7,7 +7,8 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 - Run node/pnpm through a login shell or pnpm breaks (nvm/corepack mismatch):
   `zsh -ilc 'nvm use >/dev/null 2>&1 && <command>' 2>&1 | grep -v "command not found"`
 - Quote bracketed Nuxt paths in the shell: `"app/pages/games/[id].vue"`.
-- Verify with `pnpm typecheck && pnpm lint`. **Don't run `pnpm format`** — the user formats code themselves.
+- Verify with `pnpm typecheck && pnpm lint && pnpm test`. **Don't run `pnpm format`** — the user formats code themselves. `pnpm test` runs vitest over `shared/**/*.test.ts` and `server/**/*.test.ts`.
+- `.env`'s `DATABASE_URL` contains `&`, so don't `source` it; use `node --env-file=.env` for ad-hoc scripts.
 - Typecheck and lint don't catch broken template structure (e.g. a missing closing tag). After template edits, compile the changed templates with `parse`/`compileTemplate` from the pnpm-installed `node_modules/.pnpm/@vue+compiler-sfc@*/node_modules/@vue/compiler-sfc` (works for pages behind auth), or request a public page from the dev server (a 500 body includes the Vite compile error; auth pages just 302 without compiling). The user often has `pnpm dev` running already — check `lsof -iTCP -sTCP:LISTEN -P | grep node` for its port (3000 or 3001) before starting another, and never kill a dev server you didn't start.
 
 ## Data model
@@ -18,6 +19,11 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 - Characters and Content are both `content` resources, split by the ContentType's `contentCategory` (`playerCharacter` vs everything else) and filtered client-side from `/api/content`. No separate Characters API.
 - A ContentType's default Sheet belongs to the ContentType: changing a Sheet's `isDefault` requires edit access to its ContentType, not just the Sheet.
 - User profiles have a `username` (slug-formatted, unique, case-insensitive).
+- ContentType schemas (`ContentFieldSchema` in `shared/content-schema.ts`, TypeBox mirror `contentTypeSchemaSchema` in `server/utils/api-schemas.ts`; keep both in sync) are stored as `json`, not `jsonb`, to keep field order. Every ContentType has a built-in `name` field that is the Content's resource name: schemas can't define `name`, and a `name` key in submitted Content data is moved to the resource name (`extractDataName`).
+- A `content` schema field holds either the ID of existing Content of `contentTypeId` (a reference) or an object of local data validated against that ContentType (with its own `name`); `allow` restricts which. `validateContentData` in `server/utils/content-validation.ts` is async because it checks references and loads referenced schemas.
+- Content PATCH accepts `expectedUpdatedAt` and returns 409 if the Content changed since; the returned `updatedAt` can be sent back as the next `expectedUpdatedAt`.
+- Code shared by client and server lives in `shared/`; server code imports it with relative paths (drizzle-kit loads `server/database/schema.ts` without Nuxt aliases).
+- The Sheet system (markup language, rendering, editing) is being built in phases; the agreed design is `docs/sheet-system.md`. Follow it, and update it when a decision changes.
 
 ## Conventions
 
