@@ -5,11 +5,12 @@ import {
   extractBrokenSheets,
   type BrokenSheets,
 } from "~/utils/api-error";
+import {
+  CONTENT_CATEGORY_LABELS,
+  type ContentCategory,
+} from "#shared/content-categories";
 
 definePageMeta({ middleware: "auth" });
-
-type ContentCategory =
-  "general" | "nonPlayerCharacter" | "document" | "playerCharacter";
 
 interface ContentTypeItem {
   id: string;
@@ -28,14 +29,7 @@ interface SystemItem {
   name: string;
 }
 
-const categoryLabels: Record<ContentCategory, string> = {
-  general: "General",
-  nonPlayerCharacter: "Non-Player Character",
-  document: "Document",
-  playerCharacter: "Player Character",
-};
-
-const categoryOptions = Object.entries(categoryLabels).map(
+const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
   ([value, label]) => ({ label, value }),
 );
 
@@ -262,7 +256,7 @@ async function remove() {
       </template>
 
       <template #contentCategory-cell="{ row }">
-        {{ categoryLabels[row.original.contentCategory] }}
+        {{ CONTENT_CATEGORY_LABELS[row.original.contentCategory] }}
       </template>
 
       <template #hasStrictSchema-cell="{ row }">

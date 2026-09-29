@@ -10,14 +10,11 @@ import type {
 } from "../content-schema";
 import { humanizeFieldName } from "./registry";
 import type { SheetSchemas } from "./validate";
+import type { ContentCategory } from "../content-categories";
 
 export const GENERATED_SHEET_NAME = "Generated (from schema)";
 
-export type ContentCategory =
-  | "general"
-  | "nonPlayerCharacter"
-  | "document"
-  | "playerCharacter";
+export type { ContentCategory } from "../content-categories";
 
 // Initial Edit/Autosave switch state for generated sheets.
 export function generatedSheetDefaults(category: ContentCategory) {

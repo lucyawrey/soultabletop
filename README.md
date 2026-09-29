@@ -100,7 +100,8 @@ pnpm test        # vitest
 pnpm check       # all of the above plus a Prettier check
 ```
 
-CI (`.github/workflows/ci.yml`) runs lint, typecheck, and tests on every push.
+There is no CI: run these before opening a pull request. Vercel builds every
+push, which catches build errors but not lint, type, or test failures.
 
 ## API reference
 

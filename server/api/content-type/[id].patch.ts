@@ -32,7 +32,7 @@ defineRouteMeta({
                 enum: [
                   "general",
                   "nonPlayerCharacter",
-                  "document",
+                  "page",
                   "playerCharacter",
                 ],
               },
@@ -119,8 +119,7 @@ export default defineEventHandler(async (event) => {
   const typeValues = {
       ...(body.contentCategory !== undefined
         ? {
-            contentCategory: body.contentCategory as
-              "general" | "nonPlayerCharacter" | "document" | "playerCharacter",
+            contentCategory: body.contentCategory,
           }
         : {}),
       ...(body.hasStrictSchema !== undefined

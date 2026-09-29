@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import type { ContentTypeSchema } from "../../shared/content-schema";
+import { CONTENT_CATEGORIES } from "../../shared/content-categories";
 import {
   boolean,
   json,
@@ -92,12 +93,7 @@ export const verification = pgTable("verification", {
 export const siteRole = pgEnum("site_role", ["member", "admin"]);
 export const groupRole = pgEnum("group_role", ["admin", "editor", "member"]);
 export const gameRole = pgEnum("game_role", ["gm", "player"]);
-export const contentCategory = pgEnum("content_category", [
-  "general",
-  "nonPlayerCharacter",
-  "document",
-  "playerCharacter",
-]);
+export const contentCategory = pgEnum("content_category", CONTENT_CATEGORIES);
 export const resourceKind = pgEnum("resource_kind", [
   "system",
   "game",

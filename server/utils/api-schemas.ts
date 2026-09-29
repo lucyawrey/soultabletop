@@ -3,6 +3,7 @@ import { FormatRegistry, Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { createError, readBody, type H3Event } from "h3";
 import { uuidPattern } from "./resource-management";
+import { CONTENT_CATEGORIES } from "../../shared/content-categories";
 
 FormatRegistry.Set("uuid", (value) => uuidPattern.test(value));
 
@@ -102,17 +103,16 @@ export const contentTypeSchemaSchema = Type.Record(
   contentFieldSchema,
 );
 
+const contentCategorySchema = Type.Union(
+  CONTENT_CATEGORIES.map((category) => Type.Literal(category)),
+);
+
 export const contentTypeCreateSchema = Type.Intersect([
   resourceCreateSchema,
   Type.Object({
     systemId: uuidSchema,
     contentCategory: Type.Optional(
-      Type.Union([
-        Type.Literal("general"),
-        Type.Literal("nonPlayerCharacter"),
-        Type.Literal("document"),
-        Type.Literal("playerCharacter"),
-      ]),
+      contentCategorySchema,
     ),
     hasStrictSchema: Type.Optional(Type.Boolean()),
     schema: Type.Optional(contentTypeSchemaSchema),
@@ -124,12 +124,7 @@ export const contentTypePatchSchema = Type.Partial(
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
     isPubliclyReadable: Type.Boolean(),
-    contentCategory: Type.Union([
-      Type.Literal("general"),
-      Type.Literal("nonPlayerCharacter"),
-      Type.Literal("document"),
-      Type.Literal("playerCharacter"),
-    ]),
+    contentCategory: contentCategorySchema,
     hasStrictSchema: Type.Boolean(),
     schema: contentTypeSchemaSchema,
     // Save even if the change breaks existing Sheets (otherwise 409).
