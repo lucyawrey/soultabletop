@@ -4,6 +4,7 @@ import { contentType, sheet } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { requireResourceReader } from "../../utils/resource-management";
+import { processSheetCss } from "../../../shared/sheet/css";
 import { loadSheetSchemas } from "../../utils/sheet-schemas";
 
 defineRouteMeta({
@@ -11,7 +12,7 @@ defineRouteMeta({
     tags: ["Sheet"],
     summary: "Get a sheet",
     description:
-      "Includes the schemas its markup is checked against (`schemas`) and its content type's `contentCategory`.",
+      "Includes the schemas its markup is checked against (`schemas`), its content type's `contentCategory`, and its CSS scoped for rendering (`css`).",
     responses: {
       200: { description: "Sheet" },
       404: { description: "Sheet not found" },
@@ -43,6 +44,7 @@ export default defineEventHandler(async (event) => {
     ...item,
     ...row.sheet,
     contentCategory: row.contentCategory,
+    css: processSheetCss(row.sheet.cssStyles, id).css,
     schemas,
   };
 });

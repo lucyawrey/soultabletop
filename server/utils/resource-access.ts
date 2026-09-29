@@ -178,6 +178,15 @@ export function getResourceAccess(
   return { canRead, canEdit, canDelete: false };
 }
 
+// Whether the user may create resources owned by a group, or move resources
+// into it: its admins and editors, and site admins for system groups (which
+// they manage without being members).
+export function canCreateForGroup(groupId: string, context: ResourceAccessContext) {
+  const role = context.groupRoles.get(groupId);
+  if (role === "admin" || role === "editor") return true;
+  return context.isSiteAdmin && context.systemGroupIds.has(groupId);
+}
+
 // Like getResourceAccess, but for routes that allow anonymous visitors (no
 // context): they can read public, non-hidden Resources and edit nothing.
 export function getResourceAccessOrPublic(
