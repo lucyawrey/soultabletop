@@ -8,6 +8,14 @@ import {
   CONTENT_CATEGORY_LABELS,
   type ContentCategory,
 } from "#shared/content-categories";
+import type { ContentTypeSchema } from "#shared/content-schema";
+import {
+  builderErrors,
+  builderToSchema,
+  parseSchemaJson,
+  schemaToBuilder,
+  type BuilderField,
+} from "#shared/schema-builder";
 
 definePageMeta({ middleware: "auth" });
 
@@ -42,6 +50,7 @@ const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
 
 const route = useRoute();
 const id = route.params.id as string;
+const toast = useToast();
 
 const { data: contentType, refresh } = await useFetch<ContentTypeDetail>(
   `/api/content-type/${id}`,
@@ -68,7 +77,6 @@ const form = reactive({
   isPubliclyReadable: false,
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
-  schema: "{}",
 });
 const formBusy = ref(false);
 const formError = ref("");
@@ -84,7 +92,6 @@ function openEdit() {
   form.isPubliclyReadable = contentType.value.isPubliclyReadable;
   form.contentCategory = contentType.value.contentCategory;
   form.hasStrictSchema = contentType.value.hasStrictSchema;
-  form.schema = JSON.stringify(contentType.value.schema, null, 2);
   resetSlugTouched(true);
   isFormOpen.value = true;
 }
@@ -95,14 +102,6 @@ async function submitForm(confirmBrokenSheets = false) {
   brokenSheets.value = undefined;
 
   try {
-    const schema = JSON.parse(form.schema) as unknown;
-    if (
-      typeof schema !== "object" ||
-      schema === null ||
-      Array.isArray(schema)
-    ) {
-      throw new Error("Schema must be a JSON object.");
-    }
     await $fetch(`/api/content-type/${id}`, {
       method: "PATCH",
       body: {
@@ -111,7 +110,6 @@ async function submitForm(confirmBrokenSheets = false) {
         isPubliclyReadable: form.isPubliclyReadable,
         contentCategory: form.contentCategory,
         hasStrictSchema: form.hasStrictSchema,
-        schema,
         ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
       },
     });
@@ -128,6 +126,117 @@ async function submitForm(confirmBrokenSheets = false) {
   } finally {
     formBusy.value = false;
   }
+}
+
+// Schema: edited with the schema builder, or as JSON (advanced).
+
+const { data: allContentTypes } = await useLazyFetch<SystemOption[]>(
+  "/api/content-type",
+  { default: () => [] },
+);
+
+const schemaFields = ref<BuilderField[]>([]);
+const schemaMode = ref<"builder" | "json">("builder");
+const schemaJson = ref("");
+const schemaBusy = ref(false);
+const schemaError = ref("");
+const schemaBroken = ref<BrokenSheets>();
+// The saved schema, normalized the way the builder writes it, so an untouched
+// draft compares equal.
+const savedSchema = ref<string>();
+function loadSchema(schema: ContentTypeSchema) {
+  schemaFields.value = schemaToBuilder(schema);
+  savedSchema.value = JSON.stringify(builderToSchema(schemaFields.value));
+  schemaMode.value = "builder";
+  schemaJson.value = "";
+  schemaError.value = "";
+  schemaBroken.value = undefined;
+}
+
+const schemaDraft = computed(() => {
+  if (schemaMode.value === "builder")
+    return { schema: builderToSchema(schemaFields.value) };
+  return parseSchemaJson(schemaJson.value);
+});
+const schemaDirty = computed(
+  () =>
+    !!contentType.value?.canEdit &&
+    savedSchema.value !== undefined &&
+    (!("schema" in schemaDraft.value) ||
+      JSON.stringify(schemaDraft.value.schema) !== savedSchema.value),
+);
+useUnsavedChangesGuard(schemaDirty);
+
+watch(
+  () => contentType.value?.schema,
+  (schema) => {
+    if (schema && !schemaDirty.value) loadSchema(schema as ContentTypeSchema);
+  },
+  { immediate: true },
+);
+
+const builderHasErrors = computed(
+  () =>
+    schemaMode.value === "builder" &&
+    builderErrors(schemaFields.value).size > 0,
+);
+
+function setSchemaMode(mode: "builder" | "json") {
+  if (mode === schemaMode.value) return;
+  schemaError.value = "";
+  if (mode === "json") {
+    schemaJson.value = JSON.stringify(
+      builderToSchema(schemaFields.value),
+      null,
+      2,
+    );
+    schemaMode.value = "json";
+    return;
+  }
+  const parsed = parseSchemaJson(schemaJson.value);
+  if ("error" in parsed) {
+    schemaError.value = parsed.error;
+    return;
+  }
+  schemaFields.value = schemaToBuilder(parsed.schema);
+  schemaMode.value = "builder";
+}
+
+async function saveSchema(confirmBrokenSheets = false) {
+  const draft = schemaDraft.value;
+  if ("error" in draft) {
+    schemaError.value = draft.error;
+    return;
+  }
+  schemaBusy.value = true;
+  schemaError.value = "";
+  schemaBroken.value = undefined;
+  try {
+    await $fetch(`/api/content-type/${id}`, {
+      method: "PATCH",
+      body: {
+        schema: draft.schema,
+        ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
+      },
+    });
+    await refresh();
+    if (contentType.value) loadSchema(contentType.value.schema as ContentTypeSchema);
+    toast.add({ title: "Schema saved", color: "success", icon: "i-lucide-check" });
+  } catch (error) {
+    const broken = extractBrokenSheets(error);
+    if (broken) schemaBroken.value = broken;
+    else
+      schemaError.value = extractApiErrorMessage(
+        error,
+        "Could not save the schema.",
+      );
+  } finally {
+    schemaBusy.value = false;
+  }
+}
+
+function discardSchema() {
+  if (contentType.value) loadSchema(contentType.value.schema as ContentTypeSchema);
 }
 
 const isDeleteOpen = ref(false);
@@ -250,11 +359,83 @@ async function remove() {
 
       <UPageCard>
         <template #header>
-          <h2 class="text-lg font-semibold text-highlighted">Schema</h2>
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-semibold text-highlighted">Schema</h2>
+              <p class="text-sm text-muted">
+                Every content type also has a built-in name field.
+                <template v-if="contentType.canEdit">
+                  Renaming a key doesn't move existing content's values to the
+                  new key.
+                </template>
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <UFieldGroup size="sm">
+                <UButton
+                  label="Builder"
+                  :color="schemaMode === 'builder' ? 'primary' : 'neutral'"
+                  :variant="schemaMode === 'builder' ? 'solid' : 'outline'"
+                  @click="setSchemaMode('builder')"
+                />
+                <UButton
+                  label="JSON"
+                  :color="schemaMode === 'json' ? 'primary' : 'neutral'"
+                  :variant="schemaMode === 'json' ? 'solid' : 'outline'"
+                  @click="setSchemaMode('json')"
+                />
+              </UFieldGroup>
+              <template v-if="contentType.canEdit">
+                <UButton
+                  label="Discard"
+                  color="neutral"
+                  variant="outline"
+                  size="sm"
+                  :disabled="!schemaDirty || schemaBusy"
+                  @click="discardSchema"
+                />
+                <UButton
+                  label="Save schema"
+                  icon="i-lucide-save"
+                  size="sm"
+                  :loading="schemaBusy"
+                  :disabled="!schemaDirty || builderHasErrors"
+                  @click="saveSchema()"
+                />
+              </template>
+            </div>
+          </div>
         </template>
-        <pre class="overflow-x-auto text-sm font-mono">{{
-          JSON.stringify(contentType.schema, null, 2)
-        }}</pre>
+
+        <div class="space-y-4">
+          <UAlert
+            v-if="schemaError"
+            color="error"
+            variant="subtle"
+            :description="schemaError"
+          />
+          <BrokenSheetsAlert
+            v-if="schemaBroken"
+            :broken="schemaBroken"
+            :loading="schemaBusy"
+            @confirm="saveSchema(true)"
+          />
+          <SchemaBuilder
+            v-if="schemaMode === 'builder'"
+            v-model="schemaFields"
+            :content-types="allContentTypes"
+            :readonly="!contentType.canEdit"
+          />
+          <UTextarea
+            v-else
+            v-model="schemaJson"
+            class="w-full font-mono"
+            :rows="16"
+            autoresize
+            :readonly="!contentType.canEdit"
+            aria-label="Schema JSON"
+          />
+        </div>
       </UPageCard>
     </template>
 
@@ -297,13 +478,6 @@ async function remove() {
             description="Reject content data that does not match the schema."
           >
             <USwitch v-model="form.hasStrictSchema" />
-          </UFormField>
-          <UFormField name="schema" label="Schema (JSON)" required>
-            <UTextarea
-              v-model="form.schema"
-              class="w-full font-mono"
-              :rows="10"
-            />
           </UFormField>
           <UAlert
             v-if="formError"

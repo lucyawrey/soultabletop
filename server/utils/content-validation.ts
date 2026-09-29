@@ -22,6 +22,9 @@ import { uuidPattern } from "./resource-management";
 // `content` field values found while walking data, checked afterwards in
 // batches because they need database lookups.
 interface Pending {
+  // Skip "is required" for missing fields (new Content created with default
+  // data, whose reference fields start empty).
+  allowMissingRequired: boolean;
   locals: {
     value: Record<string, unknown>;
     contentTypeId: string;
@@ -117,7 +120,8 @@ function validateObject(
   for (const [key, field] of Object.entries(schema)) {
     const fieldPath = path ? `${path}.${key}` : key;
     if (!(key in value)) {
-      if (field.required) return `${fieldPath} is required`;
+      if (field.required && !pending.allowMissingRequired)
+        return `${fieldPath} is required`;
       continue;
     }
 
@@ -162,8 +166,13 @@ export async function validateContentData(
   user: Pick<User, "id" | "name">,
   data: unknown,
   rules: ContentTypeRules,
+  options: { allowMissingRequired?: boolean } = {},
 ): Promise<string | undefined> {
-  const pending: Pending = { locals: [], refs: [] };
+  const pending: Pending = {
+    allowMissingRequired: options.allowMissingRequired === true,
+    locals: [],
+    refs: [],
+  };
   const error = validateObject(
     data,
     rules.schema,

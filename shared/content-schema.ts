@@ -53,3 +53,38 @@ export function referencedContentTypeIds(
   Object.values(schema).forEach(visit);
   return ids;
 }
+
+// Starting data for new Content created without data: required fields get
+// empty values (text "", 0, false, empty lists, groups with their own required
+// fields filled the same way). Resource links and content fields have no
+// valid empty value, so they are left out for the user to fill in.
+export function defaultContentData(
+  schema: ContentTypeSchema,
+  depth = 0,
+): Record<string, unknown> {
+  const data: Record<string, unknown> = {};
+  for (const [key, field] of Object.entries(schema)) {
+    if (!field.required) continue;
+    switch (field.type) {
+      case "string":
+        data[key] = "";
+        break;
+      case "number":
+        data[key] = 0;
+        break;
+      case "boolean":
+        data[key] = false;
+        break;
+      case "any":
+        data[key] = null;
+        break;
+      case "array":
+        data[key] = [];
+        break;
+      case "object":
+        data[key] = depth > 8 ? {} : defaultContentData(field.entries, depth + 1);
+        break;
+    }
+  }
+  return data;
+}
