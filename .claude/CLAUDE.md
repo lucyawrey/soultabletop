@@ -11,6 +11,11 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 - `.env`'s `DATABASE_URL` contains `&`, so don't `source` it; use `node --env-file=.env` for ad-hoc scripts.
 - Typecheck and lint don't catch broken template structure (e.g. a missing closing tag). After template edits, compile the changed templates with `parse`/`compileTemplate` from the pnpm-installed `node_modules/.pnpm/@vue+compiler-sfc@*/node_modules/@vue/compiler-sfc` (works for pages behind auth), or request a public page from the dev server (a 500 body includes the Vite compile error; auth pages just 302 without compiling). The user often has `pnpm dev` running already — check `lsof -iTCP -sTCP:LISTEN -P | grep node` for its port (3000 or 3001) before starting another, and never kill a dev server you didn't start.
 
+## Agent files
+
+- Everything for AI agents lives in `.claude/` (this file, `skills/`), except `skills-lock.json`, which the `skills` CLI requires at the repo root. Keep agent files out of the root.
+- Add third-party skills with `npx skills add <owner/repo> -a claude-code` (add `-s <skill>` to pick one). `-a claude-code` copies them into `.claude/skills/` and records them in `skills-lock.json`; without it the CLI also installs into `.agents/` for other agents, which we don't use.
+
 ## Data model
 
 - Everything user-created is a row in the polymorphic `resource` table (`kind`: `system`, `game`, `contentType`, `sheet`, `content`) plus a per-kind table keyed by `resourceId`. Resources are owned by a user or a group, with extra access via `resourceGrant`.
