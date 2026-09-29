@@ -10,7 +10,9 @@ const props = defineProps<{ original?: string | null }>();
 interface GroupItem {
   id: string;
   name: string;
-  role: "admin" | "editor" | "member";
+  kind: "user" | "system";
+  // null: a system group the user (a site admin) isn't in.
+  role: "admin" | "editor" | "member" | null;
 }
 
 const { data: groups } = useLazyFetch<GroupItem[]>("/api/group", {
@@ -26,7 +28,12 @@ const options = computed(() => {
   const items = [
     { label: "You", value: YOU },
     ...groups.value
-      .filter((item) => item.role === "admin" || item.role === "editor")
+      .filter(
+        (item) =>
+          item.role === "admin" ||
+          item.role === "editor" ||
+          (item.kind === "system" && item.role === null),
+      )
       .map((item) => ({ label: item.name, value: item.id })),
   ];
   // The current owning group, if the user can't pick it themselves (e.g. a

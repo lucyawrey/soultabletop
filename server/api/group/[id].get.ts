@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { group } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
-import { requireGroupMember } from "../../utils/group";
+import { requireGroupViewer } from "../../utils/group";
 
 defineRouteMeta({
   openAPI: {
@@ -25,9 +25,9 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: "Group ID is required",
     });
-  const role = await requireGroupMember(id, user.id);
+  const { role, canManage } = await requireGroupViewer(id, user.id);
   const [item] = await useDatabase().select().from(group).where(eq(group.id, id));
   if (!item)
     throw createError({ statusCode: 404, statusMessage: "Group not found" });
-  return { ...item, role };
+  return { ...item, role, canManage };
 });

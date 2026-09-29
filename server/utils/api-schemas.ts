@@ -190,6 +190,12 @@ export const groupCreateSchema = Type.Object({
 
 export const groupPatchSchema = Type.Partial(groupCreateSchema);
 
+export const groupCreateWithKindSchema = Type.Intersect([
+  groupCreateSchema,
+  // A system group, whose resources are official (site admins only).
+  Type.Object({ official: Type.Optional(Type.Boolean()) }),
+]);
+
 export const gameMembershipSchema = Type.Object({
   userId: Type.String({ minLength: 1 }),
   role: Type.Union([Type.Literal("gm"), Type.Literal("player")]),
