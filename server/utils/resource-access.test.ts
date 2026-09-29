@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Resource } from "../database/schema";
 import {
+  canCreateForGroup,
   getResourceAccess,
   type ResourceAccessContext,
 } from "./resource-access";
@@ -84,5 +85,29 @@ describe("getResourceAccess", () => {
         ).canEdit,
       ).toBe(true);
     });
+  });
+});
+
+describe("canCreateForGroup", () => {
+  it("allows group admins and editors, not members", () => {
+    for (const role of ["admin", "editor"] as const)
+      expect(canCreateForGroup(PARTY, context({ groupRoles: new Map([[PARTY, role]]) }))).toBe(true);
+    expect(canCreateForGroup(PARTY, context({ groupRoles: new Map([[PARTY, "member"]]) }))).toBe(false);
+    expect(canCreateForGroup(PARTY, context())).toBe(false);
+  });
+
+  it("lets site admins use system groups they aren't in", () => {
+    expect(canCreateForGroup(OFFICIAL, context({ isSiteAdmin: true }))).toBe(true);
+    expect(canCreateForGroup(OFFICIAL, context())).toBe(false);
+  });
+
+  it("holds site admins to the role rule for regular groups", () => {
+    expect(canCreateForGroup(PARTY, context({ isSiteAdmin: true }))).toBe(false);
+    expect(
+      canCreateForGroup(
+        PARTY,
+        context({ isSiteAdmin: true, groupRoles: new Map([[PARTY, "member"]]) }),
+      ),
+    ).toBe(false);
   });
 });
