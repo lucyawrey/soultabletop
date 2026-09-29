@@ -155,7 +155,7 @@ async function submitForm() {
   } catch (error) {
     formError.value = extractApiErrorMessage(
       error,
-      "Could not save Character.",
+      "Could not save character.",
     );
   } finally {
     formBusy.value = false;
@@ -187,7 +187,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Character.",
+      "Could not delete character.",
     );
   } finally {
     deleteBusy.value = false;
@@ -210,8 +210,8 @@ async function remove() {
     </div>
 
     <p v-if="characterTypes.length === 0" class="text-sm text-muted">
-      Create a ContentType with category "playerCharacter" before adding
-      characters.
+      Create a content type with the Player Character category before
+      adding characters.
     </p>
 
     <UTable
@@ -269,7 +269,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No Characters yet.</p>
+        <p class="py-6 text-center text-sm text-muted">No characters yet.</p>
       </template>
     </UTable>
 

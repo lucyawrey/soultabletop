@@ -48,7 +48,7 @@ export function extractDefaultReplacement(error: unknown): string | undefined {
   if (!("currentDefaultSheet" in details)) return;
   return typeof data.statusMessage === "string"
     ? data.statusMessage
-    : "This replaces the current default Sheet";
+    : "This replaces the current default sheet";
 }
 
 interface ValidationErrorDetail {

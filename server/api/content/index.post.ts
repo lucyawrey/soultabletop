@@ -17,7 +17,7 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["Content"],
-    summary: "Create a Content record",
+    summary: "Create a content record",
     requestBody: {
       required: true,
       content: {
@@ -38,11 +38,11 @@ defineRouteMeta({
       },
     },
     responses: {
-      201: { description: "Created Content record" },
-      400: { description: "Invalid Content data" },
+      201: { description: "Created content record" },
+      400: { description: "Invalid content data" },
       401: { description: "Authentication required" },
       403: { description: "Referenced resource is inaccessible" },
-      404: { description: "ContentType or Sheet not found" },
+      404: { description: "Content type or sheet not found" },
       409: { description: "Slug already exists" },
     },
   },
@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
   if (!typeRecord) {
     throw createError({
       statusCode: 404,
-      statusMessage: "ContentType not found",
+      statusMessage: "Content type not found",
     });
   }
 
@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
   if (!getResourceAccess(typeRecord.resource, accessContext).canRead) {
     throw createError({
       statusCode: 403,
-      statusMessage: "ContentType is not accessible",
+      statusMessage: "Content type is not accessible",
     });
   }
 
@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
     ) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Sheet does not match ContentType",
+        statusMessage: "Sheet does not match content type",
       });
     }
     const sheetAccess = await loadResourceAccessContext(user, [

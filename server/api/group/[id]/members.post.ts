@@ -9,7 +9,7 @@ import { parseBody, groupMembershipSchema } from "../../../utils/api-schemas";
 defineRouteMeta({
   openAPI: {
     tags: ["Group Membership"],
-    summary: "Add or update a Group member",
+    summary: "Add or update a group member",
     requestBody: {
       required: true,
       content: {
@@ -86,7 +86,7 @@ export default defineEventHandler(async (event) => {
     if (!otherAdmins?.total)
       throw createError({
         statusCode: 409,
-        statusMessage: "A Group must keep at least one admin",
+        statusMessage: "A group must keep at least one admin",
       });
   }
 

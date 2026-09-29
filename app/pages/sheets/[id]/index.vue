@@ -50,7 +50,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Sheet.",
+      "Could not delete sheet.",
     );
   } finally {
     deleteBusy.value = false;

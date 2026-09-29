@@ -8,7 +8,7 @@ import { requireResourceEditor } from "../../utils/resource-management";
 defineRouteMeta({
   openAPI: {
     tags: ["Game"],
-    summary: "Delete a Game",
+    summary: "Delete a game",
     responses: {
       204: { description: "Deleted" },
       401: { description: "Authentication required" },

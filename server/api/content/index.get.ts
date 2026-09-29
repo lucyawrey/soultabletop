@@ -12,13 +12,13 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["Content"],
-    summary: "List accessible Content records",
+    summary: "List accessible content records",
     parameters: [
       {
         name: "contentTypeId",
         in: "query",
         required: false,
-        description: "Only Content of this ContentType",
+        description: "Only content of this content type",
         schema: { type: "string", format: "uuid" },
       },
     ],

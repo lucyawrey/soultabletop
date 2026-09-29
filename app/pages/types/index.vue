@@ -180,7 +180,7 @@ async function submitForm(confirmBrokenSheets = false) {
     else
       formError.value = extractApiErrorMessage(
         error,
-        "Could not save Content Type.",
+        "Could not save content type.",
       );
   } finally {
     formBusy.value = false;
@@ -212,7 +212,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Content Type. It may still be used by Content or Sheets.",
+      "Could not delete content type. It may still be used by content or sheets.",
     );
   } finally {
     deleteBusy.value = false;
@@ -235,7 +235,7 @@ async function remove() {
     </div>
 
     <p v-if="systems.length === 0" class="text-sm text-muted">
-      Create a System before adding Content Types.
+      Create a system before adding content types.
     </p>
 
     <UTable
@@ -308,7 +308,7 @@ async function remove() {
 
       <template #empty>
         <p class="py-6 text-center text-sm text-muted">
-          No Content Types yet.
+          No content types yet.
         </p>
       </template>
     </UTable>
@@ -347,7 +347,7 @@ async function remove() {
             label="System"
             :description="
               editingType
-                ? 'The System cannot be changed after creation.'
+                ? 'The system cannot be changed after creation.'
                 : undefined
             "
             required
@@ -369,7 +369,7 @@ async function remove() {
           <UFormField
             name="hasStrictSchema"
             label="Strict schema"
-            description="Reject Content data that does not match the schema."
+            description="Reject content data that does not match the schema."
           >
             <USwitch v-model="form.hasStrictSchema" />
           </UFormField>

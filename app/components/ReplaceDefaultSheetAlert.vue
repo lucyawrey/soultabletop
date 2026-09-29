@@ -11,7 +11,7 @@ const emit = defineEmits<{ confirm: [] }>();
     color="warning"
     variant="subtle"
     icon="i-lucide-triangle-alert"
-    title="Replace the default Sheet?"
+    title="Replace the default sheet?"
     :description="`${message}.`"
     :actions="[
       {

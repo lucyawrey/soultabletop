@@ -9,9 +9,9 @@ import { loadSheetSchemas } from "../../utils/sheet-schemas";
 defineRouteMeta({
   openAPI: {
     tags: ["Sheet"],
-    summary: "Get a Sheet",
+    summary: "Get a sheet",
     description:
-      "Includes the schemas its markup is checked against (`schemas`) and its ContentType's `contentCategory`.",
+      "Includes the schemas its markup is checked against (`schemas`) and its content type's `contentCategory`.",
     responses: {
       200: { description: "Sheet" },
       404: { description: "Sheet not found" },

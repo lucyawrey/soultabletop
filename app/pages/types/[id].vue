@@ -129,7 +129,7 @@ async function submitForm(confirmBrokenSheets = false) {
     else
       formError.value = extractApiErrorMessage(
         error,
-        "Could not save Content Type.",
+        "Could not save content type.",
       );
   } finally {
     formBusy.value = false;
@@ -150,7 +150,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Content Type. It may still be used by Content or Sheets.",
+      "Could not delete content type. It may still be used by content or sheets.",
     );
   } finally {
     deleteBusy.value = false;
@@ -250,7 +250,7 @@ async function remove() {
           </li>
         </ul>
         <p v-else class="py-6 text-center text-sm text-muted">
-          No Sheets for this Content Type yet.
+          No sheets for this content type yet.
         </p>
       </UPageCard>
 
@@ -300,7 +300,7 @@ async function remove() {
           <UFormField
             name="hasStrictSchema"
             label="Strict schema"
-            description="Reject Content data that does not match the schema."
+            description="Reject content data that does not match the schema."
           >
             <USwitch v-model="form.hasStrictSchema" />
           </UFormField>

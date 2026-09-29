@@ -10,7 +10,7 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["System"],
-    summary: "List accessible Systems",
+    summary: "List accessible systems",
     responses: {
       200: { description: "System list" },
       401: { description: "Authentication required" },

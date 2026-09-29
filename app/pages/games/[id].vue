@@ -63,7 +63,7 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save Game.");
+    formError.value = extractApiErrorMessage(error, "Could not save game.");
   } finally {
     formBusy.value = false;
   }
@@ -83,7 +83,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Game.",
+      "Could not delete game.",
     );
   } finally {
     deleteBusy.value = false;

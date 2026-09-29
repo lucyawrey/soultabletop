@@ -7,7 +7,7 @@ import { useDatabase } from "../../../../utils/database";
 defineRouteMeta({
   openAPI: {
     tags: ["Group Membership"],
-    summary: "Remove a Group member",
+    summary: "Remove a group member",
     responses: {
       204: { description: "Removed" },
       401: { description: "Authentication required" },

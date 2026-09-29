@@ -200,7 +200,7 @@ const recentSections = computed(() => {
       title: "Games",
       icon: "i-lucide-swords",
       path: "/games",
-      empty: "No Games yet.",
+      empty: "No games yet.",
       items: dashboard.value.games,
       loading,
     },
@@ -208,7 +208,7 @@ const recentSections = computed(() => {
       title: "Characters",
       icon: "i-lucide-users",
       path: "/characters",
-      empty: "No Characters yet.",
+      empty: "No characters yet.",
       items: dashboard.value.characters,
       loading,
     },
@@ -216,7 +216,7 @@ const recentSections = computed(() => {
       title: "Content",
       icon: "i-lucide-file-text",
       path: "/content",
-      empty: "No Content yet.",
+      empty: "No content yet.",
       items: dashboard.value.content,
       loading,
     },
@@ -397,13 +397,16 @@ function formatUpdated(updatedAt: string) {
               </span>
             </li>
           </ul>
-          <p v-else-if="section.loading" class="py-6 text-center text-sm text-muted">
+          <p
+            v-else-if="section.loading"
+            class="py-6 text-center text-sm text-muted"
+          >
             Loading…
           </p>
           <p v-else class="py-6 text-center text-sm text-muted">
             {{ section.empty }}
             <NuxtLink :to="section.path" class="text-primary hover:underline">
-              Create one
+              Create one.
             </NuxtLink>
           </p>
         </UPageCard>

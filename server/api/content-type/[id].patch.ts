@@ -16,7 +16,7 @@ import { parseBody, contentTypePatchSchema } from "../../utils/api-schemas";
 defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
-    summary: "Update a ContentType",
+    summary: "Update a content type",
     requestBody: {
       required: true,
       content: {
@@ -45,12 +45,12 @@ defineRouteMeta({
       },
     },
     responses: {
-      200: { description: "Updated ContentType" },
+      200: { description: "Updated content type" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
       409: {
         description:
-          "The change breaks existing Sheets (readable ones listed in data.brokenSheets, the rest counted in data.hiddenBrokenSheets); resend with confirmBrokenSheets",
+          "The change breaks existing sheets (readable ones listed in data.brokenSheets, the rest counted in data.hiddenBrokenSheets); resend with confirmBrokenSheets",
       },
     },
   },
@@ -69,7 +69,7 @@ export default defineEventHandler(async (event) => {
   if (item.kind !== "contentType")
     throw createError({
       statusCode: 404,
-      statusMessage: "ContentType not found",
+      statusMessage: "Content type not found",
     });
   if (body.schema !== undefined)
     await assertContentTypeSchema(user, body.schema as ContentTypeSchema);
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
       if (total)
         throw createError({
           statusCode: 409,
-          statusMessage: `This change would break ${total} Sheet${total === 1 ? "" : "s"}`,
+          statusMessage: `This change would break ${total} sheet${total === 1 ? "" : "s"}`,
           // Details only for Sheets the editor can read; the rest are counted.
           data: {
             brokenSheets: broken.sheets,

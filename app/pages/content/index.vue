@@ -156,7 +156,7 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save Content.");
+    formError.value = extractApiErrorMessage(error, "Could not save content.");
   } finally {
     formBusy.value = false;
   }
@@ -187,7 +187,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Content.",
+      "Could not delete content.",
     );
   } finally {
     deleteBusy.value = false;
@@ -210,7 +210,7 @@ async function remove() {
     </div>
 
     <p v-if="standardContentTypes.length === 0" class="text-sm text-muted">
-      Create a non-character ContentType before adding content records.
+      Create a non-character content type before adding content records.
     </p>
 
     <UTable
@@ -269,7 +269,7 @@ async function remove() {
 
       <template #empty>
         <p class="py-6 text-center text-sm text-muted">
-          No Content records yet.
+          No content records yet.
         </p>
       </template>
     </UTable>

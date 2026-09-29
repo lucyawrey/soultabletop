@@ -147,7 +147,7 @@ async function submitForm(confirmReplaceDefault = false) {
   } catch (error) {
     replaceDefault.value = extractDefaultReplacement(error);
     if (!replaceDefault.value)
-      formError.value = extractApiErrorMessage(error, "Could not save Sheet.");
+      formError.value = extractApiErrorMessage(error, "Could not save sheet.");
   } finally {
     formBusy.value = false;
   }
@@ -178,7 +178,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Sheet.",
+      "Could not delete sheet.",
     );
   } finally {
     deleteBusy.value = false;
@@ -201,7 +201,7 @@ async function remove() {
     </div>
 
     <p v-if="contentTypes.length === 0" class="text-sm text-muted">
-      Create a Content Type before adding Sheets.
+      Create a content type before adding sheets.
     </p>
 
     <UTable :data="sheets" :columns="columns" :loading="status === 'pending'">
@@ -261,14 +261,14 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No Sheets yet.</p>
+        <p class="py-6 text-center text-sm text-muted">No sheets yet.</p>
       </template>
     </UTable>
 
     <UModal
       v-model:open="isFormOpen"
       title="New Sheet"
-      description="It starts with markup generated from the Content Type's schema; you'll customize it in the editor next."
+      description="It starts with markup generated from the content type's schema; you'll customize it in the editor next."
     >
       <template #body>
         <UForm
@@ -311,7 +311,7 @@ async function remove() {
             v-if="canSetDefault"
             name="isDefault"
             label="Default sheet"
-            description="Used for Content of this type that doesn't pick a Sheet. You'll be asked before it replaces another default."
+            description="Used for content of this type that doesn't pick a sheet. You'll be asked before it replaces another default."
           >
             <USwitch v-model="form.isDefault" />
           </UFormField>

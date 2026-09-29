@@ -127,7 +127,7 @@ export function scopeSheetSelector(selector: string, scopeId: string) {
         // Checked first: only direct children can be in `leading`.
         if (node.parent !== item || !leading.includes(node as SelectorChild)) {
           throw new SheetSelectorError(
-            `${node.value} can only start a selector (it means this Sheet); "${String(item).trim()}" would reach outside the Sheet`,
+            `${node.value} can only start a selector (it means this sheet); "${String(item).trim()}" would reach outside the sheet`,
           );
         }
         roots.push(node);
@@ -136,7 +136,7 @@ export function scopeSheetSelector(selector: string, scopeId: string) {
         const afterLeading = item.nodes[item.nodes.indexOf(leading.at(-1)!) + 1];
         if (isSiblingCombinator(afterLeading)) {
           throw new SheetSelectorError(
-            `"${String(item).trim()}" would style elements next to the Sheet, outside it`,
+            `"${String(item).trim()}" would style elements next to the sheet, outside it`,
           );
         }
         for (const node of roots) node.replaceWith(scopeAttribute(scopeId));
@@ -201,7 +201,7 @@ function checkNestedSelector(selector: string, parentTargetsRoot: boolean) {
       item.walk((node) => {
         if (node.type === "nesting" && insidePseudoFunction(node, item)) {
           throw new SheetSelectorError(
-            `& can't be used inside :not(), :has(), or other pseudo-classes in Sheet CSS ("${String(item).trim()}")`,
+            `& can't be used inside :not(), :has(), or other pseudo-classes in sheet CSS ("${String(item).trim()}")`,
           );
         }
       });
@@ -211,7 +211,7 @@ function checkNestedSelector(selector: string, parentTargetsRoot: boolean) {
       // leading ~ or + attaches to the root.
       if (!hasNesting && isSiblingCombinator(item.first)) {
         throw new SheetSelectorError(
-          `"${String(item).trim()}" would style elements next to the Sheet, outside it`,
+          `"${String(item).trim()}" would style elements next to the sheet, outside it`,
         );
       }
       let compoundHasNesting = false;
@@ -220,7 +220,7 @@ function checkNestedSelector(selector: string, parentTargetsRoot: boolean) {
         if (node.type !== "combinator") return;
         if (compoundHasNesting && isSiblingCombinator(node)) {
           throw new SheetSelectorError(
-            `"${String(item).trim()}" would style elements next to the Sheet, outside it`,
+            `"${String(item).trim()}" would style elements next to the sheet, outside it`,
           );
         }
         compoundHasNesting = false;
@@ -301,7 +301,7 @@ export function processSheetCss(source: string, scopeId?: string): SheetCssResul
   root.walkAtRules((rule) => {
     const name = rule.name.toLowerCase();
     if (!allowedAtRules.has(name)) {
-      report(rule, "css-at-rule", `@${rule.name} isn't allowed in Sheet CSS`);
+      report(rule, "css-at-rule", `@${rule.name} isn't allowed in sheet CSS`);
       rule.remove();
       return;
     }
@@ -315,7 +315,7 @@ export function processSheetCss(source: string, scopeId?: string): SheetCssResul
   root.walkDecls((declaration: Declaration) => {
     const property = declaration.prop.toLowerCase();
     if (blockedProperties.has(property)) {
-      report(declaration, "css-property", `${declaration.prop} isn't allowed in Sheet CSS`);
+      report(declaration, "css-property", `${declaration.prop} isn't allowed in sheet CSS`);
       declaration.remove();
       return;
     }
@@ -323,7 +323,7 @@ export function processSheetCss(source: string, scopeId?: string): SheetCssResul
       report(
         declaration,
         "css-function",
-        `${declaration.prop}: url() and other functions that load files aren't allowed in Sheet CSS`,
+        `${declaration.prop}: url() and other functions that load files aren't allowed in sheet CSS`,
       );
       declaration.remove();
       return;
@@ -337,7 +337,7 @@ export function processSheetCss(source: string, scopeId?: string): SheetCssResul
         report(
           declaration,
           "css-font",
-          `"${name}" isn't one of the Sheet fonts, so it only shows if the viewer has it installed`,
+          `"${name}" isn't one of the sheet fonts, so it only shows if the viewer has it installed`,
           "warning",
         );
       }

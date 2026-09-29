@@ -14,7 +14,7 @@ import { parseBody, resourceCreateSchema } from "../../utils/api-schemas";
 defineRouteMeta({
   openAPI: {
     tags: ["System"],
-    summary: "Create a System",
+    summary: "Create a system",
     requestBody: {
       required: true,
       content: {
@@ -33,7 +33,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      201: { description: "Created System" },
+      201: { description: "Created system" },
       400: { description: "Invalid request" },
       401: { description: "Authentication required" },
     },

@@ -8,7 +8,7 @@ import { requireResourceReader } from "../../utils/resource-management";
 defineRouteMeta({
   openAPI: {
     tags: ["Game"],
-    summary: "Get a Game",
+    summary: "Get a game",
     responses: {
       200: { description: "Game" },
       404: { description: "Game not found" },
