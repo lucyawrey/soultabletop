@@ -39,6 +39,8 @@ interface ContentDetail {
   sheetId: string | null;
   data: Record<string, unknown>;
   canEdit: boolean;
+  ownerGroupId: string | null;
+  canChangeOwner: boolean;
   isPubliclyReadable: boolean;
   sheet: ResolvedSheet;
   schemas: SheetSchemas;
@@ -183,6 +185,7 @@ const form = reactive({
   // Saved Sheet, or TYPE_DEFAULT for the ContentType's default.
   sheetId: TYPE_DEFAULT,
   data: "{}",
+  ownerGroupId: null as string | null,
 });
 const savedSheetOptions = computed(() => [
   { label: "Content Type default", value: TYPE_DEFAULT },
@@ -200,6 +203,7 @@ function openEdit() {
   form.slug = item.value.slug;
   form.name = typeof name === "string" ? name : item.value.name;
   form.isPubliclyReadable = item.value.isPubliclyReadable;
+  form.ownerGroupId = item.value.ownerGroupId;
   form.sheetId = item.value.sheetId ?? TYPE_DEFAULT;
   form.data = JSON.stringify(data, null, 2);
   resetSlugTouched(true);
@@ -221,6 +225,9 @@ async function submitForm() {
         slug: form.slug,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
+        ...(form.ownerGroupId !== (item.value?.ownerGroupId ?? null)
+          ? { ownerGroupId: form.ownerGroupId }
+          : {}),
         sheetId: form.sheetId === TYPE_DEFAULT ? null : form.sheetId,
         data,
       },
@@ -420,6 +427,11 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField
+            v-if="item?.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="item?.ownerGroupId ?? null"
+          />
           <UFormField
             name="sheetId"
             label="Sheet"

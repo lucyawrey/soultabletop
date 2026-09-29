@@ -3,7 +3,7 @@ import { and, count, eq, ne, sql } from "drizzle-orm";
 import { groupMembership, userProfile } from "../../../database/schema";
 import { requireAuthenticatedUser } from "../../../utils/auth";
 import { useDatabase } from "../../../utils/database";
-import { getGroupRole } from "../../../utils/group";
+import { requireGroupAdmin } from "../../../utils/group";
 import { parseBody, groupMembershipSchema } from "../../../utils/api-schemas";
 
 defineRouteMeta({
@@ -46,11 +46,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Group ID is required",
     });
   const body = await parseBody(event, groupMembershipSchema);
-  if ((await getGroupRole(groupId, user.id)) !== "admin")
-    throw createError({
-      statusCode: 403,
-      statusMessage: "Group admin access required",
-    });
+  const { isSystem } = await requireGroupAdmin(groupId, user.id);
   const database = useDatabase();
 
   let userId = body.userId;
@@ -72,7 +68,8 @@ export default defineEventHandler(async (event) => {
       statusMessage: "userId or username is required",
     });
 
-  if (body.role !== "admin") {
+  // System groups are managed by site admins, so they may have no admins.
+  if (body.role !== "admin" && !isSystem) {
     const [otherAdmins] = await database
       .select({ total: count() })
       .from(groupMembership)

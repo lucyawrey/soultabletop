@@ -28,6 +28,8 @@ interface ContentTypeDetail {
   hasStrictSchema: boolean;
   schema: Record<string, unknown>;
   canEdit: boolean;
+  ownerGroupId: string | null;
+  canChangeOwner: boolean;
   isPubliclyReadable: boolean;
 }
 
@@ -77,6 +79,7 @@ const form = reactive({
   isPubliclyReadable: false,
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
+  ownerGroupId: null as string | null,
 });
 const formBusy = ref(false);
 const formError = ref("");
@@ -90,6 +93,7 @@ function openEdit() {
   form.slug = contentType.value.slug;
   form.name = contentType.value.name;
   form.isPubliclyReadable = contentType.value.isPubliclyReadable;
+  form.ownerGroupId = contentType.value.ownerGroupId;
   form.contentCategory = contentType.value.contentCategory;
   form.hasStrictSchema = contentType.value.hasStrictSchema;
   resetSlugTouched(true);
@@ -108,6 +112,9 @@ async function submitForm(confirmBrokenSheets = false) {
         slug: form.slug,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
+        ...(form.ownerGroupId !== (contentType.value?.ownerGroupId ?? null)
+          ? { ownerGroupId: form.ownerGroupId }
+          : {}),
         contentCategory: form.contentCategory,
         hasStrictSchema: form.hasStrictSchema,
         ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
@@ -465,6 +472,11 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField
+            v-if="contentType?.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="contentType?.ownerGroupId ?? null"
+          />
           <UFormField name="contentCategory" label="Category" required>
             <USelect
               v-model="form.contentCategory"

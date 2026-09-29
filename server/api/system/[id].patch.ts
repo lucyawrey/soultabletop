@@ -6,6 +6,8 @@ import { useDatabase } from "../../utils/database";
 import {
   requireName,
   requireResourceEditor,
+  resolveOwnerChange,
+  rethrowSlugConflict,
   requireSlug,
 } from "../../utils/resource-management";
 
@@ -23,6 +25,12 @@ defineRouteMeta({
               name: { type: "string" },
               slug: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
+              ownerGroupId: {
+                type: ["string", "null"],
+                format: "uuid",
+                description:
+                  "Move to this group, or null to move to yourself. Only the owner, or admins of the owning group, may; the target group needs you as admin or editor.",
+              },
             },
           },
         },
@@ -48,14 +56,17 @@ export default defineEventHandler(async (event) => {
     name?: unknown;
     slug?: unknown;
     isPubliclyReadable?: unknown;
+    ownerGroupId?: unknown;
   }>(event);
   const item = await requireResourceEditor(user, id);
+  const owner = await resolveOwnerChange(user, item, body.ownerGroupId);
   if (item.kind !== "system")
     throw createError({ statusCode: 404, statusMessage: "System not found" });
   const database = useDatabase();
   const [updated] = await database
     .update(resource)
     .set({
+      ...owner,
       ...(body.name !== undefined ? { name: requireName(body.name) } : {}),
       ...(body.slug !== undefined ? { slug: requireSlug(body.slug) } : {}),
       ...(body.isPubliclyReadable !== undefined
@@ -65,6 +76,7 @@ export default defineEventHandler(async (event) => {
       updatedAt: new Date(),
     })
     .where(eq(resource.id, id))
-    .returning();
+    .returning()
+    .catch(rethrowSlugConflict);
   return updated;
 });

@@ -21,6 +21,8 @@ interface ContentTypeItem {
   hasStrictSchema: boolean;
   schema: Record<string, unknown>;
   canEdit: boolean;
+  ownerGroupId: string | null;
+  canChangeOwner: boolean;
   isPubliclyReadable: boolean;
 }
 
@@ -69,6 +71,7 @@ const form = reactive({
   slug: "",
   name: "",
   isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
   systemId: "",
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
@@ -89,6 +92,7 @@ function openCreate(systemId?: string) {
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
+  form.ownerGroupId = null;
   form.systemId = system.id;
   form.contentCategory = "general";
   form.hasStrictSchema = false;
@@ -97,6 +101,7 @@ function openCreate(systemId?: string) {
 }
 
 function openEdit(item: ContentTypeItem) {
+  form.ownerGroupId = item.ownerGroupId;
   editingType.value = item;
   formError.value = "";
   brokenSheets.value = undefined;
@@ -124,6 +129,13 @@ watch(
   { immediate: true },
 );
 
+// Sends ownerGroupId only when the Owner field changed it.
+function ownerChange(item: ContentTypeItem) {
+  return form.ownerGroupId !== item.ownerGroupId
+    ? { ownerGroupId: form.ownerGroupId }
+    : {};
+}
+
 async function submitForm(confirmBrokenSheets = false) {
   formBusy.value = true;
   formError.value = "";
@@ -144,6 +156,7 @@ async function submitForm(confirmBrokenSheets = false) {
         method: "PATCH",
         body: {
           ...body,
+          ...ownerChange(editingType.value),
           ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
         },
       });
@@ -152,7 +165,11 @@ async function submitForm(confirmBrokenSheets = false) {
     } else {
       const created = await $fetch<{ id: string }>("/api/content-type", {
         method: "POST",
-        body: { ...body, systemId: form.systemId },
+        body: {
+          ...body,
+          systemId: form.systemId,
+          ownerGroupId: form.ownerGroupId ?? undefined,
+        },
       });
       isFormOpen.value = false;
       await navigateTo(`/types/${created.id}`);
@@ -330,6 +347,11 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField
+            v-if="!editingType || editingType.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="editingType ? editingType.ownerGroupId : undefined"
+          />
           <UFormField
             name="systemId"
             label="System"

@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { defineConfig } from "drizzle-kit";
+import { withVerifiedSsl } from "./server/database/connection-url";
 
 // Local env vars live in .env.local (Vercel's convention), which drizzle-kit
 // doesn't read on its own. Variables already set win, including any from a
@@ -11,6 +12,6 @@ export default defineConfig({
   schema: "./server/database/schema.ts",
   out: "./server/database/migrations",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "",
+    url: withVerifiedSsl(process.env.DATABASE_URL ?? ""),
   },
 });

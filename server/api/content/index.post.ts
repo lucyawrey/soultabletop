@@ -10,6 +10,7 @@ import {
 import { useDatabase } from "../../utils/database";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import { defaultContentData } from "../../../shared/content-schema";
+import { resolveResourceOwner } from "../../utils/resource-management";
 import {
   getResourceAccess,
   loadResourceAccessContext,
@@ -31,6 +32,7 @@ defineRouteMeta({
               name: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
               contentTypeId: { format: "uuid", type: "string" },
+              ownerGroupId: { type: "string", format: "uuid" },
               sheetId: { type: ["string", "null"] },
               data: {
                 type: "object",
@@ -77,6 +79,11 @@ export default defineEventHandler(async (event) => {
   const accessContext = await loadResourceAccessContext(user, [
     typeRecord.resource.id,
   ]);
+  const owner = await resolveResourceOwner(
+    user,
+    body.ownerGroupId,
+    accessContext,
+  );
   if (!getResourceAccess(typeRecord.resource, accessContext).canRead) {
     throw createError({
       statusCode: 403,
@@ -136,7 +143,7 @@ export default defineEventHandler(async (event) => {
         .insert(resource)
         .values({
           kind: "content",
-          ownerUserId: user.id,
+          ...owner,
           slug,
           name,
           isPubliclyReadable: body.isPubliclyReadable === true,
@@ -160,6 +167,8 @@ export default defineEventHandler(async (event) => {
         slug: createdResource.slug,
         name: createdResource.name,
         isPubliclyReadable: createdResource.isPubliclyReadable,
+        ownerUserId: createdResource.ownerUserId,
+        ownerGroupId: createdResource.ownerGroupId,
         createdAt: createdResource.createdAt,
         updatedAt: createdResource.updatedAt,
         ...createdContent,

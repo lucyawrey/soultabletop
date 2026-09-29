@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { withVerifiedSsl } from "../database/connection-url";
 import * as schema from "../database/schema";
 
 let database: ReturnType<typeof drizzle<typeof schema>> | undefined;
@@ -14,7 +15,7 @@ export function useDatabase() {
   }
 
   pool ??= new Pool({
-    connectionString: databaseUrl,
+    connectionString: withVerifiedSsl(databaseUrl),
     ssl: true,
     connectionTimeoutMillis: 10_000,
     idleTimeoutMillis: 30_000,

@@ -12,6 +12,7 @@ import {
   loadSheetSchemas,
   resolveContentSheet,
 } from "../../utils/sheet-schemas";
+import { canChangeResourceOwner } from "../../utils/resource-management";
 
 defineRouteMeta({
   openAPI: {
@@ -79,6 +80,9 @@ export default defineEventHandler(async (event) => {
     slug: record.resource.slug,
     isPubliclyReadable: record.resource.isPubliclyReadable,
     name: record.resource.name,
+    ownerUserId: record.resource.ownerUserId,
+    ownerGroupId: record.resource.ownerGroupId,
+    canChangeOwner: canChangeResourceOwner(record.resource, user, context),
     createdAt: record.resource.createdAt,
     updatedAt: record.resource.updatedAt,
     ...record.item,

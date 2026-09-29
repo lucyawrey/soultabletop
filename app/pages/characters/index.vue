@@ -103,6 +103,7 @@ const form = reactive({
   slug: "",
   name: "",
   isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
   contentTypeId: "",
 });
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
@@ -117,6 +118,7 @@ function openCreate() {
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
+  form.ownerGroupId = null;
   form.contentTypeId = firstCharacterType.id;
   resetSlugTouched(false);
   isFormOpen.value = true;
@@ -135,6 +137,7 @@ async function submitForm() {
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
         contentTypeId: form.contentTypeId,
+        ownerGroupId: form.ownerGroupId ?? undefined,
       },
     });
     isFormOpen.value = false;
@@ -302,6 +305,7 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField v-model="form.ownerGroupId" />
           <UFormField name="contentTypeId" label="Character Type" required>
             <USelect
               v-model="form.contentTypeId"

@@ -7,7 +7,11 @@ import {
   getResourceAccess,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
-import { requireName, requireSlug } from "../../utils/resource-management";
+import {
+  requireName,
+  requireSlug,
+  resolveResourceOwner,
+} from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import { parseBody, sheetCreateSchema } from "../../utils/api-schemas";
 import {
@@ -130,25 +134,14 @@ export default defineEventHandler(async (event) => {
     await assertValidSheetMarkup(markup, body.contentTypeId);
   }
   if (typeof body.cssStyles === "string") assertValidSheetCss(body.cssStyles);
-  const ownerGroupId =
-    typeof body.ownerGroupId === "string" ? body.ownerGroupId : null;
-  if (
-    ownerGroupId &&
-    !context.groupRoles.has(ownerGroupId) &&
-    !context.isSiteAdmin
-  )
-    throw createError({
-      statusCode: 403,
-      statusMessage: "Not allowed to use this group",
-    });
+  const owner = await resolveResourceOwner(user, body.ownerGroupId, context);
   try {
     const result = await database.transaction(async (tx) => {
       const [createdResource] = await tx
         .insert(resource)
         .values({
           kind: "sheet",
-          ownerUserId: ownerGroupId ? null : user.id,
-          ownerGroupId,
+          ...owner,
           slug,
           name,
           isPubliclyReadable: body.isPubliclyReadable === true,
