@@ -42,6 +42,8 @@ export const resourcePatchSchema = Type.Partial(
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
     isPubliclyReadable: Type.Boolean(),
+    // Move to a group, or null for the acting user (see resolveOwnerChange).
+    ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
   }),
 );
 
@@ -133,6 +135,8 @@ export const contentTypePatchSchema = Type.Partial(
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
     isPubliclyReadable: Type.Boolean(),
+    // Move to a group, or null for the acting user (see resolveOwnerChange).
+    ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
     contentCategory: contentCategorySchema,
     hasStrictSchema: Type.Boolean(),
     schema: contentTypeSchemaSchema,
@@ -160,6 +164,8 @@ export const sheetPatchSchema = Type.Partial(
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
     isPubliclyReadable: Type.Boolean(),
+    // Move to a group, or null for the acting user (see resolveOwnerChange).
+    ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
     markup: Type.String(),
     cssStyles: Type.String(),
     isDefault: Type.Boolean(),
