@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
-import { extractApiErrorMessage } from "~/utils/api-error";
+import {
+  extractApiErrorMessage,
+  extractDefaultReplacement,
+} from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
 
@@ -82,6 +85,12 @@ watch(canSetDefault, (allowed) => {
 
 const formBusy = ref(false);
 const formError = ref("");
+// Set when creating this Sheet as the default would replace another default.
+const replaceDefault = ref<string>();
+watch(
+  () => [form.contentTypeId, form.isDefault],
+  () => (replaceDefault.value = undefined),
+);
 
 function openCreate(contentTypeId?: string) {
   const selectedType =
@@ -90,6 +99,7 @@ function openCreate(contentTypeId?: string) {
   if (!selectedType) return;
 
   formError.value = "";
+  replaceDefault.value = undefined;
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
@@ -113,9 +123,10 @@ watch(
   { immediate: true },
 );
 
-async function submitForm() {
+async function submitForm(confirmReplaceDefault = false) {
   formBusy.value = true;
   formError.value = "";
+  replaceDefault.value = undefined;
 
   try {
     // New Sheets start from markup generated from the schema; continue in
@@ -128,12 +139,15 @@ async function submitForm() {
         isPubliclyReadable: form.isPubliclyReadable,
         contentTypeId: form.contentTypeId,
         ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
+        ...(confirmReplaceDefault ? { confirmReplaceDefault: true } : {}),
       },
     });
     isFormOpen.value = false;
     await navigateTo(`/sheets/${created.id}/edit`);
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save Sheet.");
+    replaceDefault.value = extractDefaultReplacement(error);
+    if (!replaceDefault.value)
+      formError.value = extractApiErrorMessage(error, "Could not save Sheet.");
   } finally {
     formBusy.value = false;
   }
@@ -261,7 +275,7 @@ async function remove() {
           id="sheet-form"
           :state="form"
           class="space-y-4"
-          @submit="submitForm"
+          @submit="submitForm()"
         >
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
@@ -297,10 +311,16 @@ async function remove() {
             v-if="canSetDefault"
             name="isDefault"
             label="Default sheet"
-            description="Used for Content of this type that doesn't pick a Sheet. Replaces any existing default."
+            description="Used for Content of this type that doesn't pick a Sheet. You'll be asked before it replaces another default."
           >
             <USwitch v-model="form.isDefault" />
           </UFormField>
+          <ReplaceDefaultSheetAlert
+            v-if="replaceDefault"
+            :message="replaceDefault"
+            :loading="formBusy"
+            @confirm="submitForm(true)"
+          />
           <UAlert
             v-if="formError"
             color="error"

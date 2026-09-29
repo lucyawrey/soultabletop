@@ -266,3 +266,43 @@ export async function findSheetsBrokenBy(
   }
   return { sheets: broken, hiddenCount };
 }
+
+// Before a Sheet becomes its ContentType's default, the caller must confirm
+// replacing a current (hand-made) default: without `confirmed`, throws a 409
+// naming it, or not naming it if `user` can't read it. No default Sheet row
+// means the generated sheet is the default, which needs no confirmation.
+export async function assertDefaultReplacementConfirmed(
+  user: Pick<User, "id" | "name">,
+  contentTypeId: string,
+  sheetId: string | undefined,
+  confirmed: boolean | undefined,
+) {
+  if (confirmed) return;
+  const [current] = await useDatabase()
+    .select({ resource })
+    .from(sheet)
+    .innerJoin(resource, eq(resource.id, sheet.resourceId))
+    .where(
+      and(eq(sheet.contentTypeId, contentTypeId), eq(sheet.isDefault, true)),
+    )
+    .limit(1);
+  if (!current || current.resource.id === sheetId) return;
+  const [type] = await useDatabase()
+    .select({ name: resource.name })
+    .from(resource)
+    .where(eq(resource.id, contentTypeId));
+  const context = await loadResourceAccessContext(user, [current.resource.id]);
+  const readable = getResourceAccess(current.resource, context).canRead;
+  const typeName = type ? `"${type.name}"` : "this Content Type";
+  throw createError({
+    statusCode: 409,
+    statusMessage: readable
+      ? `This replaces "${current.resource.name}" as the default Sheet for ${typeName}`
+      : `This replaces a Sheet you can't view as the default Sheet for ${typeName}`,
+    data: {
+      currentDefaultSheet: readable
+        ? { id: current.resource.id, name: current.resource.name }
+        : null,
+    },
+  });
+}

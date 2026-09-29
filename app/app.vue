@@ -40,10 +40,10 @@ useSeoMeta({
         <UButton to="/content" color="neutral" variant="link">
           Content
         </UButton>
+        <UButton to="/sheets" color="neutral" variant="link">Sheets</UButton>
         <UButton to="/types" color="neutral" variant="link">
           Types
         </UButton>
-        <UButton to="/sheets" color="neutral" variant="link">Sheets</UButton>
         <UButton to="/systems" color="neutral" variant="link"
           >Game Systems</UButton
         >
@@ -61,10 +61,10 @@ useSeoMeta({
           <UButton to="/content" color="neutral" variant="link">
             Content
           </UButton>
+          <UButton to="/sheets" color="neutral" variant="link">Sheets</UButton>
           <UButton to="/types" color="neutral" variant="link">
             Types
           </UButton>
-          <UButton to="/sheets" color="neutral" variant="link">Sheets</UButton>
           <UButton to="/systems" color="neutral" variant="link"
             >Game Systems</UButton
           >

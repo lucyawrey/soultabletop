@@ -11,6 +11,7 @@ import { requireName, requireSlug } from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import { parseBody, sheetCreateSchema } from "../../utils/api-schemas";
 import {
+  assertDefaultReplacementConfirmed,
   assertValidSheetCss,
   assertValidSheetMarkup,
   loadSheetSchemas,
@@ -43,6 +44,11 @@ defineRouteMeta({
               },
               cssStyles: { type: "string" },
               isDefault: { type: "boolean" },
+              confirmReplaceDefault: {
+                type: "boolean",
+                description:
+                  "Required to replace an existing default Sheet (otherwise 409)",
+              },
               defaultEditMode: {
                 type: "boolean",
                 description: "Defaults by the ContentType's content category",
@@ -60,6 +66,10 @@ defineRouteMeta({
       201: { description: "Created Sheet" },
       400: { description: "Invalid request or markup errors" },
       401: { description: "Authentication required" },
+      409: {
+        description:
+          "Slug in use, or would replace the default Sheet without confirmReplaceDefault",
+      },
     },
   },
 });
@@ -104,6 +114,13 @@ export default defineEventHandler(async (event) => {
       statusMessage:
         "Only editors of the ContentType can set its default Sheet",
     });
+  if (body.isDefault === true)
+    await assertDefaultReplacementConfirmed(
+      user,
+      body.contentTypeId,
+      undefined,
+      body.confirmReplaceDefault,
+    );
   // New Sheets without markup start from the one generated from the schema.
   let markup = body.markup;
   if (markup === undefined) {
