@@ -47,18 +47,20 @@ Neon database.
 
 Install the [Vercel CLI](https://vercel.com/docs/cli) globally (`pnpm add -g
 vercel`), then link this folder to the Vercel project and pull the Development
-values into `.env`:
+values into `.env.local`:
 
 ```bash
 vercel login
 vercel link
-vercel env pull .env
+vercel env pull
 ```
 
-Pull into `.env`, not the CLI's default `.env.local`: Nuxt and `drizzle-kit`
-only read `.env`. The pulled file also contains a short-lived
-`VERCEL_OIDC_TOKEN`, which the app doesn't use. Without Vercel access, copy
-`.env.example` to `.env` and fill in the values by hand.
+Local variables live in `.env.local`, following Vercel's convention: the
+`dev`, `build`, and `preview` scripts pass `--dotenv .env.local` to Nuxt, and
+`drizzle.config.ts` loads it for `drizzle-kit`. A plain `.env` is not read. The
+pulled file also contains a short-lived `VERCEL_OIDC_TOKEN`, which the app
+doesn't use. Without Vercel access, copy `.env.example` to `.env.local` and
+fill in the values by hand.
 
 ### Changing a variable
 
