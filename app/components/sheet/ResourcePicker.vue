@@ -3,6 +3,7 @@ import {
   RESOURCE_LINK_KINDS,
   type ResourceLinkKind,
 } from "#shared/content-schema";
+import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink } from "#shared/sheet/runtime";
 
 // Searchable choice of a readable resource for a `resourceLink` field, loaded
@@ -26,7 +27,7 @@ const LIST_URLS: Record<ResourceLinkKind, string> = {
 const chosenKind = ref<ResourceLinkKind>(props.kind ?? "content");
 const kind = computed(() => props.kind ?? chosenKind.value);
 const kindOptions = RESOURCE_LINK_KINDS.map((value) => ({
-  label: value,
+  label: schemaDisplayName(value),
   value,
 }));
 

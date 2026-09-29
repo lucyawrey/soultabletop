@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   BUILDER_FIELD_TYPES,
+  schemaDisplayName,
   contentTypeErrorId,
   newBuilderNode,
   type BuilderNode,
@@ -18,20 +19,23 @@ const node = defineModel<BuilderNode>({ required: true });
 const { errors, contentTypeOptions, readonly } = useSchemaBuilder();
 
 const typeOptions = BUILDER_FIELD_TYPES.map((type) => ({
-  label: type,
+  label: schemaDisplayName(type),
   value: type,
 }));
 
 const allowOptions: { label: string; value: ContentFieldAllow }[] = [
-  { label: "both", value: "both" },
-  { label: "ref", value: "ref" },
-  { label: "local", value: "local" },
+  { label: "Both", value: "both" },
+  { label: "Ref", value: "ref" },
+  { label: "Local", value: "local" },
 ];
 
 // "any" stands for no `kind` (select items can't have an empty value).
 const kindOptions = [
-  { label: "(any)", value: "any" },
-  ...RESOURCE_LINK_KINDS.map((kind) => ({ label: kind, value: kind })),
+  { label: "(Any)", value: "any" },
+  ...RESOURCE_LINK_KINDS.map((kind) => ({
+    label: schemaDisplayName(kind),
+    value: kind,
+  })),
 ];
 const kind = computed({
   get: () => node.value.kind || "any",
@@ -52,12 +56,12 @@ watch(
 
 <template>
   <div v-if="node.type === 'struct'" class="space-y-2">
-    <p class="text-sm font-medium text-highlighted">entries</p>
+    <p class="text-sm font-medium text-highlighted">Entries</p>
     <SchemaFieldList v-model="node.fields" />
   </div>
 
   <div v-else-if="node.type === 'array' && node.item" class="space-y-2">
-    <UFormField label="itemType">
+    <UFormField label="Item Type">
       <USelect
         v-model="node.item.type"
         :items="typeOptions"
@@ -75,7 +79,7 @@ watch(
 
   <div v-else-if="node.type === 'content'" class="grid gap-3 sm:grid-cols-2">
     <UFormField
-      label="contentTypeId"
+      label="Content Type ID"
       :error="errors.get(contentTypeErrorId(node.id))"
       required
     >
@@ -88,8 +92,8 @@ watch(
       />
     </UFormField>
     <UFormField
-      label="allow"
-      description="ref: existing content only. local: custom data only. both: either."
+      label="Allow"
+      description="Ref: existing content only. Local: custom data only. Both: either."
     >
       <USelect
         v-model="node.allow"
@@ -102,7 +106,7 @@ watch(
 
   <UFormField
     v-else-if="node.type === 'resourceLink'"
-    label="kind"
+    label="Kind"
     description="Limit links to one kind of resource, or allow any."
   >
     <USelect

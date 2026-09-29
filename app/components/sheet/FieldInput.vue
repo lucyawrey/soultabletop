@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
 import { defaultSheetValue, refRecord } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
@@ -45,7 +46,9 @@ const tags = computed({
 
 // `scalar`: the value's type is picked with a switch next to the input.
 type ScalarType = "string" | "number" | "boolean" | "null";
-const scalarTypes: ScalarType[] = ["string", "number", "boolean", "null"];
+const scalarTypes = (["string", "number", "boolean", "null"] as const).map(
+  (type) => ({ label: schemaDisplayName(type), value: type }),
+);
 const scalarType = computed<ScalarType>({
   get: () =>
     props.value === null || props.value === undefined

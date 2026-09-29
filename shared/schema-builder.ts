@@ -13,6 +13,7 @@ import {
   type ContentTypeSchema,
   type ResourceLinkKind,
 } from "./content-schema";
+import { humanizeFieldName } from "./sheet/registry";
 
 export type BuilderFieldType = ContentFieldSchema["type"];
 
@@ -40,8 +41,15 @@ export interface BuilderField extends BuilderNode {
   key: string;
 }
 
-// Field types in the order the builder offers them. The builder shows the
-// schema's own type names, since it edits the data format directly.
+// How the builder shows a schema name (type, property, or value): the same
+// words, only spaced and capitalized (`resourceLink` → "Resource Link",
+// `contentTypeId` → "Content Type ID"). Never a different word, since the
+// builder edits the data format directly.
+export function schemaDisplayName(name: string) {
+  return humanizeFieldName(name).replace(/\bId\b/g, "ID");
+}
+
+// Field types in the order the builder offers them.
 export const BUILDER_FIELD_TYPES: BuilderFieldType[] = [
   "string",
   "number",

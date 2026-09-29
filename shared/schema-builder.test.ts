@@ -7,6 +7,7 @@ import {
   moveBuilderItem,
   newBuilderField,
   parseSchemaJson,
+  schemaDisplayName,
   schemaToBuilder,
 } from "./schema-builder";
 
@@ -149,6 +150,16 @@ describe("parseSchemaJson", () => {
     expect(
       parseSchemaJson('{"a":{"type":"resourceLink","kind":"group"}}'),
     ).toHaveProperty("error");
+  });
+});
+
+describe("schemaDisplayName", () => {
+  it("only spaces and capitalizes the schema's own words", () => {
+    expect(
+      ["struct", "resourceLink", "contentTypeId", "itemType", "contentType", "ref"].map(
+        schemaDisplayName,
+      ),
+    ).toEqual(["Struct", "Resource Link", "Content Type ID", "Item Type", "Content Type", "Ref"]);
   });
 });
 

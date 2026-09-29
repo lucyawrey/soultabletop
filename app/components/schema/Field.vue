@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   BUILDER_FIELD_TYPES,
+  schemaDisplayName,
   type BuilderField,
 } from "#shared/schema-builder";
 
@@ -13,7 +14,7 @@ const emit = defineEmits<{ remove: [] }>();
 const { errors, readonly } = useSchemaBuilder();
 
 const typeOptions = BUILDER_FIELD_TYPES.map((type) => ({
-  label: type,
+  label: schemaDisplayName(type),
   value: type,
 }));
 
@@ -39,8 +40,8 @@ const open = ref(field.value.type === "struct" || field.value.type === "array");
       >
         <UInput
           v-model="field.key"
-          placeholder="key"
-          aria-label="key"
+          placeholder="Key"
+          aria-label="Key"
           class="w-full font-mono"
           :disabled="readonly"
         />
@@ -48,13 +49,13 @@ const open = ref(field.value.type === "struct" || field.value.type === "array");
       <USelect
         v-model="field.type"
         :items="typeOptions"
-        aria-label="type"
+        aria-label="Type"
         class="w-40"
         :disabled="readonly"
       />
       <UCheckbox
         v-model="field.required"
-        label="required"
+        label="Required"
         class="mt-1.5"
         :disabled="readonly"
       />
@@ -81,14 +82,14 @@ const open = ref(field.value.type === "struct" || field.value.type === "array");
     </div>
     <div v-if="open" class="space-y-3 border-t border-default p-3 ps-8">
       <div class="grid gap-3 sm:grid-cols-2">
-        <UFormField label="label" hint="Optional">
+        <UFormField label="Label" hint="Optional">
           <UInput
             v-model="field.label"
             class="w-full"
             :disabled="readonly"
           />
         </UFormField>
-        <UFormField label="description" hint="Optional">
+        <UFormField label="Description" hint="Optional">
           <UInput
             v-model="field.description"
             class="w-full"
