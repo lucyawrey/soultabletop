@@ -144,7 +144,7 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save Group.");
+    formError.value = extractApiErrorMessage(error, "Could not save group.");
   } finally {
     formBusy.value = false;
   }
@@ -164,7 +164,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Group.",
+      "Could not delete group.",
     );
   } finally {
     deleteBusy.value = false;

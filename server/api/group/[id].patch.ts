@@ -8,7 +8,7 @@ import { parseBody, groupPatchSchema } from "../../utils/api-schemas";
 defineRouteMeta({
   openAPI: {
     tags: ["Group"],
-    summary: "Update a Group",
+    summary: "Update a group",
     requestBody: {
       required: true,
       content: {
@@ -21,7 +21,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      200: { description: "Updated Group" },
+      200: { description: "Updated group" },
       401: { description: "Authentication required" },
       403: { description: "Group admin access required" },
     },

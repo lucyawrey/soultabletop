@@ -93,7 +93,7 @@ const icon: AttrSpec = {
 export const commonAttrs: Record<string, AttrSpec> = {
   class: {
     type: { kind: "className" },
-    description: "Class names your Sheet CSS can target",
+    description: "Class names your sheet CSS can target",
   },
   live: bool(
     "Fields inside stay editable with Edit off; live=\"false\" opts out",
@@ -120,7 +120,7 @@ const tagList: TagSpec[] = [
   {
     name: "Sheet",
     category: "layout",
-    description: "Optional root wrapping the whole Sheet",
+    description: "Optional root wrapping the whole sheet",
     attrs: {},
     children: "any",
     parents: [],
@@ -338,7 +338,7 @@ const tagList: TagSpec[] = [
   {
     name: "Ref",
     category: "field",
-    description: "A link to another Resource or Content",
+    description: "A link to another resource or content",
     attrs: { ...fieldAttrs },
     children: "none",
     binds: ["resourceRef", "content"],

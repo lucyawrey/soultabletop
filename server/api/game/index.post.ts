@@ -14,7 +14,7 @@ import { parseBody, gameCreateSchema } from "../../utils/api-schemas";
 defineRouteMeta({
   openAPI: {
     tags: ["Game"],
-    summary: "Create a Game",
+    summary: "Create a game",
     requestBody: {
       required: true,
       content: {
@@ -34,7 +34,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      201: { description: "Created Game" },
+      201: { description: "Created game" },
       400: { description: "Invalid request" },
       401: { description: "Authentication required" },
     },
@@ -77,7 +77,7 @@ export default defineEventHandler(async (event) => {
   )
     throw createError({
       statusCode: 403,
-      statusMessage: "Not allowed to use this Group",
+      statusMessage: "Not allowed to use this group",
     });
   try {
     const result = await database.transaction(async (tx) => {

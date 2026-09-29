@@ -179,7 +179,7 @@ const form = reactive({
   data: "{}",
 });
 const savedSheetOptions = computed(() => [
-  { label: "ContentType default", value: TYPE_DEFAULT },
+  { label: "Content Type default", value: TYPE_DEFAULT },
   ...typeSheets.value.map((entry) => ({ label: entry.name, value: entry.id })),
 ]);
 const formBusy = ref(false);

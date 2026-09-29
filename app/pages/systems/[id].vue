@@ -67,7 +67,7 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save System.");
+    formError.value = extractApiErrorMessage(error, "Could not save system.");
   } finally {
     formBusy.value = false;
   }
@@ -87,7 +87,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete System.",
+      "Could not delete system.",
     );
   } finally {
     deleteBusy.value = false;
@@ -176,7 +176,7 @@ async function remove() {
           </li>
         </ul>
         <p v-else class="py-6 text-center text-sm text-muted">
-          No Content Types for this System yet.
+          No content types for this system yet.
         </p>
       </UPageCard>
     </template>

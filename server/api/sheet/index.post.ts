@@ -24,7 +24,7 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["Sheet"],
-    summary: "Create a Sheet",
+    summary: "Create a sheet",
     requestBody: {
       required: true,
       content: {
@@ -47,15 +47,15 @@ defineRouteMeta({
               confirmReplaceDefault: {
                 type: "boolean",
                 description:
-                  "Required to replace an existing default Sheet (otherwise 409)",
+                  "Required to replace an existing default sheet (otherwise 409)",
               },
               defaultEditMode: {
                 type: "boolean",
-                description: "Defaults by the ContentType's content category",
+                description: "Defaults by the content type's content category",
               },
               defaultAutosave: {
                 type: "boolean",
-                description: "Defaults by the ContentType's content category",
+                description: "Defaults by the content type's content category",
               },
             },
           },
@@ -63,12 +63,12 @@ defineRouteMeta({
       },
     },
     responses: {
-      201: { description: "Created Sheet" },
+      201: { description: "Created sheet" },
       400: { description: "Invalid request or markup errors" },
       401: { description: "Authentication required" },
       409: {
         description:
-          "Slug in use, or would replace the default Sheet without confirmReplaceDefault",
+          "Slug in use, or would replace the default sheet without confirmReplaceDefault",
       },
     },
   },
@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
   if (!typeResource)
     throw createError({
       statusCode: 404,
-      statusMessage: "ContentType not found",
+      statusMessage: "Content type not found",
     });
   const context = await loadResourceAccessContext(user, [
     typeResource.resource.id,
@@ -106,13 +106,13 @@ export default defineEventHandler(async (event) => {
   if (!typeAccess.canRead)
     throw createError({
       statusCode: 403,
-      statusMessage: "ContentType is not accessible",
+      statusMessage: "Content type is not accessible",
     });
   if (body.isDefault === true && !typeAccess.canEdit)
     throw createError({
       statusCode: 403,
       statusMessage:
-        "Only editors of the ContentType can set its default Sheet",
+        "Only editors of the content type can set its default sheet",
     });
   if (body.isDefault === true)
     await assertDefaultReplacementConfirmed(
@@ -139,7 +139,7 @@ export default defineEventHandler(async (event) => {
   )
     throw createError({
       statusCode: 403,
-      statusMessage: "Not allowed to use this Group",
+      statusMessage: "Not allowed to use this group",
     });
   try {
     const result = await database.transaction(async (tx) => {

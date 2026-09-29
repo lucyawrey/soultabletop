@@ -10,7 +10,7 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["Game"],
-    summary: "List accessible Games",
+    summary: "List accessible games",
     responses: {
       200: { description: "Game list" },
       401: { description: "Authentication required" },

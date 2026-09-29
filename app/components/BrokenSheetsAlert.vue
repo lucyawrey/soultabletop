@@ -10,7 +10,7 @@ const total = computed(
   () => props.broken.sheets.length + props.broken.hiddenCount,
 );
 const title = computed(
-  () => `Saving will break ${total.value} Sheet${total.value === 1 ? "" : "s"}`,
+  () => `Saving will break ${total.value} sheet${total.value === 1 ? "" : "s"}`,
 );
 </script>
 
@@ -47,12 +47,12 @@ const title = computed(
         </li>
         <li v-if="broken.hiddenCount">
           {{ broken.sheets.length ? "And " : "" }}{{ broken.hiddenCount }}
-          {{ broken.sheets.length ? "other " : "" }}Sheet{{ broken.hiddenCount === 1 ? "" : "s" }}
+          {{ broken.sheets.length ? "other " : "" }}sheet{{ broken.hiddenCount === 1 ? "" : "s" }}
           you can't see.
         </li>
       </ul>
       <p class="mt-2">
-        Broken tags show as placeholders until the Sheets are fixed.
+        Broken tags show as placeholders until the sheets are fixed.
       </p>
     </template>
   </UAlert>

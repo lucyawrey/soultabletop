@@ -133,9 +133,9 @@ function describeField(field: ContentFieldSchema) {
     case "object":
       return "a group of fields";
     case "resourceRef":
-      return "a Resource link";
+      return "a resource link";
     case "content":
-      return "a Content field";
+      return "a content field";
     default:
       return "a field";
   }
@@ -199,7 +199,7 @@ class Validator {
       if (depth > MAX_CONTENT_DEPTH) {
         this.error(
           "content-too-deep",
-          `"${path}" goes through more than ${MAX_CONTENT_DEPTH} Content fields`,
+          `"${path}" goes through more than ${MAX_CONTENT_DEPTH} content fields`,
           loc,
         );
         return undefined;
@@ -208,7 +208,7 @@ class Validator {
       if (!rules) {
         this.warn(
           "missing-content-type",
-          `"${path}" uses a ContentType that doesn't exist or couldn't be loaded`,
+          `"${path}" uses a content type that doesn't exist or couldn't be loaded`,
           loc,
         );
         return { kind: "unknown", depth };

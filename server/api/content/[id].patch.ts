@@ -24,7 +24,7 @@ interface UpdateContentBody {
 defineRouteMeta({
   openAPI: {
     tags: ["Content"],
-    summary: "Update a Content record",
+    summary: "Update a content record",
     requestBody: {
       required: true,
       content: {
@@ -44,7 +44,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      200: { description: "Updated Content record" },
+      200: { description: "Updated content record" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
       409: { description: "Changed since expectedUpdatedAt" },
@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
   if (!id)
     throw createError({
       statusCode: 400,
-      statusMessage: "Missing Resource ID",
+      statusMessage: "Missing resource ID",
     });
 
   const user = await requireAuthenticatedUser(event);
@@ -163,7 +163,7 @@ export default defineEventHandler(async (event) => {
     ) {
       throw createError({
         statusCode: 400,
-        statusMessage: "sheetId must be a Resource ID or null",
+        statusMessage: "sheetId must be a resource ID or null",
       });
     }
     if (typeof body.sheetId === "string") {
@@ -179,7 +179,7 @@ export default defineEventHandler(async (event) => {
       ) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Sheet does not match ContentType",
+          statusMessage: "Sheet does not match content type",
         });
       }
       const sheetContext = await loadResourceAccessContext(user, [
@@ -208,7 +208,7 @@ export default defineEventHandler(async (event) => {
         throw createError({
           statusCode: 409,
           statusMessage:
-            "This Content was changed by someone else since you loaded it",
+            "This content was changed by someone else since you loaded it",
         });
       }
     }

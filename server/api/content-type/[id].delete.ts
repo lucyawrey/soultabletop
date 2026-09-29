@@ -9,18 +9,18 @@ import { isForeignKeyConstraintError } from "../../utils/user-profile";
 defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
-    summary: "Delete a ContentType",
+    summary: "Delete a content type",
     responses: {
       204: { description: "Deleted" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
-      409: { description: "Sheets or Content still use the ContentType" },
+      409: { description: "Sheets or content still use the content type" },
     },
   },
 });
 
 const inUseMessage =
-  "Delete this ContentType's Sheets and Content before deleting the ContentType";
+  "Delete this content type's sheets and content before deleting the content type";
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
   if (item.kind !== "contentType")
     throw createError({
       statusCode: 404,
-      statusMessage: "ContentType not found",
+      statusMessage: "Content type not found",
     });
   const database = useDatabase();
   // Sheets and Content reference their ContentType with ON DELETE RESTRICT.
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
   if (sheets?.total || contents?.total)
     throw createError({
       statusCode: 409,
-      statusMessage: `${inUseMessage} (${sheets?.total ?? 0} Sheets, ${contents?.total ?? 0} Content)`,
+      statusMessage: `${inUseMessage} (${sheets?.total ?? 0} sheets, ${contents?.total ?? 0} content)`,
     });
   try {
     await database.delete(resource).where(eq(resource.id, id));

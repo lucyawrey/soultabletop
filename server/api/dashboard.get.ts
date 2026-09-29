@@ -17,9 +17,9 @@ defineRouteMeta({
     tags: ["Dashboard"],
     summary: "Recently updated items for the current user",
     description:
-      "Games the user or their Groups own or that the user is a member of, and Characters/Content owned by the user or their Groups. Public or merely shared Resources are excluded.",
+      "Games the user or their groups own or that the user is a member of, and characters/content owned by the user or their groups. Public or merely shared resources are excluded.",
     responses: {
-      200: { description: "Recent Games, Characters, and Content" },
+      200: { description: "Recent games, characters, and content" },
       401: { description: "Authentication required" },
     },
   },

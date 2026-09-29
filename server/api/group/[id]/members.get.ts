@@ -8,7 +8,7 @@ import { requireGroupMember } from "../../../utils/group";
 defineRouteMeta({
   openAPI: {
     tags: ["Group Membership"],
-    summary: "List Group members",
+    summary: "List group members",
     responses: {
       200: { description: "Members with their username and role" },
       401: { description: "Authentication required" },

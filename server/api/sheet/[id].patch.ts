@@ -22,7 +22,7 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["Sheet"],
-    summary: "Update a Sheet",
+    summary: "Update a sheet",
     requestBody: {
       required: true,
       content: {
@@ -39,7 +39,7 @@ defineRouteMeta({
               confirmReplaceDefault: {
                 type: "boolean",
                 description:
-                  "Required to replace an existing default Sheet (otherwise 409)",
+                  "Required to replace an existing default sheet (otherwise 409)",
               },
               defaultEditMode: { type: "boolean" },
               defaultAutosave: { type: "boolean" },
@@ -49,13 +49,13 @@ defineRouteMeta({
       },
     },
     responses: {
-      200: { description: "Updated Sheet" },
+      200: { description: "Updated sheet" },
       400: { description: "Invalid request or markup errors" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
       409: {
         description:
-          "Would replace the default Sheet without confirmReplaceDefault",
+          "Would replace the default sheet without confirmReplaceDefault",
       },
     },
   },
@@ -99,7 +99,7 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 403,
         statusMessage:
-          "Only editors of the ContentType can change its default Sheet",
+          "Only editors of the content type can change its default sheet",
       });
     if (body.isDefault === true)
       await assertDefaultReplacementConfirmed(

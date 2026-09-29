@@ -23,7 +23,7 @@ const categories = new Set([
 defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
-    summary: "Create a ContentType",
+    summary: "Create a content type",
     requestBody: {
       required: true,
       content: {
@@ -54,7 +54,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      201: { description: "Created ContentType" },
+      201: { description: "Created content type" },
       400: { description: "Invalid request" },
       401: { description: "Authentication required" },
     },
@@ -105,7 +105,7 @@ export default defineEventHandler(async (event) => {
   )
     throw createError({
       statusCode: 403,
-      statusMessage: "Not allowed to use this Group",
+      statusMessage: "Not allowed to use this group",
     });
   try {
     const result = await database.transaction(async (tx) => {

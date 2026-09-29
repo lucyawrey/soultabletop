@@ -9,18 +9,18 @@ import { isForeignKeyConstraintError } from "../../utils/user-profile";
 defineRouteMeta({
   openAPI: {
     tags: ["System"],
-    summary: "Delete a System",
+    summary: "Delete a system",
     responses: {
       204: { description: "Deleted" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
-      409: { description: "Games or ContentTypes still use the System" },
+      409: { description: "Games or content types still use the system" },
     },
   },
 });
 
 const inUseMessage =
-  "Delete this System's Games and ContentTypes before deleting the System";
+  "Delete this system's games and content types before deleting the system";
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
   if (games?.total || types?.total)
     throw createError({
       statusCode: 409,
-      statusMessage: `${inUseMessage} (${games?.total ?? 0} Games, ${types?.total ?? 0} ContentTypes)`,
+      statusMessage: `${inUseMessage} (${games?.total ?? 0} games, ${types?.total ?? 0} content types)`,
     });
   try {
     await database.delete(resource).where(eq(resource.id, id));

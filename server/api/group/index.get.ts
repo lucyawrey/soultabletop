@@ -6,7 +6,7 @@ import { useDatabase } from "../../utils/database";
 defineRouteMeta({
   openAPI: {
     tags: ["Group"],
-    summary: "List the current user's Groups",
+    summary: "List the current user's groups",
     responses: {
       200: { description: "Groups the user belongs to, with their role" },
       401: { description: "Authentication required" },

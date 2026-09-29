@@ -152,7 +152,7 @@ export async function assertValidSheetMarkup(
   if (!markup.trim()) return;
   const schemas = await loadSheetSchemas(contentTypeId);
   if (!schemas)
-    throw createError({ statusCode: 404, statusMessage: "ContentType not found" });
+    throw createError({ statusCode: 404, statusMessage: "Content type not found" });
   const { diagnostics } = compileSheet(markup, schemas);
   if (hasErrors(diagnostics)) {
     throw createError({
@@ -293,12 +293,12 @@ export async function assertDefaultReplacementConfirmed(
     .where(eq(resource.id, contentTypeId));
   const context = await loadResourceAccessContext(user, [current.resource.id]);
   const readable = getResourceAccess(current.resource, context).canRead;
-  const typeName = type ? `"${type.name}"` : "this Content Type";
+  const typeName = type ? `"${type.name}"` : "this content type";
   throw createError({
     statusCode: 409,
     statusMessage: readable
-      ? `This replaces "${current.resource.name}" as the default Sheet for ${typeName}`
-      : `This replaces a Sheet you can't view as the default Sheet for ${typeName}`,
+      ? `This replaces "${current.resource.name}" as the default sheet for ${typeName}`
+      : `This replaces a sheet you can't view as the default sheet for ${typeName}`,
     data: {
       currentDefaultSheet: readable
         ? { id: current.resource.id, name: current.resource.name }

@@ -7,7 +7,7 @@ import { useDatabase } from "../../utils/database";
 defineRouteMeta({
   openAPI: {
     tags: ["Group"],
-    summary: "Delete a Group",
+    summary: "Delete a group",
     responses: {
       204: { description: "Deleted" },
       401: { description: "Authentication required" },
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 409,
       statusMessage:
-        "Transfer or delete Group resources before deleting the Group",
+        "Transfer or delete group resources before deleting the group",
     });
   await database.delete(group).where(eq(group.id, id));
   setResponseStatus(event, 204);
