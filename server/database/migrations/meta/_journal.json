@@ -50,6 +50,13 @@
       "when": 1790623900747,
       "tag": "0006_sheet_system_groundwork",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790698343394,
+      "tag": "0007_rename_document_category_to_page",
+      "breakpoints": true
     }
   ]
 }

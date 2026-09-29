@@ -13,13 +13,6 @@ import { requireName, requireSlug } from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import { parseBody, contentTypeCreateSchema } from "../../utils/api-schemas";
 
-const categories = new Set([
-  "general",
-  "nonPlayerCharacter",
-  "document",
-  "playerCharacter",
-]);
-
 defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
@@ -42,7 +35,7 @@ defineRouteMeta({
                 enum: [
                   "general",
                   "nonPlayerCharacter",
-                  "document",
+                  "page",
                   "playerCharacter",
                 ],
               },
@@ -70,15 +63,6 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: "systemId is required",
-    });
-  if (
-    body.contentCategory !== undefined &&
-    (typeof body.contentCategory !== "string" ||
-      !categories.has(body.contentCategory))
-  )
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid contentCategory",
     });
   const schema = (body.schema ?? {}) as ContentTypeSchema;
   await assertContentTypeSchema(user, schema);
@@ -129,12 +113,7 @@ export default defineEventHandler(async (event) => {
         .values({
           resourceId: createdResource.id,
           systemId: body.systemId as string,
-          contentCategory:
-            (body.contentCategory as
-              | "general"
-              | "nonPlayerCharacter"
-              | "document"
-              | "playerCharacter") ?? "general",
+          contentCategory: body.contentCategory ?? "general",
           hasStrictSchema: body.hasStrictSchema === true,
           schema,
         })
