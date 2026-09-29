@@ -205,7 +205,7 @@ describe("generatedSheetDefaults", () => {
     ["playerCharacter", true, true],
     ["nonPlayerCharacter", false, true],
     ["general", false, false],
-    ["document", false, false],
+    ["page", false, false],
   ] as const)("%s", (category, defaultEditMode, defaultAutosave) => {
     expect(generatedSheetDefaults(category)).toEqual({ defaultEditMode, defaultAutosave });
   });

@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, ne, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, inArray, or, type SQL } from "drizzle-orm";
 import {
   content,
   contentType,
@@ -8,6 +8,10 @@ import {
   resource,
 } from "../database/schema";
 import { requireAuthenticatedUser } from "../utils/auth";
+import {
+  CHARACTER_CATEGORIES,
+  NON_CHARACTER_CATEGORIES,
+} from "../../shared/content-categories";
 import { useDatabase } from "../utils/database";
 
 const RECENT_LIMIT = 5;
@@ -63,9 +67,10 @@ export default defineEventHandler(async (event) => {
       .where(
         and(
           isOwned,
-          isCharacter
-            ? eq(contentType.contentCategory, "playerCharacter")
-            : ne(contentType.contentCategory, "playerCharacter"),
+          inArray(
+            contentType.contentCategory,
+            isCharacter ? CHARACTER_CATEGORIES : NON_CHARACTER_CATEGORIES,
+          ),
         ),
       )
       .orderBy(desc(resource.updatedAt))

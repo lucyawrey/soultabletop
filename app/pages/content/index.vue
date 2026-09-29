@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
+import {
+  isCharacterCategory,
+  type ContentCategory,
+} from "#shared/content-categories";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
@@ -18,8 +22,7 @@ interface ContentItem {
 interface ContentTypeItem {
   id: string;
   name: string;
-  contentCategory:
-    "general" | "nonPlayerCharacter" | "document" | "playerCharacter";
+  contentCategory: ContentCategory;
 }
 
 const {
@@ -39,7 +42,7 @@ const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
 
 const standardContentTypes = computed(() =>
   contentTypes.value.filter(
-    (item) => item.contentCategory !== "playerCharacter",
+    (item) => !isCharacterCategory(item.contentCategory),
   ),
 );
 
@@ -210,7 +213,8 @@ async function remove() {
     </div>
 
     <p v-if="standardContentTypes.length === 0" class="text-sm text-muted">
-      Create a non-character content type before adding content records.
+      Create a content type with the General or Page category before adding
+      content records.
     </p>
 
     <UTable
