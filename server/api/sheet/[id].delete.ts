@@ -8,7 +8,7 @@ import { requireResourceEditor } from "../../utils/resource-management";
 defineRouteMeta({
   openAPI: {
     tags: ["Sheet"],
-    summary: "Delete a Sheet",
+    summary: "Delete a sheet",
     responses: {
       204: { description: "Deleted" },
       401: { description: "Authentication required" },

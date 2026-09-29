@@ -13,7 +13,7 @@ import { parseBody, gamePatchSchema } from "../../utils/api-schemas";
 defineRouteMeta({
   openAPI: {
     tags: ["Game"],
-    summary: "Update a Game",
+    summary: "Update a game",
     requestBody: {
       required: true,
       content: {
@@ -30,7 +30,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      200: { description: "Updated Game" },
+      200: { description: "Updated game" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
     },

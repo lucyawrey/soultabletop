@@ -8,7 +8,7 @@ import { isUniqueConstraintError } from "../../utils/user-profile";
 defineRouteMeta({
   openAPI: {
     tags: ["Group"],
-    summary: "Create a Group",
+    summary: "Create a group",
     requestBody: {
       required: true,
       content: {
@@ -22,7 +22,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      201: { description: "Created Group" },
+      201: { description: "Created group" },
       400: { description: "Invalid request" },
       401: { description: "Authentication required" },
     },

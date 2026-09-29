@@ -245,7 +245,7 @@ describe("paths", () => {
   it("allows up to 3 content fields in a path", () => {
     expect(messages(`<Number field="class.sub.sub.hitDie" />`)).toEqual([]);
     expect(messages(`<Number field="class.sub.sub.sub.hitDie" />`)).toEqual([
-      "error content-too-deep: \"class.sub.sub.sub\" goes through more than 3 Content fields",
+      "error content-too-deep: \"class.sub.sub.sub\" goes through more than 3 content fields",
     ]);
   });
 

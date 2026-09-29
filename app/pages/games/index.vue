@@ -116,7 +116,7 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save Game.");
+    formError.value = extractApiErrorMessage(error, "Could not save game.");
   } finally {
     formBusy.value = false;
   }
@@ -145,7 +145,7 @@ async function remove() {
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete Game.",
+      "Could not delete game.",
     );
   } finally {
     deleteBusy.value = false;
@@ -167,7 +167,7 @@ async function remove() {
       </UButton>
     </div>
     <p v-if="systems.length === 0" class="text-sm text-muted">
-      Create a System before adding Games.
+      Create a system before adding games.
     </p>
 
     <UTable :data="games" :columns="columns" :loading="status === 'pending'">
@@ -221,7 +221,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No Games yet.</p>
+        <p class="py-6 text-center text-sm text-muted">No games yet.</p>
       </template>
     </UTable>
 

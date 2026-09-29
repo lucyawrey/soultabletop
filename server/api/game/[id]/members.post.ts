@@ -11,7 +11,7 @@ import { parseBody, gameMembershipSchema } from "../../../utils/api-schemas";
 defineRouteMeta({
   openAPI: {
     tags: ["Game Membership"],
-    summary: "Add or update a Game member",
+    summary: "Add or update a game member",
     requestBody: {
       required: true,
       content: {

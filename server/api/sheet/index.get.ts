@@ -10,7 +10,7 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["Sheet"],
-    summary: "List accessible Sheets",
+    summary: "List accessible sheets",
     responses: {
       200: { description: "Sheet list" },
       401: { description: "Authentication required" },

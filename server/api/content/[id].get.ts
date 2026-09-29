@@ -16,9 +16,9 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["Content"],
-    summary: "Get a Content record",
+    summary: "Get a content record",
     description:
-      "Includes the Sheet to render it with (`sheet`), the schemas that Sheet needs (`schemas`), and the referenced Content the viewer can read (`refs`).",
+      "Includes the sheet to render it with (`sheet`), the schemas that sheet needs (`schemas`), and the referenced content the viewer can read (`refs`).",
     responses: {
       200: { description: "Content record" },
       401: { description: "Authentication required" },
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   if (!id)
     throw createError({
       statusCode: 400,
-      statusMessage: "Missing Resource ID",
+      statusMessage: "Missing resource ID",
     });
 
   const database = useDatabase();
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
 
   const schemas = await loadSheetSchemas(record.item.contentTypeId);
   if (!schemas) {
-    throw createError({ statusCode: 404, statusMessage: "ContentType not found" });
+    throw createError({ statusCode: 404, statusMessage: "Content type not found" });
   }
   const [sheet, refs] = await Promise.all([
     resolveContentSheet(

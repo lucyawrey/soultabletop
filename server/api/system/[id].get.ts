@@ -5,7 +5,7 @@ import { requireResourceReader } from "../../utils/resource-management";
 defineRouteMeta({
   openAPI: {
     tags: ["System"],
-    summary: "Get a System",
+    summary: "Get a system",
     responses: {
       200: { description: "System" },
       404: { description: "System not found" },
