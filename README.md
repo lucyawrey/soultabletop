@@ -117,3 +117,7 @@ To try a production build locally:
 pnpm build
 pnpm preview
 ```
+
+## License
+
+[MIT](LICENSE)
