@@ -322,7 +322,9 @@ Route `app/pages/sheets/[id]/edit.vue` (`middleware: "auth"`; redirects to `/she
 detail page moved to `sheets/[id]/index.vue` so the editor is a sibling route, not a child. The detail page's and the
 list's Edit go here; the edit modals are gone. The list's create modal only asks for name, slug, visibility,
 content type, and default, then opens the editor: a sheet created without markup starts with the generated markup
-(this is the "Copy to new Sheet" path). `GET /api/sheet/[id]` includes `schemas` and `contentCategory`.
+(this is the "Copy to new Sheet" path). `GET /api/sheet/[id]` includes `schemas`, `contentCategory`, and the scoped
+`css`. The detail page previews the sheet with `SheetRenderer` against `sampleSheetData` (broken-tag placeholders for
+editors, an Edit switch whose changes never save), with the raw markup and CSS in tabs beside the preview.
 
 Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
 - Left: tabs **Markup** | **CSS** | **Settings** (Name, Slug, Visibility, Default sheet, Default edit mode, Default

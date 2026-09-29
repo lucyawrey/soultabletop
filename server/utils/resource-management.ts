@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
 import type { User } from "better-auth";
 import { createError } from "h3";
-import { group, resource } from "../database/schema";
+import { resource } from "../database/schema";
 import { useDatabase } from "./database";
 import { isUniqueConstraintError } from "./user-profile";
 import {
+  canCreateForGroup,
   getResourceAccess,
   getResourceAccessOrPublic,
   loadResourceAccessContext,
@@ -97,7 +98,7 @@ export async function requireResourceReader(
 }
 
 // Who owns a new resource: the user, or `ownerGroupId` if the user may create
-// resources for that group (its admins and editors, or site admins).
+// resources for that group (`canCreateForGroup`).
 export async function resolveResourceOwner(
   user: Pick<User, "id" | "name">,
   ownerGroupId: string | null | undefined,
@@ -105,22 +106,12 @@ export async function resolveResourceOwner(
 ): Promise<{ ownerUserId: string | null; ownerGroupId: string | null }> {
   if (!ownerGroupId) return { ownerUserId: user.id, ownerGroupId: null };
   const access = context ?? (await loadResourceAccessContext(user, []));
-  const role = access.groupRoles.get(ownerGroupId);
-  if (!access.isSiteAdmin && role !== "admin" && role !== "editor")
+  if (!canCreateForGroup(ownerGroupId, access))
     throw createError({
       statusCode: 403,
       statusMessage:
         "Only admins and editors of a group can create resources it owns",
     });
-  if (!role) {
-    // A site admin outside the group: make sure it exists.
-    const [row] = await useDatabase()
-      .select({ id: group.id })
-      .from(group)
-      .where(eq(group.id, ownerGroupId));
-    if (!row)
-      throw createError({ statusCode: 404, statusMessage: "Group not found" });
-  }
   return { ownerUserId: null, ownerGroupId };
 }
 

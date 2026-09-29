@@ -74,7 +74,7 @@ const targetName = computed(
       variant="subtle"
       icon="i-lucide-triangle-alert"
       :title="`${targetName} will own this`"
-      description="Its admins and editors will be able to edit and delete it, and only its admins can change the owner again."
+      description="Its admins and editors will be able to edit it, and only its admins can delete it or change the owner again."
     />
   </UFormField>
 </template>
