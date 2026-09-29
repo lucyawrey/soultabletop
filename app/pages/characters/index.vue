@@ -99,13 +99,11 @@ const columns: TableColumn<ContentItem>[] = [
 ];
 
 const isFormOpen = ref(false);
-const editingCharacter = ref<ContentItem | null>(null);
 const form = reactive({
   slug: "",
   name: "",
   isPubliclyReadable: false,
   contentTypeId: "",
-  data: "{}",
 });
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 const formBusy = ref(false);
@@ -115,64 +113,32 @@ function openCreate() {
   const firstCharacterType = characterTypes.value[0];
   if (!firstCharacterType) return;
 
-  editingCharacter.value = null;
   formError.value = "";
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.contentTypeId = firstCharacterType.id;
-  form.data = "{}";
   resetSlugTouched(false);
   isFormOpen.value = true;
 }
 
-function openEdit(item: ContentItem) {
-  editingCharacter.value = item;
-  formError.value = "";
-  form.slug = item.slug;
-  form.name = item.name;
-  form.isPubliclyReadable = item.isPubliclyReadable;
-  form.contentTypeId = item.contentTypeId;
-  form.data = JSON.stringify(item.data, null, 2);
-  resetSlugTouched(true);
-  isFormOpen.value = true;
-}
-
+// Creates with just the basics; the characters page's sheet fills in the rest.
 async function submitForm() {
   formBusy.value = true;
   formError.value = "";
 
   try {
-    const data = JSON.parse(form.data) as unknown;
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      throw new Error("Character data must be a JSON object.");
-    }
-
-    if (editingCharacter.value) {
-      await $fetch(`/api/content/${editingCharacter.value.id}`, {
-        method: "PATCH",
-        body: {
-          slug: form.slug,
-          name: form.name,
-          isPubliclyReadable: form.isPubliclyReadable,
-          data,
-        },
-      });
-    } else {
-      await $fetch("/api/content", {
-        method: "POST",
-        body: {
-          slug: form.slug,
-          name: form.name,
-          isPubliclyReadable: form.isPubliclyReadable,
-          contentTypeId: form.contentTypeId,
-          data,
-        },
-      });
-    }
-
+    const created = await $fetch<{ id: string }>("/api/content", {
+      method: "POST",
+      body: {
+        slug: form.slug,
+        name: form.name,
+        isPubliclyReadable: form.isPubliclyReadable,
+        contentTypeId: form.contentTypeId,
+      },
+    });
     isFormOpen.value = false;
-    await refresh();
+    await navigateTo(`/characters/${created.id}`);
   } catch (error) {
     formError.value = extractApiErrorMessage(
       error,
@@ -279,7 +245,7 @@ async function remove() {
               {
                 label: 'Edit',
                 icon: 'i-lucide-pencil',
-                onSelect: () => openEdit(row.original),
+                to: `/characters/${row.original.id}`,
               },
             ],
             [
@@ -308,7 +274,8 @@ async function remove() {
 
     <UModal
       v-model:open="isFormOpen"
-      :title="editingCharacter ? 'Edit Character' : 'New Character'"
+      title="New Character"
+      description="You'll fill in the rest on its sheet next."
     >
       <template #body>
         <UForm
@@ -340,11 +307,7 @@ async function remove() {
               v-model="form.contentTypeId"
               :items="characterTypeOptions"
               class="w-full"
-              :disabled="!!editingCharacter"
             />
-          </UFormField>
-          <UFormField name="data" label="Data (JSON)" required>
-            <UTextarea v-model="form.data" class="w-full font-mono" :rows="8" />
           </UFormField>
           <UAlert
             v-if="formError"
@@ -365,7 +328,7 @@ async function remove() {
         <UButton
           type="submit"
           form="character-form"
-          label="Save"
+          label="Create"
           :loading="formBusy"
         />
       </template>

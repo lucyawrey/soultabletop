@@ -18,7 +18,7 @@ defineRouteMeta({
     tags: ["Content"],
     summary: "Get a content record",
     description:
-      "Includes the sheet to render it with (`sheet`), the schemas that sheet needs (`schemas`), and the referenced content the viewer can read (`refs`).",
+      "Includes the sheet to render it with (`sheet`), the schemas that sheet needs (`schemas`), the referenced content the viewer can read (`refs`), and the names and kinds of linked resources the viewer can read (`links`).",
     responses: {
       200: { description: "Content record" },
       401: { description: "Authentication required" },
@@ -63,7 +63,7 @@ export default defineEventHandler(async (event) => {
   if (!schemas) {
     throw createError({ statusCode: 404, statusMessage: "Content type not found" });
   }
-  const [sheet, refs] = await Promise.all([
+  const [sheet, { refs, links }] = await Promise.all([
     resolveContentSheet(
       user,
       record.item.sheetId,
@@ -87,5 +87,6 @@ export default defineEventHandler(async (event) => {
     sheet,
     schemas,
     refs,
+    links,
   };
 });

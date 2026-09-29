@@ -13,7 +13,7 @@ const item: ContentTypeRules = {
   schema: {
     weight: { type: "number" },
     tags: { type: "array", itemType: { type: "string" } },
-    lore: { type: "object", entries: { origin: { type: "string" } } },
+    lore: { type: "struct", entries: { origin: { type: "string" } } },
   },
 };
 
@@ -24,26 +24,26 @@ const character: ContentTypeRules = {
     notes: { type: "string" },
     alive: { type: "boolean" },
     tags: { type: "array", itemType: { type: "string" } },
-    extra: { type: "any" },
-    link: { type: "resourceRef" },
+    extra: { type: "scalar" },
+    link: { type: "resourceLink" },
     stats: {
-      type: "object",
+      type: "struct",
       entries: {
         str: { type: "number" },
-        saves: { type: "object", entries: { fort: { type: "number" } } },
+        saves: { type: "struct", entries: { fort: { type: "number" } } },
       },
     },
     attacks: {
       type: "array",
       itemType: {
-        type: "object",
+        type: "struct",
         entries: { name: { type: "string" }, bonus: { type: "number" } },
       },
     },
     inventory: {
       type: "array",
       itemType: {
-        type: "object",
+        type: "struct",
         entries: {
           item: { type: "content", contentTypeId: "item", allow: "both" },
           qty: { type: "number" },
@@ -53,7 +53,7 @@ const character: ContentTypeRules = {
     spells: {
       type: "array",
       itemType: {
-        type: "object",
+        type: "struct",
         entries: {
           name: { type: "string" },
           components: { type: "array", itemType: { type: "string" } },
@@ -62,7 +62,7 @@ const character: ContentTypeRules = {
     },
     rolls: { type: "array", itemType: { type: "number" } },
     grid: { type: "array", itemType: { type: "array", itemType: { type: "number" } } },
-    feats: { type: "array", itemType: { type: "content", contentTypeId: "item", allow: "ref" } },
+    feats: { type: "array", itemType: { type: "content", contentTypeId: "item", allow: "reference" } },
     mainHand: { type: "content", contentTypeId: "item", allow: "both" },
   },
 };
@@ -165,7 +165,7 @@ describe("generateSheetMarkup", () => {
         hasStrictSchema: true,
         schema: {
           stats: {
-            type: "object",
+            type: "struct",
             label: "Stats \"&\" {bonus} <x> \\",
             entries: {},
           },

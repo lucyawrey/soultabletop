@@ -1,20 +1,29 @@
 <script setup lang="ts">
 import { autocompletion, type CompletionContext } from "@codemirror/autocomplete";
 import { css as cssLanguage } from "@codemirror/lang-css";
+import { json, jsonParseLinter } from "@codemirror/lang-json";
 import { xml, xmlLanguage } from "@codemirror/lang-xml";
-import { lintGutter, setDiagnostics, type Diagnostic } from "@codemirror/lint";
+import {
+  linter,
+  lintGutter,
+  setDiagnostics,
+  type Diagnostic,
+} from "@codemirror/lint";
 import { EditorState, type Text } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import type { Position, SheetDiagnostic } from "#shared/sheet/parser";
 import { commonAttrs, sheetTags } from "#shared/sheet/registry";
 
-// CodeMirror for Sheet markup or CSS: our diagnostics inline, and for markup
-// completion of tags, attributes, and field paths. Client-only.
+// CodeMirror for Sheet markup and CSS (our diagnostics inline, and for markup
+// completion of tags, attributes, and field paths) and for raw JSON (syntax
+// errors inline). Client-only.
 const props = defineProps<{
   modelValue: string;
-  language: "markup" | "css";
-  diagnostics: SheetDiagnostic[];
+  language: "markup" | "css" | "json";
+  // Sheet markup/CSS problems to show (JSON is checked by CodeMirror).
+  diagnostics?: SheetDiagnostic[];
+  readonly?: boolean;
   // Paths offered inside field="…" and {…} (markup only).
   fieldPaths?: string[];
   label: string;
@@ -82,7 +91,7 @@ function toOffset(doc: Text, position: Position) {
 }
 
 function codemirrorDiagnostics(doc: Text): Diagnostic[] {
-  return props.diagnostics.map((item) => {
+  return (props.diagnostics ?? []).map((item) => {
     const from = toOffset(doc, item.loc.start);
     let to = Math.max(from, toOffset(doc, item.loc.end));
     if (to === from) to = Math.min(from + 1, doc.length);
@@ -134,14 +143,20 @@ onMounted(() => {
         EditorView.contentAttributes.of({ "aria-label": props.label }),
         ...(props.language === "markup"
           ? markupExtensions()
-          : [cssLanguage(), autocompletion()]),
+          : props.language === "css"
+            ? [cssLanguage(), autocompletion()]
+            : [json(), linter(jsonParseLinter())]),
+        ...(props.readonly
+          ? [EditorState.readOnly.of(true), EditorView.editable.of(false)]
+          : []),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) emit("update:modelValue", update.state.doc.toString());
         }),
       ],
     }),
   });
-  view.dispatch(setDiagnostics(view.state, codemirrorDiagnostics(view.state.doc)));
+  if (props.language !== "json")
+    view.dispatch(setDiagnostics(view.state, codemirrorDiagnostics(view.state.doc)));
 });
 
 onBeforeUnmount(() => view?.destroy());
@@ -158,7 +173,7 @@ watch(
 watch(
   () => props.diagnostics,
   () => {
-    if (view) view.dispatch(setDiagnostics(view.state, codemirrorDiagnostics(view.state.doc)));
+    if (view && props.language !== "json") view.dispatch(setDiagnostics(view.state, codemirrorDiagnostics(view.state.doc)));
   },
 );
 

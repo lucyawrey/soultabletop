@@ -84,13 +84,11 @@ const columns: TableColumn<ContentItem>[] = [
 ];
 
 const isFormOpen = ref(false);
-const editingContent = ref<ContentItem | null>(null);
 const form = reactive({
   slug: "",
   name: "",
   isPubliclyReadable: false,
   contentTypeId: "",
-  data: "{}",
 });
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 const formBusy = ref(false);
@@ -100,66 +98,37 @@ function openCreate() {
   const firstContentType = standardContentTypes.value[0];
   if (!firstContentType) return;
 
-  editingContent.value = null;
   formError.value = "";
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.contentTypeId = firstContentType.id;
-  form.data = "{}";
   resetSlugTouched(false);
   isFormOpen.value = true;
 }
 
-function openEdit(item: ContentItem) {
-  editingContent.value = item;
-  formError.value = "";
-  form.slug = item.slug;
-  form.name = item.name;
-  form.isPubliclyReadable = item.isPubliclyReadable;
-  form.contentTypeId = item.contentTypeId;
-  form.data = JSON.stringify(item.data, null, 2);
-  resetSlugTouched(true);
-  isFormOpen.value = true;
-}
-
+// Creates with just the basics; the content page's sheet fills in the rest.
 async function submitForm() {
   formBusy.value = true;
   formError.value = "";
 
   try {
-    const data = JSON.parse(form.data) as unknown;
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      throw new Error("Content data must be a JSON object.");
-    }
-
-    if (editingContent.value) {
-      await $fetch(`/api/content/${editingContent.value.id}`, {
-        method: "PATCH",
-        body: {
-          slug: form.slug,
-          name: form.name,
-          isPubliclyReadable: form.isPubliclyReadable,
-          data,
-        },
-      });
-    } else {
-      await $fetch("/api/content", {
-        method: "POST",
-        body: {
-          slug: form.slug,
-          name: form.name,
-          isPubliclyReadable: form.isPubliclyReadable,
-          contentTypeId: form.contentTypeId,
-          data,
-        },
-      });
-    }
-
+    const created = await $fetch<{ id: string }>("/api/content", {
+      method: "POST",
+      body: {
+        slug: form.slug,
+        name: form.name,
+        isPubliclyReadable: form.isPubliclyReadable,
+        contentTypeId: form.contentTypeId,
+      },
+    });
     isFormOpen.value = false;
-    await refresh();
+    await navigateTo(`/content/${created.id}`);
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save content.");
+    formError.value = extractApiErrorMessage(
+      error,
+      "Could not save content.",
+    );
   } finally {
     formBusy.value = false;
   }
@@ -249,7 +218,7 @@ async function remove() {
               {
                 label: 'Edit',
                 icon: 'i-lucide-pencil',
-                onSelect: () => openEdit(row.original),
+                to: `/content/${row.original.id}`,
               },
             ],
             [
@@ -280,7 +249,8 @@ async function remove() {
 
     <UModal
       v-model:open="isFormOpen"
-      :title="editingContent ? 'Edit Content' : 'New Content'"
+      title="New Content"
+      description="You'll fill in the rest on its sheet next."
     >
       <template #body>
         <UForm
@@ -312,11 +282,7 @@ async function remove() {
               v-model="form.contentTypeId"
               :items="contentTypeOptions"
               class="w-full"
-              :disabled="!!editingContent"
             />
-          </UFormField>
-          <UFormField name="data" label="Data (JSON)" required>
-            <UTextarea v-model="form.data" class="w-full font-mono" :rows="8" />
           </UFormField>
           <UAlert
             v-if="formError"
@@ -337,7 +303,7 @@ async function remove() {
         <UButton
           type="submit"
           form="content-form"
-          label="Save"
+          label="Create"
           :loading="formBusy"
         />
       </template>

@@ -38,7 +38,7 @@ export function sheetFieldPaths(schemas: SheetSchemas): SheetFieldPath[] {
     }
   };
   const visitField = (field: ContentFieldSchema, path: string, depth: number) => {
-    if (field.type === "object") visit(field.entries, path, depth);
+    if (field.type === "struct") visit(field.entries, path, depth);
     else if (field.type === "array") visitField(field.itemType, `${path}[]`, depth);
     else if (field.type === "content" && depth < MAX_CONTENT_DEPTH) {
       const rules = schemas.types[field.contentTypeId];
@@ -62,16 +62,18 @@ export function sampleSheetData(schemas: SheetSchemas): Record<string, unknown> 
         return 10;
       case "boolean":
         return true;
-      case "any":
+      case "scalar":
         return label;
-      case "resourceRef":
+      case "resourceLink":
         return undefined;
       case "array":
         return depth > 4
           ? []
           : [1, 2].map((index) => sample(field.itemType, `${key} ${index}`, depth + 1));
-      case "object":
+      case "struct":
         return record(field.entries, depth + 1);
+      case "object":
+        return { example: label };
       case "content": {
         const rules = schemas.types[field.contentTypeId];
         return {

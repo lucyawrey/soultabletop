@@ -26,13 +26,16 @@ export interface AttrSpec {
   description: string;
 }
 
-// Schema field kinds a tag's `field` may point at. `any` fields (and paths the
-// schema doesn't know about) are accepted by every field tag.
+// Schema field kinds a tag's `field` may point at. Paths the schema doesn't
+// know about (non-strict types, inside free-form objects) are accepted by
+// every field tag.
 export type BindKind =
   | "string"
   | "number"
   | "boolean"
-  | "resourceRef"
+  | "scalar"
+  | "object"
+  | "resourceLink"
   | "content"
   | "array"
   | "stringArray"
@@ -249,7 +252,16 @@ const tagList: TagSpec[] = [
     description: "Picks the input from the field's schema type",
     attrs: { ...fieldAttrs },
     children: "none",
-    binds: ["string", "number", "boolean", "resourceRef", "content", "stringArray"],
+    binds: [
+      "string",
+      "number",
+      "boolean",
+      "scalar",
+      "object",
+      "resourceLink",
+      "content",
+      "stringArray",
+    ],
   },
   {
     name: "Text",
@@ -341,7 +353,7 @@ const tagList: TagSpec[] = [
     description: "A link to another resource or content",
     attrs: { ...fieldAttrs },
     children: "none",
-    binds: ["resourceRef", "content"],
+    binds: ["resourceLink", "content"],
   },
   {
     name: "Value",
@@ -414,7 +426,7 @@ const tagList: TagSpec[] = [
     },
     children: "none",
     parents: ["Table"],
-    binds: ["string", "number", "boolean", "resourceRef", "content"],
+    binds: ["string", "number", "boolean", "scalar", "resourceLink", "content"],
   },
   {
     name: "RowDetails",

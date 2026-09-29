@@ -11,6 +11,7 @@ import {
   type ContentFieldSchema,
   type ContentTypeRules,
   type ContentTypeSchema,
+  type ResourceLinkKind,
 } from "../../shared/content-schema";
 import { useDatabase } from "./database";
 import {
@@ -22,6 +23,9 @@ import { uuidPattern } from "./resource-management";
 // `content` field values found while walking data, checked afterwards in
 // batches because they need database lookups.
 interface Pending {
+  // Skip "is required" for missing fields (new Content created with default
+  // data, whose reference fields start empty).
+  allowMissingRequired: boolean;
   locals: {
     value: Record<string, unknown>;
     contentTypeId: string;
@@ -29,6 +33,7 @@ interface Pending {
     depth: number;
   }[];
   refs: { id: string; contentTypeId: string; path: string }[];
+  links: { id: string; kind: ResourceLinkKind | undefined; path: string }[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -54,12 +59,22 @@ function validateField(
       return typeof value === "boolean"
         ? undefined
         : `${path} must be a boolean`;
-    case "any":
-      return undefined;
-    case "resourceRef":
-      return typeof value === "string" && uuidPattern.test(value)
+    case "scalar":
+      return value === null ||
+        typeof value === "string" ||
+        typeof value === "boolean" ||
+        (typeof value === "number" && Number.isFinite(value))
         ? undefined
-        : `${path} must be a resource ID`;
+        : `${path} must be a string, number, boolean, or null`;
+    case "object":
+      return isRecord(value)
+        ? freeObjectError(value, path, 0)
+        : `${path} must be an object`;
+    case "resourceLink":
+      if (typeof value !== "string" || !uuidPattern.test(value))
+        return `${path} must be a resource ID`;
+      pending.links.push({ id: value, kind: field.kind, path });
+      return undefined;
     case "content":
       if (typeof value === "string") {
         if (field.allow === "local")
@@ -69,7 +84,7 @@ function validateField(
         return undefined;
       }
       if (isRecord(value)) {
-        if (field.allow === "ref")
+        if (field.allow === "reference")
           return `${path} must reference existing content`;
         if (depth >= MAX_CONTENT_DEPTH)
           return `${path} nests custom content more than ${MAX_CONTENT_DEPTH} levels deep`;
@@ -96,12 +111,37 @@ function validateField(
         if (error) return error;
       }
       return undefined;
-    case "object":
+    case "struct":
       return validateObject(value, field.entries, strict, path, depth, pending);
     default:
       // Field types from older schemas are accepted as-is.
       return undefined;
   }
+}
+
+// Free-form `object` values: anything goes, but keys at every level must be
+// identifiers (so sheet paths can reach them) and nesting is bounded.
+function freeObjectError(
+  value: unknown,
+  path: string,
+  nesting: number,
+): string | undefined {
+  if (nesting > 32) return `${path} is nested too deeply`;
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index += 1) {
+      const error = freeObjectError(value[index], `${path}[${index}]`, nesting + 1);
+      if (error) return error;
+    }
+    return undefined;
+  }
+  if (!isRecord(value)) return undefined;
+  for (const [key, item] of Object.entries(value)) {
+    if (!fieldKeyPattern.test(key))
+      return `${path} has key "${key}"; keys must start with a letter or underscore and contain only letters, numbers, and underscores`;
+    const error = freeObjectError(item, `${path}.${key}`, nesting + 1);
+    if (error) return error;
+  }
+  return undefined;
 }
 
 function validateObject(
@@ -117,7 +157,8 @@ function validateObject(
   for (const [key, field] of Object.entries(schema)) {
     const fieldPath = path ? `${path}.${key}` : key;
     if (!(key in value)) {
-      if (field.required) return `${fieldPath} is required`;
+      if (field.required && !pending.allowMissingRequired)
+        return `${fieldPath} is required`;
       continue;
     }
 
@@ -162,8 +203,14 @@ export async function validateContentData(
   user: Pick<User, "id" | "name">,
   data: unknown,
   rules: ContentTypeRules,
+  options: { allowMissingRequired?: boolean } = {},
 ): Promise<string | undefined> {
-  const pending: Pending = { locals: [], refs: [] };
+  const pending: Pending = {
+    allowMissingRequired: options.allowMissingRequired === true,
+    locals: [],
+    refs: [],
+    links: [],
+  };
   const error = validateObject(
     data,
     rules.schema,
@@ -204,6 +251,12 @@ export async function validateContentData(
 
   if (pending.refs.length > MAX_CONTENT_REFS)
     return `Content may reference at most ${MAX_CONTENT_REFS} other content`;
+  if (pending.links.length > MAX_CONTENT_REFS)
+    return `Content may link at most ${MAX_CONTENT_REFS} resources`;
+  return (await checkRefs(user, pending)) ?? (await checkLinks(user, pending));
+}
+
+async function checkRefs(user: Pick<User, "id" | "name">, pending: Pending) {
   const refIds = [...new Set(pending.refs.map((ref) => ref.id))];
   if (!refIds.length) return undefined;
 
@@ -223,6 +276,36 @@ export async function validateContentData(
   }
   return undefined;
 }
+
+// `resourceLink` values must be resources `user` can read, of the field's
+// `kind` if it has one.
+async function checkLinks(user: Pick<User, "id" | "name">, pending: Pending) {
+  const ids = [...new Set(pending.links.map((link) => link.id))];
+  if (!ids.length) return undefined;
+
+  const rows = await useDatabase()
+    .select()
+    .from(resource)
+    .where(inArray(resource.id, ids));
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const context = await loadResourceAccessContext(user, ids);
+  for (const link of pending.links) {
+    const row = byId.get(link.id);
+    if (!row || !getResourceAccess(row, context).canRead)
+      return `${link.path} links to a resource that doesn't exist or isn't accessible`;
+    if (link.kind && row.kind !== link.kind)
+      return `${link.path} must link to a ${RESOURCE_KIND_NAMES[link.kind]}`;
+  }
+  return undefined;
+}
+
+const RESOURCE_KIND_NAMES: Record<ResourceLinkKind, string> = {
+  system: "system",
+  game: "game",
+  contentType: "content type",
+  sheet: "sheet",
+  content: "content record",
+};
 
 // Every ContentType has a built-in `name` field stored as the resource name.
 // A `name` key in submitted data is moved there; an explicit `name` in the
@@ -244,7 +327,7 @@ export function extractDataName(data: Record<string, unknown>) {
 function assertFieldKeys(schema: ContentTypeSchema) {
   const visit = (field: ContentFieldSchema) => {
     if (field.type === "array") visit(field.itemType);
-    else if (field.type === "object") assertFieldKeys(field.entries);
+    else if (field.type === "struct") assertFieldKeys(field.entries);
   };
   for (const [key, field] of Object.entries(schema)) {
     if (!fieldKeyPattern.test(key)) {

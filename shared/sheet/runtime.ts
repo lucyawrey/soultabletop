@@ -2,7 +2,7 @@
 // against the data (following references into loaded Content), and formatting
 // values as text. Framework-free so it can be unit-tested.
 
-import type { ContentFieldSchema } from "../content-schema";
+import type { ContentFieldSchema, ResourceLinkKind } from "../content-schema";
 import type { TextPart } from "./parser";
 import {
   parseSheetPath,
@@ -17,6 +17,27 @@ export interface SheetRef {
 }
 
 export type SheetRefs = Record<string, SheetRef>;
+
+// A resource a `resourceLink` field points at, as loaded for the viewer.
+export interface SheetLink {
+  name: string;
+  kind: ResourceLinkKind;
+}
+
+export type SheetLinks = Record<string, SheetLink>;
+
+const RESOURCE_PAGES: Record<ResourceLinkKind, string> = {
+  system: "/systems",
+  game: "/games",
+  contentType: "/types",
+  sheet: "/sheets",
+  content: "/content",
+};
+
+// The app page of a linked resource.
+export function resourceLinkPath(id: string, link: SheetLink) {
+  return `${RESOURCE_PAGES[link.kind]}/${id}`;
+}
 
 // A value in the rendered data, and where it lives. `path` is its location in
 // the Content's own data (for editing), or null when it was reached through a
@@ -122,7 +143,7 @@ export function setSheetValue(
 }
 
 // A starting value for a new field or List item: empty values, with required
-// fields of objects and local Content filled in.
+// entries of structs and local Content filled in.
 export function defaultSheetValue(
   field: ContentFieldSchema | undefined,
   schemas: SheetSchemas,
@@ -143,8 +164,10 @@ export function defaultSheetValue(
       return false;
     case "array":
       return [];
-    case "object":
+    case "struct":
       return depth > 8 ? {} : fill(field.entries);
+    case "object":
+      return {};
     case "content": {
       const rules = schemas.types[field.contentTypeId];
       return {

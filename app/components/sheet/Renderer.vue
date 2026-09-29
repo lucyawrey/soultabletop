@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { setSheetValue, type SheetRefs } from "#shared/sheet/runtime";
+import {
+  setSheetValue,
+  type SheetLinks,
+  type SheetRefs,
+} from "#shared/sheet/runtime";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
 
 // Renders Content with Sheet markup, for viewing and editing. See
@@ -11,6 +15,7 @@ const props = defineProps<{
   // so pass the draft copy.
   data: Record<string, unknown>;
   refs: SheetRefs;
+  links?: SheetLinks;
   // The Sheet's CSS, already scoped to `[data-sheet="<scopeId>"]` (see
   // shared/sheet/css.ts).
   css?: string;
@@ -34,6 +39,8 @@ useHead({
 const emit = defineEmits<{
   // Content picked in a reference field, to keep for display.
   addRef: [id: string, ref: SheetRefs[string]];
+  // A resource picked in a resourceLink field, to keep for display.
+  addLink: [id: string, link: SheetLinks[string]];
 }>();
 
 const compiled = computed(() => compileSheet(props.markup, props.schemas));
@@ -41,12 +48,14 @@ const compiled = computed(() => compileSheet(props.markup, props.schemas));
 provideSheetContext({
   root: computed(() => ({ value: props.data, path: [] })),
   refs: computed(() => props.refs),
+  links: computed(() => props.links ?? {}),
   schemas: computed(() => props.schemas),
   showInvalid: computed(() => props.canEditSheet ?? false),
   canEdit: computed(() => props.canEdit ?? false),
   editMode: computed(() => props.editMode ?? false),
   update: (path, value) => setSheetValue(props.data, path, value),
   addRef: (id, ref) => emit("addRef", id, ref),
+  addLink: (id, link) => emit("addLink", id, link),
   unlocked: reactive(new Set<string>()),
 });
 </script>
