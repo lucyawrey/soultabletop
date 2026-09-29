@@ -143,7 +143,7 @@ describe("defaultSheetValue", () => {
     [{ type: "number" }, 0],
     [{ type: "boolean" }, false],
     [{ type: "array", itemType: { type: "string" } }, []],
-    [{ type: "any" }, null],
+    [{ type: "scalar" }, null],
     [{ type: "resourceLink" }, null],
     [undefined, null],
   ] as const)("%j -> %j", (field, value) => {
@@ -154,7 +154,7 @@ describe("defaultSheetValue", () => {
     expect(
       defaultSheetValue(
         {
-          type: "object",
+          type: "struct",
           entries: { a: { type: "number", required: true }, b: { type: "string" } },
         },
         schemas,

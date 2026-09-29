@@ -7,7 +7,7 @@ describe("defaultContentData", () => {
       title: { type: "string", required: true },
       level: { type: "number", required: true },
       secret: { type: "boolean", required: true },
-      notes: { type: "any", required: true },
+      notes: { type: "scalar", required: true },
       tags: { type: "array", itemType: { type: "string" }, required: true },
       optional: { type: "string" },
     };
@@ -23,14 +23,14 @@ describe("defaultContentData", () => {
   it("fills required fields inside required groups", () => {
     const schema: ContentTypeSchema = {
       stats: {
-        type: "object",
+        type: "struct",
         required: true,
         entries: {
           str: { type: "number", required: true },
           note: { type: "string" },
         },
       },
-      extra: { type: "object", entries: { x: { type: "number", required: true } } },
+      extra: { type: "struct", entries: { x: { type: "number", required: true } } },
     };
     expect(defaultContentData(schema)).toEqual({ stats: { str: 0 } });
   });

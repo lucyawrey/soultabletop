@@ -209,6 +209,11 @@ const imageSize = computed(
       <span v-else class="text-dimmed">No image</span>
     </template>
 
+    <pre
+      v-else-if="display === 'json'"
+      class="overflow-x-auto text-xs font-mono"
+    >{{ value === undefined ? "—" : JSON.stringify(value, null, 2) }}</pre>
+
     <span v-else :class="text ? '' : 'text-dimmed'">{{ text || "—" }}</span>
   </div>
 </template>

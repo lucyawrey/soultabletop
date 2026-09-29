@@ -5,7 +5,7 @@ import {
 } from "#shared/schema-builder";
 
 // One field row: drag handle, key, type, required, and a toggle for the
-// label, description, and type settings (entries of an `object`, itemType of
+// label, description, and type settings (entries of a `struct`, itemType of
 // an `array`).
 const field = defineModel<BuilderField>({ required: true });
 defineProps<{ handleClass: string }>();
@@ -18,9 +18,9 @@ const typeOptions = BUILDER_FIELD_TYPES.map((type) => ({
 }));
 
 const error = computed(() => errors.value.get(field.value.id));
-// `object` and `array` fields start open, since their settings are their
+// `struct` and `array` fields start open, since their settings are their
 // contents.
-const open = ref(field.value.type === "object" || field.value.type === "array");
+const open = ref(field.value.type === "struct" || field.value.type === "array");
 </script>
 
 <template>

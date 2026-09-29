@@ -117,7 +117,7 @@ View mode renders formatted values, edit mode renders the input.
 | `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
 | `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format` | any | read-only in both modes |
-| `Field` | — | any | picks input from schema type (decided); generated sheets mostly use this |
+| `Field` | — | any | picks input from schema type (decided); generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
 
@@ -179,7 +179,8 @@ the item):
 |---|---|---|
 | Path not in schema | error | warning (data may hold extra keys) |
 | Tag can't bind that field type (e.g. `Number` on a string) | error | error |
-| Field is `any` | allowed, uses `Value`-style display for `Field` | same |
+| Field is `scalar` | binds `Field`, `Value`, `Column`; no paths below it | same |
+| Path goes into a free-form `object` | warning (not checked; shows whatever the data holds) | same |
 | `List`/`Table` on a non-array | error | error |
 | Relative path inside a `List` of primitives (other than `.`) | error | error |
 | `{path}` interpolation not in schema | error | warning |
@@ -204,7 +205,7 @@ Generator: `generateSheetMarkup(schema)` in `shared/sheet/generate.ts`, a pure f
 ordinary markup, so it goes through the same parse/validate/render path as authored sheets:
 - Top-level simple fields → one "Details" `Section` with `<Grid cols="2">`, starting with `<Text field="name" />`
   (the page header already shows the name, so no heading), then a `<Field>` per field.
-- Object field → its own `Section` titled by label, recursing.
+- `struct` field → its own `Section` titled by label, recursing. Free-form `object` → a `Section` with a `<Field>` (JSON editor).
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
 - Array of strings → `Tags`; other primitive arrays → `List field="."`.
 - `resourceLink` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)

@@ -16,7 +16,7 @@ const schema: ContentTypeSchema = {
   level: { type: "number", required: true, label: "Level" },
   bio: { type: "string", description: "Backstory" },
   stats: {
-    type: "object",
+    type: "struct",
     entries: {
       str: { type: "number", required: true },
       dex: { type: "number" },
@@ -26,14 +26,14 @@ const schema: ContentTypeSchema = {
   attacks: {
     type: "array",
     itemType: {
-      type: "object",
+      type: "struct",
       entries: { name: { type: "string" }, bonus: { type: "number" } },
     },
   },
   class: { type: "content", contentTypeId: typeId, allow: "ref", required: true },
   link: { type: "resourceLink" },
   home: { type: "resourceLink", kind: "game" },
-  extra: { type: "any" },
+  extra: { type: "scalar" },
   alive: { type: "boolean" },
 };
 
@@ -63,7 +63,7 @@ describe("schemaToBuilder / builderToSchema", () => {
 
   it("saves only the current type's settings and drops empty text", () => {
     const [field] = schemaToBuilder({
-      stats: { type: "object", entries: { str: { type: "number" } } },
+      stats: { type: "struct", entries: { str: { type: "number" } } },
     });
     field!.type = "string";
     field!.label = "  ";
@@ -72,9 +72,9 @@ describe("schemaToBuilder / builderToSchema", () => {
       stats: { type: "string", description: "Notes" },
     });
     // Switching back restores the nested fields.
-    field!.type = "object";
+    field!.type = "struct";
     expect(builderToSchema([field!]).stats).toMatchObject({
-      type: "object",
+      type: "struct",
       entries: { str: { type: "number" } },
     });
   });
@@ -110,14 +110,14 @@ describe("builderErrors", () => {
 
   it("allows `name` inside groups", () => {
     const fields = schemaToBuilder({
-      stats: { type: "object", entries: { name: { type: "string" } } },
+      stats: { type: "struct", entries: { name: { type: "string" } } },
     });
     expect(builderErrors(fields).size).toBe(0);
   });
 
   it("checks nested fields and content types", () => {
     const fields = schemaToBuilder({
-      stats: { type: "object", entries: { ok: { type: "number" } } },
+      stats: { type: "struct", entries: { ok: { type: "number" } } },
       list: {
         type: "array",
         itemType: { type: "content", contentTypeId: "", allow: "both" },

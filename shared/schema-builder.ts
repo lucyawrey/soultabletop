@@ -27,7 +27,7 @@ export interface BuilderNode {
   description: string;
   // `array`: the type of each item.
   item: BuilderNode | null;
-  // `object`: its entries.
+  // `struct`: its entries.
   fields: BuilderField[];
   // `content`.
   contentTypeId: string;
@@ -46,9 +46,10 @@ export const BUILDER_FIELD_TYPES: BuilderFieldType[] = [
   "string",
   "number",
   "boolean",
-  "any",
+  "scalar",
   "resourceLink",
   "array",
+  "struct",
   "object",
   "content",
 ];
@@ -84,7 +85,7 @@ function toNode(field: ContentFieldSchema): BuilderNode {
   node.label = field.label ?? "";
   node.description = field.description ?? "";
   if (field.type === "array") node.item = toNode(field.itemType);
-  if (field.type === "object") node.fields = schemaToBuilder(field.entries);
+  if (field.type === "struct") node.fields = schemaToBuilder(field.entries);
   if (field.type === "content") {
     node.contentTypeId = field.contentTypeId;
     node.allow = field.allow;
@@ -115,8 +116,8 @@ function fromNode(node: BuilderNode): ContentFieldSchema {
         itemType: fromNode(node.item ?? newBuilderNode()),
         ...base,
       };
-    case "object":
-      return { type: "object", entries: builderToSchema(node.fields), ...base };
+    case "struct":
+      return { type: "struct", entries: builderToSchema(node.fields), ...base };
     case "content":
       return {
         type: "content",
@@ -130,7 +131,11 @@ function fromNode(node: BuilderNode): ContentFieldSchema {
         ...(node.kind ? { kind: node.kind } : {}),
         ...base,
       };
-    default:
+    case "string":
+    case "number":
+    case "boolean":
+    case "scalar":
+    case "object":
       return { type: node.type, ...base };
   }
 }
@@ -150,7 +155,7 @@ export function builderErrors(fields: BuilderField[]): Map<string, string> {
     if (node.type === "content" && !node.contentTypeId)
       errors.set(contentTypeErrorId(node.id), "Choose a content type");
     if (node.type === "array") visitNode(node.item ?? newBuilderNode());
-    if (node.type === "object") visitList(node.fields, false);
+    if (node.type === "struct") visitList(node.fields, false);
   };
   const visitList = (list: BuilderField[], topLevel: boolean) => {
     const seen = new Set<string>();
@@ -167,7 +172,7 @@ export function builderErrors(fields: BuilderField[]): Map<string, string> {
       else if (seen.has(key)) errors.set(field.id, `"${key}" is used twice`);
       seen.add(key);
       if (!errors.has(field.id)) visitNode(field);
-      else if (field.type === "object") visitList(field.fields, false);
+      else if (field.type === "struct") visitList(field.fields, false);
     }
   };
   visitList(fields, true);
@@ -193,7 +198,7 @@ function isFieldShape(value: unknown, depth: number): boolean {
   if (typeof field.type !== "string" || !FIELD_TYPES.has(field.type)) return false;
   if (depth > 32) return false;
   if (field.type === "array") return isFieldShape(field.itemType, depth + 1);
-  if (field.type === "object") return isSchemaShape(field.entries, depth + 1);
+  if (field.type === "struct") return isSchemaShape(field.entries, depth + 1);
   if (field.type === "resourceLink")
     return (
       field.kind === undefined ||

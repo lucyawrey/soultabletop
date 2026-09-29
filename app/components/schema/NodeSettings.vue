@@ -11,9 +11,9 @@ import {
   type ResourceLinkKind,
 } from "#shared/content-schema";
 
-// Settings for a node's type: an `object`'s entries, an `array`'s itemType
-// (itself a node, so arrays of objects or of arrays work), or a `content`
-// field's contentTypeId and allow.
+// Settings for a node's type: a `struct`'s entries, an `array`'s itemType
+// (itself a node, so arrays of structs or of arrays work), a `content` field's
+// contentTypeId and allow, or a `resourceLink`'s kind.
 const node = defineModel<BuilderNode>({ required: true });
 const { errors, contentTypeOptions, readonly } = useSchemaBuilder();
 
@@ -51,7 +51,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="node.type === 'object'" class="space-y-2">
+  <div v-if="node.type === 'struct'" class="space-y-2">
     <p class="text-sm font-medium text-highlighted">entries</p>
     <SchemaFieldList v-model="node.fields" />
   </div>
@@ -66,7 +66,7 @@ watch(
       />
     </UFormField>
     <div
-      v-if="['object', 'array', 'content', 'resourceLink'].includes(node.item.type)"
+      v-if="['struct', 'array', 'content', 'resourceLink'].includes(node.item.type)"
       class="border-s-2 border-default ps-3"
     >
       <SchemaNodeSettings v-model="node.item" />

@@ -34,18 +34,18 @@ const character: ContentTypeRules = {
     notes: { type: "string", description: "Anything goes" },
     alive: { type: "boolean" },
     tags: { type: "array", itemType: { type: "string" } },
-    stats: { type: "object", entries: { str: { type: "number" } } },
+    stats: { type: "struct", entries: { str: { type: "number" } } },
     attacks: {
       type: "array",
       itemType: {
-        type: "object",
+        type: "struct",
         entries: { name: { type: "string" }, bonus: { type: "number" } },
       },
     },
     inventory: {
       type: "array",
       itemType: {
-        type: "object",
+        type: "struct",
         entries: {
           item: { type: "content", contentTypeId: "item", allow: "both" },
           qty: { type: "number" },
@@ -54,7 +54,8 @@ const character: ContentTypeRules = {
     },
     class: { type: "content", contentTypeId: "cls", allow: "ref" },
     link: { type: "resourceLink" },
-    extra: { type: "any" },
+    extra: { type: "scalar" },
+    misc: { type: "object" },
   },
 };
 
@@ -180,17 +181,31 @@ describe("bindings", () => {
       "error wrong-field-type: <Number> can't show \"notes\": it's a text field",
     ]);
     expect(messages(`<Text field="attacks" />`)).toEqual([
-      "error wrong-field-type: <Text> can't show \"attacks\": it's a list; use <List> or <Table>",
+      "error wrong-field-type: <Text> can't show \"attacks\": it's an array; use <List> or <Table>",
     ]);
     expect(messages(`<Field field="stats" />`)).toEqual([
-      "error wrong-field-type: <Field> can't show \"stats\": it's a group of fields; use a <Section> with fields inside",
+      "error wrong-field-type: <Field> can't show \"stats\": it's a struct; use a <Section> with fields inside",
     ]);
     expect(errorCodes(`<Table field="tags"><Column field="." /></Table>`)).toEqual(["wrong-field-type"]);
     expect(errorCodes(`<Tags field="attacks" />`)).toEqual(["wrong-field-type"]);
   });
 
-  it("lets every field tag bind `any` fields and anything under them", () => {
-    expect(messages(`<Number field="extra" /><Text field="extra.a.b" /><List field="extra"><Text field="x" /></List>`)).toEqual([]);
+  it("binds scalar fields to Field, Value, and Column only", () => {
+    expect(messages(`<Field field="extra" /><Value field="extra" />`)).toEqual([]);
+    expect(messages(`<Number field="extra" />`)).toEqual([
+      "error wrong-field-type: <Number> can't show \"extra\": it's a scalar field",
+    ]);
+    expect(messages(`<Text field="extra.a" />`)).toEqual([
+      "error not-an-object: \"extra.a\": \"extra\" is a scalar field and has no field \"a\"",
+    ]);
+  });
+
+  it("allows unchecked paths into free-form objects, with a warning", () => {
+    expect(messages(`<Field field="misc" />`)).toEqual([]);
+    expect(messages(`<Number field="misc.a.b" /><List field="misc.items"><Text field="x" /></List>`)).toEqual([
+      "warning free-form-path: \"misc.a.b\": \"misc\" is a free-form object, so \"a\" isn't checked; it will show whatever the data holds",
+      "warning free-form-path: \"misc.items\": \"misc\" is a free-form object, so \"items\" isn't checked; it will show whatever the data holds",
+    ]);
   });
 
   it("lets Value show anything", () => {
@@ -229,7 +244,7 @@ describe("paths", () => {
   it("supports array indexes but not field names on arrays", () => {
     expect(messages(`<Text field="attacks.0.name" />`)).toEqual([]);
     expect(messages(`<Text field="attacks.name" />`)).toEqual([
-      "error not-an-object: \"attacks.name\": \"attacks\" is a list; use an index like attacks.0, or a <List>",
+      "error not-an-object: \"attacks.name\": \"attacks\" is an array; use an index like attacks.0, or a <List>",
     ]);
   });
 
@@ -258,7 +273,7 @@ describe("paths", () => {
   it("checks {paths} in text and attributes", () => {
     expect(errorCodes(`<Note>{nope}</Note><Section title="{nope2}" />`)).toEqual(["unknown-field", "unknown-field"]);
     expect(messages(`<Note>{stats}</Note>`)).toEqual([
-      "warning interpolates-object: {stats} is a group of fields and will show as raw data",
+      "warning interpolates-object: {stats} is an object and will show as raw data",
     ]);
   });
 

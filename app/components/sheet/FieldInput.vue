@@ -43,6 +43,63 @@ const tags = computed({
   set,
 });
 
+// `scalar`: the value's type is picked with a switch next to the input.
+type ScalarType = "string" | "number" | "boolean" | "null";
+const scalarTypes: ScalarType[] = ["string", "number", "boolean", "null"];
+const scalarType = computed<ScalarType>({
+  get: () =>
+    props.value === null || props.value === undefined
+      ? "null"
+      : typeof props.value === "number"
+        ? "number"
+        : typeof props.value === "boolean"
+          ? "boolean"
+          : "string",
+  set: (type) => {
+    const current = props.value;
+    if (type === "null") set(null);
+    else if (type === "boolean") set(current === true || current === "true");
+    else if (type === "number") {
+      const parsed = Number(current);
+      set(typeof current !== "boolean" && Number.isFinite(parsed) ? parsed : 0);
+    } else set(current === null || current === undefined ? "" : String(current));
+  },
+});
+const scalarNumber = computed({
+  get: () => (typeof props.value === "number" ? props.value : 0),
+  set: (value: number | null | undefined) => set(value ?? 0),
+});
+
+// Free-form `object`: edited as JSON; only valid objects are written back.
+const jsonText = ref(JSON.stringify(props.value ?? {}, null, 2));
+const jsonError = ref("");
+watch(
+  () => props.value,
+  (value) => {
+    try {
+      if (JSON.stringify(JSON.parse(jsonText.value)) === JSON.stringify(value)) return;
+    } catch {
+      // The text is mid-edit and invalid; replace it with the new value.
+    }
+    jsonText.value = JSON.stringify(value ?? {}, null, 2);
+    jsonError.value = "";
+  },
+);
+function updateJson(text: string) {
+  jsonText.value = text;
+  try {
+    const parsed = JSON.parse(text) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      jsonError.value = "Must be a JSON object";
+      return;
+    }
+    jsonError.value = "";
+    set(parsed);
+  } catch (error) {
+    jsonError.value = `Invalid JSON: ${(error as Error).message}`;
+  }
+}
+
 const placeholder = computed(() => attrText(props.node.attrs.placeholder) || undefined);
 const options = computed(() => (props.node.attrs.options as string[] | undefined) ?? []);
 const min = computed(() => number(props.node.attrs.min));
@@ -234,6 +291,45 @@ const imageError = computed(() =>
       :aria-label="label"
     />
   </div>
+
+  <div v-else-if="display === 'scalar'" class="flex gap-2">
+    <USelect
+      v-model="scalarType"
+      :items="scalarTypes"
+      :aria-label="`${label} type`"
+      class="w-28 shrink-0"
+    />
+    <UInput
+      v-if="scalarType === 'string'"
+      v-model="text"
+      :aria-label="label"
+      class="min-w-0 flex-1"
+    />
+    <UInputNumber
+      v-else-if="scalarType === 'number'"
+      v-model="scalarNumber"
+      :aria-label="label"
+      class="min-w-0 flex-1"
+    />
+    <USwitch
+      v-else-if="scalarType === 'boolean'"
+      v-model="booleanValue"
+      :aria-label="label"
+      class="mt-1.5"
+    />
+  </div>
+
+  <UFormField v-else-if="display === 'json'" :error="jsonError || undefined">
+    <ClientOnly>
+      <CodeEditor
+        :model-value="jsonText"
+        language="json"
+        :label="label"
+        class="h-48 min-h-0"
+        @update:model-value="updateJson"
+      />
+    </ClientOnly>
+  </UFormField>
 
   <UFormField v-else-if="display === 'image'" :error="imageError">
     <UInput

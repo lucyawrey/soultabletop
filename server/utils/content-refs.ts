@@ -43,7 +43,7 @@ function collectRefs(
     if (field.type === "array") {
       if (Array.isArray(item))
         for (const entry of item) visit(entry, field.itemType, itemDepth);
-    } else if (field.type === "object") {
+    } else if (field.type === "struct") {
       collectRefs(item, field.entries, schemas, itemDepth, found, links);
     } else if (field.type === "resourceLink") {
       if (typeof item === "string" && uuidPattern.test(item)) links.add(item);

@@ -59,8 +59,17 @@ function validateField(
       return typeof value === "boolean"
         ? undefined
         : `${path} must be a boolean`;
-    case "any":
-      return undefined;
+    case "scalar":
+      return value === null ||
+        typeof value === "string" ||
+        typeof value === "boolean" ||
+        (typeof value === "number" && Number.isFinite(value))
+        ? undefined
+        : `${path} must be a string, number, boolean, or null`;
+    case "object":
+      return isRecord(value)
+        ? freeObjectError(value, path, 0)
+        : `${path} must be an object`;
     case "resourceLink":
       if (typeof value !== "string" || !uuidPattern.test(value))
         return `${path} must be a resource ID`;
@@ -102,12 +111,37 @@ function validateField(
         if (error) return error;
       }
       return undefined;
-    case "object":
+    case "struct":
       return validateObject(value, field.entries, strict, path, depth, pending);
     default:
       // Field types from older schemas are accepted as-is.
       return undefined;
   }
+}
+
+// Free-form `object` values: anything goes, but keys at every level must be
+// identifiers (so sheet paths can reach them) and nesting is bounded.
+function freeObjectError(
+  value: unknown,
+  path: string,
+  nesting: number,
+): string | undefined {
+  if (nesting > 32) return `${path} is nested too deeply`;
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index += 1) {
+      const error = freeObjectError(value[index], `${path}[${index}]`, nesting + 1);
+      if (error) return error;
+    }
+    return undefined;
+  }
+  if (!isRecord(value)) return undefined;
+  for (const [key, item] of Object.entries(value)) {
+    if (!fieldKeyPattern.test(key))
+      return `${path} has key "${key}"; keys must start with a letter or underscore and contain only letters, numbers, and underscores`;
+    const error = freeObjectError(item, `${path}.${key}`, nesting + 1);
+    if (error) return error;
+  }
+  return undefined;
 }
 
 function validateObject(
@@ -293,7 +327,7 @@ export function extractDataName(data: Record<string, unknown>) {
 function assertFieldKeys(schema: ContentTypeSchema) {
   const visit = (field: ContentFieldSchema) => {
     if (field.type === "array") visit(field.itemType);
-    else if (field.type === "object") assertFieldKeys(field.entries);
+    else if (field.type === "struct") assertFieldKeys(field.entries);
   };
   for (const [key, field] of Object.entries(schema)) {
     if (!fieldKeyPattern.test(key)) {

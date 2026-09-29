@@ -192,6 +192,8 @@ export type SheetFieldDisplay =
   | "tags"
   | "tracker"
   | "ref"
+  | "scalar"
+  | "json"
   | "value"
   | "markdown"
   | "image";
@@ -231,6 +233,10 @@ export function sheetFieldDisplay(node: ValidatedElement): SheetFieldDisplay {
     case "resourceLink":
     case "content":
       return "ref";
+    case "scalar":
+      return "scalar";
+    case "object":
+      return "json";
     case "array":
       return "tags";
     default:

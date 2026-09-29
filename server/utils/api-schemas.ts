@@ -61,7 +61,8 @@ export const contentFieldSchema = Type.Recursive((Self) =>
           Type.Literal("string"),
           Type.Literal("number"),
           Type.Literal("boolean"),
-          Type.Literal("any"),
+          Type.Literal("scalar"),
+          Type.Literal("object"),
         ]),
         ...fieldMeta,
       },
@@ -73,7 +74,7 @@ export const contentFieldSchema = Type.Recursive((Self) =>
     ),
     Type.Object(
       {
-        type: Type.Literal("object"),
+        type: Type.Literal("struct"),
         entries: Type.Record(fieldKeySchema, Self),
         ...fieldMeta,
       },

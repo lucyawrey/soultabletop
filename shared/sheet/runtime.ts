@@ -143,7 +143,7 @@ export function setSheetValue(
 }
 
 // A starting value for a new field or List item: empty values, with required
-// fields of objects and local Content filled in.
+// entries of structs and local Content filled in.
 export function defaultSheetValue(
   field: ContentFieldSchema | undefined,
   schemas: SheetSchemas,
@@ -164,8 +164,10 @@ export function defaultSheetValue(
       return false;
     case "array":
       return [];
-    case "object":
+    case "struct":
       return depth > 8 ? {} : fill(field.entries);
+    case "object":
+      return {};
     case "content": {
       const rules = schemas.types[field.contentTypeId];
       return {
