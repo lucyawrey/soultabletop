@@ -17,7 +17,8 @@ import { commonAttrs, sheetTags } from "#shared/sheet/registry";
 
 // CodeMirror for Sheet markup and CSS (our diagnostics inline, and for markup
 // completion of tags, attributes, and field paths) and for raw JSON (syntax
-// errors inline). Client-only.
+// errors inline). Client-only. Give it a fixed height (e.g. `class="h-80"`); it
+// scrolls inside that, and the user can drag its corner to resize it.
 const props = defineProps<{
   modelValue: string;
   language: "markup" | "css" | "json";
@@ -130,9 +131,13 @@ const theme = EditorView.theme({
   },
 });
 
-onMounted(() => {
+// A .client component mounted during hydration runs onMounted before its
+// template renders, so wait for `host` to exist.
+onMounted(async () => {
+  await nextTick();
+  if (!host.value) return;
   view = new EditorView({
-    parent: host.value!,
+    parent: host.value,
     state: EditorState.create({
       doc: props.modelValue,
       extensions: [
@@ -201,6 +206,6 @@ defineExpose({
 <template>
   <div
     ref="host"
-    class="h-full min-h-80 overflow-hidden rounded-md border border-default"
+    class="min-h-24 resize-y overflow-hidden rounded-md border border-default"
   />
 </template>

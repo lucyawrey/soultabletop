@@ -328,7 +328,7 @@ const imageError = computed(() =>
         :model-value="jsonText"
         language="json"
         :label="label"
-        class="h-48 min-h-0"
+        class="h-48"
         @update:model-value="updateJson"
       />
     </ClientOnly>

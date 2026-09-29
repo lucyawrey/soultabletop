@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type { SheetCssResult } from "#shared/sheet/css";
 import { sampleSheetData, sheetFieldPaths } from "#shared/sheet/editor";
+import {
+  readSheetFile,
+  sheetExportFileName,
+  sheetFileTypes,
+  type SheetFileKind,
+} from "#shared/sheet/files";
 import { sheetFonts } from "#shared/sheet/fonts";
 import { generateSheetMarkup, type ContentCategory } from "#shared/sheet/generate";
 import type { SheetDiagnostic } from "#shared/sheet/parser";
@@ -212,6 +218,69 @@ const fieldPaths = computed(() =>
   sheet.value ? sheetFieldPaths(sheet.value.schemas) : [],
 );
 
+// Files: load markup or CSS from a local file as an unsaved change (Upload, or
+// drop it on the editor), and download what's in the editor.
+
+const fileInput = ref<HTMLInputElement>();
+const fileKind = ref<SheetFileKind>("markup");
+const fileError = ref("");
+function pickFile(kind: SheetFileKind) {
+  if (!fileInput.value) return;
+  fileKind.value = kind;
+  fileInput.value.accept = sheetFileTypes[kind].extensions.join(",");
+  fileInput.value.click();
+}
+async function loadFile(file: File, kind: SheetFileKind) {
+  fileError.value = "";
+  const result = await readSheetFile(file, kind);
+  if ("error" in result) {
+    fileError.value = result.error;
+    return;
+  }
+  if (kind === "markup") form.markup = result.text;
+  else form.cssStyles = result.text;
+  tab.value = kind;
+  toast.add({
+    title: `Loaded ${file.name}`,
+    description: "Not saved yet. Undo in the editor to go back.",
+    color: "info",
+    icon: "i-lucide-file-up",
+  });
+}
+function onFileChosen(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = "";
+  if (file) loadFile(file, fileKind.value);
+}
+// Caught before CodeMirror, which would insert a dropped file at the cursor.
+function isFileDrag(event: DragEvent) {
+  return event.dataTransfer?.types.includes("Files") ?? false;
+}
+function onFileDragOver(event: DragEvent) {
+  if (!isFileDrag(event)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  event.dataTransfer!.dropEffect = "copy";
+}
+function onFileDrop(event: DragEvent, kind: SheetFileKind) {
+  if (!isFileDrag(event)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const file = event.dataTransfer!.files[0];
+  if (file) loadFile(file, kind);
+}
+function download(kind: SheetFileKind) {
+  const text = kind === "markup" ? form.markup : form.cssStyles;
+  const blob = new Blob([text], { type: `${sheetFileTypes[kind].mimeType};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = sheetExportFileName(form.slug, kind);
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url));
+}
+
 // "Insert generated markup"
 
 const isGenerateOpen = ref(false);
@@ -377,6 +446,22 @@ async function insertPath(path: string) {
         title="Could not save"
         :description="saveError"
       />
+      <UAlert
+        v-if="fileError"
+        color="error"
+        variant="subtle"
+        title="Could not load file"
+        :description="fileError"
+        :close="true"
+        @update:open="fileError = ''"
+      />
+      <input
+        ref="fileInput"
+        type="file"
+        class="hidden"
+        aria-hidden="true"
+        @change="onFileChosen"
+      />
       <ReplaceDefaultSheetAlert
         v-if="replaceDefault"
         :message="replaceDefault"
@@ -388,29 +473,77 @@ async function insertPath(path: string) {
         <div class="min-w-0 space-y-4">
           <UTabs v-model="tab" :items="tabs" :unmount-on-hide="false">
             <template #markup>
-              <ClientOnly>
-                <CodeEditor
-                  ref="markupEditor"
-                  v-model="form.markup"
-                  language="markup"
-                  label="Sheet markup"
-                  :diagnostics="markupDiagnostics"
-                  :field-paths="fieldPaths.map((item) => item.path)"
-                  class="h-[60vh]"
+              <div class="flex flex-wrap items-center justify-end gap-2 pb-2">
+                <span class="text-xs text-muted">Drop a file on the editor to load it.</span>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-upload"
+                  label="Upload"
+                  @click="pickFile('markup')"
                 />
-              </ClientOnly>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-download"
+                  label="Download"
+                  @click="download('markup')"
+                />
+              </div>
+              <div
+                @dragover.capture="onFileDragOver"
+                @drop.capture="onFileDrop($event, 'markup')"
+              >
+                <ClientOnly>
+                  <CodeEditor
+                    ref="markupEditor"
+                    v-model="form.markup"
+                    language="markup"
+                    label="Sheet markup"
+                    :diagnostics="markupDiagnostics"
+                    :field-paths="fieldPaths.map((item) => item.path)"
+                    class="h-[60vh]"
+                  />
+                </ClientOnly>
+              </div>
             </template>
             <template #css>
-              <ClientOnly>
-                <CodeEditor
-                  ref="cssEditor"
-                  v-model="form.cssStyles"
-                  language="css"
-                  label="Sheet CSS"
-                  :diagnostics="cssDiagnostics"
-                  class="h-[60vh]"
+              <div class="flex flex-wrap items-center justify-end gap-2 pb-2">
+                <span class="text-xs text-muted">Drop a file on the editor to load it.</span>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-upload"
+                  label="Upload"
+                  @click="pickFile('css')"
                 />
-              </ClientOnly>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-download"
+                  label="Download"
+                  @click="download('css')"
+                />
+              </div>
+              <div
+                @dragover.capture="onFileDragOver"
+                @drop.capture="onFileDrop($event, 'css')"
+              >
+                <ClientOnly>
+                  <CodeEditor
+                    ref="cssEditor"
+                    v-model="form.cssStyles"
+                    language="css"
+                    label="Sheet CSS"
+                    :diagnostics="cssDiagnostics"
+                    class="h-[60vh]"
+                  />
+                </ClientOnly>
+              </div>
             </template>
             <template #settings>
               <div class="space-y-4 pt-2">
