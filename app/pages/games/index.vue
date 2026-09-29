@@ -12,6 +12,8 @@ interface GameItem {
   isPubliclyReadable: boolean;
   updatedAt: string;
   canEdit: boolean;
+  ownerGroupId: string | null;
+  canChangeOwner: boolean;
 }
 
 interface SystemOption {
@@ -59,6 +61,7 @@ const form = reactive({
   name: "",
   systemId: "",
   isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
 });
 const formBusy = ref(false);
 const formError = ref("");
@@ -72,11 +75,13 @@ function openCreate() {
   form.name = "";
   form.systemId = firstSystem?.id ?? "";
   form.isPubliclyReadable = false;
+  form.ownerGroupId = null;
   resetSlugTouched(false);
   isFormOpen.value = true;
 }
 
 function openEdit(item: GameItem) {
+  form.ownerGroupId = item.ownerGroupId;
   editingGame.value = item;
   formError.value = "";
   form.slug = item.slug;
@@ -85,6 +90,13 @@ function openEdit(item: GameItem) {
   form.isPubliclyReadable = item.isPubliclyReadable;
   resetSlugTouched(true);
   isFormOpen.value = true;
+}
+
+// Sends ownerGroupId only when the Owner field changed it.
+function ownerChange(item: GameItem) {
+  return form.ownerGroupId !== item.ownerGroupId
+    ? { ownerGroupId: form.ownerGroupId }
+    : {};
 }
 
 async function submitForm() {
@@ -99,6 +111,7 @@ async function submitForm() {
           slug: form.slug,
           name: form.name,
           isPubliclyReadable: form.isPubliclyReadable,
+          ...ownerChange(editingGame.value),
         },
       });
     } else {
@@ -109,6 +122,7 @@ async function submitForm() {
           name: form.name,
           systemId: form.systemId,
           isPubliclyReadable: form.isPubliclyReadable,
+          ownerGroupId: form.ownerGroupId ?? undefined,
         },
       });
     }
@@ -254,6 +268,11 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField
+            v-if="!editingGame || editingGame.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="editingGame ? editingGame.ownerGroupId : undefined"
+          />
           <UFormField name="systemId" label="System" required>
             <USelect
               v-model="form.systemId"

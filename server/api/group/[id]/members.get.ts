@@ -3,7 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { groupMembership, user, userProfile } from "../../../database/schema";
 import { requireAuthenticatedUser } from "../../../utils/auth";
 import { useDatabase } from "../../../utils/database";
-import { requireGroupMember } from "../../../utils/group";
+import { requireGroupViewer } from "../../../utils/group";
 
 defineRouteMeta({
   openAPI: {
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: "Group ID is required",
     });
-  await requireGroupMember(groupId, currentUser.id);
+  await requireGroupViewer(groupId, currentUser.id);
   return useDatabase()
     .select({
       userId: groupMembership.userId,

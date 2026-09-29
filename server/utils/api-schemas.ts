@@ -24,6 +24,7 @@ export const createContentSchema = Type.Object({
   slug: slugSchema,
   name: Type.String({ minLength: 1 }),
   contentTypeId: uuidSchema,
+  ownerGroupId: Type.Optional(uuidSchema),
   sheetId: Type.Optional(Type.Union([uuidSchema, Type.Null()])),
   data: Type.Optional(Type.Object({}, { additionalProperties: true })),
   isPubliclyReadable: Type.Optional(Type.Boolean()),
@@ -41,6 +42,8 @@ export const resourcePatchSchema = Type.Partial(
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
     isPubliclyReadable: Type.Boolean(),
+    // Move to a group, or null for the acting user (see resolveOwnerChange).
+    ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
   }),
 );
 
@@ -132,6 +135,8 @@ export const contentTypePatchSchema = Type.Partial(
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
     isPubliclyReadable: Type.Boolean(),
+    // Move to a group, or null for the acting user (see resolveOwnerChange).
+    ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
     contentCategory: contentCategorySchema,
     hasStrictSchema: Type.Boolean(),
     schema: contentTypeSchemaSchema,
@@ -159,6 +164,8 @@ export const sheetPatchSchema = Type.Partial(
     name: Type.String({ minLength: 1 }),
     slug: slugSchema,
     isPubliclyReadable: Type.Boolean(),
+    // Move to a group, or null for the acting user (see resolveOwnerChange).
+    ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
     markup: Type.String(),
     cssStyles: Type.String(),
     isDefault: Type.Boolean(),
@@ -182,6 +189,12 @@ export const groupCreateSchema = Type.Object({
 });
 
 export const groupPatchSchema = Type.Partial(groupCreateSchema);
+
+export const groupCreateWithKindSchema = Type.Intersect([
+  groupCreateSchema,
+  // A system group, whose resources are official (site admins only).
+  Type.Object({ official: Type.Optional(Type.Boolean()) }),
+]);
 
 export const gameMembershipSchema = Type.Object({
   userId: Type.String({ minLength: 1 }),
