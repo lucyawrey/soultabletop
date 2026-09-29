@@ -372,7 +372,7 @@ async function insertPath(path: string) {
           <UTabs v-model="tab" :items="tabs" :unmount-on-hide="false">
             <template #markup>
               <ClientOnly>
-                <SheetCodeEditor
+                <CodeEditor
                   ref="markupEditor"
                   v-model="form.markup"
                   language="markup"
@@ -385,7 +385,7 @@ async function insertPath(path: string) {
             </template>
             <template #css>
               <ClientOnly>
-                <SheetCodeEditor
+                <CodeEditor
                   ref="cssEditor"
                   v-model="form.cssStyles"
                   language="css"

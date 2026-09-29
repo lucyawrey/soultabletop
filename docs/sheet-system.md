@@ -337,7 +337,7 @@ Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
 Code editor (decided): **CodeMirror 6**, client-only, loaded only on this page. Markup via `@codemirror/lang-xml`
 with its element/attribute spec generated from the registry, plus a completion source for field paths from the
 schema; CSS via `@codemirror/lang-css`; `@codemirror/lint` shows our diagnostics inline. Themed with Nuxt UI tokens.
-Wrapped in `app/components/sheet/CodeEditor.client.vue`. Field-path completion inside `field="…"` and `{…}`; List
+Wrapped in `app/components/CodeEditor.client.vue`. Field-path completion inside `field="…"` and `{…}`; List
 item paths are offered by their tail (`name` for `attacks[].name`). Schema-derived helpers (field paths, sample
 preview data) are in `shared/sheet/editor.ts`. Syntax colors use CodeMirror's default (light) highlight style.
 

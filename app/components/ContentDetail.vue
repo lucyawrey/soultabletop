@@ -429,7 +429,14 @@ async function remove() {
             description="Advanced: the raw data. The name is edited above."
             required
           >
-            <UTextarea v-model="form.data" class="w-full font-mono" :rows="8" />
+            <ClientOnly>
+              <CodeEditor
+                v-model="form.data"
+                language="json"
+                label="Data JSON"
+                class="h-80"
+              />
+            </ClientOnly>
           </UFormField>
           <UAlert
             v-if="formError"

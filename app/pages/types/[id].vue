@@ -426,15 +426,15 @@ async function remove() {
             :content-types="allContentTypes"
             :readonly="!contentType.canEdit"
           />
-          <UTextarea
-            v-else
-            v-model="schemaJson"
-            class="w-full font-mono"
-            :rows="16"
-            autoresize
-            :readonly="!contentType.canEdit"
-            aria-label="Schema JSON"
-          />
+          <ClientOnly v-else>
+            <CodeEditor
+              v-model="schemaJson"
+              language="json"
+              label="Schema JSON"
+              :readonly="!contentType.canEdit"
+              class="h-[60vh]"
+            />
+          </ClientOnly>
         </div>
       </UPageCard>
     </template>
