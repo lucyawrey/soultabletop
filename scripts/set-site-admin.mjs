@@ -16,7 +16,12 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+// Same as withVerifiedSsl in server/database/connection-url.ts.
+const connectionString = process.env.DATABASE_URL.replace(
+  /([?&]sslmode=)(?:require|prefer|verify-ca)(?=&|$)/i,
+  "$1verify-full",
+);
+const client = new pg.Client({ connectionString });
 await client.connect();
 try {
   const { rows } = await client.query(
