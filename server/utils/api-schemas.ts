@@ -144,6 +144,8 @@ export const sheetCreateSchema = Type.Intersect([
     markup: Type.Optional(Type.String()),
     cssStyles: Type.Optional(Type.String()),
     isDefault: Type.Optional(Type.Boolean()),
+    // Replace an existing default Sheet (otherwise 409).
+    confirmReplaceDefault: Type.Optional(Type.Boolean()),
     defaultEditMode: Type.Optional(Type.Boolean()),
     defaultAutosave: Type.Optional(Type.Boolean()),
   }),
@@ -157,6 +159,8 @@ export const sheetPatchSchema = Type.Partial(
     markup: Type.String(),
     cssStyles: Type.String(),
     isDefault: Type.Boolean(),
+    // Replace an existing default Sheet (otherwise 409).
+    confirmReplaceDefault: Type.Boolean(),
     defaultEditMode: Type.Boolean(),
     defaultAutosave: Type.Boolean(),
   }),
