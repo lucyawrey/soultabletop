@@ -87,7 +87,7 @@ The user switches computers, and conversations, plans, and auto-memory don't tra
 
 **Last updated:** 2026-09-29
 
-- **State:** nothing in progress; #9 (Sheet detail preview, `canCreateForGroup`) and #10 (Sheet file upload/download as `.stts`, `CodeEditor` fixes) are merged. The user signed off for now.
+- **State:** nothing in progress; #9 (Sheet detail preview, `canCreateForGroup`) and #10 (Sheet file upload/download as `.stts`, `CodeEditor` fixes) are merged. Test-user feedback was turned into seven `TODO.md` entries (quick fixes, showing systems, changing content type, printing, onboarding, Game → Campaign rename, official D&D 2024 system); they aren't placed in the order below yet.
 - **Next:** text/box display for non-editable fields (the `TODO.md` item "Choose how non-editable fields look"; needs a migration for the per-Sheet default column), then logged-out viewing of public resources → search with My/Find tabs → current-system selector → user API keys → the Soul Tabletop Sheets agent skill last. The "(Important)" marks in `TODO.md` mean important, not next.
 - **Cloud sessions:** a fresh clone has no `.env.local` (it's gitignored and holds live secrets), so anything that needs the database (dev server, `pnpm db:*`, `pnpm admin:set`, API checks) won't work until the environment provides `DATABASE_URL` and `BETTER_AUTH_SECRET`; typecheck, lint, tests, and template compilation work without them. Don't push without asking the user, as everywhere.
 - **Loose ends:**
