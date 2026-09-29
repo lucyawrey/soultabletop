@@ -1,8 +1,9 @@
 import { createError } from "h3";
-import { group, groupMembership } from "../../database/schema";
+import { eq } from "drizzle-orm";
+import { group, groupMembership, userProfile } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
-import { parseBody, groupCreateSchema } from "../../utils/api-schemas";
+import { parseBody, groupCreateWithKindSchema } from "../../utils/api-schemas";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 
 defineRouteMeta({
@@ -16,7 +17,15 @@ defineRouteMeta({
           schema: {
             type: "object",
             required: ["name", "slug"],
-            properties: { name: { type: "string" }, slug: { type: "string" } },
+            properties: {
+              name: { type: "string" },
+              slug: { type: "string" },
+              official: {
+                type: "boolean",
+                description:
+                  "Create a system group, whose resources are official (site admins only)",
+              },
+            },
           },
         },
       },
@@ -31,13 +40,32 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const { name, slug } = await parseBody(event, groupCreateSchema);
+  const { name, slug, official } = await parseBody(
+    event,
+    groupCreateWithKindSchema,
+  );
+  if (official) {
+    const [profile] = await useDatabase()
+      .select({ role: userProfile.role })
+      .from(userProfile)
+      .where(eq(userProfile.userId, user.id));
+    if (profile?.role !== "admin")
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Only site admins can create official groups",
+      });
+  }
   try {
     const database = useDatabase();
     const created = await database.transaction(async (tx) => {
       const [createdGroup] = await tx
         .insert(group)
-        .values({ name, slug, createdByUserId: user.id })
+        .values({
+          name,
+          slug,
+          kind: official ? "system" : "user",
+          createdByUserId: user.id,
+        })
         .returning();
       if (!createdGroup) throw new Error("Group was not created");
       await tx

@@ -67,6 +67,7 @@ const form = reactive({
   slug: "",
   name: "",
   isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
   contentTypeId: "",
   isDefault: false,
 });
@@ -103,6 +104,7 @@ function openCreate(contentTypeId?: string) {
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
+  form.ownerGroupId = null;
   form.contentTypeId = selectedType.id;
   form.isDefault = false;
   resetSlugTouched(false);
@@ -138,6 +140,7 @@ async function submitForm(confirmReplaceDefault = false) {
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
         contentTypeId: form.contentTypeId,
+        ownerGroupId: form.ownerGroupId ?? undefined,
         ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
         ...(confirmReplaceDefault ? { confirmReplaceDefault: true } : {}),
       },
@@ -295,6 +298,7 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField v-model="form.ownerGroupId" />
           <UFormField
             name="contentTypeId"
             label="Content Type"

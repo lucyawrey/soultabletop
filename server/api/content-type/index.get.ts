@@ -6,6 +6,7 @@ import {
   getResourceAccessOrPublic,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
+import { canChangeResourceOwner } from "../../utils/resource-management";
 
 defineRouteMeta({
   openAPI: {
@@ -48,6 +49,10 @@ export default defineEventHandler(async (event) => {
       contentCategory: type.contentCategory,
       hasStrictSchema: type.hasStrictSchema,
       schema: type.schema,
+      ownerUserId: item.ownerUserId,
+      ownerGroupId: item.ownerGroupId,
       canEdit: access.canEdit,
+      canChangeOwner:
+        !!user && !!context && canChangeResourceOwner(item, user, context),
     }));
 });

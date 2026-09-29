@@ -28,6 +28,8 @@ interface SheetDetail {
   defaultEditMode: boolean;
   defaultAutosave: boolean;
   canEdit: boolean;
+  ownerGroupId: string | null;
+  canChangeOwner: boolean;
   isPubliclyReadable: boolean;
   schemas: SheetSchemas;
 }
@@ -54,7 +56,9 @@ const route = useRoute();
 const id = route.params.id as string;
 const toast = useToast();
 
-const { data: sheet } = await useFetch<SheetDetail>(`/api/sheet/${id}`);
+const { data: sheet, refresh: refreshSheet } = await useFetch<SheetDetail>(
+  `/api/sheet/${id}`,
+);
 if (sheet.value && !sheet.value.canEdit) await navigateTo(`/sheets/${id}`);
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
@@ -73,6 +77,7 @@ const form = reactive({
   name: "",
   slug: "",
   isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
   isDefault: false,
   defaultEditMode: false,
   defaultAutosave: false,
@@ -86,6 +91,7 @@ function load(detail: SheetDetail) {
     name: detail.name,
     slug: detail.slug,
     isPubliclyReadable: detail.isPubliclyReadable,
+    ownerGroupId: detail.ownerGroupId,
     isDefault: detail.isDefault,
     defaultEditMode: detail.defaultEditMode,
     defaultAutosave: detail.defaultAutosave,
@@ -114,6 +120,7 @@ async function save(confirmReplaceDefault = false) {
   saveError.value = "";
   replaceDefault.value = undefined;
   const snapshot = JSON.stringify(form);
+  const ownerChanged = form.ownerGroupId !== (sheet.value?.ownerGroupId ?? null);
   try {
     await $fetch(`/api/sheet/${id}`, {
       method: "PATCH",
@@ -121,6 +128,7 @@ async function save(confirmReplaceDefault = false) {
         name: form.name,
         slug: form.slug,
         isPubliclyReadable: form.isPubliclyReadable,
+        ...(ownerChanged ? { ownerGroupId: form.ownerGroupId } : {}),
         markup: form.markup,
         cssStyles: form.cssStyles,
         defaultEditMode: form.defaultEditMode,
@@ -130,6 +138,8 @@ async function save(confirmReplaceDefault = false) {
       },
     });
     saved.value = snapshot;
+    // The owner and who may change it again come from the server.
+    if (ownerChanged) await refreshSheet();
     toast.add({ title: "Sheet saved", color: "success", icon: "i-lucide-check" });
   } catch (error) {
     replaceDefault.value = extractDefaultReplacement(error);
@@ -421,6 +431,11 @@ async function insertPath(path: string) {
                   />
                 </UFormField>
                 <VisibilityField v-model="form.isPubliclyReadable" />
+                <OwnerField
+                  v-if="sheet?.canChangeOwner"
+                  v-model="form.ownerGroupId"
+                  :original="sheet?.ownerGroupId ?? null"
+                />
                 <UFormField
                   v-if="canSetDefault"
                   name="isDefault"

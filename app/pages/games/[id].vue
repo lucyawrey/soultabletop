@@ -11,6 +11,8 @@ interface GameDetail {
   updatedAt: string;
   systemId?: string;
   canEdit: boolean;
+  ownerGroupId: string | null;
+  canChangeOwner: boolean;
 }
 
 interface SystemOption {
@@ -32,7 +34,12 @@ const system = computed(() =>
 );
 
 const isFormOpen = ref(false);
-const form = reactive({ slug: "", name: "", isPubliclyReadable: false });
+const form = reactive({
+  slug: "",
+  name: "",
+  isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
+});
 const formBusy = ref(false);
 const formError = ref("");
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
@@ -43,6 +50,7 @@ function openEdit() {
   form.slug = game.value.slug;
   form.name = game.value.name;
   form.isPubliclyReadable = game.value.isPubliclyReadable;
+  form.ownerGroupId = game.value.ownerGroupId;
   resetSlugTouched(true);
   isFormOpen.value = true;
 }
@@ -58,6 +66,9 @@ async function submitForm() {
         slug: form.slug,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
+        ...(form.ownerGroupId !== (game.value?.ownerGroupId ?? null)
+          ? { ownerGroupId: form.ownerGroupId }
+          : {}),
       },
     });
     isFormOpen.value = false;
@@ -171,6 +182,11 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField
+            v-if="game?.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="game?.ownerGroupId ?? null"
+          />
           <UAlert
             v-if="formError"
             color="error"

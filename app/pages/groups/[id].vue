@@ -10,7 +10,10 @@ interface GroupDetail {
   id: string;
   slug: string;
   name: string;
-  role: GroupRole;
+  kind: "user" | "system";
+  // null for a site admin viewing a system group they aren't in.
+  role: GroupRole | null;
+  canManage: boolean;
 }
 
 interface Member {
@@ -35,7 +38,7 @@ const currentUserId = computed(() => session.data.value?.user.id);
 const { data: group, refresh } = await useFetch<GroupDetail>(
   `/api/group/${id}`,
 );
-const isAdmin = computed(() => group.value?.role === "admin");
+const isAdmin = computed(() => group.value?.canManage ?? false);
 
 const {
   data: members,
@@ -187,12 +190,18 @@ async function remove() {
     <template v-if="group">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-highlighted">
+          <h1 class="flex items-center gap-2 text-2xl font-bold text-highlighted">
             {{ group.name }}
+            <UBadge v-if="group.kind === 'system'" variant="subtle">
+              Official
+            </UBadge>
           </h1>
           <p class="text-sm text-muted">
-            {{ group.slug }} · You are
-            <span class="capitalize">{{ group.role }}</span>
+            {{ group.slug }} ·
+            <template v-if="group.role">
+              You are <span class="capitalize">{{ group.role }}</span>
+            </template>
+            <template v-else>You manage it as a site admin</template>
           </p>
         </div>
         <div v-if="isAdmin" class="flex gap-2">

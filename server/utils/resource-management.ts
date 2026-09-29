@@ -1,12 +1,14 @@
 import { eq } from "drizzle-orm";
 import type { User } from "better-auth";
 import { createError } from "h3";
-import { resource } from "../database/schema";
+import { group, resource } from "../database/schema";
 import { useDatabase } from "./database";
+import { isUniqueConstraintError } from "./user-profile";
 import {
   getResourceAccess,
   getResourceAccessOrPublic,
   loadResourceAccessContext,
+  type ResourceAccessContext,
 } from "./resource-access";
 
 export const uuidPattern =
@@ -80,29 +82,100 @@ export async function requireResourceReader(
   if (!item)
     throw createError({ statusCode: 404, statusMessage: "Resource not found" });
 
-  const access = getResourceAccessOrPublic(
-    item,
-    user ? await loadResourceAccessContext(user, [resourceId]) : null,
-  );
+  const context = user
+    ? await loadResourceAccessContext(user, [resourceId])
+    : null;
+  const access = getResourceAccessOrPublic(item, context);
   if (!access.canRead) {
     throw createError({ statusCode: 404, statusMessage: "Resource not found" });
   }
-  return { ...item, canEdit: access.canEdit };
+  return {
+    ...item,
+    canEdit: access.canEdit,
+    canChangeOwner: !!context && canChangeResourceOwner(item, user!, context),
+  };
 }
 
-export function requireOwnerTarget(
-  user: Pick<User, "id">,
-  ownerGroupId: string | null,
-  groupRoles: Map<string, "admin" | "editor" | "member">,
-  isSiteAdmin: boolean,
-) {
+// Who owns a new resource: the user, or `ownerGroupId` if the user may create
+// resources for that group (its admins and editors, or site admins).
+export async function resolveResourceOwner(
+  user: Pick<User, "id" | "name">,
+  ownerGroupId: string | null | undefined,
+  context?: ResourceAccessContext,
+): Promise<{ ownerUserId: string | null; ownerGroupId: string | null }> {
   if (!ownerGroupId) return { ownerUserId: user.id, ownerGroupId: null };
-  const role = groupRoles.get(ownerGroupId);
-  if (!isSiteAdmin && role !== "admin" && role !== "editor") {
+  const access = context ?? (await loadResourceAccessContext(user, []));
+  const role = access.groupRoles.get(ownerGroupId);
+  if (!access.isSiteAdmin && role !== "admin" && role !== "editor")
     throw createError({
       statusCode: 403,
-      statusMessage: "Not allowed to create group resources",
+      statusMessage:
+        "Only admins and editors of a group can create resources it owns",
     });
+  if (!role) {
+    // A site admin outside the group: make sure it exists.
+    const [row] = await useDatabase()
+      .select({ id: group.id })
+      .from(group)
+      .where(eq(group.id, ownerGroupId));
+    if (!row)
+      throw createError({ statusCode: 404, statusMessage: "Group not found" });
   }
   return { ownerUserId: null, ownerGroupId };
+}
+
+type Owned = { ownerUserId: string | null; ownerGroupId: string | null };
+
+// Who may move a resource to another owner: the user who owns it, admins of
+// the group that owns it, and site admins. (Group editors may not.)
+export function canChangeResourceOwner(
+  item: Owned,
+  user: Pick<User, "id">,
+  context: ResourceAccessContext,
+) {
+  if (context.isSiteAdmin) return true;
+  if (item.ownerGroupId)
+    return context.groupRoles.get(item.ownerGroupId) === "admin";
+  return item.ownerUserId === user.id;
+}
+
+// The new owner columns for a request to move `item` to `requested` (a group
+// ID, or null for the acting user), or undefined when nothing changes.
+export async function resolveOwnerChange(
+  user: Pick<User, "id" | "name">,
+  item: Owned,
+  requested: unknown,
+): Promise<Owned | undefined> {
+  if (requested === undefined) return undefined;
+  if (requested !== null && !(typeof requested === "string" && uuidPattern.test(requested)))
+    throw createError({
+      statusCode: 400,
+      statusMessage: "ownerGroupId must be a group ID or null",
+    });
+  const ownerGroupId = requested as string | null;
+  if (
+    ownerGroupId === item.ownerGroupId &&
+    (ownerGroupId !== null || item.ownerUserId === user.id)
+  )
+    return undefined;
+  const context = await loadResourceAccessContext(user, []);
+  if (!canChangeResourceOwner(item, user, context))
+    throw createError({
+      statusCode: 403,
+      statusMessage: item.ownerGroupId
+        ? "Only admins of the owning group can change who owns this"
+        : "Only the owner can change who owns this",
+    });
+  return resolveResourceOwner(user, ownerGroupId, context);
+}
+
+// Slugs are unique per owner and kind, so renames and owner changes can
+// collide.
+export function rethrowSlugConflict(error: unknown): never {
+  if (isUniqueConstraintError(error))
+    throw createError({
+      statusCode: 409,
+      statusMessage: "The owner already has one of these with that slug",
+    });
+  throw error;
 }

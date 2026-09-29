@@ -12,7 +12,7 @@ import {
 } from "../database/schema";
 import { useDatabase } from "./database";
 
-interface ResourceAccessContext {
+export interface ResourceAccessContext {
   userId: string;
   isSiteAdmin: boolean;
   groupRoles: Map<string, "admin" | "editor" | "member">;
@@ -93,12 +93,17 @@ export function getResourceAccess(
   resource: Resource,
   context: ResourceAccessContext,
 ): ResourceAccess {
+  // Site admins can read and delete (moderate) anything and edit official
+  // resources (owned by system groups), on top of the access every user has
+  // to their own and their groups' resources.
   if (context.isSiteAdmin) {
+    const own = getResourceAccess(resource, { ...context, isSiteAdmin: false });
     return {
       canRead: true,
       canEdit:
-        !!resource.ownerGroupId &&
-        context.systemGroupIds.has(resource.ownerGroupId),
+        own.canEdit ||
+        (!!resource.ownerGroupId &&
+          context.systemGroupIds.has(resource.ownerGroupId)),
       canDelete: true,
     };
   }

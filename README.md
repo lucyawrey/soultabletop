@@ -91,6 +91,16 @@ pnpm db:migrate    # apply pending migrations to DATABASE_URL
 Read a generated migration before applying it: renames and enum value changes
 need hand-written migrations.
 
+## Site admins
+
+There is no in-app way to become a site admin. With database access (the
+`DATABASE_URL` in `.env.local`, or set in the environment), run:
+
+```bash
+pnpm admin:set <username>            # make a site admin
+pnpm admin:set <username> --remove   # back to a regular member
+```
+
 ## Checks
 
 ```bash

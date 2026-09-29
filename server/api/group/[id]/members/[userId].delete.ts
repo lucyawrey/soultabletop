@@ -26,20 +26,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Group ID and userId are required",
     });
   const database = useDatabase();
-  const [caller] = await database
-    .select({ role: groupMembership.role })
-    .from(groupMembership)
-    .where(
-      and(
-        eq(groupMembership.groupId, groupId),
-        eq(groupMembership.userId, user.id),
-      ),
-    );
-  if (caller?.role !== "admin")
-    throw createError({
-      statusCode: 403,
-      statusMessage: "Group admin access required",
-    });
+  await requireGroupAdmin(groupId, user.id);
   if (userId === user.id)
     throw createError({
       statusCode: 409,

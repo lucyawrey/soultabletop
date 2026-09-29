@@ -10,7 +10,9 @@ interface GroupItem {
   id: string;
   slug: string;
   name: string;
-  role: GroupRole;
+  kind: "user" | "system";
+  // null for a system group a site admin isn't in.
+  role: GroupRole | null;
   memberCount: number;
 }
 
@@ -28,7 +30,13 @@ const columns: TableColumn<GroupItem>[] = [
 ];
 
 const isFormOpen = ref(false);
-const form = reactive({ slug: "", name: "" });
+const form = reactive({ slug: "", name: "", official: false });
+
+// Only site admins can create official (system) groups.
+const { data: profile } = await useLazyFetch<{ role: "member" | "admin" }>(
+  "/api/profile",
+);
+const isSiteAdmin = computed(() => profile.value?.role === "admin");
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 const formBusy = ref(false);
 const formError = ref("");
@@ -37,6 +45,7 @@ function openCreate() {
   formError.value = "";
   form.slug = "";
   form.name = "";
+  form.official = false;
   resetSlugTouched(false);
   isFormOpen.value = true;
 }
@@ -48,7 +57,11 @@ async function submitForm() {
   try {
     await $fetch("/api/group", {
       method: "POST",
-      body: { slug: form.slug, name: form.name },
+      body: {
+        slug: form.slug,
+        name: form.name,
+        ...(form.official ? { official: true } : {}),
+      },
     });
     isFormOpen.value = false;
     await refresh();
@@ -77,10 +90,22 @@ async function submitForm() {
         >
           {{ row.original.name }}
         </NuxtLink>
+        <UBadge
+          v-if="row.original.kind === 'system'"
+          variant="subtle"
+          size="sm"
+          class="ms-2"
+        >
+          Official
+        </UBadge>
       </template>
 
       <template #role-cell="{ row }">
+        <span v-if="!row.original.role" class="text-sm text-muted">
+          Site admin
+        </span>
         <UBadge
+          v-else
           :color="row.original.role === 'admin' ? 'primary' : 'neutral'"
           variant="subtle"
           class="capitalize"
@@ -120,6 +145,14 @@ async function submitForm() {
               required
               @update:model-value="onSlugInput"
             />
+          </UFormField>
+          <UFormField
+            v-if="isSiteAdmin"
+            name="official"
+            label="Official group"
+            description="Resources it owns are official. Site admins can manage it."
+          >
+            <USwitch v-model="form.official" />
           </UFormField>
           <UAlert
             v-if="formError"

@@ -6,6 +6,7 @@ import {
   getResourceAccessOrPublic,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
+import { canChangeResourceOwner } from "../../utils/resource-management";
 
 defineRouteMeta({
   openAPI: {
@@ -42,5 +43,7 @@ export default defineEventHandler(async (event) => {
       ...owner,
       ...item,
       canEdit: access.canEdit,
+      canChangeOwner:
+        !!user && !!context && canChangeResourceOwner(owner, user, context),
     }));
 });

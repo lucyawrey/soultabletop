@@ -1,6 +1,6 @@
 import { createError, getRouterParam } from "h3";
-import { and, eq } from "drizzle-orm";
-import { group, groupMembership } from "../../database/schema";
+import { eq } from "drizzle-orm";
+import { group } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { parseBody, groupPatchSchema } from "../../utils/api-schemas";
@@ -38,17 +38,7 @@ export default defineEventHandler(async (event) => {
     });
   const body = await parseBody(event, groupPatchSchema);
   const database = useDatabase();
-  const [membership] = await database
-    .select({ role: groupMembership.role })
-    .from(groupMembership)
-    .where(
-      and(eq(groupMembership.groupId, id), eq(groupMembership.userId, user.id)),
-    );
-  if (membership?.role !== "admin")
-    throw createError({
-      statusCode: 403,
-      statusMessage: "Group admin access required",
-    });
+  await requireGroupAdmin(id, user.id);
   const [updated] = await database
     .update(group)
     .set({

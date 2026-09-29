@@ -11,6 +11,10 @@ import {
   getResourceAccess,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
+import {
+  resolveOwnerChange,
+  rethrowSlugConflict,
+} from "../../utils/resource-management";
 
 interface UpdateContentBody {
   slug?: unknown;
@@ -18,6 +22,7 @@ interface UpdateContentBody {
   data?: unknown;
   sheetId?: unknown;
   isPubliclyReadable?: unknown;
+  ownerGroupId?: unknown;
   expectedUpdatedAt?: unknown;
 }
 
@@ -35,6 +40,12 @@ defineRouteMeta({
               slug: { type: "string" },
               name: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
+              ownerGroupId: {
+                type: ["string", "null"],
+                format: "uuid",
+                description:
+                  "Move to this group, or null to move to yourself. Only the owner, or admins of the owning group, may; the target group needs you as admin or editor.",
+              },
               sheetId: { type: ["string", "null"] },
               data: { type: "object", additionalProperties: true },
               expectedUpdatedAt: { type: "string", format: "date-time" },
@@ -84,6 +95,11 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const owner = await resolveOwnerChange(
+    user,
+    record.resource,
+    body.ownerGroupId,
+  );
   const updates: { slug?: string; name?: string; isPubliclyReadable?: boolean } =
     {};
   if (body.isPubliclyReadable !== undefined) {
@@ -215,6 +231,7 @@ export default defineEventHandler(async (event) => {
 
     const hasChanges =
       Object.keys(updates).length > 0 ||
+      owner !== undefined ||
       data !== undefined ||
       sheetId !== undefined;
     // One timestamp for the row and the response, so clients can send it back
@@ -225,10 +242,12 @@ export default defineEventHandler(async (event) => {
         .update(resource)
         .set({
           ...updates,
+          ...owner,
           updatedByUserId: user.id,
           updatedAt: now,
         })
-        .where(eq(resource.id, record.resource.id));
+        .where(eq(resource.id, record.resource.id))
+        .catch(rethrowSlugConflict);
     }
 
     const contentUpdates = {

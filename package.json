@@ -13,6 +13,7 @@
     "format:check": "prettier . --check",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "admin:set": "node --env-file-if-exists=.env.local scripts/set-site-admin.mjs",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run format:check"
