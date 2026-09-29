@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { sampleSheetData } from "#shared/sheet/editor";
+import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import type { SheetSchemas } from "#shared/sheet/validate";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
@@ -52,13 +53,24 @@ const tabs = [
 ];
 const previewEditMode = ref(false);
 const previewData = ref<Record<string, unknown>>({});
+// Content and resources picked in the preview, so they show by name.
+const previewRefs = ref<SheetRefs>({});
+const previewLinks = ref<SheetLinks>({});
 watch(
   () => sheet.value?.schemas,
   (schemas) => {
     previewData.value = schemas ? sampleSheetData(schemas) : {};
+    previewRefs.value = {};
+    previewLinks.value = {};
   },
   { immediate: true },
 );
+function addPreviewRef(refId: string, ref: SheetRefs[string]) {
+  previewRefs.value = { ...previewRefs.value, [refId]: ref };
+}
+function addPreviewLink(linkId: string, link: SheetLinks[string]) {
+  previewLinks.value = { ...previewLinks.value, [linkId]: link };
+}
 
 const isDeleteOpen = ref(false);
 const deleteBusy = ref(false);
@@ -152,10 +164,13 @@ async function remove() {
               :scope-id="sheet.id"
               :schemas="sheet.schemas"
               :data="previewData"
-              :refs="{}"
+              :refs="previewRefs"
+              :links="previewLinks"
               :can-edit-sheet="sheet.canEdit"
               can-edit
               :edit-mode="previewEditMode"
+              @add-ref="addPreviewRef"
+              @add-link="addPreviewLink"
             />
           </div>
         </template>
