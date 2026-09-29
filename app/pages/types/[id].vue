@@ -4,11 +4,12 @@ import {
   extractBrokenSheets,
   type BrokenSheets,
 } from "~/utils/api-error";
+import {
+  CONTENT_CATEGORY_LABELS,
+  type ContentCategory,
+} from "#shared/content-categories";
 
 definePageMeta({ middleware: "auth" });
-
-type ContentCategory =
-  "general" | "nonPlayerCharacter" | "document" | "playerCharacter";
 
 interface ContentTypeDetail {
   id: string;
@@ -35,14 +36,7 @@ interface SheetOption {
   isDefault: boolean;
 }
 
-const categoryLabels: Record<ContentCategory, string> = {
-  general: "General",
-  nonPlayerCharacter: "Non-Player Character",
-  document: "Document",
-  playerCharacter: "Player Character",
-};
-
-const categoryOptions = Object.entries(categoryLabels).map(
+const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
   ([value, label]) => ({ label, value }),
 );
 
@@ -186,7 +180,7 @@ async function remove() {
             >
               {{ system.name }}
             </NuxtLink>
-            · {{ categoryLabels[contentType.contentCategory] }}
+            · {{ CONTENT_CATEGORY_LABELS[contentType.contentCategory] }}
             <template v-if="contentType.hasStrictSchema">
               · Strict schema
             </template>

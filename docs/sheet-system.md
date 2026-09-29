@@ -253,7 +253,7 @@ Edit + Autosave switches (decided):
 - New `sheet` columns: `defaultEditMode boolean not null default false`, `defaultAutosave boolean not null default
   false`, editable in the sheet form/editor and accepted on sheet create/update.
 - Generated sheets take defaults from the content type's `contentCategory`: `playerCharacter` → both on;
-  `nonPlayerCharacter` → edit off, autosave on; `general`/`document` → both off.
+  `nonPlayerCharacter` → edit off, autosave on; `general`/`page` → both off.
 - Edit on, Autosave off: draft copy, Save/Cancel buttons, unsaved-changes guard on navigation.
 - Edit on, Autosave on: each change saves after ~800 ms of inactivity; status indicator (Saving… / Saved / Error).
   A validation error keeps the draft and shows the message; the next change retries.

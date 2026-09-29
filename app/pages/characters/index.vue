@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
+import {
+  CONTENT_CATEGORY_LABELS,
+  isCharacterCategory,
+  type ContentCategory,
+} from "#shared/content-categories";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
@@ -18,8 +23,7 @@ interface ContentItem {
 interface ContentTypeItem {
   id: string;
   name: string;
-  contentCategory:
-    "general" | "nonPlayerCharacter" | "document" | "playerCharacter";
+  contentCategory: ContentCategory;
 }
 
 const {
@@ -38,9 +42,7 @@ const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
 );
 
 const characterTypes = computed(() =>
-  contentTypes.value.filter(
-    (item) => item.contentCategory === "playerCharacter",
-  ),
+  contentTypes.value.filter((item) => isCharacterCategory(item.contentCategory)),
 );
 
 const characterTypeOptions = computed(() =>
@@ -51,17 +53,35 @@ const characterTypeIdSet = computed(
   () => new Set(characterTypes.value.map((item) => item.id)),
 );
 
+// Player characters, NPCs, or both.
+const categoryFilter = ref<ContentCategory | "all">("all");
+const categoryFilterOptions = [
+  { label: "All characters", value: "all" },
+  { label: "Player Characters", value: "playerCharacter" },
+  { label: "Non-Player Characters", value: "nonPlayerCharacter" },
+];
+
 const characters = computed(() =>
-  contentItems.value.filter((item) =>
-    characterTypeIdSet.value.has(item.contentTypeId),
+  contentItems.value.filter(
+    (item) =>
+      characterTypeIdSet.value.has(item.contentTypeId) &&
+      (categoryFilter.value === "all" ||
+        characterType(item.contentTypeId)?.contentCategory ===
+          categoryFilter.value),
   ),
 );
 
+function characterType(contentTypeId: string) {
+  return characterTypes.value.find((item) => item.id === contentTypeId);
+}
+
 function contentTypeName(contentTypeId: string) {
-  return (
-    characterTypes.value.find((item) => item.id === contentTypeId)?.name ??
-    "Unknown"
-  );
+  return characterType(contentTypeId)?.name ?? "Unknown";
+}
+
+function categoryLabel(contentTypeId: string) {
+  const category = characterType(contentTypeId)?.contentCategory;
+  return category ? CONTENT_CATEGORY_LABELS[category] : "";
 }
 
 const columns: TableColumn<ContentItem>[] = [
@@ -69,6 +89,7 @@ const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "slug", header: "Slug" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Character Type" },
+  { id: "category", header: "Category" },
   {
     accessorKey: "updatedAt",
     header: "Updated",
@@ -210,9 +231,17 @@ async function remove() {
     </div>
 
     <p v-if="characterTypes.length === 0" class="text-sm text-muted">
-      Create a content type with the Player Character category before
-      adding characters.
+      Create a content type with the Player Character or Non-Player Character
+      category before adding characters.
     </p>
+
+    <USelect
+      v-if="characterTypes.length > 0"
+      v-model="categoryFilter"
+      :items="categoryFilterOptions"
+      aria-label="Filter by category"
+      class="w-56"
+    />
 
     <UTable
       :data="characters"
@@ -230,6 +259,10 @@ async function remove() {
 
       <template #contentTypeId-cell="{ row }">
         {{ contentTypeName(row.original.contentTypeId) }}
+      </template>
+
+      <template #category-cell="{ row }">
+        {{ categoryLabel(row.original.contentTypeId) }}
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
