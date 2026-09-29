@@ -23,10 +23,22 @@ const typeOptions = BUILDER_FIELD_TYPES.map((type) => ({
   value: type,
 }));
 
-const allowOptions: { label: string; value: ContentFieldAllow }[] = [
-  { label: "Both", value: "both" },
-  { label: "Ref", value: "ref" },
-  { label: "Local", value: "local" },
+const allowOptions: {
+  label: string;
+  value: ContentFieldAllow;
+  description: string;
+}[] = [
+  {
+    label: "Both",
+    value: "both",
+    description: "Existing content or custom data",
+  },
+  {
+    label: "Reference",
+    value: "reference",
+    description: "Existing content only",
+  },
+  { label: "Local", value: "local", description: "Custom data only" },
 ];
 
 // "any" stands for no `kind` (select items can't have an empty value).
@@ -48,7 +60,8 @@ const kind = computed({
 watch(
   () => node.value.type,
   (type) => {
-    if (type === "array" && !node.value.item) node.value.item = newBuilderNode();
+    if (type === "array" && !node.value.item)
+      node.value.item = newBuilderNode();
   },
   { immediate: true },
 );
@@ -70,7 +83,9 @@ watch(
       />
     </UFormField>
     <div
-      v-if="['struct', 'array', 'content', 'resourceLink'].includes(node.item.type)"
+      v-if="
+        ['struct', 'array', 'content', 'resourceLink'].includes(node.item.type)
+      "
       class="border-s-2 border-default ps-3"
     >
       <SchemaNodeSettings v-model="node.item" />
@@ -79,7 +94,7 @@ watch(
 
   <div v-else-if="node.type === 'content'" class="grid gap-3 sm:grid-cols-2">
     <UFormField
-      label="Content Type ID"
+      label="Content Type"
       :error="errors.get(contentTypeErrorId(node.id))"
       required
     >
@@ -91,10 +106,7 @@ watch(
         :disabled="readonly"
       />
     </UFormField>
-    <UFormField
-      label="Allow"
-      description="Ref: existing content only. Local: custom data only. Both: either."
-    >
+    <UFormField label="Allow">
       <USelect
         v-model="node.allow"
         :items="allowOptions"

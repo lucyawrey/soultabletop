@@ -128,14 +128,14 @@ Label resolution: `label` attr → schema field `label` → humanized field name
 `description`. (decided: `ContentFieldSchema` entries gain optional `label` and `description`.)
 
 ### Content fields: references and local data (decided)
-- Schema type `{ type: "content", contentTypeId, allow: "ref" | "local" | "both", required }` replaces the old
+- Schema type `{ type: "content", contentTypeId, allow: "reference" | "local" | "both", required }` replaces the old
   `contentType` type (whose validator wrongly required the value to equal the content type id).
 - Value is a **string** = id of an existing content of that content type (reference), or an **object** = local data
   validated against that content type's schema, including its own `name`. `allow` restricts which forms are accepted.
 - Paths continue through it into that content type's schema: `class.hitDie`, `class.name`, `item.weight`. Works in
   arrays: `inventory: [{ item: content(Item), qty: number }]` → `item.weight` next to `qty`.
 - Referenced values are **live and read-only** through the sheet; local values are editable. Edit mode shows a
-  searchable picker of readable content of that type (for `ref`/`both`), a "Custom" option creating a local object
+  searchable picker of readable content of that type (for `reference`/`both`), a "Custom" option creating a local object
   (for `local`/`both`), and "Make custom copy" turning a reference into local data.
 - Depth: paths may cross up to **3** content fields (`class.subclass.feature.name`); deeper is a validation error.
 - Loading: `GET /api/content/[id]` walks the data, batch-loads referenced content one level at a time (≤ 3 queries),

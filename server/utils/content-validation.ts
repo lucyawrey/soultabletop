@@ -84,7 +84,7 @@ function validateField(
         return undefined;
       }
       if (isRecord(value)) {
-        if (field.allow === "ref")
+        if (field.allow === "reference")
           return `${path} must reference existing content`;
         if (depth >= MAX_CONTENT_DEPTH)
           return `${path} nests custom content more than ${MAX_CONTENT_DEPTH} levels deep`;

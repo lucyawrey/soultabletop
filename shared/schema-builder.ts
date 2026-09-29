@@ -215,7 +215,7 @@ function isFieldShape(value: unknown, depth: number): boolean {
   if (field.type === "content")
     return (
       typeof field.contentTypeId === "string" &&
-      ["ref", "local", "both"].includes(field.allow as string)
+      ["reference", "local", "both"].includes(field.allow as string)
     );
   return true;
 }

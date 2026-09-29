@@ -31,7 +31,7 @@ const schema: ContentTypeSchema = {
       entries: { name: { type: "string" }, bonus: { type: "number" } },
     },
   },
-  class: { type: "content", contentTypeId: typeId, allow: "ref", required: true },
+  class: { type: "content", contentTypeId: typeId, allow: "reference", required: true },
   link: { type: "resourceLink" },
   home: { type: "resourceLink", kind: "game" },
   extra: { type: "scalar" },

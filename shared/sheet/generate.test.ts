@@ -62,7 +62,7 @@ const character: ContentTypeRules = {
     },
     rolls: { type: "array", itemType: { type: "number" } },
     grid: { type: "array", itemType: { type: "array", itemType: { type: "number" } } },
-    feats: { type: "array", itemType: { type: "content", contentTypeId: "item", allow: "ref" } },
+    feats: { type: "array", itemType: { type: "content", contentTypeId: "item", allow: "reference" } },
     mainHand: { type: "content", contentTypeId: "item", allow: "both" },
   },
 };

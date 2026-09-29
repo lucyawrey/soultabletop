@@ -95,7 +95,7 @@ export const contentFieldSchema = Type.Recursive((Self) =>
         type: Type.Literal("content"),
         contentTypeId: uuidSchema,
         allow: Type.Union([
-          Type.Literal("ref"),
+          Type.Literal("reference"),
           Type.Literal("local"),
           Type.Literal("both"),
         ]),

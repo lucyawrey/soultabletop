@@ -23,7 +23,7 @@ const schemas: SheetSchemas = {
   types: {
     cls: {
       hasStrictSchema: true,
-      schema: { hitDie: { type: "number" }, sub: { type: "content", contentTypeId: "cls", allow: "ref" } },
+      schema: { hitDie: { type: "number" }, sub: { type: "content", contentTypeId: "cls", allow: "reference" } },
     },
   },
 };

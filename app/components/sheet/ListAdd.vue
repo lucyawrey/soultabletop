@@ -42,7 +42,7 @@ function pick(id: string, ref: SheetRef) {
       />
     </div>
     <UButton
-      v-if="!contentField || contentField.allow !== 'ref'"
+      v-if="!contentField || contentField.allow !== 'reference'"
       icon="i-lucide-plus"
       color="neutral"
       variant="outline"

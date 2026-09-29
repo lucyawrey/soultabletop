@@ -22,7 +22,7 @@ const classType: ContentTypeRules = {
   hasStrictSchema: true,
   schema: {
     hitDie: { type: "number" },
-    sub: { type: "content", contentTypeId: "cls", allow: "ref" },
+    sub: { type: "content", contentTypeId: "cls", allow: "reference" },
   },
 };
 
@@ -52,7 +52,7 @@ const character: ContentTypeRules = {
         },
       },
     },
-    class: { type: "content", contentTypeId: "cls", allow: "ref" },
+    class: { type: "content", contentTypeId: "cls", allow: "reference" },
     link: { type: "resourceLink" },
     extra: { type: "scalar" },
     misc: { type: "object" },

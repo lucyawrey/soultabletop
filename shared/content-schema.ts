@@ -2,7 +2,7 @@
 // client (sheet rendering). Every ContentType also has a built-in `name` field
 // that maps to the Content's resource name, so schemas can't define `name`.
 
-export type ContentFieldAllow = "ref" | "local" | "both";
+export type ContentFieldAllow = "reference" | "local" | "both";
 
 // Resource kinds a `resourceLink` field can be limited to.
 export const RESOURCE_LINK_KINDS = [

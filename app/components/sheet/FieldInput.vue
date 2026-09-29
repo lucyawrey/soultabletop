@@ -269,7 +269,7 @@ const imageError = computed(() =>
       :placeholder="referenced?.name ?? (isLocal ? 'Use existing…' : 'Choose…')"
       @pick="pick"
     />
-    <div v-if="allow !== 'ref' && !isLocal" class="flex gap-2">
+    <div v-if="allow !== 'reference' && !isLocal" class="flex gap-2">
       <UButton
         size="xs"
         color="neutral"
