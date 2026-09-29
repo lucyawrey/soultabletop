@@ -12,6 +12,8 @@ interface SystemItem {
   createdAt: string;
   updatedAt: string;
   canEdit: boolean;
+  ownerGroupId: string | null;
+  canChangeOwner: boolean;
 }
 
 const {
@@ -56,6 +58,7 @@ function openCreate() {
 }
 
 function openEdit(item: SystemItem) {
+  form.ownerGroupId = item.ownerGroupId;
   editingSystem.value = item;
   formError.value = "";
   form.slug = item.slug;
@@ -63,6 +66,13 @@ function openEdit(item: SystemItem) {
   form.isPubliclyReadable = item.isPubliclyReadable;
   resetSlugTouched(true);
   isFormOpen.value = true;
+}
+
+// Sends ownerGroupId only when the Owner field changed it.
+function ownerChange(item: SystemItem) {
+  return form.ownerGroupId !== item.ownerGroupId
+    ? { ownerGroupId: form.ownerGroupId }
+    : {};
 }
 
 async function submitForm() {
@@ -77,6 +87,7 @@ async function submitForm() {
           slug: form.slug,
           name: form.name,
           isPubliclyReadable: form.isPubliclyReadable,
+          ...ownerChange(editingSystem.value),
         },
       });
     } else {
@@ -226,7 +237,11 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField v-if="!editingSystem" v-model="form.ownerGroupId" />
+          <OwnerField
+            v-if="!editingSystem || editingSystem.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="editingSystem ? editingSystem.ownerGroupId : undefined"
+          />
           <UAlert
             v-if="formError"
             color="error"

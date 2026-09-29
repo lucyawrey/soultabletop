@@ -21,6 +21,8 @@ interface ContentTypeItem {
   hasStrictSchema: boolean;
   schema: Record<string, unknown>;
   canEdit: boolean;
+  ownerGroupId: string | null;
+  canChangeOwner: boolean;
   isPubliclyReadable: boolean;
 }
 
@@ -99,6 +101,7 @@ function openCreate(systemId?: string) {
 }
 
 function openEdit(item: ContentTypeItem) {
+  form.ownerGroupId = item.ownerGroupId;
   editingType.value = item;
   formError.value = "";
   brokenSheets.value = undefined;
@@ -126,6 +129,13 @@ watch(
   { immediate: true },
 );
 
+// Sends ownerGroupId only when the Owner field changed it.
+function ownerChange(item: ContentTypeItem) {
+  return form.ownerGroupId !== item.ownerGroupId
+    ? { ownerGroupId: form.ownerGroupId }
+    : {};
+}
+
 async function submitForm(confirmBrokenSheets = false) {
   formBusy.value = true;
   formError.value = "";
@@ -146,6 +156,7 @@ async function submitForm(confirmBrokenSheets = false) {
         method: "PATCH",
         body: {
           ...body,
+          ...ownerChange(editingType.value),
           ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
         },
       });
@@ -336,7 +347,11 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField v-if="!editingType" v-model="form.ownerGroupId" />
+          <OwnerField
+            v-if="!editingType || editingType.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="editingType ? editingType.ownerGroupId : undefined"
+          />
           <UFormField
             name="systemId"
             label="System"
