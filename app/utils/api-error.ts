@@ -32,6 +32,25 @@ export function extractBrokenSheets(error: unknown): BrokenSheets | undefined {
   };
 }
 
+// The message of the 409 that `POST /api/sheet` and `PATCH /api/sheet/[id]`
+// return when making a Sheet the default would replace another default
+// without `confirmReplaceDefault`.
+export function extractDefaultReplacement(error: unknown): string | undefined {
+  if (!error || typeof error !== "object" || !("data" in error)) return;
+  const data = (
+    error as {
+      data?: { statusCode?: unknown; statusMessage?: unknown; data?: unknown };
+    }
+  ).data;
+  if (data?.statusCode !== 409) return;
+  const details = data.data;
+  if (!details || typeof details !== "object") return;
+  if (!("currentDefaultSheet" in details)) return;
+  return typeof data.statusMessage === "string"
+    ? data.statusMessage
+    : "This replaces the current default Sheet";
+}
+
 interface ValidationErrorDetail {
   path?: unknown;
   message?: unknown;

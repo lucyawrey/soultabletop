@@ -14,6 +14,7 @@ import {
 } from "../../utils/resource-access";
 import { parseBody, sheetPatchSchema } from "../../utils/api-schemas";
 import {
+  assertDefaultReplacementConfirmed,
   assertValidSheetCss,
   assertValidSheetMarkup,
 } from "../../utils/sheet-schemas";
@@ -35,6 +36,11 @@ defineRouteMeta({
               markup: { type: "string" },
               cssStyles: { type: "string" },
               isDefault: { type: "boolean" },
+              confirmReplaceDefault: {
+                type: "boolean",
+                description:
+                  "Required to replace an existing default Sheet (otherwise 409)",
+              },
               defaultEditMode: { type: "boolean" },
               defaultAutosave: { type: "boolean" },
             },
@@ -47,6 +53,10 @@ defineRouteMeta({
       400: { description: "Invalid request or markup errors" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
+      409: {
+        description:
+          "Would replace the default Sheet without confirmReplaceDefault",
+      },
     },
   },
 });
@@ -91,6 +101,13 @@ export default defineEventHandler(async (event) => {
         statusMessage:
           "Only editors of the ContentType can change its default Sheet",
       });
+    if (body.isDefault === true)
+      await assertDefaultReplacementConfirmed(
+        user,
+        current.contentTypeId,
+        id,
+        body.confirmReplaceDefault,
+      );
   }
   return database.transaction(async (tx) => {
   // Only one default Sheet per ContentType (partial unique index).
@@ -117,9 +134,7 @@ export default defineEventHandler(async (event) => {
     })
     .where(eq(resource.id, id))
     .returning();
-  const [updatedSheet] = await tx
-    .update(sheet)
-    .set({
+  const sheetValues = {
       ...(body.markup !== undefined
         ? { markup: typeof body.markup === "string" ? body.markup : "" }
         : {}),
@@ -137,9 +152,15 @@ export default defineEventHandler(async (event) => {
       ...(body.defaultAutosave !== undefined
         ? { defaultAutosave: body.defaultAutosave }
         : {}),
-    })
-    .where(eq(sheet.resourceId, id))
-    .returning();
+  };
+  // Drizzle rejects an empty update, e.g. when only the name changes.
+  const [updatedSheet] = Object.keys(sheetValues).length
+    ? await tx
+        .update(sheet)
+        .set(sheetValues)
+        .where(eq(sheet.resourceId, id))
+        .returning()
+    : await tx.select().from(sheet).where(eq(sheet.resourceId, id));
   return { ...updatedResource, ...updatedSheet };
   });
 });

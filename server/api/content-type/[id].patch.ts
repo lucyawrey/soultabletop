@@ -116,9 +116,7 @@ export default defineEventHandler(async (event) => {
     })
     .where(eq(resource.id, id))
     .returning();
-  const [updatedType] = await database
-    .update(contentType)
-    .set({
+  const typeValues = {
       ...(body.contentCategory !== undefined
         ? {
             contentCategory: body.contentCategory as
@@ -131,8 +129,17 @@ export default defineEventHandler(async (event) => {
       ...(body.schema !== undefined
         ? { schema: body.schema as ContentTypeSchema }
         : {}),
-    })
-    .where(eq(contentType.resourceId, id))
-    .returning();
+  };
+  // Drizzle rejects an empty update, e.g. when only the name changes.
+  const [updatedType] = Object.keys(typeValues).length
+    ? await database
+        .update(contentType)
+        .set(typeValues)
+        .where(eq(contentType.resourceId, id))
+        .returning()
+    : await database
+        .select()
+        .from(contentType)
+        .where(eq(contentType.resourceId, id));
   return { ...updatedResource, ...updatedType };
 });
