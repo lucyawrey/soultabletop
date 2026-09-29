@@ -5,7 +5,7 @@ import {
   generateSheetMarkup,
   type ContentCategory,
 } from "#shared/sheet/generate";
-import type { SheetRefs } from "#shared/sheet/runtime";
+import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import type { SheetSchemas } from "#shared/sheet/validate";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
@@ -43,6 +43,7 @@ interface ContentDetail {
   sheet: ResolvedSheet;
   schemas: SheetSchemas;
   refs: SheetRefs;
+  links: SheetLinks;
 }
 
 interface NamedItem {
@@ -156,6 +157,11 @@ async function reload() {
 // Content picked in reference fields, shown before the next save reloads refs.
 const pickedRefs = ref<SheetRefs>({});
 const refs = computed(() => ({ ...item.value?.refs, ...pickedRefs.value }));
+const pickedLinks = ref<SheetLinks>({});
+const links = computed(() => ({ ...item.value?.links, ...pickedLinks.value }));
+function addLink(id: string, link: SheetLinks[string]) {
+  pickedLinks.value = { ...pickedLinks.value, [id]: link };
+}
 function addRef(id: string, ref: SheetRefs[string]) {
   pickedRefs.value = { ...pickedRefs.value, [id]: ref };
 }
@@ -342,10 +348,12 @@ async function remove() {
         :schemas="item.schemas"
         :data="draft"
         :refs="refs"
+        :links="links"
         :can-edit-sheet="viewSheet.canEdit"
         :can-edit="item.canEdit"
         :edit-mode="editMode"
         @add-ref="addRef"
+        @add-link="addLink"
       />
 
       <div
@@ -429,7 +437,14 @@ async function remove() {
             description="Advanced: the raw data. The name is edited above."
             required
           >
-            <UTextarea v-model="form.data" class="w-full font-mono" :rows="8" />
+            <ClientOnly>
+              <CodeEditor
+                v-model="form.data"
+                language="json"
+                label="Data JSON"
+                class="h-80"
+              />
+            </ClientOnly>
           </UFormField>
           <UAlert
             v-if="formError"

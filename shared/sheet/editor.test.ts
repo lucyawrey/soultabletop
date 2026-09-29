@@ -10,11 +10,11 @@ const schemas: SheetSchemas = {
       hp: { type: "number", label: "Hit Points" },
       bio: { type: "string" },
       alive: { type: "boolean" },
-      link: { type: "resourceRef" },
-      stats: { type: "object", entries: { str: { type: "number" } } },
+      link: { type: "resourceLink" },
+      stats: { type: "struct", entries: { str: { type: "number" } } },
       attacks: {
         type: "array",
-        itemType: { type: "object", entries: { name: { type: "string" } } },
+        itemType: { type: "struct", entries: { name: { type: "string" } } },
       },
       tags: { type: "array", itemType: { type: "string" } },
       class: { type: "content", contentTypeId: "cls", allow: "both" },
@@ -23,7 +23,7 @@ const schemas: SheetSchemas = {
   types: {
     cls: {
       hasStrictSchema: true,
-      schema: { hitDie: { type: "number" }, sub: { type: "content", contentTypeId: "cls", allow: "ref" } },
+      schema: { hitDie: { type: "number" }, sub: { type: "content", contentTypeId: "cls", allow: "reference" } },
     },
   },
 };
@@ -36,10 +36,10 @@ describe("sheetFieldPaths", () => {
       "hp: number",
       "bio: string",
       "alive: boolean",
-      "link: resourceRef",
-      "stats: object",
+      "link: resourceLink",
+      "stats: struct",
       "stats.str: number",
-      "attacks: list of object",
+      "attacks: list of struct",
       "attacks[].name: string",
       "tags: list of string",
       "class: content",

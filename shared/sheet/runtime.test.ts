@@ -143,8 +143,8 @@ describe("defaultSheetValue", () => {
     [{ type: "number" }, 0],
     [{ type: "boolean" }, false],
     [{ type: "array", itemType: { type: "string" } }, []],
-    [{ type: "any" }, null],
-    [{ type: "resourceRef" }, null],
+    [{ type: "scalar" }, null],
+    [{ type: "resourceLink" }, null],
     [undefined, null],
   ] as const)("%j -> %j", (field, value) => {
     expect(defaultSheetValue(field as ContentFieldSchema | undefined, schemas)).toEqual(value);
@@ -154,7 +154,7 @@ describe("defaultSheetValue", () => {
     expect(
       defaultSheetValue(
         {
-          type: "object",
+          type: "struct",
           entries: { a: { type: "number", required: true }, b: { type: "string" } },
         },
         schemas,
