@@ -7,7 +7,10 @@ import type { SheetDiagnostic } from "#shared/sheet/parser";
 import { commonAttrs, sheetTags, type TagSpec } from "#shared/sheet/registry";
 import type { SheetRefs } from "#shared/sheet/runtime";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
-import { extractApiErrorMessage } from "~/utils/api-error";
+import {
+  extractApiErrorMessage,
+  extractDefaultReplacement,
+} from "~/utils/api-error";
 
 // Full-page Sheet editor: markup and CSS with inline diagnostics, settings,
 // and a live preview. See docs/sheet-system.md, section 7.
@@ -98,10 +101,17 @@ useUnsavedChangesGuard(dirty);
 
 const saving = ref(false);
 const saveError = ref("");
-async function save() {
+// Set when saving as the default would replace another default Sheet.
+const replaceDefault = ref<string>();
+watch(
+  () => form.isDefault,
+  () => (replaceDefault.value = undefined),
+);
+async function save(confirmReplaceDefault = false) {
   if (saving.value) return;
   saving.value = true;
   saveError.value = "";
+  replaceDefault.value = undefined;
   const snapshot = JSON.stringify(form);
   try {
     await $fetch(`/api/sheet/${id}`, {
@@ -115,18 +125,21 @@ async function save() {
         defaultEditMode: form.defaultEditMode,
         defaultAutosave: form.defaultAutosave,
         ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
+        ...(confirmReplaceDefault ? { confirmReplaceDefault: true } : {}),
       },
     });
     saved.value = snapshot;
     toast.add({ title: "Sheet saved", color: "success", icon: "i-lucide-check" });
   } catch (error) {
-    saveError.value = extractApiErrorMessage(error, "Could not save Sheet.");
+    replaceDefault.value = extractDefaultReplacement(error);
+    if (!replaceDefault.value)
+      saveError.value = extractApiErrorMessage(error, "Could not save Sheet.");
   } finally {
     saving.value = false;
   }
 }
 
-defineShortcuts({ meta_s: { usingInput: true, handler: save } });
+defineShortcuts({ meta_s: { usingInput: true, handler: () => save() } });
 
 // Diagnostics, recomputed shortly after typing stops.
 
@@ -331,7 +344,7 @@ async function insertPath(path: string) {
             label="Save"
             :loading="saving"
             :disabled="!dirty"
-            @click="save"
+            @click="save()"
           >
             <template #trailing>
               <UKbd value="meta" size="sm" /><UKbd value="s" size="sm" />
@@ -346,6 +359,12 @@ async function insertPath(path: string) {
         variant="subtle"
         title="Could not save"
         :description="saveError"
+      />
+      <ReplaceDefaultSheetAlert
+        v-if="replaceDefault"
+        :message="replaceDefault"
+        :loading="saving"
+        @confirm="save(true)"
       />
 
       <div class="grid gap-6 lg:grid-cols-2">
@@ -399,7 +418,7 @@ async function insertPath(path: string) {
                   v-if="canSetDefault"
                   name="isDefault"
                   label="Default sheet"
-                  description="Used for Content of this type that doesn't pick a Sheet. Replaces any existing default."
+                  description="Used for Content of this type that doesn't pick a Sheet. You'll be asked before it replaces another default."
                 >
                   <USwitch v-model="form.isDefault" />
                 </UFormField>
