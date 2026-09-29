@@ -14,6 +14,8 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 ## Git workflow
 
 - `main` is branch-protected: never commit to it directly. All changes, including docs, skills, and other agent files, go on a feature branch off an up-to-date `main` and merge through a pull request.
+- **Never push without asking the user first**, every time (an agent could have written a secret into a tracked file). Committing locally on a feature branch is fine. Before asking, check the commits to be pushed for secrets: compare against `.env` values without printing them, and grep for connection strings and key prefixes.
+- The remote is HTTPS (`https://github.com/lucyawrey/soultabletop.git`), authenticated through the GitHub CLI, so git works from agent shells that can't reach the user's SSH agent. Per machine: install `gh`, `gh auth login`, `gh auth setup-git`, `gh config set -h github.com git_protocol https`, and `git remote set-url origin` to the HTTPS URL if the clone uses SSH. Use `gh` for PRs.
 - Name branches after the work (e.g. `remove-base-url`, `sheet-detail-preview`). Changes to agent files like this one can ride along on whatever branch is current without being mentioned in branch names or commit messages; they don't need their own branch.
 
 ## Agent files
@@ -45,12 +47,22 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 - **Pages**: each resource kind has a list page (`/things`) and a detail page (`/things/[id]`), all behind `middleware: "auth"`. Follow the existing pages for structure. `/content/[id]` and `/characters/[id]` share `app/components/ContentDetail.vue`. `/` is the sign-in/register form when logged out and a welcome dashboard when logged in, fed by `GET /api/dashboard`: recently updated Games the user or their Groups own or that the user is a member of, and Characters/Content owned by the user or their Groups. Public or merely shared items are deliberately excluded.
 - A lone "username"-like text field inside a `<form>` makes Firefox autofill saved logins (it ignores `autocomplete="off"`); see the add-member row in `app/pages/groups/[id].vue`.
 
+## User-facing copy
+
+User-facing text is anything a person reads outside the code and git history: UI text, `README.md`, and `docs/`. The team writes the copy that says what Soul Tabletop is or speaks to its users; agents write only the functional and technical parts.
+
+- **Agents may write:** labels, button text, field hints and placeholders, column headers, short status, validation, and error messages, and one-line empty states that say what's missing (e.g. "No Games yet."). Technical documentation is fine too: setup, commands, environment variables, architecture, API and Sheet-markup reference.
+- **Agents don't write:** project descriptions, taglines, welcome or onboarding text, feature pitches or other promotional copy, announcements, emails, or any other longform text addressed to users. Where a feature needs such text, leave a clearly marked placeholder (`<!-- Copy: … (written by the team) -->` in Markdown; in the UI, a short neutral stand-in like "Welcome text goes here" plus a `// Copy: written by the team` comment), and tell the user it's waiting for them.
+- Don't rewrite or "improve" copy the team wrote; point out issues (typos, outdated facts) instead. Correcting a fact in technical docs is fine.
+- When unsure which side something falls on, ask.
+
 ## Deployment and URLs
 
 - Hosted on Vercel. There is no base-URL setting: the app's URL comes from each request. Don't reintroduce `BASE_URL`/`BETTER_AUTH_URL` (Better Auth reads both from the environment on its own, so a leftover value anywhere would take effect).
 - Better Auth (`server/utils/auth.ts`) uses a per-request `baseURL` with `allowedHosts`: Vercel's system env vars (`VERCEL_PROJECT_PRODUCTION_URL`, `VERCEL_BRANCH_URL`, `VERCEL_URL`) plus `localhost:*`. A host outside the list fails with "not in the allowed hosts list", so a custom domain that isn't the production domain must be added there. Cookies are `Secure` when `NODE_ENV=production`.
 - Scalar's API reference uses the relative server URL `"/"` (`nuxt.config.ts`).
 - Manage Vercel env vars with the Vercel CLI (`vercel env ls/add/rm/pull`), not the dashboard. It's installed globally per machine, not as a project dependency: `pnpm add -g vercel` (on the user's main machine pnpm's `global-bin-dir` is `~/.local/bin`, since pnpm is system-installed and `pnpm setup` can't write to `/usr/bin`). Each machine then needs `vercel login` and `vercel link` (interactive; the user runs these, e.g. with `! vercel login` at the Claude prompt). `.vercel/` is gitignored.
+- The env vars, what they're for, and local setup (`vercel env pull .env`; Nuxt and drizzle-kit don't read the CLI's default `.env.local`) are documented in `README.md`. All environments currently share one database. Preview/Production values are sensitive and can't be pulled; never print secret values (compare by hash).
 
 ## Database and migrations
 
@@ -65,8 +77,9 @@ The user switches computers, and conversations, plans, and auto-memory don't tra
 
 **Last updated:** 2026-09-29
 
-- **State:** on branch `remove-base-url` (committed, not yet pushed). `BASE_URL` is gone from the code, `.env.example`, and the local `.env`: Better Auth uses a per-request `baseURL` with `allowedHosts`, Scalar a relative server URL (see "Deployment and URLs"). Verified locally: sign-in works in dev and against a production build posing as a Vercel deployment, foreign origins get 403, hosts outside the allowlist are refused, and with `NODE_ENV=production` the session cookie is `__Secure-…; Secure; HttpOnly`. The Vercel CLI (60.1.3) is installed globally on this machine; not yet logged in or linked.
-- **Next:** the user runs `vercel login` and `vercel link`. Then, with the CLI: list env vars per environment, remove `BASE_URL`/`BETTER_AUTH_URL`, check `BETTER_AUTH_SECRET`/`DATABASE_URL` and that the database has all migrations, push `remove-base-url` (a preview deployment, if the Vercel project is connected to GitHub), check login on the preview, open the PR, and after merge check production (top of `TODO.md`). Then the rest of `TODO.md` in the agreed order: quick wins (nav swap, default-sheet replacement warning) → category split and `document` → `page` rename (a migration; do it before real data) → no raw JSON in create dialogs together with the schema builder → Group-owned resources → Sheet detail preview, file import/export, text/box display → the Soul Tabletop Sheets agent skill last.
+- **State:** on branch `document-env-vars` (not yet pushed): README documents the env vars and local setup, the finished Vercel item is gone from `TODO.md`, and this file notes the HTTPS/`gh` git setup. Vercel is done: `BASE_URL` removed everywhere, `DATABASE_URL`/`BETTER_AUTH_SECRET`/`EMAIL_API_KEY` set in Production, Preview, and Development (all one database), and production sign-in verified on the merged `remove-base-url` build (own origin reaches auth, foreign origin gets 403). This machine's clone now uses the HTTPS remote with `gh` credentials.
+- **Next:** the user reviews `document-env-vars`; push and open the PR only once they say to. Then `TODO.md` in the agreed order: quick wins (nav swap, default-sheet replacement warning) → category split and `document` → `page` rename (a migration; do it before real data) → no raw JSON in create dialogs together with the schema builder → Group-owned resources → Sheet detail preview, file import/export, text/box display → the Soul Tabletop Sheets agent skill last.
+- **Waiting on the user:** merged branches `remove-base-url` and `claude/project-thread-qp7axz` still exist on GitHub (delete them, or enable "Automatically delete head branches").
 - **Loose ends:**
   - The end-to-end API/SSR check scripts used during the Sheet work lived in a machine-local temp folder and are gone. Moving checks like them into the repo as an integration suite (run against the dev server, cleaning up after themselves) was suggested but not done.
   - The test database has 32 leftover `claude-smoke-*@example.invalid` users from those checks (their other data was deleted); removing them takes one SQL statement if the user wants.
