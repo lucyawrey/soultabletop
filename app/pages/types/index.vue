@@ -72,7 +72,6 @@ const form = reactive({
   systemId: "",
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
-  schema: "{}",
 });
 const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
 const formBusy = ref(false);
@@ -93,7 +92,6 @@ function openCreate(systemId?: string) {
   form.systemId = system.id;
   form.contentCategory = "general";
   form.hasStrictSchema = false;
-  form.schema = "{}";
   resetSlugTouched(false);
   isFormOpen.value = true;
 }
@@ -108,7 +106,6 @@ function openEdit(item: ContentTypeItem) {
   form.systemId = item.systemId;
   form.contentCategory = item.contentCategory;
   form.hasStrictSchema = item.hasStrictSchema;
-  form.schema = JSON.stringify(item.schema, null, 2);
   resetSlugTouched(true);
   isFormOpen.value = true;
 }
@@ -133,22 +130,13 @@ async function submitForm(confirmBrokenSheets = false) {
   brokenSheets.value = undefined;
 
   try {
-    const schema = JSON.parse(form.schema) as unknown;
-    if (
-      typeof schema !== "object" ||
-      schema === null ||
-      Array.isArray(schema)
-    ) {
-      throw new Error("Schema must be a JSON object.");
-    }
-
+    // The schema is edited on the content type's page (schema builder).
     const body = {
       slug: form.slug,
       name: form.name,
       isPubliclyReadable: form.isPubliclyReadable,
       contentCategory: form.contentCategory,
       hasStrictSchema: form.hasStrictSchema,
-      schema,
     };
 
     if (editingType.value) {
@@ -159,15 +147,16 @@ async function submitForm(confirmBrokenSheets = false) {
           ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
         },
       });
+      isFormOpen.value = false;
+      await refresh();
     } else {
-      await $fetch("/api/content-type", {
+      const created = await $fetch<{ id: string }>("/api/content-type", {
         method: "POST",
         body: { ...body, systemId: form.systemId },
       });
+      isFormOpen.value = false;
+      await navigateTo(`/types/${created.id}`);
     }
-
-    isFormOpen.value = false;
-    await refresh();
   } catch (error) {
     const broken = extractBrokenSheets(error);
     if (broken) brokenSheets.value = broken;
@@ -310,6 +299,11 @@ async function remove() {
     <UModal
       v-model:open="isFormOpen"
       :title="editingType ? 'Edit Content Type' : 'New Content Type'"
+      :description="
+        editingType
+          ? undefined
+          : 'You\'ll define its fields on its page next.'
+      "
     >
       <template #body>
         <UForm
@@ -366,13 +360,6 @@ async function remove() {
             description="Reject content data that does not match the schema."
           >
             <USwitch v-model="form.hasStrictSchema" />
-          </UFormField>
-          <UFormField name="schema" label="Schema (JSON)" required>
-            <UTextarea
-              v-model="form.schema"
-              class="w-full font-mono"
-              :rows="10"
-            />
           </UFormField>
           <UAlert
             v-if="formError"

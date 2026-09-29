@@ -44,8 +44,8 @@ function isSimple(field: ContentFieldSchema) {
     case "string":
     case "number":
     case "boolean":
-    case "any":
-    case "resourceRef":
+    case "scalar":
+    case "resourceLink":
       return true;
     case "array":
       return field.itemType.type === "string";
@@ -56,7 +56,7 @@ function isSimple(field: ContentFieldSchema) {
 
 // Fields a Table <Column> can show.
 function isColumnable(field: ContentFieldSchema) {
-  return ["string", "number", "boolean", "any", "resourceRef", "content"].includes(
+  return ["string", "number", "boolean", "scalar", "resourceLink", "content"].includes(
     field.type,
   );
 }
@@ -116,19 +116,21 @@ export function generateSheetMarkup(schemas: SheetSchemas): string {
   ) {
     add(depth, `<Section title="${label(key, field)}">`);
     const inner = depth + 1;
-    if (field.type === "object") {
+    if (field.type === "struct") {
       fields(field.entries, path, inner, false);
+    } else if (field.type === "object") {
+      add(inner, `<Field field="${path}" />`);
     } else if (field.type === "content") {
       add(inner, `<Ref field="${path}" />`);
       referencedFields(field.contentTypeId, path, inner);
     } else if (field.type === "array") {
       const item = field.itemType;
-      if (item.type === "object" && Object.values(item.entries).every(isColumnable)) {
+      if (item.type === "struct" && Object.values(item.entries).every(isColumnable)) {
         add(inner, `<Table field="${path}">`);
         for (const [entryKey] of Object.entries(item.entries))
           add(inner + 1, `<Column field="${entryKey}" />`);
         add(inner, "</Table>");
-      } else if (item.type === "object") {
+      } else if (item.type === "struct") {
         add(inner, `<List field="${path}">`);
         fields(item.entries, "", inner + 1, false);
         add(inner, "</List>");

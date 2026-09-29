@@ -5,7 +5,7 @@ import { sheetFonts } from "#shared/sheet/fonts";
 import { generateSheetMarkup, type ContentCategory } from "#shared/sheet/generate";
 import type { SheetDiagnostic } from "#shared/sheet/parser";
 import { commonAttrs, sheetTags, type TagSpec } from "#shared/sheet/registry";
-import type { SheetRefs } from "#shared/sheet/runtime";
+import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
 import {
   extractApiErrorMessage,
@@ -47,6 +47,7 @@ interface ContentDetail {
   name: string;
   data: Record<string, unknown>;
   refs: SheetRefs;
+  links: SheetLinks;
 }
 
 const route = useRoute();
@@ -225,6 +226,7 @@ const previewOptions = computed(() => [
 ]);
 const previewData = ref<Record<string, unknown>>({});
 const previewRefs = ref<SheetRefs>({});
+const previewLinks = ref<SheetLinks>({});
 const previewError = ref("");
 watch(
   previewSource,
@@ -234,12 +236,14 @@ watch(
     if (source === SAMPLE) {
       previewData.value = sampleSheetData(sheet.value.schemas);
       previewRefs.value = {};
+      previewLinks.value = {};
       return;
     }
     try {
       const detail = await $fetch<ContentDetail>(`/api/content/${source}`);
       previewData.value = structuredClone({ ...detail.data, name: detail.name });
       previewRefs.value = detail.refs;
+      previewLinks.value = detail.links;
     } catch (error) {
       previewError.value = extractApiErrorMessage(error, "Could not load content.");
     }
@@ -248,6 +252,9 @@ watch(
 );
 function addPreviewRef(refId: string, ref: SheetRefs[string]) {
   previewRefs.value = { ...previewRefs.value, [refId]: ref };
+}
+function addPreviewLink(linkId: string, link: SheetLinks[string]) {
+  previewLinks.value = { ...previewLinks.value, [linkId]: link };
 }
 
 // Reference panel
@@ -372,7 +379,7 @@ async function insertPath(path: string) {
           <UTabs v-model="tab" :items="tabs" :unmount-on-hide="false">
             <template #markup>
               <ClientOnly>
-                <SheetCodeEditor
+                <CodeEditor
                   ref="markupEditor"
                   v-model="form.markup"
                   language="markup"
@@ -385,7 +392,7 @@ async function insertPath(path: string) {
             </template>
             <template #css>
               <ClientOnly>
-                <SheetCodeEditor
+                <CodeEditor
                   ref="cssEditor"
                   v-model="form.cssStyles"
                   language="css"
@@ -508,10 +515,12 @@ async function insertPath(path: string) {
             :schemas="sheet.schemas"
             :data="previewData"
             :refs="previewRefs"
+            :links="previewLinks"
             can-edit-sheet
             can-edit
             :edit-mode="previewEditMode"
             @add-ref="addPreviewRef"
+            @add-link="addPreviewLink"
           />
         </div>
       </div>

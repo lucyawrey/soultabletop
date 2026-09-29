@@ -115,9 +115,9 @@ View mode renders formatted values, edit mode renders the input.
 | `Select` | `options` (comma list, req) | string | `USelect` |
 | `Tags` | — | array of string | `UInputTags` |
 | `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
-| `Ref` | — | resourceRef / `content` | link to the resource; edit: picker (see "Content fields") |
+| `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format` | any | read-only in both modes |
-| `Field` | — | any | picks input from schema type (decided); generated sheets mostly use this |
+| `Field` | — | any | picks input from schema type (decided); generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
 
@@ -128,14 +128,14 @@ Label resolution: `label` attr → schema field `label` → humanized field name
 `description`. (decided: `ContentFieldSchema` entries gain optional `label` and `description`.)
 
 ### Content fields: references and local data (decided)
-- Schema type `{ type: "content", contentTypeId, allow: "ref" | "local" | "both", required }` replaces the old
+- Schema type `{ type: "content", contentTypeId, allow: "reference" | "local" | "both", required }` replaces the old
   `contentType` type (whose validator wrongly required the value to equal the content type id).
 - Value is a **string** = id of an existing content of that content type (reference), or an **object** = local data
   validated against that content type's schema, including its own `name`. `allow` restricts which forms are accepted.
 - Paths continue through it into that content type's schema: `class.hitDie`, `class.name`, `item.weight`. Works in
   arrays: `inventory: [{ item: content(Item), qty: number }]` → `item.weight` next to `qty`.
 - Referenced values are **live and read-only** through the sheet; local values are editable. Edit mode shows a
-  searchable picker of readable content of that type (for `ref`/`both`), a "Custom" option creating a local object
+  searchable picker of readable content of that type (for `reference`/`both`), a "Custom" option creating a local object
   (for `local`/`both`), and "Make custom copy" turning a reference into local data.
 - Depth: paths may cross up to **3** content fields (`class.subclass.feature.name`); deeper is a validation error.
 - Loading: `GET /api/content/[id]` walks the data, batch-loads referenced content one level at a time (≤ 3 queries),
@@ -179,7 +179,8 @@ the item):
 |---|---|---|
 | Path not in schema | error | warning (data may hold extra keys) |
 | Tag can't bind that field type (e.g. `Number` on a string) | error | error |
-| Field is `any` | allowed, uses `Value`-style display for `Field` | same |
+| Field is `scalar` | binds `Field`, `Value`, `Column`; no paths below it | same |
+| Path goes into a free-form `object` | warning (not checked; shows whatever the data holds) | same |
 | `List`/`Table` on a non-array | error | error |
 | Relative path inside a `List` of primitives (other than `.`) | error | error |
 | `{path}` interpolation not in schema | error | warning |
@@ -204,10 +205,10 @@ Generator: `generateSheetMarkup(schema)` in `shared/sheet/generate.ts`, a pure f
 ordinary markup, so it goes through the same parse/validate/render path as authored sheets:
 - Top-level simple fields → one "Details" `Section` with `<Grid cols="2">`, starting with `<Text field="name" />`
   (the page header already shows the name, so no heading), then a `<Field>` per field.
-- Object field → its own `Section` titled by label, recursing.
+- `struct` field → its own `Section` titled by label, recursing. Free-form `object` → a `Section` with a `<Field>` (JSON editor).
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
 - Array of strings → `Tags`; other primitive arrays → `List field="."`.
-- `resourceRef` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)
+- `resourceLink` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)
   showing the referenced content type's primitive fields, one level deep, plus the ref/custom picker in edit mode.
 - Order = schema key order. `content_type.schema` is `jsonb`, which does not preserve key order, so it becomes
   `json` (decided): Drizzle `json("schema")` + migration `ALTER COLUMN "schema" SET DATA TYPE json USING "schema"::json`
@@ -337,7 +338,7 @@ Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
 Code editor (decided): **CodeMirror 6**, client-only, loaded only on this page. Markup via `@codemirror/lang-xml`
 with its element/attribute spec generated from the registry, plus a completion source for field paths from the
 schema; CSS via `@codemirror/lang-css`; `@codemirror/lint` shows our diagnostics inline. Themed with Nuxt UI tokens.
-Wrapped in `app/components/sheet/CodeEditor.client.vue`. Field-path completion inside `field="…"` and `{…}`; List
+Wrapped in `app/components/CodeEditor.client.vue`. Field-path completion inside `field="…"` and `{…}`; List
 item paths are offered by their tail (`name` for `attacks[].name`). Schema-derived helpers (field paths, sample
 preview data) are in `shared/sheet/editor.ts`. Syntax colors use CodeMirror's default (light) highlight style.
 

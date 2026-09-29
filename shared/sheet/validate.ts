@@ -127,12 +127,16 @@ function describeField(field: ContentFieldSchema) {
     case "number":
       return "a number field";
     case "boolean":
-      return "a yes/no field";
+      return "a boolean field";
+    case "scalar":
+      return "a scalar field";
     case "array":
-      return "a list";
+      return "an array";
+    case "struct":
+      return "a struct";
     case "object":
-      return "a group of fields";
-    case "resourceRef":
+      return "a free-form object";
+    case "resourceLink":
       return "a resource link";
     case "content":
       return "a content field";
@@ -142,7 +146,7 @@ function describeField(field: ContentFieldSchema) {
 }
 
 function describeShape(shape: Shape) {
-  if (shape.kind === "record") return "a group of fields";
+  if (shape.kind === "record") return "a struct";
   if (shape.kind === "field") return describeField(shape.field);
   return "an unknown field";
 }
@@ -181,11 +185,11 @@ class Validator {
 
   // Paths
 
-  // Turns an `object` or `content` field into the record of its fields.
+  // Turns a `struct` or `content` field into the record of its fields.
   private enter(shape: Shape, path: string, loc: Loc): Shape | undefined {
     if (shape.kind !== "field") return shape;
     const { field } = shape;
-    if (field.type === "object") {
+    if (field.type === "struct") {
       return {
         kind: "record",
         fields: field.entries,
@@ -258,14 +262,21 @@ class Validator {
     }
 
     const { field } = shape;
-    if (field.type === "any") return { kind: "unknown", depth: shape.depth };
+    if (field.type === "object") {
+      this.warn(
+        "free-form-path",
+        `"${path}": "${walked}" is a free-form object, so "${segment}" isn't checked; it will show whatever the data holds`,
+        loc,
+      );
+      return { kind: "unknown", depth: shape.depth };
+    }
     if (field.type === "array") {
       if (indexPattern.test(segment)) {
         return { kind: "field", field: field.itemType, strict: shape.strict, depth: shape.depth };
       }
       this.error(
         "not-an-object",
-        `"${path}": "${walked}" is a list; use an index like ${walked}.0, or a <List>`,
+        `"${path}": "${walked}" is an array; use an index like ${walked}.0, or a <List>`,
         loc,
       );
       return undefined;
@@ -296,20 +307,22 @@ class Validator {
     if (shape.kind === "record") return kinds;
     const { field } = shape;
     switch (field.type) {
-      case "any":
-        return "all";
+      case "scalar":
+      case "object":
+        kinds.add(field.type);
+        break;
       case "string":
       case "number":
       case "boolean":
-      case "resourceRef":
+      case "resourceLink":
       case "content":
         kinds.add(field.type);
         break;
       case "array": {
         kinds.add("array");
         const item = field.itemType.type;
-        if (item === "string" || item === "any") kinds.add("stringArray");
-        if (item === "object" || item === "content" || item === "any")
+        if (item === "string") kinds.add("stringArray");
+        if (item === "struct" || item === "content" || item === "object")
           kinds.add("objectArray");
         break;
       }
@@ -331,11 +344,12 @@ class Validator {
       const shape = this.resolve(part.path, scope, part.loc);
       if (
         shape?.kind === "record" ||
-        (shape?.kind === "field" && shape.field.type === "object")
+        (shape?.kind === "field" &&
+          (shape.field.type === "struct" || shape.field.type === "object"))
       ) {
         this.warn(
           "interpolates-object",
-          `{${part.path}} is a group of fields and will show as raw data`,
+          `{${part.path}} is an object and will show as raw data`,
           part.loc,
         );
       }
@@ -414,7 +428,7 @@ class Validator {
       if (kinds !== "all" && !spec.binds?.some((kind) => kinds.has(kind))) {
         const suggestion =
           kinds.has("array") ? "; use <List> or <Table>" :
-          shape.kind === "record" || (shape.kind === "field" && shape.field.type === "object")
+          shape.kind === "record" || (shape.kind === "field" && shape.field.type === "struct")
             ? "; use a <Section> with fields inside"
             : "";
         return invalid(
@@ -427,7 +441,7 @@ class Validator {
       const lastSegment = parsed.segments.at(-1);
       binding = {
         path: parsed,
-        field: field?.type === "any" ? undefined : field,
+        field,
         label:
           field?.label ??
           (lastSegment && !indexPattern.test(lastSegment)
@@ -511,7 +525,7 @@ class Validator {
       const [only] = attr.value;
       if (attr.value.length === 1 && typeof only === "object") {
         const shape = this.resolve(only.path, scope, only.loc);
-        if (shape?.kind === "field" && shape.field.type !== "number" && shape.field.type !== "any")
+        if (shape?.kind === "field" && shape.field.type !== "number" && shape.field.type !== "scalar")
           return fail(`${name}="{${only.path}}" must point at a number field, but it's ${describeField(shape.field)}`);
         return shape ? only : undefined;
       }

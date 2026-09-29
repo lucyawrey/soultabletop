@@ -9,6 +9,7 @@ import {
 } from "../../utils/content-validation";
 import { useDatabase } from "../../utils/database";
 import { isUniqueConstraintError } from "../../utils/user-profile";
+import { defaultContentData } from "../../../shared/content-schema";
 import {
   getResourceAccess,
   loadResourceAccessContext,
@@ -31,7 +32,12 @@ defineRouteMeta({
               isPubliclyReadable: { type: "boolean" },
               contentTypeId: { format: "uuid", type: "string" },
               sheetId: { type: ["string", "null"] },
-              data: { type: "object", additionalProperties: true },
+              data: {
+                type: "object",
+                additionalProperties: true,
+                description:
+                  "Defaults to empty values for required fields; required resource links and content fields start empty",
+              },
             },
           } as const,
         },
@@ -78,12 +84,18 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Without `data`, new Content starts from defaults for its required
+  // fields; required reference fields start empty for the user to fill in.
   // The body's required `name` wins over any `data.name`.
-  const { data } = extractDataName(body.data ?? {});
+  const { data } =
+    body.data === undefined
+      ? { data: defaultContentData(typeRecord.type.schema) }
+      : extractDataName(body.data);
   const validationError = await validateContentData(
     user,
     data,
     typeRecord.type,
+    { allowMissingRequired: body.data === undefined },
   );
   if (validationError) {
     throw createError({ statusCode: 400, statusMessage: validationError });
