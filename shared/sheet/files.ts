@@ -15,8 +15,9 @@ export const sheetFileTypes: Record<
   { extensions: string[]; exportExtension: string; mimeType: string; maxLength: number; label: string }
 > = {
   markup: {
-    extensions: [".sheet", ".xml", ".html", ".htm", ".txt"],
-    exportExtension: ".sheet",
+    // .stts: Soul Tabletop Sheet.
+    extensions: [".stts", ".xml", ".html", ".htm", ".txt"],
+    exportExtension: ".stts",
     mimeType: "text/plain",
     maxLength: sheetParseLimits.maxSourceLength,
     label: "Markup",

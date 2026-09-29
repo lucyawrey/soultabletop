@@ -324,17 +324,17 @@ list's Edit go here; the edit modals are gone. The list's create modal only asks
 content type, and default, then opens the editor: a sheet created without markup starts with the generated markup
 (this is the "Copy to new Sheet" path). `GET /api/sheet/[id]` includes `schemas`, `contentCategory`, and the scoped
 `css`. The detail page previews the sheet with `SheetRenderer` against `sampleSheetData` (broken-tag placeholders for
-editors, an Edit switch whose changes never save), with the raw markup and CSS in tabs beside the preview.
+editors, an Edit switch whose changes never save), with the markup and CSS in tabs beside the preview (a read-only `CodeEditor`, for the same syntax colors).
 
 Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
 - Left: tabs **Markup** | **CSS** | **Settings** (Name, Slug, Visibility, Default sheet, Default edit mode, Default
   autosave), then a diagnostics list (errors + warnings, click → jump to line).
 - The Markup and CSS tabs have **Upload** and **Download** buttons, and a file dropped on either editor loads into it.
-  Files are read in the browser (`shared/sheet/files.ts`), never stored on the server: markup accepts `.sheet`,
+  Files are read in the browser (`shared/sheet/files.ts`), never stored on the server: markup accepts `.stts` (Soul Tabletop Sheet),
   `.xml`, `.html`, `.htm`, `.txt`; CSS accepts `.css`, `.txt`; both are capped at the save limits (100,000 / 50,000
   characters) and rejected if they aren't text. A loaded file replaces the editor's content as an unsaved change (undo
   restores it), so it's checked and previewed before saving. Download saves the editor's current content as
-  `<slug>.sheet` or `<slug>.css`.
+  `<slug>.stts` or `<slug>.css`.
 - Right: live preview via the real `SheetRenderer` with its Edit/Autosave switches (preview edits never save), plus a
   data picker: **Sample data** (generated from the schema: labels as text, 10 for numbers, 2 items per array) or any
   readable content of this content type.

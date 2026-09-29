@@ -7,7 +7,7 @@ function file(name: string, text: string, size = new TextEncoder().encode(text).
 
 describe("readSheetFile", () => {
   it("reads markup and CSS files", async () => {
-    await expect(readSheetFile(file("fighter.sheet", "<Stack />"), "markup")).resolves.toEqual({
+    await expect(readSheetFile(file("fighter.stts", "<Stack />"), "markup")).resolves.toEqual({
       text: "<Stack />",
     });
     await expect(readSheetFile(file("Fighter.HTML", "<Stack />"), "markup")).resolves.toEqual({
@@ -52,7 +52,7 @@ describe("readSheetFile", () => {
 
 describe("sheetExportFileName", () => {
   it("names files after the slug", () => {
-    expect(sheetExportFileName("fighter", "markup")).toBe("fighter.sheet");
+    expect(sheetExportFileName("fighter", "markup")).toBe("fighter.stts");
     expect(sheetExportFileName("fighter", "css")).toBe("fighter.css");
     expect(sheetExportFileName("", "css")).toBe("sheet.css");
   });

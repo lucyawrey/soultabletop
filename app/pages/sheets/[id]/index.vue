@@ -161,22 +161,38 @@ async function remove() {
         </template>
 
         <template #markup>
-          <UCard>
-            <pre
-              v-if="sheet.markup"
-              class="overflow-x-auto text-sm font-mono"
-            >{{ sheet.markup }}</pre>
-            <p v-else class="py-6 text-center text-sm text-muted">No markup yet.</p>
+          <ClientOnly v-if="sheet.markup">
+            <CodeEditor
+              :model-value="sheet.markup"
+              language="markup"
+              label="Sheet markup"
+              readonly
+              class="h-[60vh]"
+            />
+            <template #fallback>
+              <pre class="overflow-x-auto text-sm font-mono">{{ sheet.markup }}</pre>
+            </template>
+          </ClientOnly>
+          <UCard v-else>
+            <p class="py-6 text-center text-sm text-muted">No markup yet.</p>
           </UCard>
         </template>
 
         <template #css>
-          <UCard>
-            <pre
-              v-if="sheet.cssStyles"
-              class="overflow-x-auto text-sm font-mono"
-            >{{ sheet.cssStyles }}</pre>
-            <p v-else class="py-6 text-center text-sm text-muted">No CSS yet.</p>
+          <ClientOnly v-if="sheet.cssStyles">
+            <CodeEditor
+              :model-value="sheet.cssStyles"
+              language="css"
+              label="Sheet CSS"
+              readonly
+              class="h-[60vh]"
+            />
+            <template #fallback>
+              <pre class="overflow-x-auto text-sm font-mono">{{ sheet.cssStyles }}</pre>
+            </template>
+          </ClientOnly>
+          <UCard v-else>
+            <p class="py-6 text-center text-sm text-muted">No CSS yet.</p>
           </UCard>
         </template>
       </UTabs>
