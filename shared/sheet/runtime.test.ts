@@ -144,7 +144,7 @@ describe("defaultSheetValue", () => {
     [{ type: "boolean" }, false],
     [{ type: "array", itemType: { type: "string" } }, []],
     [{ type: "any" }, null],
-    [{ type: "resourceRef" }, null],
+    [{ type: "resourceLink" }, null],
     [undefined, null],
   ] as const)("%j -> %j", (field, value) => {
     expect(defaultSheetValue(field as ContentFieldSchema | undefined, schemas)).toEqual(value);

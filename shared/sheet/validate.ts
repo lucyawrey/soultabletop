@@ -132,7 +132,7 @@ function describeField(field: ContentFieldSchema) {
       return "a list";
     case "object":
       return "a group of fields";
-    case "resourceRef":
+    case "resourceLink":
       return "a resource link";
     case "content":
       return "a content field";
@@ -301,7 +301,7 @@ class Validator {
       case "string":
       case "number":
       case "boolean":
-      case "resourceRef":
+      case "resourceLink":
       case "content":
         kinds.add(field.type);
         break;

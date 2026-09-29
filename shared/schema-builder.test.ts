@@ -31,7 +31,8 @@ const schema: ContentTypeSchema = {
     },
   },
   class: { type: "content", contentTypeId: typeId, allow: "ref", required: true },
-  link: { type: "resourceRef" },
+  link: { type: "resourceLink" },
+  home: { type: "resourceLink", kind: "game" },
   extra: { type: "any" },
   alive: { type: "boolean" },
 };
@@ -144,6 +145,9 @@ describe("parseSchemaJson", () => {
     expect(parseSchemaJson('{"a":{"type":"array"}}')).toHaveProperty("error");
     expect(
       parseSchemaJson('{"a":{"type":"content","contentTypeId":"x"}}'),
+    ).toHaveProperty("error");
+    expect(
+      parseSchemaJson('{"a":{"type":"resourceLink","kind":"group"}}'),
     ).toHaveProperty("error");
   });
 });

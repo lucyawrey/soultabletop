@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { resourceLinkPath } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // Every field tag (Text, Number, Field, Column, ...): its value, or its input
@@ -45,14 +46,18 @@ const pips = computed(() =>
 );
 
 // A reference to other Content (id), local Content data (object), or a
-// Resource link (id).
+// resource link (id).
 const refInfo = computed(() => {
   const current = value.value;
   if (typeof current === "string") {
+    if (props.node.binding?.field?.type === "resourceLink") {
+      const link = context.links.value[current];
+      return link
+        ? { name: link.name, to: resourceLinkPath(current, link) }
+        : { name: "Unavailable", to: undefined, muted: true };
+    }
     const ref = context.refs.value[current];
     if (ref) return { name: ref.name, to: `/content/${current}` };
-    if (props.node.binding?.field?.type === "resourceRef")
-      return { name: current, to: undefined };
     return { name: "Unavailable", to: undefined, muted: true };
   }
   if (current && typeof current === "object" && "name" in current)

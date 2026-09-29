@@ -7,9 +7,11 @@
 import {
   fieldKeyPattern,
   NAME_FIELD,
+  RESOURCE_LINK_KINDS,
   type ContentFieldAllow,
   type ContentFieldSchema,
   type ContentTypeSchema,
+  type ResourceLinkKind,
 } from "./content-schema";
 
 export type BuilderFieldType = ContentFieldSchema["type"];
@@ -27,9 +29,11 @@ export interface BuilderNode {
   item: BuilderNode | null;
   // `object`: its entries.
   fields: BuilderField[];
-  // Content (`content`).
+  // `content`.
   contentTypeId: string;
   allow: ContentFieldAllow;
+  // `resourceLink`: "" for any kind.
+  kind: ResourceLinkKind | "";
 }
 
 export interface BuilderField extends BuilderNode {
@@ -43,7 +47,7 @@ export const BUILDER_FIELD_TYPES: BuilderFieldType[] = [
   "number",
   "boolean",
   "any",
-  "resourceRef",
+  "resourceLink",
   "array",
   "object",
   "content",
@@ -66,6 +70,7 @@ export function newBuilderNode(type: BuilderFieldType = "string"): BuilderNode {
     fields: [],
     contentTypeId: "",
     allow: "both",
+    kind: "",
   };
 }
 
@@ -84,6 +89,7 @@ function toNode(field: ContentFieldSchema): BuilderNode {
     node.contentTypeId = field.contentTypeId;
     node.allow = field.allow;
   }
+  if (field.type === "resourceLink") node.kind = field.kind ?? "";
   return node;
 }
 
@@ -116,6 +122,12 @@ function fromNode(node: BuilderNode): ContentFieldSchema {
         type: "content",
         contentTypeId: node.contentTypeId,
         allow: node.allow,
+        ...base,
+      };
+    case "resourceLink":
+      return {
+        type: "resourceLink",
+        ...(node.kind ? { kind: node.kind } : {}),
         ...base,
       };
     default:
@@ -182,6 +194,11 @@ function isFieldShape(value: unknown, depth: number): boolean {
   if (depth > 32) return false;
   if (field.type === "array") return isFieldShape(field.itemType, depth + 1);
   if (field.type === "object") return isSchemaShape(field.entries, depth + 1);
+  if (field.type === "resourceLink")
+    return (
+      field.kind === undefined ||
+      (RESOURCE_LINK_KINDS as readonly unknown[]).includes(field.kind)
+    );
   if (field.type === "content")
     return (
       typeof field.contentTypeId === "string" &&
@@ -213,7 +230,7 @@ export function parseSchemaJson(
   if (!isSchemaShape(value, 0))
     return {
       error:
-        "The schema must be an object of fields, each with a known type (and itemType, entries, or contentTypeId and allow where needed).",
+        "The schema must be an object of fields, each with a known type (and itemType, entries, contentTypeId and allow, or a known kind where needed).",
     };
   return { schema: value as ContentTypeSchema };
 }

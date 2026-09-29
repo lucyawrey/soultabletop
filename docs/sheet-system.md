@@ -115,7 +115,7 @@ View mode renders formatted values, edit mode renders the input.
 | `Select` | `options` (comma list, req) | string | `USelect` |
 | `Tags` | — | array of string | `UInputTags` |
 | `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
-| `Ref` | — | resourceRef / `content` | link to the resource; edit: picker (see "Content fields") |
+| `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format` | any | read-only in both modes |
 | `Field` | — | any | picks input from schema type (decided); generated sheets mostly use this |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
@@ -207,7 +207,7 @@ ordinary markup, so it goes through the same parse/validate/render path as autho
 - Object field → its own `Section` titled by label, recursing.
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
 - Array of strings → `Tags`; other primitive arrays → `List field="."`.
-- `resourceRef` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)
+- `resourceLink` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)
   showing the referenced content type's primitive fields, one level deep, plus the ref/custom picker in edit mode.
 - Order = schema key order. `content_type.schema` is `jsonb`, which does not preserve key order, so it becomes
   `json` (decided): Drizzle `json("schema")` + migration `ALTER COLUMN "schema" SET DATA TYPE json USING "schema"::json`

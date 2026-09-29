@@ -53,7 +53,7 @@ const character: ContentTypeRules = {
       },
     },
     class: { type: "content", contentTypeId: "cls", allow: "ref" },
-    link: { type: "resourceRef" },
+    link: { type: "resourceLink" },
     extra: { type: "any" },
   },
 };

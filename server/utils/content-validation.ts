@@ -11,6 +11,7 @@ import {
   type ContentFieldSchema,
   type ContentTypeRules,
   type ContentTypeSchema,
+  type ResourceLinkKind,
 } from "../../shared/content-schema";
 import { useDatabase } from "./database";
 import {
@@ -32,6 +33,7 @@ interface Pending {
     depth: number;
   }[];
   refs: { id: string; contentTypeId: string; path: string }[];
+  links: { id: string; kind: ResourceLinkKind | undefined; path: string }[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -59,10 +61,11 @@ function validateField(
         : `${path} must be a boolean`;
     case "any":
       return undefined;
-    case "resourceRef":
-      return typeof value === "string" && uuidPattern.test(value)
-        ? undefined
-        : `${path} must be a resource ID`;
+    case "resourceLink":
+      if (typeof value !== "string" || !uuidPattern.test(value))
+        return `${path} must be a resource ID`;
+      pending.links.push({ id: value, kind: field.kind, path });
+      return undefined;
     case "content":
       if (typeof value === "string") {
         if (field.allow === "local")
@@ -172,6 +175,7 @@ export async function validateContentData(
     allowMissingRequired: options.allowMissingRequired === true,
     locals: [],
     refs: [],
+    links: [],
   };
   const error = validateObject(
     data,
@@ -213,6 +217,12 @@ export async function validateContentData(
 
   if (pending.refs.length > MAX_CONTENT_REFS)
     return `Content may reference at most ${MAX_CONTENT_REFS} other content`;
+  if (pending.links.length > MAX_CONTENT_REFS)
+    return `Content may link at most ${MAX_CONTENT_REFS} resources`;
+  return (await checkRefs(user, pending)) ?? (await checkLinks(user, pending));
+}
+
+async function checkRefs(user: Pick<User, "id" | "name">, pending: Pending) {
   const refIds = [...new Set(pending.refs.map((ref) => ref.id))];
   if (!refIds.length) return undefined;
 
@@ -232,6 +242,36 @@ export async function validateContentData(
   }
   return undefined;
 }
+
+// `resourceLink` values must be resources `user` can read, of the field's
+// `kind` if it has one.
+async function checkLinks(user: Pick<User, "id" | "name">, pending: Pending) {
+  const ids = [...new Set(pending.links.map((link) => link.id))];
+  if (!ids.length) return undefined;
+
+  const rows = await useDatabase()
+    .select()
+    .from(resource)
+    .where(inArray(resource.id, ids));
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const context = await loadResourceAccessContext(user, ids);
+  for (const link of pending.links) {
+    const row = byId.get(link.id);
+    if (!row || !getResourceAccess(row, context).canRead)
+      return `${link.path} links to a resource that doesn't exist or isn't accessible`;
+    if (link.kind && row.kind !== link.kind)
+      return `${link.path} must link to a ${RESOURCE_KIND_NAMES[link.kind]}`;
+  }
+  return undefined;
+}
+
+const RESOURCE_KIND_NAMES: Record<ResourceLinkKind, string> = {
+  system: "system",
+  game: "game",
+  contentType: "content type",
+  sheet: "sheet",
+  content: "content record",
+};
 
 // Every ContentType has a built-in `name` field stored as the resource name.
 // A `name` key in submitted data is moved there; an explicit `name` in the

@@ -64,7 +64,7 @@ export function sampleSheetData(schemas: SheetSchemas): Record<string, unknown> 
         return true;
       case "any":
         return label;
-      case "resourceRef":
+      case "resourceLink":
         return undefined;
       case "array":
         return depth > 4

@@ -32,7 +32,7 @@ export type BindKind =
   | "string"
   | "number"
   | "boolean"
-  | "resourceRef"
+  | "resourceLink"
   | "content"
   | "array"
   | "stringArray"
@@ -249,7 +249,7 @@ const tagList: TagSpec[] = [
     description: "Picks the input from the field's schema type",
     attrs: { ...fieldAttrs },
     children: "none",
-    binds: ["string", "number", "boolean", "resourceRef", "content", "stringArray"],
+    binds: ["string", "number", "boolean", "resourceLink", "content", "stringArray"],
   },
   {
     name: "Text",
@@ -341,7 +341,7 @@ const tagList: TagSpec[] = [
     description: "A link to another resource or content",
     attrs: { ...fieldAttrs },
     children: "none",
-    binds: ["resourceRef", "content"],
+    binds: ["resourceLink", "content"],
   },
   {
     name: "Value",
@@ -414,7 +414,7 @@ const tagList: TagSpec[] = [
     },
     children: "none",
     parents: ["Table"],
-    binds: ["string", "number", "boolean", "resourceRef", "content"],
+    binds: ["string", "number", "boolean", "resourceLink", "content"],
   },
   {
     name: "RowDetails",

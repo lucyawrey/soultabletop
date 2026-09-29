@@ -4,6 +4,7 @@ import { Value } from "@sinclair/typebox/value";
 import { createError, readBody, type H3Event } from "h3";
 import { uuidPattern } from "./resource-management";
 import { CONTENT_CATEGORIES } from "../../shared/content-categories";
+import { RESOURCE_LINK_KINDS } from "../../shared/content-schema";
 
 FormatRegistry.Set("uuid", (value) => uuidPattern.test(value));
 
@@ -79,7 +80,13 @@ export const contentFieldSchema = Type.Recursive((Self) =>
       { additionalProperties: false },
     ),
     Type.Object(
-      { type: Type.Literal("resourceRef"), ...fieldMeta },
+      {
+        type: Type.Literal("resourceLink"),
+        kind: Type.Optional(
+          Type.Union(RESOURCE_LINK_KINDS.map((kind) => Type.Literal(kind))),
+        ),
+        ...fieldMeta,
+      },
       { additionalProperties: false },
     ),
     Type.Object(

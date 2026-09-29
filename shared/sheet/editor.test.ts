@@ -10,7 +10,7 @@ const schemas: SheetSchemas = {
       hp: { type: "number", label: "Hit Points" },
       bio: { type: "string" },
       alive: { type: "boolean" },
-      link: { type: "resourceRef" },
+      link: { type: "resourceLink" },
       stats: { type: "object", entries: { str: { type: "number" } } },
       attacks: {
         type: "array",
@@ -36,7 +36,7 @@ describe("sheetFieldPaths", () => {
       "hp: number",
       "bio: string",
       "alive: boolean",
-      "link: resourceRef",
+      "link: resourceLink",
       "stats: object",
       "stats.str: number",
       "attacks: list of object",

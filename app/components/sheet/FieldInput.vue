@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SheetRef } from "#shared/sheet/runtime";
+import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
 import { defaultSheetValue, refRecord } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
@@ -78,6 +78,17 @@ const localName = computed({
       : "",
   set: (name: string) => context.update([...props.path, "name"], name),
 });
+
+const linkField = computed(() =>
+  field.value?.type === "resourceLink" ? field.value : undefined,
+);
+const linked = computed(() =>
+  typeof props.value === "string" ? context.links.value[props.value] : undefined,
+);
+function pickLink(id: string, link: SheetLink) {
+  context.addLink(id, link);
+  set(id);
+}
 
 function pick(id: string, ref: SheetRef) {
   context.addRef(id, ref);
@@ -176,12 +187,12 @@ const imageError = computed(() =>
     </div>
   </div>
 
-  <UInput
-    v-else-if="display === 'ref' && !contentField"
-    v-model="text"
-    placeholder="Resource ID"
-    :aria-label="label"
-    class="w-full font-mono"
+  <SheetResourcePicker
+    v-else-if="display === 'ref' && linkField"
+    :kind="linkField.kind"
+    :model-value="typeof value === 'string' ? value : undefined"
+    :placeholder="linked?.name ?? 'Choose…'"
+    @pick="pickLink"
   />
   <div v-else-if="display === 'ref'" class="space-y-2">
     <UInput

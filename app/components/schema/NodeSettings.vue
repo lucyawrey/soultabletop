@@ -5,7 +5,11 @@ import {
   newBuilderNode,
   type BuilderNode,
 } from "#shared/schema-builder";
-import type { ContentFieldAllow } from "#shared/content-schema";
+import {
+  RESOURCE_LINK_KINDS,
+  type ContentFieldAllow,
+  type ResourceLinkKind,
+} from "#shared/content-schema";
 
 // Settings for a node's type: an `object`'s entries, an `array`'s itemType
 // (itself a node, so arrays of objects or of arrays work), or a `content`
@@ -23,6 +27,18 @@ const allowOptions: { label: string; value: ContentFieldAllow }[] = [
   { label: "ref", value: "ref" },
   { label: "local", value: "local" },
 ];
+
+// "any" stands for no `kind` (select items can't have an empty value).
+const kindOptions = [
+  { label: "(any)", value: "any" },
+  ...RESOURCE_LINK_KINDS.map((kind) => ({ label: kind, value: kind })),
+];
+const kind = computed({
+  get: () => node.value.kind || "any",
+  set: (value) => {
+    node.value.kind = value === "any" ? "" : (value as ResourceLinkKind);
+  },
+});
 
 // A new `array` starts with `string` items.
 watch(
@@ -50,7 +66,7 @@ watch(
       />
     </UFormField>
     <div
-      v-if="['object', 'array', 'content'].includes(node.item.type)"
+      v-if="['object', 'array', 'content', 'resourceLink'].includes(node.item.type)"
       class="border-s-2 border-default ps-3"
     >
       <SchemaNodeSettings v-model="node.item" />
@@ -83,4 +99,17 @@ watch(
       />
     </UFormField>
   </div>
+
+  <UFormField
+    v-else-if="node.type === 'resourceLink'"
+    label="kind"
+    description="Limit links to one kind of resource, or allow any."
+  >
+    <USelect
+      v-model="kind"
+      :items="kindOptions"
+      class="w-48"
+      :disabled="readonly"
+    />
+  </UFormField>
 </template>

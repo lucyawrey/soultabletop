@@ -5,6 +5,8 @@ import {
   interpolateSheetText,
   itemScopes,
   resolveSheetPath,
+  type SheetLink,
+  type SheetLinks,
   type SheetRef,
   type SheetRefs,
   type SheetScope,
@@ -22,6 +24,8 @@ import {
 export interface SheetContext {
   root: Ref<SheetScope>;
   refs: Ref<SheetRefs>;
+  // Resources linked by `resourceLink` fields that the viewer can read.
+  links: Ref<SheetLinks>;
   schemas: Ref<SheetSchemas>;
   // Show placeholders for broken tags (users who can edit the Sheet).
   showInvalid: Ref<boolean>;
@@ -32,6 +36,8 @@ export interface SheetContext {
   update: (path: (string | number)[], value: unknown) => void;
   // Makes referenced Content picked while editing displayable before saving.
   addRef: (id: string, ref: SheetRef) => void;
+  // Same for resources picked in `resourceLink` fields.
+  addLink: (id: string, link: SheetLink) => void;
   // `locked` fields unlocked with their pencil button, for this page view.
   unlocked: Set<string>;
 }
@@ -222,7 +228,7 @@ export function sheetFieldDisplay(node: ValidatedElement): SheetFieldDisplay {
       return "number";
     case "boolean":
       return "boolean";
-    case "resourceRef":
+    case "resourceLink":
     case "content":
       return "ref";
     case "array":

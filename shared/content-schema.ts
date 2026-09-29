@@ -4,6 +4,16 @@
 
 export type ContentFieldAllow = "ref" | "local" | "both";
 
+// Resource kinds a `resourceLink` field can be limited to.
+export const RESOURCE_LINK_KINDS = [
+  "system",
+  "game",
+  "contentType",
+  "sheet",
+  "content",
+] as const;
+export type ResourceLinkKind = (typeof RESOURCE_LINK_KINDS)[number];
+
 interface ContentFieldBase {
   required?: boolean;
   label?: string;
@@ -15,7 +25,8 @@ export type ContentFieldSchema = ContentFieldBase &
     | { type: "string" | "number" | "boolean" | "any" }
     | { type: "array"; itemType: ContentFieldSchema }
     | { type: "object"; entries: ContentTypeSchema }
-    | { type: "resourceRef" }
+    // The ID of any readable resource, or only of `kind` if given.
+    | { type: "resourceLink"; kind?: ResourceLinkKind }
     // A value is either the ID of existing Content of `contentTypeId` (a
     // reference) or an object of local data following that ContentType's
     // schema. `allow` limits which forms are accepted.

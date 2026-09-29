@@ -45,7 +45,7 @@ function isSimple(field: ContentFieldSchema) {
     case "number":
     case "boolean":
     case "any":
-    case "resourceRef":
+    case "resourceLink":
       return true;
     case "array":
       return field.itemType.type === "string";
@@ -56,7 +56,7 @@ function isSimple(field: ContentFieldSchema) {
 
 // Fields a Table <Column> can show.
 function isColumnable(field: ContentFieldSchema) {
-  return ["string", "number", "boolean", "any", "resourceRef", "content"].includes(
+  return ["string", "number", "boolean", "any", "resourceLink", "content"].includes(
     field.type,
   );
 }

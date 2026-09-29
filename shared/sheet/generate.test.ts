@@ -25,7 +25,7 @@ const character: ContentTypeRules = {
     alive: { type: "boolean" },
     tags: { type: "array", itemType: { type: "string" } },
     extra: { type: "any" },
-    link: { type: "resourceRef" },
+    link: { type: "resourceLink" },
     stats: {
       type: "object",
       entries: {

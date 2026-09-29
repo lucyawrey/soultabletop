@@ -37,7 +37,7 @@ describe("defaultContentData", () => {
 
   it("leaves out fields that need a real value", () => {
     const schema: ContentTypeSchema = {
-      link: { type: "resourceRef", required: true },
+      link: { type: "resourceLink", required: true },
       class: {
         type: "content",
         contentTypeId: "00000000-0000-4000-8000-000000000000",
