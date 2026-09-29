@@ -12,7 +12,7 @@ import {
 } from "../database/schema";
 import { useDatabase } from "./database";
 
-interface ResourceAccessContext {
+export interface ResourceAccessContext {
   userId: string;
   isSiteAdmin: boolean;
   groupRoles: Map<string, "admin" | "editor" | "member">;

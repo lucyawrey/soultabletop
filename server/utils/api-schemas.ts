@@ -24,6 +24,7 @@ export const createContentSchema = Type.Object({
   slug: slugSchema,
   name: Type.String({ minLength: 1 }),
   contentTypeId: uuidSchema,
+  ownerGroupId: Type.Optional(uuidSchema),
   sheetId: Type.Optional(Type.Union([uuidSchema, Type.Null()])),
   data: Type.Optional(Type.Object({}, { additionalProperties: true })),
   isPubliclyReadable: Type.Optional(Type.Boolean()),

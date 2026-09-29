@@ -69,6 +69,7 @@ const form = reactive({
   slug: "",
   name: "",
   isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
   systemId: "",
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
@@ -89,6 +90,7 @@ function openCreate(systemId?: string) {
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
+  form.ownerGroupId = null;
   form.systemId = system.id;
   form.contentCategory = "general";
   form.hasStrictSchema = false;
@@ -152,7 +154,11 @@ async function submitForm(confirmBrokenSheets = false) {
     } else {
       const created = await $fetch<{ id: string }>("/api/content-type", {
         method: "POST",
-        body: { ...body, systemId: form.systemId },
+        body: {
+          ...body,
+          systemId: form.systemId,
+          ownerGroupId: form.ownerGroupId ?? undefined,
+        },
       });
       isFormOpen.value = false;
       await navigateTo(`/types/${created.id}`);
@@ -330,6 +336,7 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField v-if="!editingType" v-model="form.ownerGroupId" />
           <UFormField
             name="systemId"
             label="System"

@@ -59,6 +59,7 @@ const form = reactive({
   name: "",
   systemId: "",
   isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
 });
 const formBusy = ref(false);
 const formError = ref("");
@@ -72,6 +73,7 @@ function openCreate() {
   form.name = "";
   form.systemId = firstSystem?.id ?? "";
   form.isPubliclyReadable = false;
+  form.ownerGroupId = null;
   resetSlugTouched(false);
   isFormOpen.value = true;
 }
@@ -109,6 +111,7 @@ async function submitForm() {
           name: form.name,
           systemId: form.systemId,
           isPubliclyReadable: form.isPubliclyReadable,
+          ownerGroupId: form.ownerGroupId ?? undefined,
         },
       });
     }
@@ -254,6 +257,7 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField v-if="!editingGame" v-model="form.ownerGroupId" />
           <UFormField name="systemId" label="System" required>
             <USelect
               v-model="form.systemId"

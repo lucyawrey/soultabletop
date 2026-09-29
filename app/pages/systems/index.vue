@@ -38,6 +38,7 @@ const form = reactive({
   slug: "",
   name: "",
   isPubliclyReadable: false,
+  ownerGroupId: null as string | null,
 });
 const formBusy = ref(false);
 const formError = ref("");
@@ -49,6 +50,7 @@ function openCreate() {
   form.slug = "";
   form.name = "";
   form.isPubliclyReadable = false;
+  form.ownerGroupId = null;
   resetSlugTouched(false);
   isFormOpen.value = true;
 }
@@ -84,6 +86,7 @@ async function submitForm() {
           slug: form.slug,
           name: form.name,
           isPubliclyReadable: form.isPubliclyReadable,
+          ownerGroupId: form.ownerGroupId ?? undefined,
         },
       });
     }
@@ -223,6 +226,7 @@ async function remove() {
             />
           </UFormField>
           <VisibilityField v-model="form.isPubliclyReadable" />
+          <OwnerField v-if="!editingSystem" v-model="form.ownerGroupId" />
           <UAlert
             v-if="formError"
             color="error"

@@ -1,13 +1,8 @@
 import { createError } from "h3";
-import { and, eq } from "drizzle-orm";
-import {
-  groupMembership,
-  resource,
-  system,
-  userProfile,
-} from "../../database/schema";
+import { resource, system } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
+import { resolveResourceOwner } from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
 import { parseBody, resourceCreateSchema } from "../../utils/api-schemas";
 
@@ -45,45 +40,14 @@ export default defineEventHandler(async (event) => {
   const body = await parseBody(event, resourceCreateSchema);
   const { name, slug } = body;
   const database = useDatabase();
-  let ownerGroupId: string | null = null;
-  if (body.ownerGroupId !== undefined && body.ownerGroupId !== null) {
-    if (typeof body.ownerGroupId !== "string")
-      throw createError({
-        statusCode: 400,
-        statusMessage: "ownerGroupId must be a UUID",
-      });
-    const [profile] = await database
-      .select({ role: userProfile.role })
-      .from(userProfile)
-      .where(eq(userProfile.userId, user.id));
-    const [membership] = await database
-      .select({ role: groupMembership.role })
-      .from(groupMembership)
-      .where(
-        and(
-          eq(groupMembership.groupId, body.ownerGroupId),
-          eq(groupMembership.userId, user.id),
-        ),
-      );
-    if (
-      profile?.role !== "admin" &&
-      membership?.role !== "admin" &&
-      membership?.role !== "editor"
-    )
-      throw createError({
-        statusCode: 403,
-        statusMessage: "Not allowed to create group resources",
-      });
-    ownerGroupId = body.ownerGroupId;
-  }
+  const owner = await resolveResourceOwner(user, body.ownerGroupId);
   try {
     const result = await database.transaction(async (tx) => {
       const [createdResource] = await tx
         .insert(resource)
         .values({
           kind: "system",
-          ownerUserId: ownerGroupId ? null : user.id,
-          ownerGroupId,
+          ...owner,
           slug,
           name,
           isPubliclyReadable: body.isPubliclyReadable === true,
