@@ -47,10 +47,9 @@ export default defineNuxtConfig({
     metaData: {
       title: "Soul Tabletop API Documentation",
     },
-    servers: [
-      {
-        url: process.env.BASE_URL,
-      },
-    ],
+    // Relative, so Scalar resolves it against the page's own origin. Nitro's
+    // generated spec builds an absolute server URL from the SSR request that
+    // fetched it, which lacks the real host and port.
+    servers: [{ url: "/" }],
   },
 });
