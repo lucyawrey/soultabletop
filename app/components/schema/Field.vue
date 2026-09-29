@@ -61,11 +61,11 @@ const open = ref(field.value.type === "struct" || field.value.type === "array");
       />
       <div class="ms-auto flex gap-1">
         <UButton
-          :icon="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+          :label="open ? 'Collapse' : 'Expand'"
+          :trailing-icon="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
           color="neutral"
-          variant="ghost"
-          size="sm"
-          :aria-label="open ? 'Hide settings' : 'Show settings'"
+          variant="soft"
+          size="md"
           :aria-expanded="open"
           @click="open = !open"
         />
@@ -74,7 +74,7 @@ const open = ref(field.value.type === "struct" || field.value.type === "array");
           icon="i-lucide-trash"
           color="error"
           variant="ghost"
-          size="sm"
+          size="md"
           aria-label="Remove field"
           @click="emit('remove')"
         />
