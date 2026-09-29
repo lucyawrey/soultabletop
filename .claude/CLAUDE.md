@@ -11,6 +11,11 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 - `.env`'s `DATABASE_URL` contains `&`, so don't `source` it; use `node --env-file=.env` for ad-hoc scripts.
 - Typecheck and lint don't catch broken template structure (e.g. a missing closing tag). After template edits, compile the changed templates with `parse`/`compileTemplate` from the pnpm-installed `node_modules/.pnpm/@vue+compiler-sfc@*/node_modules/@vue/compiler-sfc` (works for pages behind auth), or request a public page from the dev server (a 500 body includes the Vite compile error; auth pages just 302 without compiling). The user often has `pnpm dev` running already — check `lsof -iTCP -sTCP:LISTEN -P | grep node` for its port (3000 or 3001) before starting another, and never kill a dev server you didn't start.
 
+## Git workflow
+
+- `main` is branch-protected: never commit to it directly. All changes, including docs, skills, and other agent files, go on a feature branch off an up-to-date `main` and merge through a pull request.
+- Name branches after the work (e.g. `remove-base-url`, `sheet-detail-preview`). Changes to agent files like this one can ride along on whatever branch is current without being mentioned in branch names or commit messages; they don't need their own branch.
+
 ## Agent files
 
 - Everything for AI agents lives in `.claude/` (this file, `skills/`), except `skills-lock.json`, which the `skills` CLI requires at the repo root. Keep agent files out of the root.
@@ -40,9 +45,28 @@ Nuxt 4 app for managing tabletop RPG Systems, Games, Content Types, Sheets, and 
 - **Pages**: each resource kind has a list page (`/things`) and a detail page (`/things/[id]`), all behind `middleware: "auth"`. Follow the existing pages for structure. `/content/[id]` and `/characters/[id]` share `app/components/ContentDetail.vue`. `/` is the sign-in/register form when logged out and a welcome dashboard when logged in, fed by `GET /api/dashboard`: recently updated Games the user or their Groups own or that the user is a member of, and Characters/Content owned by the user or their Groups. Public or merely shared items are deliberately excluded.
 - A lone "username"-like text field inside a `<form>` makes Firefox autofill saved logins (it ignores `autocomplete="off"`); see the add-member row in `app/pages/groups/[id].vue`.
 
+## Deployment and URLs
+
+- Hosted on Vercel. There is no base-URL setting: the app's URL comes from each request. Don't reintroduce `BASE_URL`/`BETTER_AUTH_URL` (Better Auth reads both from the environment on its own, so a leftover value anywhere would take effect).
+- Better Auth (`server/utils/auth.ts`) uses a per-request `baseURL` with `allowedHosts`: Vercel's system env vars (`VERCEL_PROJECT_PRODUCTION_URL`, `VERCEL_BRANCH_URL`, `VERCEL_URL`) plus `localhost:*`. A host outside the list fails with "not in the allowed hosts list", so a custom domain that isn't the production domain must be added there. Cookies are `Secure` when `NODE_ENV=production`.
+- Scalar's API reference uses the relative server URL `"/"` (`nuxt.config.ts`).
+
 ## Database and migrations
 
 - `DATABASE_URL` in `.env` points at a live Neon database. For now it holds only disposable test data, so running `pnpm db:migrate` without asking is fine. **Once there is a real production database or real users, confirm before migrating and suggest a backup/review step.**
 - Always read generated migrations before applying them:
   - **Renames**: `drizzle-kit generate` stops to ask whether a column was renamed or dropped and recreated, and that prompt can't be answered non-interactively. Hand-write the migration (`ALTER TABLE ... RENAME COLUMN`, rename indexes/constraints), the matching `meta/NNNN_snapshot.json` and `_journal.json` entry, then run `pnpm db:generate` and confirm it reports "No schema changes". See `0005_rename_profile_slug_to_username`.
   - **Enum value changes**: generated migrations drop/recreate the enum type and cast with `USING col::new_enum`, which fails or loses data for rows holding old labels. Insert `UPDATE "table" SET "col" = CASE "col" WHEN 'Old' THEN 'new' ... ELSE "col" END;` after the `SET DATA TYPE text` step and before the final cast. See `0004_cute_bushwacker`.
+
+## Handoff
+
+The user switches computers, and conversations, plans, and auto-memory don't travel, so session state lives here. Keep this section current: rewrite it (don't append a log) when work starts, pauses, or finishes, and whenever the user says they're switching. Keep it short: what's in progress, what's next, and anything half-done, unverified, or waiting on the user. Work a human would recognize as a task (features, bugs, chores) goes in `TODO.md`; this section only points at it. Durable decisions go in the docs or the sections above, not here.
+
+**Last updated:** 2026-09-29
+
+- **State:** on branch `remove-base-url` (committed, not yet pushed). `BASE_URL` is gone from the code, `.env.example`, and the local `.env`: Better Auth uses a per-request `baseURL` with `allowedHosts`, Scalar a relative server URL (see "Deployment and URLs"). Verified locally: sign-in works in dev and against a production build posing as a Vercel deployment (`VERCEL_URL` set, `Host` header of that deployment), foreign origins get 403, hosts outside the allowlist are refused, and with `NODE_ENV=production` the session cookie is `__Secure-…; Secure; HttpOnly`. Scalar's server shows `http://localhost:3000`. Typecheck, lint, and 203 tests pass.
+- **Next:** commit, push, and open a PR for `remove-base-url`. Then get the Vercel deployment working (top of `TODO.md`), using the Vercel CLI to manage env vars; that needs the user (Vercel access, CLI login). Then the rest of `TODO.md` in the agreed order: quick wins (nav swap, default-sheet replacement warning) → category split and `document` → `page` rename (a migration; do it before real data) → no raw JSON in create dialogs together with the schema builder → Group-owned resources → Sheet detail preview, file import/export, text/box display → the Soul Tabletop Sheets agent skill last.
+- **Loose ends:**
+  - The end-to-end API/SSR check scripts used during the Sheet work lived in a machine-local temp folder and are gone. Moving checks like them into the repo as an integration suite (run against the dev server, cleaning up after themselves) was suggested but not done.
+  - The test database has 32 leftover `claude-smoke-*@example.invalid` users from those checks (their other data was deleted); removing them takes one SQL statement if the user wants.
+  - Unverified in a browser: the Sheet editor's syntax colors in dark mode (CodeMirror's default highlight style is light-only; listed in `TODO.md`).
