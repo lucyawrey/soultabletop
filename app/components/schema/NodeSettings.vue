@@ -1,30 +1,30 @@
 <script setup lang="ts">
 import {
-  BUILDER_TYPE_LABELS,
+  BUILDER_FIELD_TYPES,
   contentTypeErrorId,
   newBuilderNode,
-  type BuilderFieldType,
   type BuilderNode,
 } from "#shared/schema-builder";
 import type { ContentFieldAllow } from "#shared/content-schema";
 
-// Settings for a node's type: a group's fields, a list's item type (itself a
-// node, so lists of groups or of lists work), or a content field's content
-// type and allowed forms.
+// Settings for a node's type: an `object`'s entries, an `array`'s itemType
+// (itself a node, so arrays of objects or of arrays work), or a `content`
+// field's contentTypeId and allow.
 const node = defineModel<BuilderNode>({ required: true });
 const { errors, contentTypeOptions, readonly } = useSchemaBuilder();
 
-const typeOptions = (
-  Object.entries(BUILDER_TYPE_LABELS) as [BuilderFieldType, string][]
-).map(([value, label]) => ({ label, value }));
+const typeOptions = BUILDER_FIELD_TYPES.map((type) => ({
+  label: type,
+  value: type,
+}));
 
 const allowOptions: { label: string; value: ContentFieldAllow }[] = [
-  { label: "Existing or custom", value: "both" },
-  { label: "Existing only", value: "ref" },
-  { label: "Custom only", value: "local" },
+  { label: "both", value: "both" },
+  { label: "ref", value: "ref" },
+  { label: "local", value: "local" },
 ];
 
-// A new list starts with text items.
+// A new `array` starts with `string` items.
 watch(
   () => node.value.type,
   (type) => {
@@ -36,12 +36,12 @@ watch(
 
 <template>
   <div v-if="node.type === 'object'" class="space-y-2">
-    <p class="text-sm font-medium text-highlighted">Fields</p>
+    <p class="text-sm font-medium text-highlighted">entries</p>
     <SchemaFieldList v-model="node.fields" />
   </div>
 
   <div v-else-if="node.type === 'array' && node.item" class="space-y-2">
-    <UFormField label="Item type">
+    <UFormField label="itemType">
       <USelect
         v-model="node.item.type"
         :items="typeOptions"
@@ -59,7 +59,7 @@ watch(
 
   <div v-else-if="node.type === 'content'" class="grid gap-3 sm:grid-cols-2">
     <UFormField
-      label="Content type"
+      label="contentTypeId"
       :error="errors.get(contentTypeErrorId(node.id))"
       required
     >
@@ -71,7 +71,10 @@ watch(
         :disabled="readonly"
       />
     </UFormField>
-    <UFormField label="Allow" description="Link existing content, fill in custom data, or both.">
+    <UFormField
+      label="allow"
+      description="ref: existing content only. local: custom data only. both: either."
+    >
       <USelect
         v-model="node.allow"
         :items="allowOptions"

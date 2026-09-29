@@ -78,7 +78,7 @@ describe("schemaToBuilder / builderToSchema", () => {
     });
   });
 
-  it("gives a new List a text item type", () => {
+  it("gives a new array a string item type", () => {
     const field = newBuilderField("tags");
     field.type = "array";
     expect(builderToSchema([field])).toEqual({

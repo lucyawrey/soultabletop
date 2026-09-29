@@ -14,7 +14,7 @@ import {
 
 export type BuilderFieldType = ContentFieldSchema["type"];
 
-// One field, or the item type of a List. Every node keeps the settings of all
+// One field, or the item type of an `array`. Every node keeps the settings of all
 // types, so switching a field's type and back doesn't lose its nested fields
 // or content type choice; only the current type's settings are saved.
 export interface BuilderNode {
@@ -23,9 +23,9 @@ export interface BuilderNode {
   required: boolean;
   label: string;
   description: string;
-  // List (`array`): the type of each item.
+  // `array`: the type of each item.
   item: BuilderNode | null;
-  // Group (`object`): its fields.
+  // `object`: its entries.
   fields: BuilderField[];
   // Content (`content`).
   contentTypeId: string;
@@ -36,16 +36,18 @@ export interface BuilderField extends BuilderNode {
   key: string;
 }
 
-export const BUILDER_TYPE_LABELS: Record<BuilderFieldType, string> = {
-  string: "Text",
-  number: "Number",
-  boolean: "Checkbox",
-  any: "Any",
-  resourceRef: "Resource link",
-  array: "List",
-  object: "Group",
-  content: "Content",
-};
+// Field types in the order the builder offers them. The builder shows the
+// schema's own type names, since it edits the data format directly.
+export const BUILDER_FIELD_TYPES: BuilderFieldType[] = [
+  "string",
+  "number",
+  "boolean",
+  "any",
+  "resourceRef",
+  "array",
+  "object",
+  "content",
+];
 
 let nextId = 0;
 export function newBuilderId() {
@@ -171,7 +173,7 @@ export function moveBuilderItem<T>(list: T[], from: number, to: number) {
   list.splice(Math.max(0, Math.min(to, list.length)), 0, item as T);
 }
 
-const FIELD_TYPES = new Set(Object.keys(BUILDER_TYPE_LABELS));
+const FIELD_TYPES = new Set<string>(BUILDER_FIELD_TYPES);
 
 function isFieldShape(value: unknown, depth: number): boolean {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;

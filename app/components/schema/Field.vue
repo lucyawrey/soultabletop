@@ -1,23 +1,25 @@
 <script setup lang="ts">
 import {
-  BUILDER_TYPE_LABELS,
+  BUILDER_FIELD_TYPES,
   type BuilderField,
-  type BuilderFieldType,
 } from "#shared/schema-builder";
 
 // One field row: drag handle, key, type, required, and a toggle for the
-// label, description, and type settings (nested fields for groups and lists).
+// label, description, and type settings (entries of an `object`, itemType of
+// an `array`).
 const field = defineModel<BuilderField>({ required: true });
 defineProps<{ handleClass: string }>();
 const emit = defineEmits<{ remove: [] }>();
 const { errors, readonly } = useSchemaBuilder();
 
-const typeOptions = (
-  Object.entries(BUILDER_TYPE_LABELS) as [BuilderFieldType, string][]
-).map(([value, label]) => ({ label, value }));
+const typeOptions = BUILDER_FIELD_TYPES.map((type) => ({
+  label: type,
+  value: type,
+}));
 
 const error = computed(() => errors.value.get(field.value.id));
-// Groups and lists start open, since their settings are their contents.
+// `object` and `array` fields start open, since their settings are their
+// contents.
 const open = ref(field.value.type === "object" || field.value.type === "array");
 </script>
 
@@ -38,7 +40,7 @@ const open = ref(field.value.type === "object" || field.value.type === "array");
         <UInput
           v-model="field.key"
           placeholder="key"
-          aria-label="Key"
+          aria-label="key"
           class="w-full font-mono"
           :disabled="readonly"
         />
@@ -46,13 +48,13 @@ const open = ref(field.value.type === "object" || field.value.type === "array");
       <USelect
         v-model="field.type"
         :items="typeOptions"
-        aria-label="Type"
+        aria-label="type"
         class="w-40"
         :disabled="readonly"
       />
       <UCheckbox
         v-model="field.required"
-        label="Required"
+        label="required"
         class="mt-1.5"
         :disabled="readonly"
       />
@@ -79,14 +81,14 @@ const open = ref(field.value.type === "object" || field.value.type === "array");
     </div>
     <div v-if="open" class="space-y-3 border-t border-default p-3 ps-8">
       <div class="grid gap-3 sm:grid-cols-2">
-        <UFormField label="Label" hint="Optional">
+        <UFormField label="label" hint="Optional">
           <UInput
             v-model="field.label"
             class="w-full"
             :disabled="readonly"
           />
         </UFormField>
-        <UFormField label="Description" hint="Optional">
+        <UFormField label="description" hint="Optional">
           <UInput
             v-model="field.description"
             class="w-full"
