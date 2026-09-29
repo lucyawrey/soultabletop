@@ -14,9 +14,10 @@ import postcss, {
 } from "postcss";
 import selectorParser from "postcss-selector-parser";
 import { genericFontFamilies, sheetFonts } from "./fonts";
+import { MAX_SHEET_CSS_LENGTH } from "./files";
 import type { Loc, SheetDiagnostic } from "./parser";
 
-export const MAX_SHEET_CSS_LENGTH = 50_000;
+export { MAX_SHEET_CSS_LENGTH };
 
 const allowedAtRules = new Set([
   "media",
