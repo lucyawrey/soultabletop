@@ -133,7 +133,7 @@ async function save(confirmReplaceDefault = false) {
   } catch (error) {
     replaceDefault.value = extractDefaultReplacement(error);
     if (!replaceDefault.value)
-      saveError.value = extractApiErrorMessage(error, "Could not save Sheet.");
+      saveError.value = extractApiErrorMessage(error, "Could not save sheet.");
   } finally {
     saving.value = false;
   }
@@ -241,7 +241,7 @@ watch(
       previewData.value = structuredClone({ ...detail.data, name: detail.name });
       previewRefs.value = detail.refs;
     } catch (error) {
-      previewError.value = extractApiErrorMessage(error, "Could not load Content.");
+      previewError.value = extractApiErrorMessage(error, "Could not load content.");
     }
   },
   { immediate: true },
@@ -418,14 +418,14 @@ async function insertPath(path: string) {
                   v-if="canSetDefault"
                   name="isDefault"
                   label="Default sheet"
-                  description="Used for Content of this type that doesn't pick a Sheet. You'll be asked before it replaces another default."
+                  description="Used for content of this type that doesn't pick a sheet. You'll be asked before it replaces another default."
                 >
                   <USwitch v-model="form.isDefault" />
                 </UFormField>
                 <UFormField
                   name="defaultEditMode"
                   label="Start in Edit mode"
-                  description="Whether Content opens with the Edit switch on."
+                  description="Whether content opens with the Edit switch on."
                 >
                   <USwitch v-model="form.defaultEditMode" />
                 </UFormField>
@@ -520,7 +520,7 @@ async function insertPath(path: string) {
     <UModal
       v-model:open="isGenerateOpen"
       title="Insert generated markup"
-      description="Replace the markup with markup generated from the Content Type's schema? You can undo this in the editor, or leave without saving."
+      description="Replace the markup with markup generated from the content type's schema? You can undo this in the editor, or leave without saving."
       :ui="{ footer: 'justify-end' }"
     >
       <template #footer="{ close }">
@@ -582,7 +582,7 @@ async function insertPath(path: string) {
           <section class="space-y-2">
             <h3 class="font-semibold text-highlighted">CSS</h3>
             <p class="text-muted">
-              Rules only apply inside this Sheet. Target tags with their
+              Rules only apply inside this sheet. Target tags with their
               <code>sheet-&lt;tag&gt;</code> class (e.g. <code>.sheet-section</code>)
               or your own <code>class="…"</code>. <code>:root</code> means the
               Sheet itself; start a selector with <code>.dark</code> for dark

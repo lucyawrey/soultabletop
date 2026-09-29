@@ -11,7 +11,7 @@ import { useDatabase } from "../../../../utils/database";
 defineRouteMeta({
   openAPI: {
     tags: ["Game Membership"],
-    summary: "Remove a Game member",
+    summary: "Remove a game member",
     responses: {
       204: { description: "Removed" },
       401: { description: "Authentication required" },

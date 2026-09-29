@@ -11,7 +11,7 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["Content"],
-    summary: "Delete a Content record",
+    summary: "Delete a content record",
     responses: {
       204: { description: "Deleted" },
       401: { description: "Authentication required" },
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
   if (!id)
     throw createError({
       statusCode: 400,
-      statusMessage: "Missing Resource ID",
+      statusMessage: "Missing resource ID",
     });
 
   const user = await requireAuthenticatedUser(event);

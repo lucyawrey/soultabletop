@@ -8,10 +8,10 @@ import { requireResourceReader } from "../../utils/resource-management";
 defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
-    summary: "Get a ContentType",
+    summary: "Get a content type",
     responses: {
-      200: { description: "ContentType" },
-      404: { description: "ContentType not found" },
+      200: { description: "Content type" },
+      404: { description: "Content type not found" },
     },
   },
 });
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   if (item.kind !== "contentType")
     throw createError({
       statusCode: 404,
-      statusMessage: "ContentType not found",
+      statusMessage: "Content type not found",
     });
   const [type] = await useDatabase()
     .select()
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   if (!type)
     throw createError({
       statusCode: 404,
-      statusMessage: "ContentType not found",
+      statusMessage: "Content type not found",
     });
   return { ...item, ...type };
 });

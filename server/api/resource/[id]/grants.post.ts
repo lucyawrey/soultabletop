@@ -61,12 +61,12 @@ export default defineEventHandler(async (event) => {
   )
     throw createError({
       statusCode: 400,
-      statusMessage: "gameAudience is required for Game grants",
+      statusMessage: "gameAudience is required for game grants",
     });
   if (body.gameId === undefined && body.gameAudience !== undefined)
     throw createError({
       statusCode: 400,
-      statusMessage: "gameAudience only applies to Game grants",
+      statusMessage: "gameAudience only applies to game grants",
     });
   try {
     const [grant] = await useDatabase()

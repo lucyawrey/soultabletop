@@ -12,7 +12,7 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["System"],
-    summary: "Update a System",
+    summary: "Update a system",
     requestBody: {
       required: true,
       content: {
@@ -29,7 +29,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      200: { description: "Updated System" },
+      200: { description: "Updated system" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
     },

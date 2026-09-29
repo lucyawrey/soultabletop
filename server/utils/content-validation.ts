@@ -59,20 +59,20 @@ function validateField(
     case "resourceRef":
       return typeof value === "string" && uuidPattern.test(value)
         ? undefined
-        : `${path} must be a Resource ID`;
+        : `${path} must be a resource ID`;
     case "content":
       if (typeof value === "string") {
         if (field.allow === "local")
           return `${path} must be custom data, not a reference`;
-        if (!uuidPattern.test(value)) return `${path} must be a Content ID`;
+        if (!uuidPattern.test(value)) return `${path} must be a content ID`;
         pending.refs.push({ id: value, contentTypeId: field.contentTypeId, path });
         return undefined;
       }
       if (isRecord(value)) {
         if (field.allow === "ref")
-          return `${path} must reference existing Content`;
+          return `${path} must reference existing content`;
         if (depth >= MAX_CONTENT_DEPTH)
-          return `${path} nests custom Content more than ${MAX_CONTENT_DEPTH} levels deep`;
+          return `${path} nests custom content more than ${MAX_CONTENT_DEPTH} levels deep`;
         pending.locals.push({
           value,
           contentTypeId: field.contentTypeId,
@@ -81,7 +81,7 @@ function validateField(
         });
         return undefined;
       }
-      return `${path} must be a Content ID or an object`;
+      return `${path} must be a content ID or an object`;
     case "array":
       if (!Array.isArray(value)) return `${path} must be an array`;
       for (let index = 0; index < value.length; index += 1) {
@@ -186,7 +186,7 @@ export async function validateContentData(
     for (const local of batch) {
       const localRules = typeRules.get(local.contentTypeId);
       if (!localRules)
-        return `${local.path} uses a ContentType that no longer exists`;
+        return `${local.path} uses a content type that no longer exists`;
       const { [NAME_FIELD]: name, ...rest } = local.value;
       if (typeof name !== "string" || !name.trim())
         return `${local.path}.${NAME_FIELD} is required`;
@@ -203,7 +203,7 @@ export async function validateContentData(
   }
 
   if (pending.refs.length > MAX_CONTENT_REFS)
-    return `Content may reference at most ${MAX_CONTENT_REFS} other Content`;
+    return `Content may reference at most ${MAX_CONTENT_REFS} other content`;
   const refIds = [...new Set(pending.refs.map((ref) => ref.id))];
   if (!refIds.length) return undefined;
 
@@ -217,9 +217,9 @@ export async function validateContentData(
   for (const ref of pending.refs) {
     const row = byId.get(ref.id);
     if (!row || !getResourceAccess(row.resource, context).canRead)
-      return `${ref.path} references Content that doesn't exist or isn't accessible`;
+      return `${ref.path} references content that doesn't exist or isn't accessible`;
     if (row.contentTypeId !== ref.contentTypeId)
-      return `${ref.path} must reference Content of the field's ContentType`;
+      return `${ref.path} must reference content of the field's content type`;
   }
   return undefined;
 }
@@ -269,7 +269,7 @@ export async function assertContentTypeSchema(
     throw createError({
       statusCode: 400,
       statusMessage:
-        "\"name\" is a built-in field of every ContentType and can't be defined in the schema",
+        "\"name\" is a built-in field of every content type and can't be defined in the schema",
     });
   }
 
@@ -289,7 +289,7 @@ export async function assertContentTypeSchema(
     ) {
       throw createError({
         statusCode: 400,
-        statusMessage: `Schema references ContentType ${id}, which doesn't exist or isn't accessible`,
+        statusMessage: `Schema references content type ${id}, which doesn't exist or isn't accessible`,
       });
     }
   }

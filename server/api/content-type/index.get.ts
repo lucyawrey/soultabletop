@@ -10,9 +10,9 @@ import {
 defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
-    summary: "List accessible ContentTypes",
+    summary: "List accessible content types",
     responses: {
-      200: { description: "ContentType list" },
+      200: { description: "Content type list" },
       401: { description: "Authentication required" },
     },
   },

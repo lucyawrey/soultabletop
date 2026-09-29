@@ -53,7 +53,7 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not create Group.");
+    formError.value = extractApiErrorMessage(error, "Could not create group.");
   } finally {
     formBusy.value = false;
   }
@@ -91,7 +91,7 @@ async function submitForm() {
 
       <template #empty>
         <p class="py-6 text-center text-sm text-muted">
-          You aren't in any Groups yet.
+          You aren't in any groups yet.
         </p>
       </template>
     </UTable>
