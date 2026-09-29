@@ -329,6 +329,12 @@ editors, an Edit switch whose changes never save), with the raw markup and CSS i
 Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
 - Left: tabs **Markup** | **CSS** | **Settings** (Name, Slug, Visibility, Default sheet, Default edit mode, Default
   autosave), then a diagnostics list (errors + warnings, click → jump to line).
+- The Markup and CSS tabs have **Upload** and **Download** buttons, and a file dropped on either editor loads into it.
+  Files are read in the browser (`shared/sheet/files.ts`), never stored on the server: markup accepts `.sheet`,
+  `.xml`, `.html`, `.htm`, `.txt`; CSS accepts `.css`, `.txt`; both are capped at the save limits (100,000 / 50,000
+  characters) and rejected if they aren't text. A loaded file replaces the editor's content as an unsaved change (undo
+  restores it), so it's checked and previewed before saving. Download saves the editor's current content as
+  `<slug>.sheet` or `<slug>.css`.
 - Right: live preview via the real `SheetRenderer` with its Edit/Autosave switches (preview edits never save), plus a
   data picker: **Sample data** (generated from the schema: labels as text, 10 for numbers, 2 items per array) or any
   readable content of this content type.
