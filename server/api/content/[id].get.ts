@@ -41,6 +41,7 @@ export default defineEventHandler(async (event) => {
       item: content,
       resource,
       contentCategory: contentType.contentCategory,
+      systemId: contentType.systemId,
     })
     .from(content)
     .innerJoin(resource, eq(resource.id, content.resourceId))
@@ -89,6 +90,7 @@ export default defineEventHandler(async (event) => {
     updatedAt: record.resource.updatedAt,
     ...record.item,
     contentCategory: record.contentCategory,
+    systemId: record.systemId,
     canEdit: access.canEdit,
     sheet,
     schemas,

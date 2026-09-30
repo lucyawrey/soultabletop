@@ -15,9 +15,13 @@ export async function useResourceList<T>(
     // False for lists that need an account anyway (campaigns): one list, no
     // My / Find split, still searchable and paged.
     tabs?: boolean;
+    // Filter by the header's current system (`?systemId=`). For lists tied to
+    // a system; not the Systems list.
+    bySystem?: boolean;
   } = {},
 ) {
   const hasTabs = options.tabs ?? true;
+  const { systemId } = useCurrentSystem();
   const route = useRoute();
   const router = useRouter();
 
@@ -68,6 +72,7 @@ export async function useResourceList<T>(
 
   const query = computed(() => ({
     ...toValue(options.extraQuery),
+    ...(options.bySystem && systemId.value ? { systemId: systemId.value } : {}),
     ...(scope.value ? { scope: scope.value } : {}),
     ...(q.value ? { q: q.value } : {}),
     page: page.value,

@@ -6,6 +6,7 @@ import type { SheetSchemas } from "#shared/sheet/validate";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
 interface SheetDetail {
+  systemId: string;
   id: string;
   readableId: string;
   name: string;
@@ -31,9 +32,11 @@ interface ContentTypeOption {
 const route = useRoute();
 const id = route.params.id as string;
 
+const { followSystem } = useCurrentSystem();
 const { data: sheet } = await useFetch<SheetDetail>(
   `/api/sheet/${id}`,
 );
+followSystem(sheet.value?.systemId);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
 // sign in, since it may be something their account can see.

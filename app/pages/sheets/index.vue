@@ -24,12 +24,14 @@ interface SheetItem {
 }
 
 interface ContentTypeItem {
+  systemId: string;
   id: string;
   name: string;
   canEdit: boolean;
 }
 
-const list = await useResourceList<SheetItem>("/api/sheet", loggedIn);
+const { systemId: currentSystemId } = useCurrentSystem();
+const list = await useResourceList<SheetItem>("/api/sheet", loggedIn, { bySystem: true });
 const { items: sheets, status, refresh } = list;
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
@@ -97,6 +99,7 @@ watch(
 function openCreate(contentTypeId?: string) {
   const selectedType =
     contentTypes.value.find((item) => item.id === contentTypeId) ??
+    contentTypes.value.find((item) => item.systemId === currentSystemId.value) ??
     contentTypes.value[0];
   if (!selectedType) return;
 

@@ -14,7 +14,9 @@ import {
   listResources,
   officialColumn,
   requireListQuery,
+  requireSystemFilter,
   respondWithList,
+  systemIdParameter,
 } from "../../utils/resource-list";
 
 defineRouteMeta({
@@ -24,6 +26,7 @@ defineRouteMeta({
     description: "Without signing in, lists public content only.",
     parameters: [
       ...listQueryParameters,
+      systemIdParameter,
       {
         name: "categories",
         in: "query",
@@ -67,6 +70,7 @@ async function loadReadableTypeIds(user: User | null) {
 export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
   const query = requireListQuery(event);
+  const systemId = requireSystemFilter(event);
   const { contentTypeId, categories } = getQuery(event);
   if (contentTypeId !== undefined) requireUuid(contentTypeId, "contentTypeId");
   let categoryFilter: ContentCategory[] | undefined;
@@ -90,6 +94,7 @@ export default defineEventHandler(async (event) => {
     readableTypeIds
       ? inArray(content.contentTypeId, readableTypeIds)
       : undefined,
+    systemId ? eq(contentType.systemId, systemId) : undefined,
     typeof contentTypeId === "string"
       ? eq(content.contentTypeId, contentTypeId)
       : undefined,

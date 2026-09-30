@@ -23,7 +23,9 @@ interface SystemOption {
 const route = useRoute();
 const id = route.params.id as string;
 
+const { followSystem } = useCurrentSystem();
 const { data: campaign, refresh } = await useFetch<CampaignDetail>(`/api/campaign/${id}`);
+followSystem(campaign.value?.systemId);
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
