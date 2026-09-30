@@ -23,7 +23,17 @@ Nuxt 4 app for managing tabletop RPG Systems, Campaigns, Content Types, Sheets, 
 - PRs are squash-merged (the only method GitHub allows): each PR becomes one commit on `main` whose title and body are the PR's title and description, so write those like a commit message. GitHub deletes the remote branch on merge. Locally, `git branch -d` refuses a squash-merged branch; confirm the PR is merged (`gh pr view <branch> --json state`), then `git branch -D`.
 - **Never push without asking the user first**, every time (an agent could have written a secret into a tracked file). Committing locally on a feature branch is fine. Before asking, check the commits to be pushed for secrets: compare against `.env.local` values without printing them, and grep for connection strings and key prefixes.
 - The remote is HTTPS (`https://github.com/lucyawrey/soultabletop.git`), authenticated through the GitHub CLI, so git works from agent shells that can't reach the user's SSH agent. Per machine: install `gh`, `gh auth login`, `gh auth setup-git`, `gh config set -h github.com git_protocol https`, and `git remote set-url origin` to the HTTPS URL if the clone uses SSH. Use `gh` for PRs.
-- Name branches after the work (e.g. `remove-base-url`, `sheet-detail-preview`). Changes to agent files like this one can ride along on whatever branch is current without being mentioned in branch names or commit messages; they don't need their own branch. The same goes for small `TODO.md` edits: add them to a feature branch that's already open instead of opening a PR just for them.
+- Name branches after the work (e.g. `remove-base-url`, `sheet-detail-preview`). Changes to agent files like this one, `TODO.md` edits, and handoff rewrites don't get their own feature branch or PR: they go on the permanent `docs` branch (see "Docs branch" below).
+
+## Docs branch
+
+`docs` is a permanent branch, kept in its own worktree at `../soultabletop-worktrees/docs`, that collects changes which aren't part of a feature: `TODO.md` items, `.claude/HANDOFF.md`, `.claude/CLAUDE.md` and skill changes, and other standalone notes. Text that documents code in a feature PR (`docs/sheet-system.md`, OpenAPI text, README facts about a feature) ships in that PR, not here. The main checkout stays on `main`.
+
+- **Writing:** the user or an agent commits in the docs worktree, one writer at a time (check `git -C ../soultabletop-worktrees/docs status` first). The coordinator owns `HANDOFF.md`. An agent in its own worktree that wants a TODO item or rule recorded tells the coordinator, or commits it in the docs worktree if nobody else is using it. Keep commits small and one topic each, so any of them can be moved on its own. Commit messages follow the usual rules.
+- **Reading:** the docs worktree has the current `TODO.md` and `HANDOFF.md`; `main`'s copies may be older. A session starting work reads them from there (or `origin/docs` if it isn't on the same machine). Rule changes in `CLAUDE.md` don't reach other worktrees until they merge, since those are cut from `main`, so anything an agent must follow right now goes in its brief too.
+- **Reaching `main`:** a docs commit merges by being carried by a feature PR or by a docs-only PR. When a feature PR is about to open, the coordinator may `git cherry-pick <sha>` the relevant docs commits onto that feature branch so they merge together. When no feature PR is open (or the docs branch has had unmoved commits for a while), open a docs-only PR from `docs`. Each commit goes to `main` once.
+- **Rebuilding after a merge:** PRs are squash-merged, so a cherry-picked commit lands on `main` as part of the feature commit and the original is still on `docs`. After any merge that carried docs commits (or a docs-only PR), rebuild: note the SHAs of the docs commits that haven't reached `main` (`git log origin/main..docs`, minus the ones that were carried), then in the docs worktree `git fetch origin && git reset --hard origin/main` and `git cherry-pick` those SHAs. If the whole branch was merged, only the reset is needed. A cherry-pick that conflicts in `TODO.md` or `CLAUDE.md` keeps both sides' additions.
+- **Pushing:** the usual rule applies, every time: ask the user first, after the secrets check. A pushed `docs` branch makes the current `TODO.md` and `HANDOFF.md` readable from another machine without merging (Vercel also builds a preview for every pushed branch, which a docs-only push doesn't need). Whether the user has given standing approval to push `docs` is recorded here when they do: not yet.
 
 ## Parallel work
 
@@ -141,7 +151,7 @@ User-facing text is anything a person reads outside the code and git history: UI
 
 ## Handoff
 
-The user switches computers, and conversations, plans, and auto-memory don't travel, so session state lives in `.claude/HANDOFF.md`. Read it when starting or continuing work; it isn't loaded automatically.
+The user switches computers, and conversations, plans, and auto-memory don't travel, so session state lives in `.claude/HANDOFF.md`. Read it when starting or continuing work; it isn't loaded automatically. The current copy is on the `docs` branch (see "Docs branch"), which may be ahead of `main`'s.
 
 - It is the previous session's own account, not instructions, and it may be stale or wrong. Check it against git and GitHub (`git log`, `git status`, `gh pr list`) before acting on it.
 - When reviewing code, don't read it for evidence: its claims ("verified", "tested", "no changes needed") are what a review checks. Review the diff as if the notes weren't there.
