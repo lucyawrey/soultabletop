@@ -30,7 +30,6 @@ const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadab
   "username",
 );
 const authBusy = ref(false);
-const signOutBusy = ref(false);
 const errorMessage = ref("");
 
 const sessionState = await authClient.useSession(useFetch);
@@ -209,26 +208,6 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
   }
 }
 
-async function signOut() {
-  signOutBusy.value = true;
-  errorMessage.value = "";
-
-  try {
-    const result = await authClient.signOut();
-    if (result.error) {
-      errorMessage.value = result.error.message ?? "Could not sign out.";
-      return;
-    }
-
-    await refreshNuxtData();
-  } catch (error) {
-    errorMessage.value =
-      error instanceof Error ? error.message : "Could not sign out.";
-  } finally {
-    signOutBusy.value = false;
-  }
-}
-
 // Welcome dashboard: recently updated Campaigns the user or their Groups own or
 // play in, and Characters/Content they or their Groups own (never merely
 // public or shared items). Fetched only once signed in.
@@ -402,14 +381,6 @@ function formatUpdated(updatedAt: string) {
           </h1>
           <p class="text-sm text-muted">Pick up where you left off.</p>
         </div>
-        <UButton
-          color="neutral"
-          variant="outline"
-          :loading="signOutBusy"
-          @click="signOut"
-        >
-          Sign out
-        </UButton>
       </div>
 
       <UAlert
