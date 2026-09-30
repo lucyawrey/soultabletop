@@ -89,6 +89,52 @@ export async function loadResourceAccessContext(
   };
 }
 
+// What one grant gives the user: whether it reaches them (through their own
+// account, a group they're in, or a campaign audience) and whether it lets
+// them edit.
+export function getGrantEffect(
+  grant: ResourceAccessContext["grants"][number],
+  context: ResourceAccessContext,
+): { applies: boolean; canEdit: boolean } {
+  let applies = false;
+  let canEdit = false;
+
+  if (grant.userId === context.userId) {
+    applies = true;
+    canEdit ||= grant.permission === "edit";
+  }
+
+  if (grant.groupId) {
+    const role = context.groupRoles.get(grant.groupId);
+    if (role) {
+      applies = true;
+      canEdit ||= grant.permission === "edit" && role !== "member";
+    }
+  }
+
+  if (grant.campaignId) {
+    const role = context.campaignRoles.get(grant.campaignId);
+    const campaignOwner = context.campaignOwners.get(grant.campaignId);
+    const isCampaignOwner =
+      campaignOwner?.userId === context.userId ||
+      (!!campaignOwner?.groupId &&
+        ["admin", "editor"].includes(
+          context.groupRoles.get(campaignOwner.groupId) ?? "",
+        ));
+    const includedInAudience =
+      isCampaignOwner ||
+      (role !== undefined &&
+        (grant.campaignAudience === "members" ||
+          (grant.campaignAudience === "gms" && role === "gm")));
+    if (includedInAudience) {
+      applies = true;
+      canEdit ||= grant.permission === "edit";
+    }
+  }
+
+  return { applies, canEdit };
+}
+
 export function getResourceAccess(
   resource: Resource,
   context: ResourceAccessContext,
@@ -140,39 +186,9 @@ export function getResourceAccess(
 
   for (const grant of context.grants) {
     if (grant.resourceId !== resource.id) continue;
-
-    if (grant.userId === context.userId) {
-      canRead = true;
-      canEdit ||= grant.permission === "edit";
-    }
-
-    if (grant.groupId) {
-      const role = context.groupRoles.get(grant.groupId);
-      if (role) {
-        canRead = true;
-        canEdit ||= grant.permission === "edit" && role !== "member";
-      }
-    }
-
-    if (grant.campaignId) {
-      const role = context.campaignRoles.get(grant.campaignId);
-      const campaignOwner = context.campaignOwners.get(grant.campaignId);
-      const isCampaignOwner =
-        campaignOwner?.userId === context.userId ||
-        (!!campaignOwner?.groupId &&
-          ["admin", "editor"].includes(
-            context.groupRoles.get(campaignOwner.groupId) ?? "",
-          ));
-      const includedInAudience =
-        isCampaignOwner ||
-        (role !== undefined &&
-          (grant.campaignAudience === "members" ||
-            (grant.campaignAudience === "gms" && role === "gm")));
-      if (includedInAudience) {
-        canRead = true;
-        canEdit ||= grant.permission === "edit";
-      }
-    }
+    const effect = getGrantEffect(grant, context);
+    if (effect.applies) canRead = true;
+    canEdit ||= effect.canEdit;
   }
 
   return { canRead, canEdit, canDelete: false };

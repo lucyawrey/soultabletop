@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import type { TableColumn } from "@nuxt/ui";
 import {
   extractApiErrorMessage,
@@ -10,6 +11,7 @@ const loggedIn = await useLoggedIn();
 
 interface SheetItem {
   id: string;
+  source: ResourceSource;
   readableId: string;
   name: string;
   updatedAt: string;
@@ -27,11 +29,8 @@ interface ContentTypeItem {
   canEdit: boolean;
 }
 
-const {
-  data: sheets,
-  status,
-  refresh,
-} = await useLazyFetch<SheetItem[]>("/api/sheet", { default: () => [] });
+const list = await useResourceList<SheetItem>("/api/sheet", loggedIn);
+const { items: sheets, status, refresh } = list;
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
@@ -51,6 +50,7 @@ function contentTypeName(contentTypeId: string) {
 
 const columns: TableColumn<SheetItem>[] = [
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Content Type" },
@@ -214,7 +214,8 @@ async function remove() {
       Create a content type before adding sheets.
     </p>
 
-    <UTable :data="sheets" :columns="columns" :loading="status === 'pending'">
+    <ResourceList :list="list" noun="Sheets">
+<UTable :data="sheets" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/sheets/${row.original.id}`"
@@ -239,6 +240,10 @@ async function remove() {
         <UBadge v-if="row.original.isDefault" variant="subtle">
           Default
         </UBadge>
+      </template>
+
+      <template #source-cell="{ row }">
+        <SourceBadge :source="row.original.source" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -278,9 +283,10 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No sheets yet.</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('sheets') }}</p>
       </template>
     </UTable>
+    </ResourceList>
 
     <UModal
       v-model:open="isFormOpen"
