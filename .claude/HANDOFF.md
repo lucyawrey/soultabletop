@@ -4,7 +4,7 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-09-30
 
-- **State:** `main` has logged-out viewing (#17), the `h3` declaration and `/tmp/` ignore (#18), the profile page (#19), the Sheets agent skill (#20), and the `docs/sheet-system.md` corrections (#21). Not confirmed in a browser by an agent: the profile page's Firefox autofill behavior, and the logged-out-viewing sign-in return and header Sign out checks.
+- **State:** `main` has logged-out viewing (#17), the `h3` declaration and `/tmp/` ignore (#18), the profile page (#19), the Sheets agent skill (#20), and the `docs/sheet-system.md` corrections (#21). The user checked the profile page in a browser, Firefox autofill included. Not confirmed in a browser by an agent: the logged-out-viewing sign-in return and the header Sign out checks.
 - **Parallel work:** no worktrees are open; the first round (profile page, Sheets skill, docs fixes, small chores) is fully merged and cleaned up. The next round should start with Search + My/Find tabs once Opus is available, in windows mode (see "Parallel work" in `CLAUDE.md`, which now describes messaging between sessions; delivery to an idle window is untested).
 - **Next:** search with My/Find tabs → current-system selector → user API keys → the Soul Tabletop Sheets agent skill. The other test-user entries (showing systems, changing content type, printing, onboarding, authoring CLI, official D&D 2024 system) aren't placed in this order yet; the D&D system depends on API keys, the Sheets skill, and the CLI. The "(Important)" marks in `TODO.md` mean important, not next.
 - **Loose ends:**
