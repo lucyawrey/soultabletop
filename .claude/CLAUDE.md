@@ -27,18 +27,22 @@ Nuxt 4 app for managing tabletop RPG Systems, Campaigns, Content Types, Sheets, 
 
 ## Parallel work
 
-When the user asks to work on several features at once ("start parallel work on X and Y"), the session they ask becomes the coordinator and each feature gets its own git worktree and branch. There are two modes; if the user doesn't say which, ask.
+When the user asks to work on several features at once ("start parallel work on X and Y"), the session they ask becomes the coordinator and each feature gets its own git worktree and branch. The user finds many VS Code windows hard to keep track of, so **subagent mode is the default** and the user doesn't need to say so; asking for parallel work is the request to spawn the agents. There are two modes:
 
-- **Windows mode** (the user steers each feature): every worktree opens in its own VS Code window and the user starts a Claude session there.
-- **Subagent mode** (hands-off, for small well-defined tasks): the coordinator runs one background subagent per worktree and relays their reports. The user asking for this mode is the request to spawn agents.
+- **Subagent mode** (the default): the coordinator runs one background subagent per worktree, relays their reports, and keeps the user in one window (see "Showing files" and "Questions from subagents" below).
+- **Windows mode** (only where the user wants to steer a feature themselves, for example a large one with many design decisions): the worktree opens in its own VS Code window and the user starts a Claude session there. **At most one such extra window is open at a time**, however many features run: every other feature runs as a subagent, even if that means all the parallelism is subagents. If the user wants a second window, finish or close the first one first.
 
-Setup, the same for both modes, run by the coordinator from the main checkout:
+Setup, the same for both modes, run by the coordinator from the main checkout. Many agents cost a lot and can hit session limits: use Sonnet for small well-specified tasks and Opus where design judgment or access-control review matters, and run one review round per PR unless a fix changes access rules.
 
 1. Pick a branch name per feature (see "Git workflow"). `git fetch origin`, then for each: `git worktree add ../soultabletop-worktrees/<branch> -b <branch> origin/main`. All worktrees live in that one container folder beside the repo, not inside it, so lint, format, and typecheck in one checkout never crawl another.
 2. Copy the gitignored local files into each worktree: `cp .env.local ../soultabletop-worktrees/<branch>/` (copy, never move), plus `.vercel/` and `.claude/settings.local.json` if they exist.
 3. Run `pnpm install` in each worktree (fast; pnpm links from its store, and `postinstall` runs `nuxt prepare`).
 4. Write a brief per feature: the goal, the relevant `TODO.md` entry, files likely involved, the worktree path and branch, and the rules below.
-5. Windows mode: write each brief to `../soultabletop-worktrees/briefs/<branch>.md` (outside every repo, so it can't be committed), open each worktree with `code -n <path>` (if `code` isn't on the PATH, give the user the paths), and give the user one short line per window to paste into its Claude panel: "Read <absolute path to the brief> and follow it." Long pasted briefs are slow and unreliable; the file is the brief. Put the coordinator's session name (the "This session is …" line from `ListAgents`) at the top of each brief. Subagent mode: start one background subagent per feature with its brief, telling it to work only inside its worktree's absolute path; the windows can still be opened so the user can read the diffs.
+5. Subagent mode: start one background subagent per feature with its brief, telling it to work only inside its worktree's absolute path. Do not open a window for it. Windows mode (at most one window open at a time): write the brief to `../soultabletop-worktrees/briefs/<branch>.md` (outside every repo, so it can't be committed), open the worktree with `code -n <path>` (if `code` isn't on the PATH, give the user the path), and give the user one short line to paste into its Claude panel: "Read <absolute path to the brief> and follow it." Long pasted briefs are slow and unreliable; the file is the brief. Put the coordinator's session name (the "This session is …" line from `ListAgents`) at the top of the brief.
+
+**Showing files.** The user works in the main VS Code window (the one with `/Users/lucy/Developer/games/soultabletop` open), so whenever a file in another worktree matters to them (a new or heavily changed component, a migration, the diff of a decision, a brief, a report), open it there instead of pointing at a path: `code /Users/lucy/Developer/games/soultabletop <absolute path of the file>`, and check that it landed in the main window (fall back to `code -r <file>`, which reuses the last active window). Say what you opened and why. Don't open a pile of files; the few that answer "what should I look at".
+
+**Questions from subagents.** A subagent can't ask the user anything, and guessing on a decision that is the user's to make is worse than waiting. The brief tells it to stop at such a decision, finish what doesn't depend on it, commit, and put the question in its final report (the question, the options, its recommendation). The coordinator asks the user with AskUserQuestion, recommended option first, and resumes that subagent with `SendMessage` and the answer. Bubble up every such question, and anything in a report the user would want to decide (a design choice made because the brief was silent, a scope cut, a finding declined), instead of burying it in a summary.
 
 Rules for every feature session or subagent (include them in the brief):
 
@@ -46,9 +50,10 @@ Rules for every feature session or subagent (include them in the brief):
 - Start your own dev server when you need one and use the port Nuxt gives it; other worktrees' servers are not yours to stop.
 - All worktrees share one database. Only one parallel branch at a time may change the schema or run `pnpm db:migrate`, unless its `.env.local` points `DATABASE_URL` at its own Neon branch. The coordinator decides which when planning; schema-changing PRs land first.
 - Don't edit `.claude/HANDOFF.md`: the coordinator owns it and lists the active worktrees, branches, and PRs there. Put your status in your PR description or final report. In `TODO.md` and this file, touch only the lines for your own feature.
-- Pushing still needs the user's approval each time. A feature session asks the user itself. A subagent can't: it commits locally and reports, and the coordinator does the secrets check, asks the user, then pushes and opens the PR.
+- Pushing still needs the user's approval each time. A feature session in a window asks the user itself. A subagent can't: it commits locally and reports, and the coordinator does the secrets check, asks the user, then pushes and opens the PR.
+- A subagent stops and reports at a decision that is the user's to make (see "Questions from subagents"), rather than picking an answer.
 
-Windows-mode sessions talk to the coordinator with `ListAgents` and `SendMessage` (peer sessions on the same machine), not through the user pasting text:
+The window session (windows mode) talks to the coordinator with `ListAgents` and `SendMessage` (peer sessions on the same machine), not through the user pasting text:
 
 - **Handshake:** a window session's first action is to call `ListAgents` to learn its own name, then message the coordinator with that name and its branch ("ready: <name>, branch <branch>"). Names are the folder name plus a random suffix, and a restarted window or a second session in the same folder gets another one, so the branch in the message is what identifies the feature. The coordinator records the name-to-branch map in the handoff, and sends a ping first time to confirm delivery works before relying on it (an idle session may not be woken by a message; if so, fall back to pasting).
 - **Window to coordinator:** the PR link once opened, when done or blocked, and questions only the coordinator can answer (for example schema ownership). Status goes in messages and the PR description, never in `HANDOFF.md`.
@@ -65,9 +70,9 @@ When a PR merges, update every other open branch in its own worktree: `git fetch
 Reviewing a parallel PR needs a session with a clean context: never the session that wrote the code, and in subagent mode not the coordinator either, since it has read the author's report.
 
 - Give the reviewer the PR number and what the feature is meant to do, not the author's brief, report, or "verified" claims (the same rule as for the handoff notes).
-- Windows mode: once the author session has stopped editing, the user starts a new Claude conversation in that feature's window and runs `/code-review`. Subagent mode: the coordinator starts a fresh reviewer subagent.
+- The coordinator starts a fresh reviewer subagent, in both modes. Don't ask the user to open another conversation or window for a review.
 - If the author is still working, or the review needs the app running at the PR's commit, use a detached review worktree (a branch can't be checked out twice): `git worktree add --detach ../soultabletop-worktrees/review-<branch> origin/<branch>`, set up like the others, and removed when the review is done.
-- The reviewer reports findings and doesn't fix them; the author session fixes them, since it has the feature's context.
+- The reviewer reports findings and doesn't fix them; the author (the window session, or the author subagent, resumed with `SendMessage`) fixes them, since it has the feature's context.
 
 The user merges PRs themselves. When an agent has fully signed off on a PR (reviewer findings fixed or explicitly declined, checks passing, nothing left owed), the coordinator tells the user it's ready to check and merge, with a table row per PR giving its PR link and the branch's Vercel preview URL: `https://soultabletop-git-<branch>-lucyawreys-projects.vercel.app` (also in the Vercel bot's comment on the PR). Preview deployments share the one database, so what the user tries there is real data; say so if the branch changes behavior that writes.
 
