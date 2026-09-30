@@ -26,6 +26,8 @@ describe("scopeSheetSelector", () => {
     [".dark.x", `${scope} .dark.x`],
     ["*", `${scope} *`],
     [".sheet-section:hover", `${scope} .sheet-section:hover`],
+    [".sheet-number .sheet-field-label", `${scope} .sheet-number .sheet-field-label`],
+    [".sheet-field-value", `${scope} .sheet-field-value`],
   ])("%s -> %s", (selector, expected) => {
     expect(scopeSheetSelector(selector, id)).toBe(expected);
   });

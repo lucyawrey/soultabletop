@@ -30,6 +30,8 @@ Every tag's root element has `sheet-<tag>` in lowercase: `sheet-sheet`, `sheet-s
 `sheet-invalid` (placeholder for a broken tag, shown to editors only), and `sheet-root` on the outermost element.
 Each `Column` cell has `sheet-column`. The `class` attribute adds your own classes on the same element.
 
+Inside every field tag (`Text`, `Number`, `Value`, `Column` cells, ...) two more hooks are fixed: `sheet-field-label` (the visible label above the value, or under it for `Number variant="stat"`; absent with `hideLabel` and in `Column` cells) and `sheet-field-value` (a wrapper around the value or input). Use them instead of `div:first-child` or Nuxt UI/Tailwind classes, e.g. `.sheet-number .sheet-field-label { text-transform: uppercase; }`. Hint text has no hook.
+
 Inner parts of Nuxt UI components have no stable hooks: style what the hooks and `class` attributes reach, use
 variables (`--ui-*`), and avoid selectors that depend on Nuxt UI's internal markup.
 

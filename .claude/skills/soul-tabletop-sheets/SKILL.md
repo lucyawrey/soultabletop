@@ -48,11 +48,11 @@ Read these when in doubt; this skill is a summary and the code wins if they disa
 The full list of attributes and children is in `references/tags.md` (verified against the registry). Summary:
 
 - Layout: `Sheet`, `Section` (card; `title`, `description`, `icon`, `span`, `collapsible`, `collapsed`), `Grid` (`cols` 1-12, `gap`), `Stack` (`direction`, `gap`, `align`, `wrap`), `Tabs` (only `Tab` children) and `Tab` (`label` required), `Divider`, `Heading` (`level` 1-4), `Note`, `Callout`, `Badge`, `Collapsible` (`title` required).
-- Fields (all need `field`; optional `label`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (`options` required), `Tags`, `Tracker` (`max` required), `Ref`, `Value` (never editable), `Markdown`, `Image`.
+- Fields (all need `field`; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (`options` required), `Tags`, `Tracker` (`max` required), `Ref`, `Value` (never editable), `Markdown`, `Image`.
 - Repeaters: `List` (repeats its children per array item), `Table` (only `Column` and `RowDetails` children).
 - Every tag also takes `class`, `live`, `locked`, `display`.
 
-Rendering notes: `Number variant="stat"` shows a big number with its label small. `Value format="signed"` shows `+2` for positives. `Tracker style="pips"` shows boxes instead of a bar. `Ref` shows a link to the referenced resource or Content.
+Rendering notes: `Number variant="stat"` shows a big number with its label small. `format="signed"` (on `Number` and `Value`) shows `+2` for positives; an editable `Number` input shows the sign too, while the saved value stays a plain number. `Tracker style="pips"` shows boxes instead of a bar. `Ref` shows a link to the referenced resource or Content.
 
 ## Field paths
 
@@ -65,7 +65,7 @@ Rendering notes: `Number variant="stat"` shows a big number with its label small
 - `scalar` fields bind `Field`, `Value`, `Column` only.
 - Which tag binds which field type: `Text`, `Select`, `Markdown`, `Image` bind string; `Number`, `Tracker` bind number; `Checkbox`, `Toggle` bind boolean; `Tags` binds an array of strings; `Ref` binds resourceLink and content; `Value` binds anything; `Field` binds string, number, boolean, scalar, object, resourceLink, content, and arrays of strings; `Column` binds string, number, boolean, scalar, resourceLink, content.
 - Unknown paths: error when the content type has a strict schema, warning when not (`hasStrictSchema`). `{path}` follows the same rule.
-- Labels: `label` attribute, else the schema field's `label`, else the humanized name (`hitPoints` becomes "Hit Points"). `hint` falls back to the schema description. `label=""` does NOT hide the label (it falls back to the schema label); there is no way to hide one yet (see TODO.md).
+- Labels: `label` attribute, else the schema field's `label`, else the humanized name (`hitPoints` becomes "Hit Points"). `hint` falls back to the schema description. `label=""` does NOT hide the label (it falls back to the schema label); add `hideLabel` (on any field tag or `Column`) to hide it. A hidden label still names the input for screen readers.
 
 ## `live`, `locked`, `display`
 
@@ -81,7 +81,7 @@ Boolean (`live`, `locked`) or enum (`display`) attributes on any tag; on layout 
 Details and tables are in `references/css.md`. Essentials:
 
 - Every selector is scoped to the Sheet automatically: write `.sheet-section { ... }`, never worry about affecting the app.
-- Hook classes: every tag's root element has `sheet-<tag>` in lowercase (`sheet-section`, `sheet-grid`, `sheet-number`, `sheet-text`, `sheet-tabs`, `sheet-tab`, ...); List items also have `sheet-list-item`; plain text paragraphs have `sheet-text`; broken tags `sheet-invalid`. Add your own with the `class` attribute (names: lowercase letters, digits, hyphens, starting with a letter).
+- Hook classes: every tag's root element has `sheet-<tag>` in lowercase (`sheet-section`, `sheet-grid`, `sheet-number`, `sheet-text`, `sheet-tabs`, `sheet-tab`, ...); List items also have `sheet-list-item`; plain text paragraphs have `sheet-text`; inside field tags, `sheet-field-label` is the visible label and `sheet-field-value` the value or input (see references/css.md); broken tags `sheet-invalid`. Add your own with the `class` attribute (names: lowercase letters, digits, hyphens, starting with a letter).
 - `:root`, `html`, and `body` mean the Sheet's own root element (only at the start of a selector), so `:root { --accent: teal }` defines variables for the Sheet. A leading `.dark` targets dark mode: `.dark .sheet-section { ... }`.
 - Use Nuxt UI tokens so the Sheet follows the theme: `var(--ui-primary)`, `--ui-text`, `--ui-text-muted`, `--ui-text-highlighted`, `--ui-bg`, `--ui-bg-elevated`, `--ui-border`, `--ui-radius`.
 - Fonts: only these load, by name in `font-family`: Cinzel, Uncial Antiqua, IM Fell English, Crimson Pro, Special Elite, Orbitron (plus generic families). Another name is a warning: it shows only if the viewer has it installed. There is no `@font-face`.
@@ -111,7 +111,7 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 ## Known limits
 
 - No formulas or computed values yet: ability modifiers, bonuses, and DCs must be stored fields. Do not write expressions inside `{...}`.
-- Dice buttons, hiding a field's label, choice fields in schemas, and iterating a struct's entries in a `List`/`Table` are all planned in TODO.md, not available.
+- Dice buttons, choice fields in schemas, and iterating a struct's entries in a `List`/`Table` are all planned in TODO.md, not available.
 
 ## Known doc drift
 
