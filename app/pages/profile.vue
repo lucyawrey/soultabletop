@@ -13,11 +13,15 @@ interface GroupSummary {
   role: "admin" | "editor" | "member" | null;
 }
 
+const nuxtApp = useNuxtApp();
 const session = await useAuthSession();
 const user = computed(() => session.data.value?.user);
 
 // Shared with the header's user menu, so saving here updates it too.
-const { data: profile, refresh } = await useProfile(() => !!user.value);
+const { data: profile, refresh } = await useProfile(() => user.value?.id);
+// The header may have loaded it long before: start the form from fresh values
+// (on a full page load it was just fetched).
+if (import.meta.client && !nuxtApp.isHydrating) await refresh();
 const { data: groups } = await useLazyFetch<GroupSummary[]>("/api/group", {
   default: () => [],
 });

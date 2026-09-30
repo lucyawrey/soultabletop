@@ -6,7 +6,7 @@ import { authClient } from "~/utils/auth-client";
 // in, Profile, and Sign out. The header shows it only when logged in.
 const session = await useAuthSession();
 const user = computed(() => session.data.value?.user);
-const { data: profile } = await useProfile(() => !!user.value);
+const { data: profile } = await useProfile(() => user.value?.id);
 
 const displayName = computed(() => user.value?.name ?? "");
 
@@ -22,8 +22,20 @@ const initials = computed(() => {
   return (fromName || profile.value?.username.charAt(0) || "").toUpperCase();
 });
 
+// UAvatar falls back when its image fires `error`, but on a server-rendered
+// page the image can fail before hydration adds that listener, so the header
+// avatar also checks on mount.
+const iconUrl = computed(() => profile.value?.iconImageUrl ?? undefined);
+const iconFailed = ref(false);
+watch(iconUrl, () => (iconFailed.value = false));
+const triggerAvatar = useTemplateRef<{ $el: HTMLElement }>("triggerAvatar");
+onMounted(() => {
+  const img = triggerAvatar.value?.$el.querySelector("img");
+  if (img?.complete && img.naturalWidth === 0) iconFailed.value = true;
+});
+
 const avatar = computed(() => ({
-  src: profile.value?.iconImageUrl ?? undefined,
+  src: iconFailed.value ? undefined : iconUrl.value,
   alt: displayName.value,
   text: initials.value || undefined,
   // UAvatar prefers an icon over text, so only when there are no initials.
@@ -34,6 +46,7 @@ const toast = useToast();
 const router = useRouter();
 const signOutBusy = ref(false);
 async function signOut() {
+  if (signOutBusy.value) return;
   signOutBusy.value = true;
   try {
     // Leave the page first: if it has unsaved changes and the user cancels
@@ -44,6 +57,10 @@ async function signOut() {
     if (router.currentRoute.value.path !== "/") return;
     const result = await authClient.signOut();
     if (result.error) throw new Error(result.error.message);
+    // Mark the session ended now: its own refetch is still in flight, and the
+    // refresh below would otherwise reload data (profile, dashboard) as the
+    // signed-in user without the cookie.
+    session.data.value = null;
     // Reload what the home page fetched, now as a logged-out visitor.
     await refreshNuxtData();
   } catch (error) {
@@ -60,7 +77,14 @@ async function signOut() {
 const items = computed<DropdownMenuItem[][]>(() => [
   [{ type: "label", slot: "account" as const }],
   [{ label: "Profile", icon: "i-lucide-user", to: "/profile" }],
-  [{ label: "Sign out", icon: "i-lucide-log-out", onSelect: signOut }],
+  [
+    {
+      label: "Sign out",
+      icon: "i-lucide-log-out",
+      disabled: signOutBusy.value,
+      onSelect: signOut,
+    },
+  ],
 ]);
 </script>
 
@@ -83,17 +107,22 @@ const items = computed<DropdownMenuItem[][]>(() => [
         name="i-lucide-loader-circle"
         class="size-8 animate-spin p-1.5"
       />
-      <UAvatar v-else v-bind="avatar" size="md" />
+      <UAvatar v-else ref="triggerAvatar" v-bind="avatar" size="md" />
     </UButton>
 
     <template #account>
       <div class="flex min-w-0 items-center gap-3 py-1">
-        <UAvatar v-bind="avatar" size="lg" />
+        <!-- alt="": the name is right beside it. -->
+        <UAvatar v-bind="avatar" alt="" size="lg" />
         <div class="min-w-0 text-sm font-normal">
-          <p class="truncate font-semibold text-highlighted">
+          <p class="truncate font-semibold text-highlighted" :title="displayName">
             {{ displayName }}
           </p>
-          <p v-if="profile?.username" class="truncate text-muted">
+          <p
+            v-if="profile?.username"
+            class="truncate text-muted"
+            :title="`@${profile.username}`"
+          >
             @{{ profile.username }}
           </p>
           <p class="truncate text-muted" :title="user?.email">
