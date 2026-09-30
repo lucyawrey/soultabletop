@@ -6,6 +6,7 @@ definePageMeta({ middleware: "auth" });
 
 interface CampaignItem {
   id: string;
+  official: boolean;
   readableId: string;
   name: string;
   systemId: string;
@@ -21,11 +22,8 @@ interface SystemOption {
   name: string;
 }
 
-const {
-  data: campaigns,
-  status,
-  refresh,
-} = await useLazyFetch<CampaignItem[]>("/api/campaign", { default: () => [] });
+const list = await useResourceList<CampaignItem>("/api/campaign", { tabs: false });
+const { items: campaigns, status, refresh } = list;
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
@@ -43,6 +41,7 @@ function systemName(systemId: string) {
 
 const columns: TableColumn<CampaignItem>[] = [
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "official", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
@@ -184,7 +183,8 @@ async function remove() {
       Create a system before adding campaigns.
     </p>
 
-    <UTable :data="campaigns" :columns="columns" :loading="status === 'pending'">
+    <ResourceList :list="list" noun="Campaigns">
+<UTable :data="campaigns" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/campaigns/${row.original.id}`"
@@ -203,6 +203,10 @@ async function remove() {
           {{ systemName(row.original.systemId) }}
         </NuxtLink>
         <template v-else>Unknown</template>
+      </template>
+
+      <template #official-cell="{ row }">
+        <SourceBadge :official="row.original.official" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -242,9 +246,10 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No campaigns yet.</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.search.value ? 'Nothing matches your search.' : 'No campaigns yet.' }}</p>
       </template>
     </UTable>
+    </ResourceList>
 
     <UModal
       v-model:open="isFormOpen"

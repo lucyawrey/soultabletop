@@ -15,6 +15,7 @@ const loggedIn = await useLoggedIn();
 
 interface ContentTypeItem {
   id: string;
+  official: boolean;
   readableId: string;
   name: string;
   systemId: string;
@@ -36,13 +37,8 @@ const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
   ([value, label]) => ({ label, value }),
 );
 
-const {
-  data: contentTypes,
-  status,
-  refresh,
-} = await useLazyFetch<ContentTypeItem[]>("/api/content-type", {
-  default: () => [],
-});
+const list = await useResourceList<ContentTypeItem>("/api/content-type");
+const { items: contentTypes, status, refresh } = list;
 
 const { data: systems } = await useLazyFetch<SystemItem[]>("/api/system", {
   default: () => [],
@@ -58,6 +54,7 @@ function systemName(systemId: string) {
 
 const columns: TableColumn<ContentTypeItem>[] = [
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "official", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "systemId", header: "System" },
@@ -241,7 +238,8 @@ async function remove() {
       Create a system before adding content types.
     </p>
 
-    <UTable
+    <ResourceList :list="list" noun="Types">
+<UTable
       :data="contentTypes"
       :columns="columns"
       :loading="status === 'pending'"
@@ -270,6 +268,10 @@ async function remove() {
 
       <template #hasStrictSchema-cell="{ row }">
         {{ row.original.hasStrictSchema ? "Yes" : "No" }}
+      </template>
+
+      <template #official-cell="{ row }">
+        <SourceBadge :official="row.original.official" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -310,11 +312,10 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">
-          No content types yet.
-        </p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.search.value ? 'Nothing matches your search.' : 'No content types yet.' }}</p>
       </template>
     </UTable>
+    </ResourceList>
 
     <UModal
       v-model:open="isFormOpen"

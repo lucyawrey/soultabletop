@@ -7,6 +7,7 @@ const loggedIn = await useLoggedIn();
 
 interface SystemItem {
   id: string;
+  official: boolean;
   readableId: string;
   name: string;
   isPubliclyReadable: boolean;
@@ -17,14 +18,12 @@ interface SystemItem {
   canChangeOwner: boolean;
 }
 
-const {
-  data: systems,
-  status,
-  refresh,
-} = await useLazyFetch<SystemItem[]>("/api/system", { default: () => [] });
+const list = await useResourceList<SystemItem>("/api/system");
+const { items: systems, status, refresh } = list;
 
 const columns: TableColumn<SystemItem>[] = [
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "official", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   {
@@ -154,7 +153,8 @@ async function remove() {
       </UButton>
     </div>
 
-    <UTable
+    <ResourceList :list="list" noun="Systems">
+<UTable
       :data="systems"
       :columns="columns"
       :loading="status === 'pending'"
@@ -166,6 +166,10 @@ async function remove() {
         >
           {{ row.original.name }}
         </NuxtLink>
+      </template>
+
+      <template #official-cell="{ row }">
+        <SourceBadge :official="row.original.official" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -205,9 +209,10 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No systems yet.</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.search.value ? 'Nothing matches your search.' : 'No systems yet.' }}</p>
       </template>
     </UTable>
+    </ResourceList>
 
     <UModal
       v-model:open="isFormOpen"
