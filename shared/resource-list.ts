@@ -65,16 +65,22 @@ export function escapeLike(text: string) {
   return text.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
+// A page past the end becomes the last page that exists (page 1 when empty).
+export function clampPage(page: number, total: number, pageSize = LIST_PAGE_SIZE) {
+  return Math.min(page, Math.max(1, Math.ceil(total / pageSize)));
+}
+
 export function paginate<T>(
   items: T[],
   page: number,
   pageSize = LIST_PAGE_SIZE,
 ): Paginated<T> {
-  const start = (page - 1) * pageSize;
+  const current = clampPage(page, items.length, pageSize);
+  const start = (current - 1) * pageSize;
   return {
     items: items.slice(start, start + pageSize),
     total: items.length,
-    page,
+    page: current,
     pageSize,
   };
 }

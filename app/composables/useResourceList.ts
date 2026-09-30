@@ -78,21 +78,25 @@ export async function useResourceList<T>(
     default: () => ({ items: [], total: 0, page: 1, pageSize: 25 }),
   });
   const { data, status, refresh } = request;
-  // A page past the end (an old link, or the last row of the last page was
-  // deleted) goes back to the last page that exists.
+  // The endpoint returns the last page for a page past the end (an old link,
+  // or the last row of the last page was deleted); put that page in the URL.
+  // Client only: the server can't change the address during render.
   watch(
-    () => [request.status.value, data.value] as const,
-    ([state, result]) => {
-      if (state !== "success" || page.value === 1 || result.items.length) return;
-      const last = Math.max(1, Math.ceil(result.total / result.pageSize));
-      if (last < page.value) setQuery({ page: last });
+    () => [status.value, data.value.page] as const,
+    ([state, current]) => {
+      if (import.meta.client && state === "success" && current !== page.value)
+        setQuery({ page: current });
     },
+    { immediate: true },
   );
   await request;
 
   // What an empty list says: what's missing, for what was searched or shown.
-  function emptyMessage(plural: string) {
-    if (q.value) return `No ${plural} match your search.`;
+  // `uncountable` is for nouns like "content" that take "matches".
+  function emptyMessage(plural: string, uncountable = false) {
+    if (data.value.total > 0) return "No results on this page.";
+    if (q.value)
+      return `No ${plural} ${uncountable ? "matches" : "match"} your search.`;
     return scope.value === "public" ? `No public ${plural} yet.` : `No ${plural} yet.`;
   }
 
@@ -103,7 +107,7 @@ export async function useResourceList<T>(
     query: q,
     emptyMessage,
     search,
-    page,
+    page: computed(() => data.value.page),
     items: computed(() => data.value.items),
     total: computed(() => data.value.total),
     pageSize: computed(() => data.value.pageSize),

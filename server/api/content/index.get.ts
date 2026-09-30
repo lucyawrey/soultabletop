@@ -1,10 +1,11 @@
+import type { User } from "better-auth";
 import { createError, getQuery } from "h3";
 import { and, count, eq, inArray } from "drizzle-orm";
 import { content, contentType, group, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { loadResourceAccessContext } from "../../utils/resource-access";
-import { readableResourceIds } from "../../utils/resource-list-filter";
+import { readableResourceIds, requiresReadableType } from "../../utils/resource-list-filter";
 import { requireUuid } from "../../utils/resource-management";
 import { CONTENT_CATEGORIES, type ContentCategory } from "../../../shared/content-categories";
 import {
@@ -45,6 +46,24 @@ defineRouteMeta({
   },
 });
 
+async function loadReadableTypeIds(user: User | null) {
+  const database = useDatabase();
+  const typeResources = await database
+    .select({ resource })
+    .from(contentType)
+    .innerJoin(resource, eq(resource.id, contentType.resourceId));
+  const context = user
+    ? await loadResourceAccessContext(
+        user,
+        typeResources.map((row) => row.resource.id),
+      )
+    : null;
+  return readableResourceIds(
+    typeResources.map((row) => row.resource),
+    context,
+  );
+}
+
 export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
   const query = requireListQuery(event);
@@ -59,26 +78,18 @@ export default defineEventHandler(async (event) => {
         statusMessage: `categories must be a comma-separated list of: ${CONTENT_CATEGORIES.join(", ")}`,
       });
   }
-  // Content is listed only when its content type is readable too (sheets and
-  // schemas come from the type); the set is small, so it's resolved up front
-  // and the list query, totals, and pages all use it.
+  // The Characters and Content lists (which send `categories`) show content
+  // only when its content type is readable too, since sheets and schemas come
+  // from the type. The set is resolved up front so totals and pages stay
+  // right. Pickers and dropdowns (no `categories`) get everything readable.
   const database = useDatabase();
-  const typeResources = await database
-    .select({ resource })
-    .from(contentType)
-    .innerJoin(resource, eq(resource.id, contentType.resourceId));
-  const typeContext = user
-    ? await loadResourceAccessContext(
-        user,
-        typeResources.map((row) => row.resource.id),
-      )
-    : null;
-  const readableTypeIds = readableResourceIds(
-    typeResources.map((row) => row.resource),
-    typeContext,
-  );
+  const readableTypeIds = requiresReadableType(categories)
+    ? await loadReadableTypeIds(user)
+    : undefined;
   const filter = and(
-    inArray(content.contentTypeId, readableTypeIds),
+    readableTypeIds
+      ? inArray(content.contentTypeId, readableTypeIds)
+      : undefined,
     typeof contentTypeId === "string"
       ? eq(content.contentTypeId, contentTypeId)
       : undefined,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  clampPage,
   escapeLike,
   MAX_SEARCH_LENGTH,
   paginate,
@@ -80,7 +81,22 @@ describe("paginate", () => {
     expect(result).toMatchObject({ total: 60, page: 2, pageSize: 25 });
   });
 
-  it("returns no items past the last page", () => {
-    expect(paginate(items, 9).items).toEqual([]);
+  it("returns the last page when asked for one past the end", () => {
+    const result = paginate(items, 9);
+    expect(result.page).toBe(3);
+    expect(result.items).toEqual(items.slice(50));
+  });
+
+  it("stays on page 1 when empty", () => {
+    expect(paginate([], 4)).toMatchObject({ items: [], total: 0, page: 1 });
+  });
+});
+
+describe("clampPage", () => {
+  it("clamps to the last page that exists", () => {
+    expect(clampPage(99, 60)).toBe(3);
+    expect(clampPage(3, 60)).toBe(3);
+    expect(clampPage(2, 25)).toBe(1);
+    expect(clampPage(5, 0)).toBe(1);
   });
 });

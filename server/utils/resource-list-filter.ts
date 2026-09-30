@@ -36,3 +36,9 @@ export function readableResourceIds(
     .filter((item) => getResourceAccessOrPublic(item, context).canRead)
     .map((item) => item.id);
 }
+
+// `/api/content` restricts to readable content types only for the Characters
+// and Content lists, which send `categories`; pickers and dropdowns don't.
+export function requiresReadableType(categories: unknown) {
+  return categories !== undefined;
+}

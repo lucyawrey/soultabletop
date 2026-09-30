@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Resource } from "../database/schema";
 import { getResourceAccessOrPublic, type ResourceAccessContext } from "./resource-access";
-import { isListed, readableResourceIds } from "./resource-list-filter";
+import { isListed, readableResourceIds, requiresReadableType } from "./resource-list-filter";
 
 const PARTY = "00000000-0000-4000-8000-00000000000b";
 
@@ -110,5 +110,53 @@ describe("readableResourceIds", () => {
     const mine = resource({ id: "c", ownerUserId: "me" });
     expect(readableResourceIds([open, closed, mine], context())).toEqual(["a", "c"]);
     expect(readableResourceIds([open, closed, mine], null)).toEqual(["a"]);
+  });
+});
+
+describe("requiresReadableType", () => {
+  it("applies only to the lists that send categories", () => {
+    expect(requiresReadableType("playerCharacter")).toBe(true);
+    expect(requiresReadableType(undefined)).toBe(false);
+  });
+});
+
+describe("site admins and hidden resources", () => {
+  const admin = context({ isSiteAdmin: true });
+
+  it("lists everything they can read in unscoped and public lists", () => {
+    const item = resource({ isPubliclyReadable: false });
+    expect(listed(item, admin, undefined)).toBe(true);
+  });
+
+  it("keeps other people's resources out of their Mine list", () => {
+    expect(listed(resource({ isPubliclyReadable: true }), admin, "mine")).toBe(false);
+    expect(listed(resource({ ownerUserId: "me" }), admin, "mine")).toBe(true);
+  });
+
+  it("readableResourceIds includes hidden resources for a site admin only", () => {
+    const hidden = resource({ id: "h", isPubliclyReadable: true, isAdminHidden: true });
+    expect(readableResourceIds([hidden], admin)).toEqual(["h"]);
+    expect(readableResourceIds([hidden], context())).toEqual([]);
+    expect(readableResourceIds([hidden], null)).toEqual([]);
+  });
+});
+
+describe("admin-hidden group-owned resources", () => {
+  const hidden = resource({
+    ownerUserId: null,
+    ownerGroupId: PARTY,
+    isPubliclyReadable: true,
+    isAdminHidden: true,
+  });
+
+  it("stay listed for group members, including in Mine", () => {
+    const member = context({ groupRoles: new Map([[PARTY, "member"]]) });
+    expect(listed(hidden, member, "mine")).toBe(true);
+    expect(readableResourceIds([hidden], member)).toEqual([hidden.id]);
+  });
+
+  it("are dropped for everyone else", () => {
+    expect(listed(hidden, context(), undefined)).toBe(false);
+    expect(listed(hidden, null, "public")).toBe(false);
   });
 });

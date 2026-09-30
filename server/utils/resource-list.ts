@@ -11,9 +11,11 @@ import {
 } from "../database/schema";
 import { useDatabase } from "./database";
 import {
+  clampPage,
   escapeLike,
   LIST_PAGE_SIZE,
   LIST_SCOPES,
+  MAX_PAGE,
   paginate,
   parseListQuery,
   type ListQuery,
@@ -148,17 +150,16 @@ export async function listResources<T extends ListRow>(options: {
   // Public results are exact in SQL, so they page in SQL. Everything else is
   // filtered by the access rules in code, then paged.
   if (query.page && query.scope === "public") {
-    const [total, rows] = await Promise.all([
-      countRows(where),
-      fetchRows({
-        where,
-        limit: LIST_PAGE_SIZE,
-        offset: (query.page - 1) * LIST_PAGE_SIZE,
-      }),
-    ]);
+    const total = await countRows(where);
+    const page = clampPage(query.page, total);
+    const rows = await fetchRows({
+      where,
+      limit: LIST_PAGE_SIZE,
+      offset: (page - 1) * LIST_PAGE_SIZE,
+    });
     return {
       ...(await withAccess(rows)),
-      page: { total, page: query.page, pageSize: LIST_PAGE_SIZE },
+      page: { total, page, pageSize: LIST_PAGE_SIZE },
     };
   }
 
@@ -189,7 +190,7 @@ export const listQueryParameters = [
     in: "query" as const,
     required: false,
     description:
-      "`mine`: owned by you or your groups, or shared with you to edit. `public`: public resources.",
+      "`mine`: owned by you or your groups, shared with you to edit, or a campaign you belong to (only if you can read it). `public`: public resources.",
     schema: { type: "string" as const, enum: [...LIST_SCOPES] },
   },
   {
@@ -197,7 +198,7 @@ export const listQueryParameters = [
     in: "query" as const,
     required: false,
     description:
-      "Returns this page (25 per page) as `{ items, total, page, pageSize }` instead of the full array",
-    schema: { type: "integer" as const, minimum: 1 },
+      "Returns this page (25 per page) as `{ items, total, page, pageSize }` instead of the full array; a page past the end returns the last page",
+    schema: { type: "integer" as const, minimum: 1, maximum: MAX_PAGE },
   },
 ];
