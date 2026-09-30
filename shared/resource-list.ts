@@ -4,6 +4,24 @@
 export const LIST_SCOPES = ["mine", "public"] as const;
 export type ListScope = (typeof LIST_SCOPES)[number];
 
+// Where a listed resource comes from, relative to the viewer.
+export const RESOURCE_SOURCES = [
+  "you",
+  "yourGroups",
+  "shared",
+  "official",
+  "community",
+] as const;
+export type ResourceSource = (typeof RESOURCE_SOURCES)[number];
+
+export const RESOURCE_SOURCE_LABELS: Record<ResourceSource, string> = {
+  you: "You",
+  yourGroups: "Your Groups",
+  shared: "Shared with you",
+  official: "Official",
+  community: "Community",
+};
+
 export const LIST_PAGE_SIZE = 25;
 export const MAX_SEARCH_LENGTH = 100;
 export const MAX_PAGE = 10000;

@@ -41,7 +41,7 @@ defineRouteMeta({
       },
     ],
     responses: {
-      200: { description: "Content list" },
+      200: { description: "Content list. Each row has `source`: you, yourGroups, shared, official, or community" },
     },
   },
 });
@@ -100,6 +100,7 @@ export default defineEventHandler(async (event) => {
   const { rows, page } = await listResources({
     query,
     user,
+    kind: "content",
     where: filter,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
@@ -125,11 +126,11 @@ export default defineEventHandler(async (event) => {
   });
 
   return respondWithList(
-    rows.map(({ item, resource: resourceItem, official, access }) => ({
+    rows.map(({ item, resource: resourceItem, source, access }) => ({
       id: resourceItem.id,
       readableId: resourceItem.readableId,
       isPubliclyReadable: resourceItem.isPubliclyReadable,
-      official,
+      source,
       name: resourceItem.name,
       createdAt: resourceItem.createdAt,
       updatedAt: resourceItem.updatedAt,

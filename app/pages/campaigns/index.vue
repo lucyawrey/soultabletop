@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import { extractApiErrorMessage } from "~/utils/api-error";
 import type { TableColumn } from "@nuxt/ui";
 
@@ -6,7 +7,7 @@ definePageMeta({ middleware: "auth" });
 
 interface CampaignItem {
   id: string;
-  official: boolean;
+  source: ResourceSource;
   readableId: string;
   name: string;
   systemId: string;
@@ -43,7 +44,7 @@ function systemName(systemId: string) {
 
 const columns: TableColumn<CampaignItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "official", header: "Source" },
+  { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
@@ -207,8 +208,8 @@ async function remove() {
         <template v-else>Unknown</template>
       </template>
 
-      <template #official-cell="{ row }">
-        <SourceBadge :official="row.original.official" />
+      <template #source-cell="{ row }">
+        <SourceBadge :source="row.original.source" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">

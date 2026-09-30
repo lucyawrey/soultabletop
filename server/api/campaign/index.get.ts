@@ -18,7 +18,7 @@ defineRouteMeta({
     summary: "List accessible campaigns",
     parameters: [...listQueryParameters],
     responses: {
-      200: { description: "Campaign list" },
+      200: { description: "Campaign list. Each row has `source`: you, yourGroups, shared, official, or community" },
       401: { description: "Authentication required" },
     },
   },
@@ -31,6 +31,7 @@ export default defineEventHandler(async (event) => {
   const { rows, context, page } = await listResources({
     query,
     user,
+    kind: "campaign",
     fetchRows: ({ where, limit, offset }) => {
       const select = database
         .select({ campaign, resource, official: officialColumn })
@@ -52,10 +53,10 @@ export default defineEventHandler(async (event) => {
     },
   });
   return respondWithList(
-    rows.map(({ campaign: item, resource: owner, official, access }) => ({
+    rows.map(({ campaign: item, resource: owner, source, access }) => ({
       ...owner,
       ...item,
-      official,
+      source,
       canEdit: access.canEdit,
       canChangeOwner: !!context && canChangeResourceOwner(owner, user, context),
     })),

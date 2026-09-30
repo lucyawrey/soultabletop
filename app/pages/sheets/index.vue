@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import type { TableColumn } from "@nuxt/ui";
 import {
   extractApiErrorMessage,
@@ -10,7 +11,7 @@ const loggedIn = await useLoggedIn();
 
 interface SheetItem {
   id: string;
-  official: boolean;
+  source: ResourceSource;
   readableId: string;
   name: string;
   updatedAt: string;
@@ -49,7 +50,7 @@ function contentTypeName(contentTypeId: string) {
 
 const columns: TableColumn<SheetItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "official", header: "Source" },
+  { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Content Type" },
@@ -241,8 +242,8 @@ async function remove() {
         </UBadge>
       </template>
 
-      <template #official-cell="{ row }">
-        <SourceBadge :official="row.original.official" />
+      <template #source-cell="{ row }">
+        <SourceBadge :source="row.original.source" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">

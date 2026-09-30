@@ -1,5 +1,5 @@
 import { createError, getQuery, type H3Event } from "h3";
-import { and, asc, desc, eq, exists, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, exists, ilike, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
 import type { User } from "better-auth";
 import {
   campaignMembership,
@@ -19,10 +19,12 @@ import {
   paginate,
   parseListQuery,
   type ListQuery,
+  type ResourceSource,
   type Paginated,
 } from "../../shared/resource-list";
-import { isListed } from "./resource-list-filter";
+import { excludesMineFromFind, getResourceSource, isListed } from "./resource-list-filter";
 import {
+  getResourceAccess,
   getResourceAccessOrPublic,
   loadResourceAccessContext,
   type ResourceAccess,
@@ -102,6 +104,26 @@ export function listCondition(query: ListQuery, user: User | null) {
 
 interface ListRow {
   resource: Resource;
+  official: boolean;
+}
+
+// The IDs of the user's own list ("mine" scope) for a kind of resource, by the
+// same candidate query and `isListed` rule the My tab uses.
+async function loadMineIds(user: User, kind: Resource["kind"]) {
+  const database = useDatabase();
+  const candidates = await database
+    .select()
+    .from(resource)
+    .where(and(eq(resource.kind, kind), listCondition({ q: "", scope: "mine" }, user)));
+  const context = await loadResourceAccessContext(
+    user,
+    candidates.map((item) => item.id),
+  );
+  return candidates
+    .filter((item) =>
+      isListed(item, getResourceAccess(item, context), context, "mine"),
+    )
+    .map((item) => item.id);
 }
 
 // Runs a list query. `fetchRows` selects rows (with `resource` and `official`)
@@ -112,6 +134,8 @@ interface ListRow {
 export async function listResources<T extends ListRow>(options: {
   query: ListQuery;
   user: User | null;
+  // The kind of resource being listed.
+  kind: Resource["kind"];
   where?: SQL;
   fetchRows: (args: {
     where: SQL | undefined;
@@ -120,12 +144,20 @@ export async function listResources<T extends ListRow>(options: {
   }) => Promise<T[]>;
   countRows: (where: SQL | undefined) => Promise<number>;
 }): Promise<{
-  rows: (T & { access: ResourceAccess })[];
+  rows: (T & { access: ResourceAccess; source: ResourceSource })[];
   context: ResourceAccessContext | null;
   page?: Pick<Paginated<never>, "total" | "page" | "pageSize">;
 }> {
   const { query, user, fetchRows, countRows } = options;
-  const where = and(options.where, listCondition(query, user));
+  const mineIds =
+    user && excludesMineFromFind(query, true)
+      ? await loadMineIds(user, options.kind)
+      : [];
+  const where = and(
+    options.where,
+    listCondition(query, user),
+    mineIds.length ? notInArray(resource.id, mineIds) : undefined,
+  );
 
   async function withAccess(rows: T[]) {
     const context = user
@@ -140,6 +172,7 @@ export async function listResources<T extends ListRow>(options: {
         .map((row) => ({
           ...row,
           access: getResourceAccessOrPublic(row.resource, context),
+          source: getResourceSource(row.resource, row.official, context),
         }))
         .filter(({ access, resource: item }) =>
           isListed(item, access, context, query.scope),
@@ -190,7 +223,7 @@ export const listQueryParameters = [
     in: "query" as const,
     required: false,
     description:
-      "`mine`: owned by you or your groups, shared with you to edit, or a campaign you belong to (only if you can read it). `public`: public resources.",
+      "`mine`: owned by you or your groups, shared with you to edit, or a campaign you belong to (only if you can read it). `public`: public resources; when signed in with no search text, it leaves out what `mine` lists.",
     schema: { type: "string" as const, enum: [...LIST_SCOPES] },
   },
   {

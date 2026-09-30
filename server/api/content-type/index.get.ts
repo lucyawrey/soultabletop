@@ -18,7 +18,7 @@ defineRouteMeta({
     summary: "List accessible content types",
     parameters: [...listQueryParameters],
     responses: {
-      200: { description: "Content type list" },
+      200: { description: "Content type list. Each row has `source`: you, yourGroups, shared, official, or community" },
     },
   },
 });
@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
   const { rows, context, page } = await listResources({
     query,
     user,
+    kind: "contentType",
     fetchRows: ({ where, limit, offset }) => {
       const select = database
         .select({ type: contentType, resource, official: officialColumn })
@@ -52,11 +53,11 @@ export default defineEventHandler(async (event) => {
   });
 
   return respondWithList(
-    rows.map(({ type, resource: item, official, access }) => ({
+    rows.map(({ type, resource: item, source, access }) => ({
       id: item.id,
       readableId: item.readableId,
       isPubliclyReadable: item.isPubliclyReadable,
-      official,
+      source,
       name: item.name,
       systemId: type.systemId,
       contentCategory: type.contentCategory,

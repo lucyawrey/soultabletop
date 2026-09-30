@@ -18,7 +18,7 @@ defineRouteMeta({
     summary: "List accessible systems",
     parameters: [...listQueryParameters],
     responses: {
-      200: { description: "System list" },
+      200: { description: "System list. Each row has `source`: you, yourGroups, shared, official, or community" },
     },
   },
 });
@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
   const { rows, context, page } = await listResources({
     query,
     user,
+    kind: "system",
     fetchRows: ({ where, limit, offset }) => {
       const select = database
         .select({ resource, official: officialColumn })
@@ -51,9 +52,9 @@ export default defineEventHandler(async (event) => {
     },
   });
   return respondWithList(
-    rows.map(({ resource: item, official, access }) => ({
+    rows.map(({ resource: item, source, access }) => ({
       ...item,
-      official,
+      source,
       canEdit: access.canEdit,
       canChangeOwner:
         !!user && !!context && canChangeResourceOwner(item, user, context),

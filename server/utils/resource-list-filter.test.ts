@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Resource } from "../database/schema";
 import { getResourceAccessOrPublic, type ResourceAccessContext } from "./resource-access";
-import { isListed, readableResourceIds, requiresReadableType } from "./resource-list-filter";
+import {
+  excludesMineFromFind,
+  getResourceSource,
+  isListed,
+  readableResourceIds,
+  requiresReadableType,
+} from "./resource-list-filter";
 
 const PARTY = "00000000-0000-4000-8000-00000000000b";
 
@@ -158,5 +164,77 @@ describe("admin-hidden group-owned resources", () => {
   it("are dropped for everyone else", () => {
     expect(listed(hidden, context(), undefined)).toBe(false);
     expect(listed(hidden, null, "public")).toBe(false);
+  });
+});
+
+describe("getResourceSource", () => {
+  const grantFor = (item: Resource, overrides: object) =>
+    ({ resourceId: item.id, permission: "read", ...overrides }) as never;
+
+  it("says You for the viewer's own resources, even official ones", () => {
+    expect(getResourceSource(resource({ ownerUserId: "me" }), false, context())).toBe("you");
+  });
+
+  it("says Your Groups for any role, including a system group the viewer is in", () => {
+    const ctx = context({ groupRoles: new Map([[PARTY, "member"]]) });
+    const owned = resource({ ownerUserId: null, ownerGroupId: PARTY });
+    expect(getResourceSource(owned, false, ctx)).toBe("yourGroups");
+    expect(getResourceSource(owned, true, ctx)).toBe("yourGroups");
+  });
+
+  it("says Official for system group resources the viewer isn't part of", () => {
+    const item = resource({ ownerUserId: null, ownerGroupId: PARTY });
+    expect(getResourceSource(item, true, context())).toBe("official");
+    expect(getResourceSource(item, true, null)).toBe("official");
+  });
+
+  it("prefers Official over Shared when a grant lands on an official resource", () => {
+    const item = resource({ ownerUserId: null, ownerGroupId: PARTY });
+    const ctx = context({ grants: [grantFor(item, { userId: "me" })] });
+    expect(getResourceSource(item, true, ctx)).toBe("official");
+  });
+
+  it("says Shared only when a grant reaches the viewer", () => {
+    const item = resource({ isPubliclyReadable: true });
+    const mine = context({ grants: [grantFor(item, { userId: "me" })] });
+    const other = context({ grants: [grantFor(item, { userId: "someone-else" })] });
+    const viaGroup = context({
+      groupRoles: new Map([[PARTY, "member"]]),
+      grants: [grantFor(item, { groupId: PARTY })],
+    });
+    expect(getResourceSource(item, false, mine)).toBe("shared");
+    expect(getResourceSource(item, false, viaGroup)).toBe("shared");
+    expect(getResourceSource(item, false, other)).toBe("community");
+  });
+
+  it("says Shared for a campaign audience grant that includes the viewer", () => {
+    const item = resource({});
+    const grant = grantFor(item, { campaignId: "camp", campaignAudience: "members" });
+    const member = context({ campaignRoles: new Map([["camp", "player"]]), grants: [grant] });
+    expect(getResourceSource(item, false, member)).toBe("shared");
+    expect(getResourceSource(item, false, context({ grants: [grant] }))).toBe("community");
+  });
+
+  it("gives logged-out viewers only Official and Community", () => {
+    expect(getResourceSource(resource({ ownerUserId: "me" }), false, null)).toBe("community");
+    expect(getResourceSource(resource({}), true, null)).toBe("official");
+  });
+});
+
+describe("excludesMineFromFind", () => {
+  const find = { q: "", scope: "public" as const };
+
+  it("excludes My from Find for a signed-in viewer with no search", () => {
+    expect(excludesMineFromFind(find, true)).toBe(true);
+  });
+
+  it("shows everything that matches when searching", () => {
+    expect(excludesMineFromFind({ ...find, q: "dragon" }, true)).toBe(false);
+  });
+
+  it("doesn't apply to logged-out viewers, My, or unscoped lists", () => {
+    expect(excludesMineFromFind(find, false)).toBe(false);
+    expect(excludesMineFromFind({ q: "", scope: "mine" }, true)).toBe(false);
+    expect(excludesMineFromFind({ q: "" }, true)).toBe(false);
   });
 });

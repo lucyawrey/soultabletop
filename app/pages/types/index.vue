@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import type { TableColumn } from "@nuxt/ui";
 import {
   extractApiErrorMessage,
@@ -15,7 +16,7 @@ const loggedIn = await useLoggedIn();
 
 interface ContentTypeItem {
   id: string;
-  official: boolean;
+  source: ResourceSource;
   readableId: string;
   name: string;
   systemId: string;
@@ -54,7 +55,7 @@ function systemName(systemId: string) {
 
 const columns: TableColumn<ContentTypeItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "official", header: "Source" },
+  { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "systemId", header: "System" },
@@ -270,8 +271,8 @@ async function remove() {
         {{ row.original.hasStrictSchema ? "Yes" : "No" }}
       </template>
 
-      <template #official-cell="{ row }">
-        <SourceBadge :official="row.original.official" />
+      <template #source-cell="{ row }">
+        <SourceBadge :source="row.original.source" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">

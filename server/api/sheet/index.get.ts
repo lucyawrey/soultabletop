@@ -17,7 +17,7 @@ defineRouteMeta({
     summary: "List accessible sheets",
     parameters: [...listQueryParameters],
     responses: {
-      200: { description: "Sheet list" },
+      200: { description: "Sheet list. Each row has `source`: you, yourGroups, shared, official, or community" },
     },
   },
 });
@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
   const { rows, page } = await listResources({
     query,
     user,
+    kind: "sheet",
     fetchRows: ({ where, limit, offset }) => {
       const select = database
         .select({ sheet, resource, official: officialColumn })
@@ -50,10 +51,10 @@ export default defineEventHandler(async (event) => {
     },
   });
   return respondWithList(
-    rows.map(({ sheet: item, resource: owner, official, access }) => ({
+    rows.map(({ sheet: item, resource: owner, source, access }) => ({
       ...owner,
       ...item,
-      official,
+      source,
       canEdit: access.canEdit,
     })),
     page,
