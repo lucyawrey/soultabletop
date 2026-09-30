@@ -10,7 +10,8 @@ import {
   type ContentCategory,
 } from "#shared/content-categories";
 
-definePageMeta({ middleware: "auth" });
+// Logged-out visitors can view public items here; creating needs an account.
+const loggedIn = await useLoggedIn();
 
 interface ContentTypeItem {
   id: string;
@@ -122,7 +123,8 @@ watch(
   systems,
   (items) => {
     const systemId = route.query.systemId;
-    if (typeof systemId !== "string" || items.length === 0) return;
+    if (!loggedIn.value || typeof systemId !== "string" || items.length === 0)
+      return;
     openCreate(systemId);
     navigateTo({ query: {} }, { replace: true });
   },
@@ -225,6 +227,7 @@ async function remove() {
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="text-2xl font-bold text-highlighted">Content Types</h1>
       <UButton
+        v-if="loggedIn"
         icon="i-lucide-plus"
         size="sm"
         :disabled="systems.length === 0"
@@ -234,7 +237,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="systems.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && systems.length === 0" class="text-sm text-muted">
       Create a system before adding content types.
     </p>
 

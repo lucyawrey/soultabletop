@@ -1,9 +1,9 @@
 import { asc, eq } from "drizzle-orm";
 import { campaign, resource } from "../../database/schema";
-import { getAuthenticatedUser } from "../../utils/auth";
+import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
-  getResourceAccessOrPublic,
+  getResourceAccess,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 import { canChangeResourceOwner } from "../../utils/resource-management";
@@ -20,30 +20,27 @@ defineRouteMeta({
 });
 
 export default defineEventHandler(async (event) => {
-  const user = await getAuthenticatedUser(event);
+  const user = await requireAuthenticatedUser(event);
   const database = useDatabase();
   const rows = await database
     .select({ campaign, resource })
     .from(campaign)
     .innerJoin(resource, eq(resource.id, campaign.resourceId))
     .orderBy(asc(resource.name));
-  const context = user
-    ? await loadResourceAccessContext(
-        user,
-        rows.map(({ resource: item }) => item.id),
-      )
-    : null;
+  const context = await loadResourceAccessContext(
+    user,
+    rows.map(({ resource: item }) => item.id),
+  );
   return rows
     .map((row) => ({
       ...row,
-      access: getResourceAccessOrPublic(row.resource, context),
+      access: getResourceAccess(row.resource, context),
     }))
     .filter(({ access }) => access.canRead)
     .map(({ campaign: item, resource: owner, access }) => ({
       ...owner,
       ...item,
       canEdit: access.canEdit,
-      canChangeOwner:
-        !!user && !!context && canChangeResourceOwner(owner, user, context),
+      canChangeOwner: canChangeResourceOwner(owner, user, context),
     }));
 });

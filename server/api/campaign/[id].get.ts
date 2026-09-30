@@ -1,7 +1,7 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
 import { campaign } from "../../database/schema";
-import { getAuthenticatedUser } from "../../utils/auth";
+import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { requireResourceReader } from "../../utils/resource-management";
 
@@ -11,13 +11,14 @@ defineRouteMeta({
     summary: "Get a campaign",
     responses: {
       200: { description: "Campaign" },
+      401: { description: "Authentication required" },
       404: { description: "Campaign not found" },
     },
   },
 });
 
 export default defineEventHandler(async (event) => {
-  const user = await getAuthenticatedUser(event);
+  const user = await requireAuthenticatedUser(event);
   const id = getRouterParam(event, "id");
   if (!id)
     throw createError({

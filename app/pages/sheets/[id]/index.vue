@@ -5,8 +5,6 @@ import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import type { SheetSchemas } from "#shared/sheet/validate";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
-definePageMeta({ middleware: "auth" });
-
 interface SheetDetail {
   id: string;
   readableId: string;
@@ -36,6 +34,13 @@ const id = route.params.id as string;
 const { data: sheet } = await useFetch<SheetDetail>(
   `/api/sheet/${id}`,
 );
+
+// Logged-out visitors can view this if it's public; otherwise they're sent to
+// sign in, since it may be something their account can see.
+const loggedIn = await useLoggedIn();
+if (!sheet.value && !loggedIn.value) {
+  await navigateTo(signInRoute(route.fullPath), { replace: true });
+}
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
   "/api/content-type",

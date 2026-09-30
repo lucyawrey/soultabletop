@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { extractApiErrorMessage } from "~/utils/api-error";
 
-definePageMeta({ middleware: "auth" });
-
 interface SystemDetail {
   id: string;
   readableId: string;
@@ -27,6 +25,13 @@ const id = route.params.id as string;
 const { data: system, refresh } = await useFetch<SystemDetail>(
   `/api/system/${id}`,
 );
+
+// Logged-out visitors can view this if it's public; otherwise they're sent to
+// sign in, since it may be something their account can see.
+const loggedIn = await useLoggedIn();
+if (!system.value && !loggedIn.value) {
+  await navigateTo(signInRoute(route.fullPath), { replace: true });
+}
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
   "/api/content-type",
@@ -159,6 +164,7 @@ async function remove() {
               Content Types
             </h2>
             <UButton
+              v-if="loggedIn"
               :to="{ path: '/types', query: { systemId: id } }"
               icon="i-lucide-plus"
               size="sm"
