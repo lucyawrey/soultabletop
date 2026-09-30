@@ -10,6 +10,9 @@ export default withNuxt(
     rules: {
       // `sheet-*` classes are hooks for user-written Sheet CSS, not Tailwind.
       "better-tailwindcss/no-unknown-classes": ["error", { ignore: ["^sheet-"] }],
+      // pnpm's hoisted node_modules (pnpm-workspace.yaml) lets code import
+      // packages that aren't in package.json; this catches those imports.
+      "import/no-extraneous-dependencies": "error",
     },
   },
   {

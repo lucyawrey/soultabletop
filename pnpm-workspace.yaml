@@ -1,3 +1,7 @@
+# A flat node_modules instead of pnpm's symlinked layout: `nuxt build` took
+# ~32 s instead of ~55 s. It no longer blocks imports of packages missing from
+# package.json, so ESLint's import/no-extraneous-dependencies does that.
+nodeLinker: hoisted
 allowBuilds:
   "@parcel/watcher": false
   "@tailwindcss/oxide": false
