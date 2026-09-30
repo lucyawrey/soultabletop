@@ -36,6 +36,7 @@
 - Have all copy pull from an external data file for sharing across pages and easy updating.
 - TypeBox based OpenAPI generation (low priority)
 - Group invite approval (low priority): when a non-site-admin adds someone to a Group, create a pending invite the invited user must accept instead of adding them directly. Site admins can still add users directly. Currently `POST /api/group/[id]/members` adds immediately.
+- Catch undeclared imports with ESLint's `import/no-extraneous-dependencies`: server code imported `h3` for a long time without declaring it, and nothing flagged it until code ran outside Nuxt. Check that the rule works with Nuxt's auto-imports and aliases (`~`, `#imports`), and with the hoisted layout if that is ever revisited (see `CLAUDE.md`).
 
 # Before launch
 
