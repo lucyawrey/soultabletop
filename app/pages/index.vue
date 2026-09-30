@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
+import type { AuthFormField, FormError, FormSubmitEvent } from "@nuxt/ui";
 import { authClient } from "~/utils/auth-client";
 
 type AuthMode = "login" | "register";
@@ -7,6 +7,7 @@ type AuthFormData = {
   name?: string;
   email: string;
   password: string;
+  confirmPassword?: string;
 };
 
 interface RecentItem {
@@ -72,7 +73,52 @@ const fields = computed<AuthFormField[]>(() => [
     placeholder: "At least 8 characters",
     required: true,
   },
+  ...(isRegistering.value
+    ? [
+        {
+          name: "confirmPassword",
+          type: "password",
+          label: "Confirm Password",
+          placeholder: "Enter your password again",
+          required: true,
+        } satisfies AuthFormField,
+      ]
+    : []),
 ]);
+
+// UAuthForm keeps email and password in its own state; name and username are
+// in `registerForm` because their inputs are custom slots.
+const authForm = useTemplateRef("authForm");
+const canSubmit = computed(() => {
+  const state = authForm.value?.state as Partial<AuthFormData> | undefined;
+  if (!state?.email?.trim() || !state.password) return false;
+  if (!isRegistering.value) return true;
+  return (
+    !!registerForm.name.trim() &&
+    !!registerForm.username.trim() &&
+    state.password === state.confirmPassword
+  );
+});
+
+function validateAuthForm(state: Partial<AuthFormData>): FormError[] {
+  if (isRegistering.value && state.password !== state.confirmPassword) {
+    return [{ name: "confirmPassword", message: "Passwords don't match." }];
+  }
+  return [];
+}
+
+// UForm only re-validates the field being edited, so editing Password would
+// leave a stale "Passwords don't match." on Confirm Password.
+watch(
+  () => authForm.value?.state.password,
+  () => {
+    if (!isRegistering.value || !authForm.value?.state.confirmPassword) return;
+    authForm.value.formRef?.validate({
+      name: "confirmPassword",
+      silent: true,
+    });
+  },
+);
 
 function setMode(nextMode: AuthMode) {
   if (authBusy.value) return;
@@ -266,11 +312,16 @@ function formatUpdated(updatedAt: string) {
 
       <UPageCard class="w-full max-w-sm">
         <UAuthForm
+          ref="authForm"
           :key="mode"
           :fields="fields"
           :title="isRegistering ? 'Create an account' : 'Sign in'"
-          :submit="{ label: isRegistering ? 'Create account' : 'Sign in' }"
+          :submit="{
+            label: isRegistering ? 'Create account' : 'Sign in',
+            disabled: !canSubmit,
+          }"
           :loading="authBusy"
+          :validate="validateAuthForm"
           @submit="onSubmit"
         >
           <template #name-field>
