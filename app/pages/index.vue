@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
+import type { AuthFormField, FormError, FormSubmitEvent } from "@nuxt/ui";
 import { authClient } from "~/utils/auth-client";
 
 type AuthMode = "login" | "register";
@@ -7,6 +7,7 @@ type AuthFormData = {
   name?: string;
   email: string;
   password: string;
+  confirmPassword?: string;
 };
 
 interface RecentItem {
@@ -72,7 +73,25 @@ const fields = computed<AuthFormField[]>(() => [
     placeholder: "At least 8 characters",
     required: true,
   },
+  ...(isRegistering.value
+    ? [
+        {
+          name: "confirmPassword",
+          type: "password",
+          label: "Confirm Password",
+          placeholder: "Enter your password again",
+          required: true,
+        } satisfies AuthFormField,
+      ]
+    : []),
 ]);
+
+function validateAuthForm(state: Partial<AuthFormData>): FormError[] {
+  if (isRegistering.value && state.password !== state.confirmPassword) {
+    return [{ name: "confirmPassword", message: "Passwords don't match." }];
+  }
+  return [];
+}
 
 function setMode(nextMode: AuthMode) {
   if (authBusy.value) return;
@@ -271,6 +290,7 @@ function formatUpdated(updatedAt: string) {
           :title="isRegistering ? 'Create an account' : 'Sign in'"
           :submit="{ label: isRegistering ? 'Create account' : 'Sign in' }"
           :loading="authBusy"
+          :validate="validateAuthForm"
           @submit="onSubmit"
         >
           <template #name-field>

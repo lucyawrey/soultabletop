@@ -195,7 +195,14 @@ async function remove() {
       </template>
 
       <template #systemId-cell="{ row }">
-        {{ systemName(row.original.systemId) }}
+        <NuxtLink
+          v-if="systems.some((system) => system.id === row.original.systemId)"
+          :to="`/systems/${row.original.systemId}`"
+          class="text-primary hover:underline"
+        >
+          {{ systemName(row.original.systemId) }}
+        </NuxtLink>
+        <template v-else>Unknown</template>
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -256,7 +263,7 @@ async function remove() {
           <UFormField
             name="slug"
             label="Slug"
-            description="Auto-generated from the name — edit if you need something different or unique."
+            description="A short, readable ID: lowercase letters, numbers, and hyphens. Auto-generated from the name — edit it if you need something different or unique."
             :error="slugError"
             required
           >

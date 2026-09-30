@@ -553,7 +553,7 @@ async function insertPath(path: string) {
                 <UFormField
                   name="slug"
                   label="Slug"
-                  description="Auto-generated from the name — edit if you need something different or unique."
+                  description="A short, readable ID: lowercase letters, numbers, and hyphens. Auto-generated from the name — edit it if you need something different or unique."
                   :error="slugError"
                   required
                 >
