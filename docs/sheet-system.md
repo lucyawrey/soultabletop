@@ -90,7 +90,7 @@ list; required; default), allowed children, and which schema field types it may 
 |---|---|---|---|
 | `Sheet` | — | any | root wrapper; optional (implicit if omitted) |
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header |
-| `Grid` | `cols` (1–12, default 2), `gap` (sm/md/lg) | any | CSS grid, 1 column on mobile |
+| `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
 | `Tabs` / `Tab` | Tab: `label` (req), `icon` | Tabs: only `Tab` | `UTabs` |
 | `Divider` | `label` | none | `USeparator` |
@@ -117,7 +117,7 @@ View mode renders formatted values, edit mode renders the input.
 | `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
 | `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format` | any | read-only in both modes |
-| `Field` | — | any | picks input from schema type (decided); generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
+| `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string (not a struct or an array of objects) | picks input from schema type (decided); generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
 
@@ -162,7 +162,7 @@ Label resolution: `label` attr → schema field `label` → humanized field name
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
 | `List` | `field` (array), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder; `field="."` = the item itself (arrays of primitives) |
-| `Table` / `Column` | Table: `field`; Column: `field`, `label`, `width` | Table: only `Column` | `UTable`; cell input picked from schema type |
+| `Table` / `Column` | Table: `field`; Column: `field`, `label`, `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type |
 
 ---
 
@@ -239,7 +239,7 @@ Components (`app/components/sheet/`):
   (`app/composables/useSheet.ts`); `List` rows and `Table` rows re-provide the scope via `sheet/Scope.vue`.
 - Path resolution and formatting are framework-free in `shared/sheet/runtime.ts` (unit-tested). A string where
   fields are expected is a reference: it is looked up in `refs` and everything under it is read-only.
-- `Markdown` renders as plain pre-wrapped text until phase 6 adds `UEditor`.
+- `Markdown` renders with the editor's Markdown view (`UEditor`, `content-type="markdown"`) in both modes.
 
 `ContentDetail.vue`:
 - Replaces the Data card with `<SheetRenderer>`. The header's former Edit button is now **Settings** (so it isn't
