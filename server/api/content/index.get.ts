@@ -1,11 +1,11 @@
 import { getQuery } from "h3";
 import { asc, eq } from "drizzle-orm";
 import { content, resource } from "../../database/schema";
-import { requireAuthenticatedUser } from "../../utils/auth";
+import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { requireUuid } from "../../utils/resource-management";
 import {
-  getResourceAccess,
+  getResourceAccessOrPublic,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 
@@ -13,6 +13,7 @@ defineRouteMeta({
   openAPI: {
     tags: ["Content"],
     summary: "List accessible content records",
+    description: "Without signing in, lists public content only.",
     parameters: [
       {
         name: "contentTypeId",
@@ -24,13 +25,12 @@ defineRouteMeta({
     ],
     responses: {
       200: { description: "Content list" },
-      401: { description: "Authentication required" },
     },
   },
 });
 
 export default defineEventHandler(async (event) => {
-  const user = await requireAuthenticatedUser(event);
+  const user = await getAuthenticatedUser(event);
   const { contentTypeId } = getQuery(event);
   if (contentTypeId !== undefined) requireUuid(contentTypeId, "contentTypeId");
   const database = useDatabase();
@@ -44,15 +44,17 @@ export default defineEventHandler(async (event) => {
         : undefined,
     )
     .orderBy(asc(resource.createdAt));
-  const accessContext = await loadResourceAccessContext(
-    user,
-    records.map(({ resource: item }) => item.id),
-  );
+  const accessContext = user
+    ? await loadResourceAccessContext(
+        user,
+        records.map(({ resource: item }) => item.id),
+      )
+    : null;
 
   return records
     .map((record) => ({
       ...record,
-      access: getResourceAccess(record.resource, accessContext),
+      access: getResourceAccessOrPublic(record.resource, accessContext),
     }))
     .filter(({ access }) => access.canRead)
     .map(({ item, resource: resourceItem, access }) => ({

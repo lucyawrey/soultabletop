@@ -22,7 +22,11 @@ import {
   type SheetSchemas,
 } from "../../shared/sheet/validate";
 import { useDatabase } from "./database";
-import { getResourceAccess, loadResourceAccessContext } from "./resource-access";
+import {
+  getResourceAccess,
+  getResourceAccessOrPublic,
+  loadResourceAccessContext,
+} from "./resource-access";
 
 // Loads a ContentType's rules plus those of every ContentType reachable
 // through `content` fields, up to MAX_CONTENT_DEPTH hops. `overrides` replaces
@@ -79,7 +83,8 @@ export interface ResolvedSheet {
 // it, else (when none is selected) its ContentType's default Sheet if
 // readable, else one generated from the schema.
 export async function resolveContentSheet(
-  user: Pick<User, "id" | "name">,
+  // null: an anonymous visitor, who can read only public Sheets.
+  user: Pick<User, "id" | "name"> | null,
   selectedSheetId: string | null,
   contentTypeId: string,
   category: ContentCategory,
@@ -96,8 +101,10 @@ export async function resolveContentSheet(
     )
     .limit(1);
   if (row) {
-    const context = await loadResourceAccessContext(user, [row.resource.id]);
-    const access = getResourceAccess(row.resource, context);
+    const context = user
+      ? await loadResourceAccessContext(user, [row.resource.id])
+      : null;
+    const access = getResourceAccessOrPublic(row.resource, context);
     if (access.canRead) {
       return {
         id: row.resource.id,

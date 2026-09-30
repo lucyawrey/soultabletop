@@ -5,6 +5,7 @@ import {
 } from "#shared/content-schema";
 import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink } from "#shared/sheet/runtime";
+import { extractApiErrorMessage } from "~/utils/api-error";
 
 // Searchable choice of a readable resource for a `resourceLink` field, loaded
 // on first open. Fields without a `kind` get a kind choice first. Emits the
@@ -34,16 +35,30 @@ const kindOptions = RESOURCE_LINK_KINDS.map((value) => ({
 const options = ref<{ id: string; name: string }[]>([]);
 const loading = ref(false);
 const loadedKind = ref<ResourceLinkKind>();
+const loadError = ref("");
+// The message is about the previous kind's list.
+watch(kind, () => {
+  loadError.value = "";
+});
 
 async function load(open: boolean) {
   if (!open || loadedKind.value === kind.value || loading.value) return;
   loading.value = true;
+  loadError.value = "";
   try {
     const listKind = kind.value;
     options.value = await $fetch<{ id: string; name: string }[]>(
       LIST_URLS[listKind],
     );
     loadedKind.value = listKind;
+  } catch (error) {
+    options.value = [];
+    // Some lists (campaigns) need an account, and logged-out visitors can
+    // reach a picker in a sheet preview.
+    loadError.value =
+      (error as { statusCode?: number })?.statusCode === 401
+        ? "Sign in to choose from this list."
+        : extractApiErrorMessage(error, "Could not load the list.");
   } finally {
     loading.value = false;
   }
@@ -60,24 +75,27 @@ function select(id: unknown) {
 </script>
 
 <template>
-  <div class="flex gap-2">
-    <USelect
-      v-if="!props.kind"
-      v-model="chosenKind"
-      :items="kindOptions"
-      aria-label="kind"
-      class="w-36 shrink-0"
-    />
-    <USelectMenu
-      :key="kind"
-      :model-value="modelValue"
-      :items="items"
-      value-key="value"
-      :loading="loading"
-      :placeholder="placeholder ?? 'Choose…'"
-      class="min-w-0 flex-1"
-      @update:open="load"
-      @update:model-value="select"
-    />
+  <div>
+    <div class="flex gap-2">
+      <USelect
+        v-if="!props.kind"
+        v-model="chosenKind"
+        :items="kindOptions"
+        aria-label="kind"
+        class="w-36 shrink-0"
+      />
+      <USelectMenu
+        :key="kind"
+        :model-value="modelValue"
+        :items="items"
+        value-key="value"
+        :loading="loading"
+        :placeholder="placeholder ?? 'Choose…'"
+        class="min-w-0 flex-1"
+        @update:open="load"
+        @update:model-value="select"
+      />
+    </div>
+    <p v-if="loadError" class="mt-1 text-xs text-error">{{ loadError }}</p>
   </div>
 </template>

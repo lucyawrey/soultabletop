@@ -13,7 +13,6 @@ defineRouteMeta({
     summary: "List accessible sheets",
     responses: {
       200: { description: "Sheet list" },
-      401: { description: "Authentication required" },
     },
   },
 });

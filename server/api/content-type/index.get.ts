@@ -14,7 +14,6 @@ defineRouteMeta({
     summary: "List accessible content types",
     responses: {
       200: { description: "Content type list" },
-      401: { description: "Authentication required" },
     },
   },
 });

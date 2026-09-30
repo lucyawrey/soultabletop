@@ -5,7 +5,8 @@ import {
   extractDefaultReplacement,
 } from "~/utils/api-error";
 
-definePageMeta({ middleware: "auth" });
+// Logged-out visitors can view public items here; creating needs an account.
+const loggedIn = await useLoggedIn();
 
 interface SheetItem {
   id: string;
@@ -118,7 +119,12 @@ watch(
   contentTypes,
   (items) => {
     const contentTypeId = route.query.contentTypeId;
-    if (typeof contentTypeId !== "string" || items.length === 0) return;
+    if (
+      !loggedIn.value ||
+      typeof contentTypeId !== "string" ||
+      items.length === 0
+    )
+      return;
     openCreate(contentTypeId);
     navigateTo({ query: {} }, { replace: true });
   },
@@ -194,6 +200,7 @@ async function remove() {
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="text-2xl font-bold text-highlighted">Sheets</h1>
       <UButton
+        v-if="loggedIn"
         icon="i-lucide-plus"
         size="sm"
         :disabled="contentTypes.length === 0"
@@ -203,7 +210,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="contentTypes.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && contentTypes.length === 0" class="text-sm text-muted">
       Create a content type before adding sheets.
     </p>
 
