@@ -25,6 +25,44 @@ Nuxt 4 app for managing tabletop RPG Systems, Campaigns, Content Types, Sheets, 
 - The remote is HTTPS (`https://github.com/lucyawrey/soultabletop.git`), authenticated through the GitHub CLI, so git works from agent shells that can't reach the user's SSH agent. Per machine: install `gh`, `gh auth login`, `gh auth setup-git`, `gh config set -h github.com git_protocol https`, and `git remote set-url origin` to the HTTPS URL if the clone uses SSH. Use `gh` for PRs.
 - Name branches after the work (e.g. `remove-base-url`, `sheet-detail-preview`). Changes to agent files like this one can ride along on whatever branch is current without being mentioned in branch names or commit messages; they don't need their own branch.
 
+## Parallel work
+
+When the user asks to work on several features at once ("start parallel work on X and Y"), the session they ask becomes the coordinator and each feature gets its own git worktree and branch. There are two modes; if the user doesn't say which, ask.
+
+- **Windows mode** (the user steers each feature): every worktree opens in its own VS Code window and the user starts a Claude session there.
+- **Subagent mode** (hands-off, for small well-defined tasks): the coordinator runs one background subagent per worktree and relays their reports. The user asking for this mode is the request to spawn agents.
+
+Setup, the same for both modes, run by the coordinator from the main checkout:
+
+1. Pick a branch name per feature (see "Git workflow"). `git fetch origin`, then for each: `git worktree add ../soultabletop-worktrees/<branch> -b <branch> origin/main`. All worktrees live in that one container folder beside the repo, not inside it, so lint, format, and typecheck in one checkout never crawl another.
+2. Copy the gitignored local files into each worktree: `cp .env.local ../soultabletop-worktrees/<branch>/` (copy, never move), plus `.vercel/` and `.claude/settings.local.json` if they exist.
+3. Run `pnpm install` in each worktree (fast; pnpm links from its store, and `postinstall` runs `nuxt prepare`).
+4. Write a brief per feature: the goal, the relevant `TODO.md` entry, files likely involved, the worktree path and branch, and the rules below.
+5. Windows mode: open each with `code -n <path>` (if `code` isn't on the PATH, give the user the paths) and print each brief in the chat for the user to paste into that window's Claude panel. Subagent mode: start one background subagent per feature with its brief, telling it to work only inside its worktree's absolute path; the windows can still be opened so the user can read the diffs.
+
+Rules for every feature session or subagent (include them in the brief):
+
+- Stay in your own worktree and branch. A branch can be checked out in only one worktree; use `origin/main`, not local `main`.
+- Start your own dev server when you need one and use the port Nuxt gives it; other worktrees' servers are not yours to stop.
+- All worktrees share one database. Only one parallel branch at a time may change the schema or run `pnpm db:migrate`, unless its `.env.local` points `DATABASE_URL` at its own Neon branch. The coordinator decides which when planning; schema-changing PRs land first.
+- Don't edit `.claude/HANDOFF.md`: the coordinator owns it and lists the active worktrees, branches, and PRs there. Put your status in your PR description or final report. In `TODO.md` and this file, touch only the lines for your own feature.
+- Pushing still needs the user's approval each time. A feature session asks the user itself. A subagent can't: it commits locally and reports, and the coordinator does the secrets check, asks the user, then pushes and opens the PR.
+
+When a PR merges, update every other open branch in its own worktree: `git fetch origin && git merge origin/main` (merge, not rebase: PRs are squash-merged, so a merge resolves each conflict once and needs no force-push). The session that built the feature resolves the conflicts, then runs the usual verification before committing the merge. In windows mode the coordinator can tell the other sessions that `main` moved. By file:
+
+- Migrations (`NNNN_*.sql`, `meta/` snapshots, `_journal.json`): never hand-merge. Take `main`'s, delete your branch's generated migration, rerun `pnpm db:generate`, and read the result. If your old migration was already applied to the shared database, the new one will fail on it; say so instead of forcing it.
+- `pnpm-lock.yaml`: take `main`'s and run `pnpm install`.
+- `TODO.md` and this file: keep both sides' additions.
+
+Reviewing a parallel PR needs a session with a clean context: never the session that wrote the code, and in subagent mode not the coordinator either, since it has read the author's report.
+
+- Give the reviewer the PR number and what the feature is meant to do, not the author's brief, report, or "verified" claims (the same rule as for the handoff notes).
+- Windows mode: once the author session has stopped editing, the user starts a new Claude conversation in that feature's window and runs `/code-review`. Subagent mode: the coordinator starts a fresh reviewer subagent.
+- If the author is still working, or the review needs the app running at the PR's commit, use a detached review worktree (a branch can't be checked out twice): `git worktree add --detach ../soultabletop-worktrees/review-<branch> origin/<branch>`, set up like the others, and removed when the review is done.
+- The reviewer reports findings and doesn't fix them; the author session fixes them, since it has the feature's context.
+
+After a branch's PR is merged: `git worktree remove ../soultabletop-worktrees/<branch>`, then `git branch -D <branch>` (see "Git workflow"), and drop it from the handoff.
+
 ## Agent files
 
 - Everything for AI agents lives in `.claude/` (this file, `skills/`), except `skills-lock.json`, which the `skills` CLI requires at the repo root. Keep agent files out of the root.
