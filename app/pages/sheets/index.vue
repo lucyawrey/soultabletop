@@ -28,7 +28,7 @@ interface ContentTypeItem {
   canEdit: boolean;
 }
 
-const list = await useResourceList<SheetItem>("/api/sheet");
+const list = await useResourceList<SheetItem>("/api/sheet", loggedIn);
 const { items: sheets, status, refresh } = list;
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(

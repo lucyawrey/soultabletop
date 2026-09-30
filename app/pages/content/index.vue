@@ -28,7 +28,7 @@ interface ContentTypeItem {
   contentCategory: ContentCategory;
 }
 
-const list = await useResourceList<ContentItem>("/api/content", { extraQuery: { categories: NON_CHARACTER_CATEGORIES.join(",") } });
+const list = await useResourceList<ContentItem>("/api/content", loggedIn, { extraQuery: { categories: NON_CHARACTER_CATEGORIES.join(",") } });
 const { items: contentRecords, status, refresh } = list;
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(

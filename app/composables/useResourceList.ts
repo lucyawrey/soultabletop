@@ -7,6 +7,9 @@ export type ResourceListTab = "mine" | "find";
 // out visitors only get the Find tab. `extraQuery` adds endpoint filters.
 export async function useResourceList<T>(
   endpoint: string,
+  // From `await useLoggedIn()` in the page; it has to be awaited there, since
+  // a composable that awaits loses the Nuxt instance for what follows.
+  loggedIn: Ref<boolean>,
   options: {
     extraQuery?: MaybeRefOrGetter<Record<string, string>>;
     // False for lists that need an account anyway (campaigns): one list, no
@@ -15,7 +18,6 @@ export async function useResourceList<T>(
   } = {},
 ) {
   const hasTabs = options.tabs ?? true;
-  const loggedIn = await useLoggedIn();
   const route = useRoute();
   const router = useRouter();
 
@@ -71,10 +73,12 @@ export async function useResourceList<T>(
     page: page.value,
   }));
 
-  const { data, status, refresh } = await useLazyFetch<Paginated<T>>(endpoint, {
+  const request = useLazyFetch<Paginated<T>>(endpoint, {
     query,
     default: () => ({ items: [], total: 0, page: 1, pageSize: 25 }),
   });
+  const { data, status, refresh } = request;
+  await request;
 
   return {
     loggedIn,

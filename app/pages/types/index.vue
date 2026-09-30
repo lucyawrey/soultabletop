@@ -37,7 +37,7 @@ const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
   ([value, label]) => ({ label, value }),
 );
 
-const list = await useResourceList<ContentTypeItem>("/api/content-type");
+const list = await useResourceList<ContentTypeItem>("/api/content-type", loggedIn);
 const { items: contentTypes, status, refresh } = list;
 
 const { data: systems } = await useLazyFetch<SystemItem[]>("/api/system", {

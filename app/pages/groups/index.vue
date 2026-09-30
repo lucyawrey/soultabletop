@@ -29,6 +29,19 @@ const columns: TableColumn<GroupItem>[] = [
   { accessorKey: "memberCount", header: "Members" },
 ];
 
+// A user's groups are few, so the search filters them in the browser.
+const search = ref("");
+const visibleGroups = computed(() => {
+  const text = search.value.trim().toLowerCase();
+  return text
+    ? groups.value.filter(
+        (item) =>
+          item.name.toLowerCase().includes(text) ||
+          item.readableId.toLowerCase().includes(text),
+      )
+    : groups.value;
+});
+
 const isFormOpen = ref(false);
 const form = reactive({ readableId: "", name: "", official: false });
 
@@ -82,7 +95,14 @@ async function submitForm() {
       </UButton>
     </div>
 
-    <UTable :data="groups" :columns="columns" :loading="status === 'pending'">
+    <UInput
+      v-model="search"
+      icon="i-lucide-search"
+      placeholder="Search Groups by name or ID"
+      class="w-full max-w-md"
+    />
+
+    <UTable :data="visibleGroups" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/groups/${row.original.id}`"

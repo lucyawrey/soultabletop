@@ -22,7 +22,7 @@ interface SystemOption {
   name: string;
 }
 
-const list = await useResourceList<CampaignItem>("/api/campaign", { tabs: false });
+const list = await useResourceList<CampaignItem>("/api/campaign", toRef(true), { tabs: false });
 const { items: campaigns, status, refresh } = list;
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {

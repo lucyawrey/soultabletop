@@ -37,7 +37,7 @@ const categoryFilterOptions = [
   { label: "Non-Player Characters", value: "nonPlayerCharacter" },
 ];
 
-const list = await useResourceList<ContentItem>("/api/content", { extraQuery: () => ({ categories: categoryFilter.value === "all" ? CHARACTER_CATEGORIES.join(",") : categoryFilter.value }) });
+const list = await useResourceList<ContentItem>("/api/content", loggedIn, { extraQuery: () => ({ categories: categoryFilter.value === "all" ? CHARACTER_CATEGORIES.join(",") : categoryFilter.value }) });
 const { items: characters, status, refresh } = list;
 watch(categoryFilter, () => list.setPage(1));
 

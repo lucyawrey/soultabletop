@@ -18,7 +18,7 @@ interface SystemItem {
   canChangeOwner: boolean;
 }
 
-const list = await useResourceList<SystemItem>("/api/system");
+const list = await useResourceList<SystemItem>("/api/system", loggedIn);
 const { items: systems, status, refresh } = list;
 
 const columns: TableColumn<SystemItem>[] = [
