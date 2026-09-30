@@ -36,8 +36,6 @@
 - Have all copy pull from an external data file for sharing across pages and easy updating.
 - TypeBox based OpenAPI generation (low priority)
 - Group invite approval (low priority): when a non-site-admin adds someone to a Group, create a pending invite the invited user must accept instead of adding them directly. Site admins can still add users directly. Currently `POST /api/group/[id]/members` adds immediately.
-- Declare `h3` in `package.json`: server code imports it (`server/utils/api-schemas.ts` and others) but only Nuxt resolves it, so loading those files outside Nuxt (a vitest test, a script) fails with "Cannot find package 'h3'". Add it at Nitro's version (1.15.11 at the time), and consider ESLint's `import/no-extraneous-dependencies` to catch the next one. Both were in the closed PR #14.
-- Add `/tmp/` to `.gitignore` for local output files (e.g. sheet files generated for uploading); it's ignored only per clone today, through `.git/info/exclude`.
 
 # Before launch
 
