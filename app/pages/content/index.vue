@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import type { TableColumn } from "@nuxt/ui";
 import {
   isCharacterCategory,
+  NON_CHARACTER_CATEGORIES,
   type ContentCategory,
 } from "#shared/content-categories";
 import { extractApiErrorMessage } from "~/utils/api-error";
@@ -11,6 +13,7 @@ const loggedIn = await useLoggedIn();
 
 interface ContentItem {
   id: string;
+  source: ResourceSource;
   readableId: string;
   name: string;
   updatedAt: string;
@@ -26,13 +29,8 @@ interface ContentTypeItem {
   contentCategory: ContentCategory;
 }
 
-const {
-  data: contentItems,
-  status,
-  refresh,
-} = await useLazyFetch<ContentItem[]>("/api/content", {
-  default: () => [],
-});
+const list = await useResourceList<ContentItem>("/api/content", loggedIn, { extraQuery: { categories: NON_CHARACTER_CATEGORIES.join(",") } });
+const { items: contentRecords, status, refresh } = list;
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
@@ -54,15 +52,6 @@ const contentTypeOptions = computed(() =>
   })),
 );
 
-const contentTypeIdSet = computed(
-  () => new Set(standardContentTypes.value.map((item) => item.id)),
-);
-
-const contentRecords = computed(() =>
-  contentItems.value.filter((item) =>
-    contentTypeIdSet.value.has(item.contentTypeId),
-  ),
-);
 
 function contentTypeName(contentTypeId: string) {
   return (
@@ -73,6 +62,7 @@ function contentTypeName(contentTypeId: string) {
 
 const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Type" },
@@ -191,7 +181,8 @@ async function remove() {
       content records.
     </p>
 
-    <UTable
+    <ResourceList :list="list" noun="Content">
+<UTable
       :data="contentRecords"
       :columns="columns"
       :loading="status === 'pending'"
@@ -214,6 +205,10 @@ async function remove() {
           {{ contentTypeName(row.original.contentTypeId) }}
         </NuxtLink>
         <template v-else>Unknown</template>
+      </template>
+
+      <template #source-cell="{ row }">
+        <SourceBadge :source="row.original.source" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -253,11 +248,10 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">
-          No content records yet.
-        </p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('content', true) }}</p>
       </template>
     </UTable>
+    </ResourceList>
 
     <UModal
       v-model:open="isFormOpen"

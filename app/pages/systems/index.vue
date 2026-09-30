@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import { extractApiErrorMessage } from "~/utils/api-error";
 import type { TableColumn } from "@nuxt/ui";
 
@@ -7,6 +8,7 @@ const loggedIn = await useLoggedIn();
 
 interface SystemItem {
   id: string;
+  source: ResourceSource;
   readableId: string;
   name: string;
   isPubliclyReadable: boolean;
@@ -17,14 +19,12 @@ interface SystemItem {
   canChangeOwner: boolean;
 }
 
-const {
-  data: systems,
-  status,
-  refresh,
-} = await useLazyFetch<SystemItem[]>("/api/system", { default: () => [] });
+const list = await useResourceList<SystemItem>("/api/system", loggedIn);
+const { items: systems, status, refresh } = list;
 
 const columns: TableColumn<SystemItem>[] = [
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   {
@@ -154,7 +154,8 @@ async function remove() {
       </UButton>
     </div>
 
-    <UTable
+    <ResourceList :list="list" noun="Systems">
+<UTable
       :data="systems"
       :columns="columns"
       :loading="status === 'pending'"
@@ -166,6 +167,10 @@ async function remove() {
         >
           {{ row.original.name }}
         </NuxtLink>
+      </template>
+
+      <template #source-cell="{ row }">
+        <SourceBadge :source="row.original.source" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -205,9 +210,10 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No systems yet.</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('systems') }}</p>
       </template>
     </UTable>
+    </ResourceList>
 
     <UModal
       v-model:open="isFormOpen"
