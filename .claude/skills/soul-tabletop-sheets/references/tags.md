@@ -38,13 +38,13 @@ matches `i-<set>-<name>`, for example `i-lucide-sword`. "text" children means te
 
 ## Field tags
 
-All field tags take `field` (req; a path, see SKILL.md), `label`, and `hint`, plus:
+All field tags take `field` (req; a path, see SKILL.md), `label`, `hideLabel` (boolean: no visible label; `Column` leaves its header empty; `label=""` does not do this), and `hint`, plus:
 
 | Tag | Extra attributes | Binds | Notes |
 |---|---|---|---|
 | `Field` | none | string, number, boolean, scalar, object, resourceLink, content, array of strings | Input chosen from the schema type |
 | `Text` | `multiline`, `placeholder` | string | |
-| `Number` | `min`, `max`, `step`, `variant` (`input` \| `stat`) | number | `stat`: large number, small label |
+| `Number` | `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric) |
 | `Checkbox` | none | boolean | |
 | `Toggle` | none | boolean | On/off switch |
 | `Select` | `options` (req, comma-separated) | string | `options="Small, Medium, Large"` |
