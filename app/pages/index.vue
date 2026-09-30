@@ -86,6 +86,20 @@ const fields = computed<AuthFormField[]>(() => [
     : []),
 ]);
 
+// UAuthForm keeps email and password in its own state; name and username are
+// in `registerForm` because their inputs are custom slots.
+const authForm = useTemplateRef("authForm");
+const canSubmit = computed(() => {
+  const state = authForm.value?.state as Partial<AuthFormData> | undefined;
+  if (!state?.email?.trim() || !state.password) return false;
+  if (!isRegistering.value) return true;
+  return (
+    !!registerForm.name.trim() &&
+    !!registerForm.username.trim() &&
+    state.password === state.confirmPassword
+  );
+});
+
 function validateAuthForm(state: Partial<AuthFormData>): FormError[] {
   if (isRegistering.value && state.password !== state.confirmPassword) {
     return [{ name: "confirmPassword", message: "Passwords don't match." }];
@@ -285,10 +299,14 @@ function formatUpdated(updatedAt: string) {
 
       <UPageCard class="w-full max-w-sm">
         <UAuthForm
+          ref="authForm"
           :key="mode"
           :fields="fields"
           :title="isRegistering ? 'Create an account' : 'Sign in'"
-          :submit="{ label: isRegistering ? 'Create account' : 'Sign in' }"
+          :submit="{
+            label: isRegistering ? 'Create account' : 'Sign in',
+            disabled: !canSubmit,
+          }"
           :loading="authBusy"
           :validate="validateAuthForm"
           @submit="onSubmit"
