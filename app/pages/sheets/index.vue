@@ -218,7 +218,14 @@ async function remove() {
       </template>
 
       <template #contentTypeId-cell="{ row }">
-        {{ contentTypeName(row.original.contentTypeId) }}
+        <NuxtLink
+          v-if="contentTypes.some((item) => item.id === row.original.contentTypeId)"
+          :to="`/types/${row.original.contentTypeId}`"
+          class="text-primary hover:underline"
+        >
+          {{ contentTypeName(row.original.contentTypeId) }}
+        </NuxtLink>
+        <template v-else>Unknown</template>
       </template>
 
       <template #isDefault-cell="{ row }">
@@ -283,20 +290,11 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <UFormField
-            name="slug"
-            label="Slug"
-            description="Auto-generated from the name — edit if you need something different or unique."
+          <SlugField
+            :model-value="form.slug"
             :error="slugError"
-            required
-          >
-            <UInput
-              :model-value="form.slug"
-              class="w-full"
-              required
-              @update:model-value="onSlugInput"
-            />
-          </UFormField>
+            @update:model-value="onSlugInput"
+          />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField v-model="form.ownerGroupId" />
           <UFormField

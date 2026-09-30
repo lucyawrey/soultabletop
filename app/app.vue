@@ -45,7 +45,7 @@ useSeoMeta({
           Types
         </UButton>
         <UButton to="/systems" color="neutral" variant="link"
-          >Game Systems</UButton
+          >Systems</UButton
         >
         <UButton to="/groups" color="neutral" variant="link">
           Groups
@@ -66,7 +66,7 @@ useSeoMeta({
             Types
           </UButton>
           <UButton to="/systems" color="neutral" variant="link"
-            >Game Systems</UButton
+            >Systems</UButton
           >
           <UButton to="/groups" color="neutral" variant="link">
             Groups
