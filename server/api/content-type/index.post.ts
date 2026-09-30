@@ -11,7 +11,7 @@ import {
 } from "../../utils/resource-access";
 import {
   requireName,
-  requireSlug,
+  requireReadableId,
   resolveResourceOwner,
 } from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
@@ -27,11 +27,11 @@ defineRouteMeta({
         "application/json": {
           schema: {
             type: "object",
-            required: ["name", "slug", "systemId"],
+            required: ["name", "readableId", "systemId"],
             properties: {
               name: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
-              slug: { type: "string" },
+              readableId: { type: "string" },
               systemId: { type: "string", format: "uuid" },
               ownerGroupId: { type: "string", format: "uuid" },
               contentCategory: {
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const body = await parseBody(event, contentTypeCreateSchema);
   const name = requireName(body?.name);
-  const slug = requireSlug(body?.slug);
+  const readableId = requireReadableId(body?.readableId);
   if (typeof body.systemId !== "string")
     throw createError({
       statusCode: 400,
@@ -92,7 +92,7 @@ export default defineEventHandler(async (event) => {
         .values({
           kind: "contentType",
           ...owner,
-          slug,
+          readableId,
           name,
           isPubliclyReadable: body.isPubliclyReadable === true,
           createdByUserId: user.id,
@@ -119,7 +119,7 @@ export default defineEventHandler(async (event) => {
     if (isUniqueConstraintError(error))
       throw createError({
         statusCode: 409,
-        statusMessage: "Slug is already in use",
+        statusMessage: "ID is already in use",
       });
     throw error;
   }

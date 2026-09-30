@@ -14,7 +14,7 @@ import {
 
 export const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-export const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const readableIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export function requireUuid(value: unknown, field: string) {
   if (typeof value !== "string" || !uuidPattern.test(value)) {
@@ -26,18 +26,18 @@ export function requireUuid(value: unknown, field: string) {
   return value;
 }
 
-export function requireSlug(value: unknown) {
+export function requireReadableId(value: unknown) {
   if (typeof value !== "string") {
-    throw createError({ statusCode: 400, statusMessage: "slug is required" });
+    throw createError({ statusCode: 400, statusMessage: "readableId is required" });
   }
-  const slug = value.trim().toLowerCase();
-  if (!slugPattern.test(slug)) {
+  const readableId = value.trim().toLowerCase();
+  if (!readableIdPattern.test(readableId)) {
     throw createError({
       statusCode: 400,
-      statusMessage: "slug must use lowercase letters, numbers, and hyphens",
+      statusMessage: "readableId must use lowercase letters, numbers, and hyphens",
     });
   }
-  return slug;
+  return readableId;
 }
 
 export function requireName(value: unknown) {
@@ -160,13 +160,13 @@ export async function resolveOwnerChange(
   return resolveResourceOwner(user, ownerGroupId, context);
 }
 
-// Slugs are unique per owner and kind, so renames and owner changes can
+// Readable IDs are unique per owner and kind, so renames and owner changes can
 // collide.
-export function rethrowSlugConflict(error: unknown): never {
+export function rethrowReadableIdConflict(error: unknown): never {
   if (isUniqueConstraintError(error))
     throw createError({
       statusCode: 409,
-      statusMessage: "The owner already has one of these with that slug",
+      statusMessage: "The owner already has one of these with that ID",
     });
   throw error;
 }

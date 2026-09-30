@@ -1,17 +1,17 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
-import { game } from "../../database/schema";
+import { campaign } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { requireResourceReader } from "../../utils/resource-management";
 
 defineRouteMeta({
   openAPI: {
-    tags: ["Game"],
-    summary: "Get a game",
+    tags: ["Campaign"],
+    summary: "Get a campaign",
     responses: {
-      200: { description: "Game" },
-      404: { description: "Game not found" },
+      200: { description: "Campaign" },
+      404: { description: "Campaign not found" },
     },
   },
 });
@@ -25,12 +25,12 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Resource ID is required",
     });
   const item = await requireResourceReader(user, id);
-  if (item.kind !== "game")
-    throw createError({ statusCode: 404, statusMessage: "Game not found" });
-  const [gameRow] = await useDatabase()
-    .select({ systemId: game.systemId })
-    .from(game)
-    .where(eq(game.resourceId, id))
+  if (item.kind !== "campaign")
+    throw createError({ statusCode: 404, statusMessage: "Campaign not found" });
+  const [campaignRow] = await useDatabase()
+    .select({ systemId: campaign.systemId })
+    .from(campaign)
+    .where(eq(campaign.resourceId, id))
     .limit(1);
-  return { ...item, systemId: gameRow?.systemId };
+  return { ...item, systemId: campaignRow?.systemId };
 });

@@ -1,5 +1,5 @@
 import { asc, eq } from "drizzle-orm";
-import { game, resource } from "../../database/schema";
+import { campaign, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
@@ -10,10 +10,10 @@ import { canChangeResourceOwner } from "../../utils/resource-management";
 
 defineRouteMeta({
   openAPI: {
-    tags: ["Game"],
-    summary: "List accessible games",
+    tags: ["Campaign"],
+    summary: "List accessible campaigns",
     responses: {
-      200: { description: "Game list" },
+      200: { description: "Campaign list" },
       401: { description: "Authentication required" },
     },
   },
@@ -23,9 +23,9 @@ export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
   const database = useDatabase();
   const rows = await database
-    .select({ game, resource })
-    .from(game)
-    .innerJoin(resource, eq(resource.id, game.resourceId))
+    .select({ campaign, resource })
+    .from(campaign)
+    .innerJoin(resource, eq(resource.id, campaign.resourceId))
     .orderBy(asc(resource.name));
   const context = user
     ? await loadResourceAccessContext(
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
       access: getResourceAccessOrPublic(row.resource, context),
     }))
     .filter(({ access }) => access.canRead)
-    .map(({ game: item, resource: owner, access }) => ({
+    .map(({ campaign: item, resource: owner, access }) => ({
       ...owner,
       ...item,
       canEdit: access.canEdit,

@@ -22,9 +22,9 @@ defineRouteMeta({
             properties: {
               userId: { type: "string" },
               groupId: { type: "string", format: "uuid" },
-              gameId: { type: "string", format: "uuid" },
+              campaignId: { type: "string", format: "uuid" },
               permission: { type: "string", enum: ["read", "edit"] },
-              gameAudience: { type: "string", enum: ["members", "gms"] },
+              campaignAudience: { type: "string", enum: ["members", "gms"] },
             },
           },
         },
@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
   const resourceId = requireUuid(getRouterParam(event, "id"), "resourceId");
   await requireResourceEditor(user, resourceId);
   const body = await parseBody(event, resourceGrantSchema);
-  const targets = [body.userId, body.groupId, body.gameId].filter(
+  const targets = [body.userId, body.groupId, body.campaignId].filter(
     (value) => value !== undefined && value !== null,
   );
   if (
@@ -56,17 +56,17 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Exactly one target and a valid permission are required",
     });
   if (
-    body.gameId !== undefined &&
-    !["members", "gms"].includes(body.gameAudience as string)
+    body.campaignId !== undefined &&
+    !["members", "gms"].includes(body.campaignAudience as string)
   )
     throw createError({
       statusCode: 400,
-      statusMessage: "gameAudience is required for game grants",
+      statusMessage: "campaignAudience is required for campaign grants",
     });
-  if (body.gameId === undefined && body.gameAudience !== undefined)
+  if (body.campaignId === undefined && body.campaignAudience !== undefined)
     throw createError({
       statusCode: 400,
-      statusMessage: "gameAudience only applies to game grants",
+      statusMessage: "campaignAudience only applies to campaign grants",
     });
   try {
     const [grant] = await useDatabase()
@@ -75,9 +75,9 @@ export default defineEventHandler(async (event) => {
         resourceId,
         userId: typeof body.userId === "string" ? body.userId : null,
         groupId: typeof body.groupId === "string" ? body.groupId : null,
-        gameId: typeof body.gameId === "string" ? body.gameId : null,
+        campaignId: typeof body.campaignId === "string" ? body.campaignId : null,
         permission: body.permission as "read" | "edit",
-        gameAudience: body.gameAudience as "members" | "gms" | undefined,
+        campaignAudience: body.campaignAudience as "members" | "gms" | undefined,
         createdByUserId: user.id,
       })
       .returning();

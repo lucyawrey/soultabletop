@@ -6,7 +6,7 @@ definePageMeta({ middleware: "auth" });
 
 interface SystemItem {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   isPubliclyReadable: boolean;
   createdAt: string;
@@ -24,7 +24,7 @@ const {
 
 const columns: TableColumn<SystemItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   {
     accessorKey: "updatedAt",
@@ -37,23 +37,23 @@ const columns: TableColumn<SystemItem>[] = [
 const isFormOpen = ref(false);
 const editingSystem = ref<SystemItem | null>(null);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
 });
 const formBusy = ref(false);
 const formError = ref("");
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 function openCreate() {
   editingSystem.value = null;
   formError.value = "";
-  form.slug = "";
+  form.readableId = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
-  resetSlugTouched(false);
+  resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
 
@@ -61,10 +61,10 @@ function openEdit(item: SystemItem) {
   form.ownerGroupId = item.ownerGroupId;
   editingSystem.value = item;
   formError.value = "";
-  form.slug = item.slug;
+  form.readableId = item.readableId;
   form.name = item.name;
   form.isPubliclyReadable = item.isPubliclyReadable;
-  resetSlugTouched(true);
+  resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
 
@@ -84,7 +84,7 @@ async function submitForm() {
       await $fetch(`/api/system/${editingSystem.value.id}`, {
         method: "PATCH",
         body: {
-          slug: form.slug,
+          readableId: form.readableId,
           name: form.name,
           isPubliclyReadable: form.isPubliclyReadable,
           ...ownerChange(editingSystem.value),
@@ -94,7 +94,7 @@ async function submitForm() {
       await $fetch("/api/system", {
         method: "POST",
         body: {
-          slug: form.slug,
+          readableId: form.readableId,
           name: form.name,
           isPubliclyReadable: form.isPubliclyReadable,
           ownerGroupId: form.ownerGroupId ?? undefined,
@@ -222,10 +222,10 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField

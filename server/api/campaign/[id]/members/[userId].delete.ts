@@ -1,6 +1,6 @@
 import { createError, getRouterParam } from "h3";
 import { and, eq } from "drizzle-orm";
-import { gameMembership } from "../../../../database/schema";
+import { campaignMembership } from "../../../../database/schema";
 import { requireAuthenticatedUser } from "../../../../utils/auth";
 import {
   requireResourceEditor,
@@ -10,8 +10,8 @@ import { useDatabase } from "../../../../utils/database";
 
 defineRouteMeta({
   openAPI: {
-    tags: ["Game Membership"],
-    summary: "Remove a game member",
+    tags: ["Campaign Membership"],
+    summary: "Remove a campaign member",
     responses: {
       204: { description: "Removed" },
       401: { description: "Authentication required" },
@@ -22,15 +22,15 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const gameId = requireUuid(getRouterParam(event, "id"), "gameId");
-  await requireResourceEditor(user, gameId);
+  const campaignId = requireUuid(getRouterParam(event, "id"), "campaignId");
+  await requireResourceEditor(user, campaignId);
   const userId = getRouterParam(event, "userId");
   if (!userId)
     throw createError({ statusCode: 400, statusMessage: "userId is required" });
   await useDatabase()
-    .delete(gameMembership)
+    .delete(campaignMembership)
     .where(
-      and(eq(gameMembership.gameId, gameId), eq(gameMembership.userId, userId)),
+      and(eq(campaignMembership.campaignId, campaignId), eq(campaignMembership.userId, userId)),
     );
   setResponseStatus(event, 204);
 });

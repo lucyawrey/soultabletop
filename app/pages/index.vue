@@ -17,14 +17,14 @@ interface RecentItem {
 }
 
 interface Dashboard {
-  games: RecentItem[];
+  campaigns: RecentItem[];
   characters: RecentItem[];
   content: RecentItem[];
 }
 
 const mode = ref<AuthMode>("login");
 const registerForm = reactive({ name: "", username: "" });
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(
   registerForm,
   "username",
 );
@@ -55,7 +55,7 @@ const fields = computed<AuthFormField[]>(() => [
             "Auto-generated from your display name — edit if you need something different or unique.",
           placeholder: "your-name",
           required: true,
-          error: slugError.value,
+          error: readableIdError.value,
         } satisfies AuthFormField,
       ]
     : []),
@@ -126,7 +126,7 @@ function setMode(nextMode: AuthMode) {
   if (nextMode === "register") {
     registerForm.name = "";
     registerForm.username = "";
-    resetSlugTouched(false);
+    resetReadableIdTouched(false);
   }
   errorMessage.value = "";
 }
@@ -143,7 +143,7 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
         errorMessage.value = "Username is required.";
         return;
       }
-      if (getSlugError(username)) {
+      if (getReadableIdError(username)) {
         errorMessage.value =
           "Username must use lowercase letters, numbers, and hyphens only.";
         return;
@@ -219,7 +219,7 @@ async function signOut() {
   }
 }
 
-// Welcome dashboard: recently updated Games the user or their Groups own or
+// Welcome dashboard: recently updated Campaigns the user or their Groups own or
 // play in, and Characters/Content they or their Groups own (never merely
 // public or shared items). Fetched only once signed in.
 const {
@@ -227,7 +227,7 @@ const {
   status: dashboardStatus,
   refresh: refreshDashboard,
 } = useLazyFetch<Dashboard>("/api/dashboard", {
-  default: () => ({ games: [], characters: [], content: [] }),
+  default: () => ({ campaigns: [], characters: [], content: [] }),
   immediate: false,
 });
 
@@ -243,11 +243,11 @@ const recentSections = computed(() => {
   const loading = dashboardStatus.value === "pending";
   return [
     {
-      title: "Games",
+      title: "Campaigns",
       icon: "i-lucide-swords",
-      path: "/games",
-      empty: "No games yet.",
-      items: dashboard.value.games,
+      path: "/campaigns",
+      empty: "No campaigns yet.",
+      items: dashboard.value.campaigns,
       loading,
     },
     {
@@ -344,7 +344,7 @@ function formatUpdated(updatedAt: string) {
               autocapitalize="none"
               placeholder="your-name"
               required
-              @update:model-value="onSlugInput"
+              @update:model-value="onReadableIdInput"
             />
           </template>
           <template #description>

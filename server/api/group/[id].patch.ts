@@ -15,7 +15,7 @@ defineRouteMeta({
         "application/json": {
           schema: {
             type: "object",
-            properties: { name: { type: "string" }, slug: { type: "string" } },
+            properties: { name: { type: "string" }, readableId: { type: "string" } },
           },
         },
       },
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     .update(group)
     .set({
       ...(body.name !== undefined ? { name: requireName(body.name) } : {}),
-      ...(body.slug !== undefined ? { slug: requireSlug(body.slug) } : {}),
+      ...(body.readableId !== undefined ? { readableId: requireReadableId(body.readableId) } : {}),
       updatedAt: new Date(),
     })
     .where(eq(group.id, id))
