@@ -25,7 +25,8 @@ interface SystemOption {
 
 // The page needs an account (auth middleware), so visitors never reach it.
 const loggedIn = await useLoggedIn();
-const list = await useResourceList<CampaignItem>("/api/campaign", loggedIn);
+const { systemId: currentSystemId } = useCurrentSystem();
+const list = await useResourceList<CampaignItem>("/api/campaign", loggedIn, { bySystem: true });
 const { items: campaigns, status, refresh } = list;
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
@@ -70,7 +71,9 @@ const formError = ref("");
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 function openCreate() {
-  const firstSystem = systems.value[0];
+  const firstSystem =
+    systems.value.find((item) => item.id === currentSystemId.value) ??
+    systems.value[0];
   editingCampaign.value = null;
   formError.value = "";
   form.readableId = "";

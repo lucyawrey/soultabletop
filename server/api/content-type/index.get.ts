@@ -8,7 +8,9 @@ import {
   listResources,
   officialColumn,
   requireListQuery,
+  requireSystemFilter,
   respondWithList,
+  systemIdParameter,
 } from "../../utils/resource-list";
 import { canChangeResourceOwner } from "../../utils/resource-management";
 
@@ -16,7 +18,7 @@ defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
     summary: "List accessible content types",
-    parameters: [...listQueryParameters],
+    parameters: [...listQueryParameters, systemIdParameter],
     responses: {
       200: { description: "Content type list. Each row has `source`: you, yourGroups, shared, official, or community" },
     },
@@ -26,11 +28,13 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
   const query = requireListQuery(event);
+  const systemId = requireSystemFilter(event);
   const database = useDatabase();
   const { rows, context, page } = await listResources({
     query,
     user,
     kind: "contentType",
+    where: systemId ? eq(contentType.systemId, systemId) : undefined,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
         .select({ type: contentType, resource, official: officialColumn })
