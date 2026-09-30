@@ -1,3 +1,4 @@
+import yaml from "@rollup/plugin-yaml";
 import { sheetFonts } from "./shared/sheet/fonts";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -21,6 +22,11 @@ export default defineNuxtConfig({
     experimental: {
       openAPI: true,
     },
+  },
+
+  // Lets `app/copy.yml` be imported.
+  vite: {
+    plugins: [yaml()],
   },
 
   eslint: {

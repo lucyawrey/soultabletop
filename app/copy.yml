@@ -1,0 +1,23 @@
+# Copy written by the team: text that says what Soul Tabletop is or speaks to
+# its users. Edit the values freely; keep the keys (the app looks them up, and
+# a missing key fails typecheck). `{name}` marks a value filled in by the app.
+# Functional text (labels, buttons, errors) stays in the components.
+
+site:
+  # Browser tab title and the description search engines and link previews show.
+  title: Page title placeholder | Soul Tabletop
+  description: Page description placeholder.
+
+# The page at `/` for visitors who are signed out.
+home:
+  badge: Brand or section label
+  heading: Page heading placeholder
+  intro: >-
+    Placeholder for introductory copy. Replace this text with your own
+    page content.
+  formNote: Optional supporting text placeholder.
+
+# The page at `/` once signed in.
+dashboard:
+  heading: Welcome back, {name}
+  subheading: Pick up where you left off.
