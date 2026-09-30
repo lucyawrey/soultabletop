@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { extractApiErrorMessage } from "~/utils/api-error";
+import { authClient } from "~/utils/auth-client";
 import { getReadableIdError } from "~/utils/readable-id";
 
 definePageMeta({ middleware: "auth" });
@@ -135,6 +136,69 @@ async function save() {
 
 useUnsavedChangesGuard(dirty);
 
+// Better Auth's defaults, also what registration enforces.
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 128;
+
+const passwordForm = reactive({
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+  revokeOtherSessions: true,
+});
+const passwordError = ref("");
+const passwordChanged = ref(false);
+const changingPassword = ref(false);
+
+const newPasswordError = computed(() => {
+  const length = passwordForm.newPassword.length;
+  if (!length) return undefined;
+  if (length < MIN_PASSWORD_LENGTH)
+    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+  if (length > MAX_PASSWORD_LENGTH)
+    return `Password must be at most ${MAX_PASSWORD_LENGTH} characters.`;
+  return undefined;
+});
+const confirmPasswordError = computed(() =>
+  passwordForm.confirmPassword &&
+  passwordForm.confirmPassword !== passwordForm.newPassword
+    ? "Passwords don't match."
+    : undefined,
+);
+const canChangePassword = computed(
+  () =>
+    !!passwordForm.currentPassword &&
+    !!passwordForm.newPassword &&
+    !newPasswordError.value &&
+    passwordForm.confirmPassword === passwordForm.newPassword,
+);
+
+async function changePassword() {
+  if (!canChangePassword.value || changingPassword.value) return;
+  changingPassword.value = true;
+  passwordError.value = "";
+  passwordChanged.value = false;
+  try {
+    const result = await authClient.changePassword({
+      currentPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword,
+      revokeOtherSessions: passwordForm.revokeOtherSessions,
+    });
+    if (result.error) throw result.error;
+    passwordForm.currentPassword = "";
+    passwordForm.newPassword = "";
+    passwordForm.confirmPassword = "";
+    passwordChanged.value = true;
+  } catch (error) {
+    passwordError.value = extractApiErrorMessage(
+      error,
+      "Could not change password.",
+    );
+  } finally {
+    changingPassword.value = false;
+  }
+}
+
 const groupColumns = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "readableId", header: "ID" },
@@ -229,6 +293,77 @@ const groupColumns = [
           Save
         </UButton>
       </div>
+    </UPageCard>
+
+    <UPageCard>
+      <template #header>
+        <h2 class="text-lg font-semibold text-highlighted">Change Password</h2>
+      </template>
+
+      <!-- Its own <form>, with no username field (see the note above). -->
+      <form class="space-y-4" @submit.prevent="changePassword">
+        <UAlert
+          v-if="passwordError"
+          color="error"
+          variant="subtle"
+          :title="passwordError"
+        />
+        <UAlert
+          v-else-if="passwordChanged"
+          color="success"
+          variant="subtle"
+          title="Password changed."
+        />
+
+        <UFormField name="currentPassword" label="Current Password">
+          <UInput
+            v-model="passwordForm.currentPassword"
+            type="password"
+            autocomplete="current-password"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField
+          name="newPassword"
+          label="New Password"
+          :description="`At least ${MIN_PASSWORD_LENGTH} characters.`"
+          :error="newPasswordError"
+        >
+          <UInput
+            v-model="passwordForm.newPassword"
+            type="password"
+            autocomplete="new-password"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField
+          name="confirmPassword"
+          label="Confirm New Password"
+          :error="confirmPasswordError"
+        >
+          <UInput
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UCheckbox
+          v-model="passwordForm.revokeOtherSessions"
+          label="Sign out of other sessions"
+        />
+
+        <UButton
+          type="submit"
+          :loading="changingPassword"
+          :disabled="!canChangePassword"
+        >
+          Change Password
+        </UButton>
+      </form>
     </UPageCard>
 
     <UPageCard>
