@@ -1,11 +1,11 @@
 import { createError, getRouterParam } from "h3";
 import { eq } from "drizzle-orm";
 import { content, contentType, resource } from "../../database/schema";
-import { requireAuthenticatedUser } from "../../utils/auth";
+import { getAuthenticatedUser } from "../../utils/auth";
 import { loadContentRefs } from "../../utils/content-refs";
 import { useDatabase } from "../../utils/database";
 import {
-  getResourceAccess,
+  getResourceAccessOrPublic,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 import {
@@ -19,10 +19,9 @@ defineRouteMeta({
     tags: ["Content"],
     summary: "Get a content record",
     description:
-      "Includes the sheet to render it with (`sheet`), the schemas that sheet needs (`schemas`), the referenced content the viewer can read (`refs`), and the names and kinds of linked resources the viewer can read (`links`).",
+      "Includes the sheet to render it with (`sheet`), the schemas that sheet needs (`schemas`), the referenced content the viewer can read (`refs`), and the names and kinds of linked resources the viewer can read (`links`). Without signing in, only public content is returned, with only what is public in `sheet`, `refs`, and `links`.",
     responses: {
       200: { description: "Content record" },
-      401: { description: "Authentication required" },
       404: { description: "Not found" },
     },
   },
@@ -53,9 +52,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
 
-  const user = await requireAuthenticatedUser(event);
-  const context = await loadResourceAccessContext(user, [record.resource.id]);
-  const access = getResourceAccess(record.resource, context);
+  const user = await getAuthenticatedUser(event);
+  const context = user
+    ? await loadResourceAccessContext(user, [record.resource.id])
+    : null;
+  const access = getResourceAccessOrPublic(record.resource, context);
   if (!access.canRead) {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
@@ -82,7 +83,8 @@ export default defineEventHandler(async (event) => {
     name: record.resource.name,
     ownerUserId: record.resource.ownerUserId,
     ownerGroupId: record.resource.ownerGroupId,
-    canChangeOwner: canChangeResourceOwner(record.resource, user, context),
+    canChangeOwner:
+      !!user && !!context && canChangeResourceOwner(record.resource, user, context),
     createdAt: record.resource.createdAt,
     updatedAt: record.resource.updatedAt,
     ...record.item,

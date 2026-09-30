@@ -6,7 +6,8 @@ import {
 } from "#shared/content-categories";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
-definePageMeta({ middleware: "auth" });
+// Logged-out visitors can view public items here; creating needs an account.
+const loggedIn = await useLoggedIn();
 
 interface ContentItem {
   id: string;
@@ -175,6 +176,7 @@ async function remove() {
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="text-2xl font-bold text-highlighted">Content</h1>
       <UButton
+        v-if="loggedIn"
         icon="i-lucide-plus"
         size="sm"
         :disabled="standardContentTypes.length === 0"
@@ -184,7 +186,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="standardContentTypes.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && standardContentTypes.length === 0" class="text-sm text-muted">
       Create a content type with the General or Page category before adding
       content records.
     </p>

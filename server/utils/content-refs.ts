@@ -10,7 +10,10 @@ import {
 } from "../../shared/content-schema";
 import type { SheetSchemas } from "../../shared/sheet/validate";
 import { useDatabase } from "./database";
-import { getResourceAccess, loadResourceAccessContext } from "./resource-access";
+import {
+  getResourceAccessOrPublic,
+  loadResourceAccessContext,
+} from "./resource-access";
 import { uuidPattern } from "./resource-management";
 
 export interface ResourceLinkTarget {
@@ -67,9 +70,10 @@ function collectRefs(
 // Loads the Content referenced from `data` (directly, through local data, or
 // through other referenced Content, up to MAX_CONTENT_DEPTH hops) that `user`
 // can read, and the names and kinds of the resources linked by `resourceLink`
-// fields along the way. Unreadable and missing ones are left out.
+// fields along the way. Unreadable and missing ones are left out. A null
+// `user` is an anonymous visitor, who can read only what is public.
 export async function loadContentRefs(
-  user: Pick<User, "id" | "name">,
+  user: Pick<User, "id" | "name"> | null,
   data: Record<string, unknown>,
   schemas: SheetSchemas,
 ): Promise<{
@@ -94,10 +98,10 @@ export async function loadContentRefs(
       .from(content)
       .innerJoin(resource, eq(resource.id, content.resourceId))
       .where(inArray(content.resourceId, ids));
-    const context = await loadResourceAccessContext(user, ids);
+    const context = user ? await loadResourceAccessContext(user, ids) : null;
     const next = new Map<string, number>();
     for (const row of rows) {
-      if (!getResourceAccess(row.resource, context).canRead) continue;
+      if (!getResourceAccessOrPublic(row.resource, context).canRead) continue;
       refs[row.resource.id] = {
         name: row.resource.name,
         contentTypeId: row.item.contentTypeId,
@@ -120,7 +124,7 @@ export async function loadContentRefs(
 }
 
 async function loadResourceLinks(
-  user: Pick<User, "id" | "name">,
+  user: Pick<User, "id" | "name"> | null,
   ids: string[],
 ): Promise<Record<string, ResourceLinkTarget>> {
   const links: Record<string, ResourceLinkTarget> = {};
@@ -130,9 +134,12 @@ async function loadResourceLinks(
     .select()
     .from(resource)
     .where(inArray(resource.id, limited));
-  const context = await loadResourceAccessContext(user, limited);
-  for (const row of rows)
-    if (getResourceAccess(row, context).canRead)
+  const context = user ? await loadResourceAccessContext(user, limited) : null;
+  for (const row of rows) {
+    // Campaigns are for signed-in users only, even public ones.
+    if (!user && row.kind === "campaign") continue;
+    if (getResourceAccessOrPublic(row, context).canRead)
       links[row.id] = { name: row.name, kind: row.kind };
+  }
   return links;
 }

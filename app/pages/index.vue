@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AuthFormField, FormError, FormSubmitEvent } from "@nuxt/ui";
+import { safeRedirectPath } from "#shared/sign-in-redirect";
 import { authClient } from "~/utils/auth-client";
 
 type AuthMode = "login" | "register";
@@ -29,11 +30,18 @@ const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadab
   "username",
 );
 const authBusy = ref(false);
-const signOutBusy = ref(false);
 const errorMessage = ref("");
 
 const sessionState = await authClient.useSession(useFetch);
 const isLoggedIn = computed(() => !!sessionState.data.value?.user);
+
+// Pages that need an account send visitors here with `?redirect=<path>`; they
+// go back there once signed in.
+const route = useRoute();
+const redirectPath = computed(() => safeRedirectPath(route.query.redirect));
+if (isLoggedIn.value && redirectPath.value) {
+  await navigateTo(redirectPath.value, { replace: true });
+}
 
 const isRegistering = computed(() => mode.value === "register");
 
@@ -189,6 +197,7 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
     }
 
     await refreshNuxtData();
+    if (redirectPath.value) await navigateTo(redirectPath.value, { replace: true });
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -196,26 +205,6 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
         : "Authentication or profile setup failed.";
   } finally {
     authBusy.value = false;
-  }
-}
-
-async function signOut() {
-  signOutBusy.value = true;
-  errorMessage.value = "";
-
-  try {
-    const result = await authClient.signOut();
-    if (result.error) {
-      errorMessage.value = result.error.message ?? "Could not sign out.";
-      return;
-    }
-
-    await refreshNuxtData();
-  } catch (error) {
-    errorMessage.value =
-      error instanceof Error ? error.message : "Could not sign out.";
-  } finally {
-    signOutBusy.value = false;
   }
 }
 
@@ -392,14 +381,6 @@ function formatUpdated(updatedAt: string) {
           </h1>
           <p class="text-sm text-muted">Pick up where you left off.</p>
         </div>
-        <UButton
-          color="neutral"
-          variant="outline"
-          :loading="signOutBusy"
-          @click="signOut"
-        >
-          Sign out
-        </UButton>
       </div>
 
       <UAlert

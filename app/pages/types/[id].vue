@@ -17,8 +17,6 @@ import {
   type BuilderField,
 } from "#shared/schema-builder";
 
-definePageMeta({ middleware: "auth" });
-
 interface ContentTypeDetail {
   id: string;
   readableId: string;
@@ -57,6 +55,13 @@ const toast = useToast();
 const { data: contentType, refresh } = await useFetch<ContentTypeDetail>(
   `/api/content-type/${id}`,
 );
+
+// Logged-out visitors can view this if it's public; otherwise they're sent to
+// sign in, since it may be something their account can see.
+const loggedIn = await useLoggedIn();
+if (!contentType.value && !loggedIn.value) {
+  await navigateTo(signInRoute(route.fullPath), { replace: true });
+}
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
@@ -330,6 +335,7 @@ async function remove() {
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-lg font-semibold text-highlighted">Sheets</h2>
             <UButton
+              v-if="loggedIn"
               :to="{ path: '/sheets', query: { contentTypeId: id } }"
               icon="i-lucide-plus"
               size="sm"
