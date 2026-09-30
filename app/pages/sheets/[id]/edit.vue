@@ -10,7 +10,12 @@ import {
 import { sheetFonts } from "#shared/sheet/fonts";
 import { generateSheetMarkup, type ContentCategory } from "#shared/sheet/generate";
 import type { SheetDiagnostic } from "#shared/sheet/parser";
-import { commonAttrs, sheetTags, type TagSpec } from "#shared/sheet/registry";
+import {
+  commonAttrs,
+  sheetTags,
+  type SheetDisplay,
+  type TagSpec,
+} from "#shared/sheet/registry";
 import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
 import {
@@ -33,6 +38,7 @@ interface SheetDetail {
   isDefault: boolean;
   defaultEditMode: boolean;
   defaultAutosave: boolean;
+  defaultDisplay: SheetDisplay;
   canEdit: boolean;
   ownerGroupId: string | null;
   canChangeOwner: boolean;
@@ -87,10 +93,15 @@ const form = reactive({
   isDefault: false,
   defaultEditMode: false,
   defaultAutosave: false,
+  defaultDisplay: "text" as SheetDisplay,
   markup: "",
   cssStyles: "",
 });
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const displayOptions = [
+  { label: "Text", value: "text", description: "Plain values, like a stat block." },
+  { label: "Box", value: "box", description: "Their input boxes, disabled, as in Edit mode." },
+];
 const saved = ref("");
 function load(detail: SheetDetail) {
   Object.assign(form, {
@@ -101,6 +112,7 @@ function load(detail: SheetDetail) {
     isDefault: detail.isDefault,
     defaultEditMode: detail.defaultEditMode,
     defaultAutosave: detail.defaultAutosave,
+    defaultDisplay: detail.defaultDisplay,
     markup: detail.markup,
     cssStyles: detail.cssStyles,
   });
@@ -139,6 +151,7 @@ async function save(confirmReplaceDefault = false) {
         cssStyles: form.cssStyles,
         defaultEditMode: form.defaultEditMode,
         defaultAutosave: form.defaultAutosave,
+        defaultDisplay: form.defaultDisplay,
         ...(canSetDefault.value ? { isDefault: form.isDefault } : {}),
         ...(confirmReplaceDefault ? { confirmReplaceDefault: true } : {}),
       },
@@ -583,6 +596,16 @@ async function insertPath(path: string) {
                 >
                   <USwitch v-model="form.defaultAutosave" />
                 </UFormField>
+                <UFormField
+                  name="defaultDisplay"
+                  label="Non-editable fields"
+                  description="How fields look when they can't be edited. Markup can override this with display=&quot;text&quot; or display=&quot;box&quot;."
+                >
+                  <URadioGroup
+                    v-model="form.defaultDisplay"
+                    :items="displayOptions"
+                  />
+                </UFormField>
               </div>
             </template>
           </UTabs>
@@ -659,6 +682,7 @@ async function insertPath(path: string) {
             can-edit-sheet
             can-edit
             :edit-mode="previewEditMode"
+            :default-display="form.defaultDisplay"
             @add-ref="addPreviewRef"
             @add-link="addPreviewLink"
           />

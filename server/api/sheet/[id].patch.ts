@@ -51,6 +51,11 @@ defineRouteMeta({
               },
               defaultEditMode: { type: "boolean" },
               defaultAutosave: { type: "boolean" },
+              defaultDisplay: {
+                type: "string",
+                enum: ["text", "box"],
+                description: "How fields look when they can't be edited",
+              },
             },
           },
         },
@@ -162,6 +167,9 @@ export default defineEventHandler(async (event) => {
         : {}),
       ...(body.defaultAutosave !== undefined
         ? { defaultAutosave: body.defaultAutosave }
+        : {}),
+      ...(body.defaultDisplay !== undefined
+        ? { defaultDisplay: body.defaultDisplay }
         : {}),
   };
   // Drizzle rejects an empty update, e.g. when only the name changes.

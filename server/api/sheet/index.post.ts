@@ -61,6 +61,12 @@ defineRouteMeta({
                 type: "boolean",
                 description: "Defaults by the content type's content category",
               },
+              defaultDisplay: {
+                type: "string",
+                enum: ["text", "box"],
+                description:
+                  "How fields look when they can't be edited; defaults by the content type's content category",
+              },
             },
           },
         },
@@ -170,6 +176,7 @@ export default defineEventHandler(async (event) => {
             body.defaultEditMode ?? switchDefaults.defaultEditMode,
           defaultAutosave:
             body.defaultAutosave ?? switchDefaults.defaultAutosave,
+          defaultDisplay: body.defaultDisplay ?? switchDefaults.defaultDisplay,
         })
         .returning();
       return { ...createdResource, ...createdSheet };

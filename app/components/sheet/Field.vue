@@ -3,7 +3,7 @@ import { resourceLinkPath } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // Every field tag (Text, Number, Field, Column, ...): its value, or its input
-// (FieldInput.vue) when editable.
+// (FieldInput.vue) when editable, or that input disabled when `display="box"`.
 const props = defineProps<{ node: ValidatedElement; compact?: boolean }>();
 
 const { context, resolve, format, number } = useSheet();
@@ -21,10 +21,24 @@ const hint = computed(
 const display = computed(() => sheetFieldDisplay(props.node));
 
 // Fields of unknown type (`any`) are edited with the raw JSON editor.
-const { editable, lockedEditable, unlock } = useSheetEditable(
+const { editable, lockedEditable, unlock, boxed } = useSheetEditable(
   () => props.node,
   () => (display.value === "value" ? null : resolved.value.path),
 );
+
+// `display="box"` shows a non-editable field as its disabled input. Value tags
+// and images keep their normal view, and references show their link in a box
+// so they stay clickable.
+const boxedView = computed(
+  () =>
+    !editable.value &&
+    boxed.value &&
+    !resolved.value.unavailable &&
+    display.value !== "value" &&
+    display.value !== "image",
+);
+// Laid out like an input: label above, no stat styling.
+const asInput = computed(() => editable.value || boxedView.value);
 
 const text = computed(() =>
   format(value.value, props.node.attrs.format === "signed" ? "signed" : "plain"),
@@ -85,14 +99,14 @@ const imageSize = computed(
   <div
     :class="[
       sheetClasses(node),
-      display === 'stat' && !editable ? 'text-center' : '',
+      display === 'stat' && !asInput ? 'text-center' : '',
     ]"
   >
     <div
-      v-if="(label && !compact && (display !== 'stat' || editable)) || lockedEditable"
+      v-if="(label && !compact && (display !== 'stat' || asInput)) || lockedEditable"
       class="flex items-center gap-1 text-xs font-medium text-muted"
     >
-      <span v-if="!compact || editable">{{ label }}</span>
+      <span v-if="!compact || asInput">{{ label }}</span>
       <UButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
@@ -117,6 +131,17 @@ const imageSize = computed(
     <span v-else-if="resolved.unavailable" class="text-sm text-dimmed">
       Unavailable
     </span>
+
+    <template v-else-if="boxedView && display !== 'ref'">
+      <SheetFieldInput
+        :node="node"
+        :value="value"
+        :path="resolved.path ?? []"
+        :label="label"
+        disabled
+      />
+      <p v-if="hint && !compact" class="mt-1 text-xs text-dimmed">{{ hint }}</p>
+    </template>
 
     <template v-else-if="display === 'stat'">
       <div class="text-3xl font-bold text-highlighted tabular-nums">
@@ -169,7 +194,14 @@ const imageSize = computed(
       </div>
     </div>
 
-    <template v-else-if="display === 'ref'">
+    <div
+      v-else-if="display === 'ref'"
+      :class="
+        boxedView
+          ? 'min-h-8 rounded-md bg-default px-2.5 py-1.5 text-sm ring ring-accented ring-inset'
+          : ''
+      "
+    >
       <NuxtLink
         v-if="refInfo?.to"
         :to="refInfo.to"
@@ -182,7 +214,7 @@ const imageSize = computed(
         <span v-if="refInfo.custom" class="text-xs text-muted">(custom)</span>
       </span>
       <span v-else class="text-dimmed">—</span>
-    </template>
+    </div>
 
     <template v-else-if="display === 'markdown'">
       <UEditor
