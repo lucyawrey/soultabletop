@@ -1,6 +1,6 @@
 # Copy written by the team: text that says what Soul Tabletop is or speaks to
 # its users. Edit the values freely; keep the keys (the app looks them up, and
-# a missing key fails typecheck). `{name}` marks a value filled in by the app.
+# the tests fail if one is missing). `{name}` marks a value filled in by the app.
 # Functional text (labels, buttons, errors) stays in the components.
 
 site:

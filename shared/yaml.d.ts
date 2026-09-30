@@ -1,6 +1,6 @@
 // Types for the `.yml` copy file, which `@rollup/plugin-yaml` loads. The shape
-// is checked against the file itself, so the declaration below only needs to
-// say what an import is.
+// is written by hand: `shared/copy.test.ts` fails when `content/copy.yml` and this
+// declaration's keys drift apart, so change both and that test together.
 declare module "*.yml" {
   const data: {
     site: { title: string; description: string };

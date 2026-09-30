@@ -24,7 +24,7 @@ export default defineNuxtConfig({
     },
   },
 
-  // Lets `app/copy.yml` be imported.
+  // Lets `content/copy.yml` be imported.
   vite: {
     plugins: [yaml()],
   },

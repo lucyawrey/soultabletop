@@ -1,6 +1,6 @@
-import copyData from "~/copy.yml";
+import copyData from "~~/content/copy.yml";
 
-// The team's copy (see `app/copy.yml`), typed by its own shape.
+// The team's copy (see `content/copy.yml`), typed by its own shape.
 export const copy: typeof copyData = copyData;
 
 // Fills `{name}`-style markers in a copy string.
