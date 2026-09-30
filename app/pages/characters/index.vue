@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import type { TableColumn } from "@nuxt/ui";
 import {
+  CHARACTER_CATEGORIES,
   CONTENT_CATEGORY_LABELS,
   isCharacterCategory,
   type ContentCategory,
@@ -12,6 +14,7 @@ const loggedIn = await useLoggedIn();
 
 interface ContentItem {
   id: string;
+  source: ResourceSource;
   readableId: string;
   name: string;
   updatedAt: string;
@@ -27,13 +30,17 @@ interface ContentTypeItem {
   contentCategory: ContentCategory;
 }
 
-const {
-  data: contentItems,
-  status,
-  refresh,
-} = await useLazyFetch<ContentItem[]>("/api/content", {
-  default: () => [],
-});
+// Player characters, NPCs, or both.
+const categoryFilter = ref<ContentCategory | "all">("all");
+const categoryFilterOptions = [
+  { label: "All characters", value: "all" },
+  { label: "Player Characters", value: "playerCharacter" },
+  { label: "Non-Player Characters", value: "nonPlayerCharacter" },
+];
+
+const list = await useResourceList<ContentItem>("/api/content", loggedIn, { extraQuery: () => ({ categories: categoryFilter.value === "all" ? CHARACTER_CATEGORIES.join(",") : categoryFilter.value }) });
+const { items: characters, status, refresh } = list;
+watch(categoryFilter, () => list.setPage(1));
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
@@ -50,27 +57,6 @@ const characterTypeOptions = computed(() =>
   characterTypes.value.map((item) => ({ label: item.name, value: item.id })),
 );
 
-const characterTypeIdSet = computed(
-  () => new Set(characterTypes.value.map((item) => item.id)),
-);
-
-// Player characters, NPCs, or both.
-const categoryFilter = ref<ContentCategory | "all">("all");
-const categoryFilterOptions = [
-  { label: "All characters", value: "all" },
-  { label: "Player Characters", value: "playerCharacter" },
-  { label: "Non-Player Characters", value: "nonPlayerCharacter" },
-];
-
-const characters = computed(() =>
-  contentItems.value.filter(
-    (item) =>
-      characterTypeIdSet.value.has(item.contentTypeId) &&
-      (categoryFilter.value === "all" ||
-        characterType(item.contentTypeId)?.contentCategory ===
-          categoryFilter.value),
-  ),
-);
 
 function characterType(contentTypeId: string) {
   return characterTypes.value.find((item) => item.id === contentTypeId);
@@ -87,6 +73,7 @@ function categoryLabel(contentTypeId: string) {
 
 const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Character Type" },
@@ -214,7 +201,8 @@ async function remove() {
       class="w-56"
     />
 
-    <UTable
+    <ResourceList :list="list" noun="Characters">
+<UTable
       :data="characters"
       :columns="columns"
       :loading="status === 'pending'"
@@ -241,6 +229,10 @@ async function remove() {
 
       <template #category-cell="{ row }">
         {{ categoryLabel(row.original.contentTypeId) }}
+      </template>
+
+      <template #source-cell="{ row }">
+        <SourceBadge :source="row.original.source" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -280,9 +272,10 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No characters yet.</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('characters') }}</p>
       </template>
     </UTable>
+    </ResourceList>
 
     <UModal
       v-model:open="isFormOpen"

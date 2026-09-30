@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import { extractApiErrorMessage } from "~/utils/api-error";
 import type { TableColumn } from "@nuxt/ui";
 
@@ -6,6 +7,7 @@ definePageMeta({ middleware: "auth" });
 
 interface CampaignItem {
   id: string;
+  source: ResourceSource;
   readableId: string;
   name: string;
   systemId: string;
@@ -21,11 +23,10 @@ interface SystemOption {
   name: string;
 }
 
-const {
-  data: campaigns,
-  status,
-  refresh,
-} = await useLazyFetch<CampaignItem[]>("/api/campaign", { default: () => [] });
+// The page needs an account (auth middleware), so visitors never reach it.
+const loggedIn = await useLoggedIn();
+const list = await useResourceList<CampaignItem>("/api/campaign", loggedIn);
+const { items: campaigns, status, refresh } = list;
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
@@ -43,6 +44,7 @@ function systemName(systemId: string) {
 
 const columns: TableColumn<CampaignItem>[] = [
   { accessorKey: "name", header: "Name" },
+  { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
@@ -184,7 +186,8 @@ async function remove() {
       Create a system before adding campaigns.
     </p>
 
-    <UTable :data="campaigns" :columns="columns" :loading="status === 'pending'">
+    <ResourceList :list="list" noun="Campaigns">
+<UTable :data="campaigns" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/campaigns/${row.original.id}`"
@@ -203,6 +206,10 @@ async function remove() {
           {{ systemName(row.original.systemId) }}
         </NuxtLink>
         <template v-else>Unknown</template>
+      </template>
+
+      <template #source-cell="{ row }">
+        <SourceBadge :source="row.original.source" />
       </template>
 
       <template #isPubliclyReadable-cell="{ row }">
@@ -242,9 +249,10 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No campaigns yet.</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('campaigns') }}</p>
       </template>
     </UTable>
+    </ResourceList>
 
     <UModal
       v-model:open="isFormOpen"
