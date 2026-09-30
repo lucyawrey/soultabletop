@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AuthFormField, FormError, FormSubmitEvent } from "@nuxt/ui";
+import { safeRedirectPath } from "#shared/sign-in-redirect";
 import { authClient } from "~/utils/auth-client";
 
 type AuthMode = "login" | "register";
@@ -34,6 +35,14 @@ const errorMessage = ref("");
 
 const sessionState = await authClient.useSession(useFetch);
 const isLoggedIn = computed(() => !!sessionState.data.value?.user);
+
+// Pages that need an account send visitors here with `?redirect=<path>`; they
+// go back there once signed in.
+const route = useRoute();
+const redirectPath = computed(() => safeRedirectPath(route.query.redirect));
+if (isLoggedIn.value && redirectPath.value) {
+  await navigateTo(redirectPath.value, { replace: true });
+}
 
 const isRegistering = computed(() => mode.value === "register");
 
@@ -189,6 +198,7 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
     }
 
     await refreshNuxtData();
+    if (redirectPath.value) await navigateTo(redirectPath.value, { replace: true });
   } catch (error) {
     errorMessage.value =
       error instanceof Error

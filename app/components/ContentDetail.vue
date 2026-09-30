@@ -67,9 +67,17 @@ interface SheetItem {
   canEdit: boolean;
 }
 
+const route = useRoute();
 const { data: item, refresh } = await useFetch<ContentDetail>(
   `/api/content/${props.id}`,
 );
+
+// Logged-out visitors can view this if it's public; otherwise they're sent to
+// sign in, since it may be something their account can see.
+const loggedIn = await useLoggedIn();
+if (!item.value && !loggedIn.value) {
+  await navigateTo(signInRoute(route.fullPath), { replace: true });
+}
 
 const { data: contentTypes } = await useLazyFetch<NamedItem[]>(
   "/api/content-type",

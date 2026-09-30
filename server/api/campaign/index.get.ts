@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import { campaign, resource } from "../../database/schema";
-import { getAuthenticatedUser } from "../../utils/auth";
+import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
   getResourceAccessOrPublic,
@@ -20,7 +20,7 @@ defineRouteMeta({
 });
 
 export default defineEventHandler(async (event) => {
-  const user = await getAuthenticatedUser(event);
+  const user = await requireAuthenticatedUser(event);
   const database = useDatabase();
   const rows = await database
     .select({ campaign, resource })

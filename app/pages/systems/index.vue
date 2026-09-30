@@ -2,7 +2,8 @@
 import { extractApiErrorMessage } from "~/utils/api-error";
 import type { TableColumn } from "@nuxt/ui";
 
-definePageMeta({ middleware: "auth" });
+// Logged-out visitors can view public items here; creating needs an account.
+const loggedIn = await useLoggedIn();
 
 interface SystemItem {
   id: string;
@@ -148,7 +149,7 @@ async function remove() {
   <div class="mx-auto w-full max-w-(--ui-container) space-y-6 p-4 py-8">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="text-2xl font-bold text-highlighted">Systems</h1>
-      <UButton icon="i-lucide-plus" size="sm" @click="openCreate">
+      <UButton v-if="loggedIn" icon="i-lucide-plus" size="sm" @click="openCreate">
         New System
       </UButton>
     </div>
