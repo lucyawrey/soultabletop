@@ -78,6 +78,7 @@ const fields = computed<AuthFormField[]>(() => [
     name: "password",
     type: "password",
     label: "Password",
+    ...(isRegistering.value ? { description: "At least 8 characters." } : {}),
     placeholder: "At least 8 characters",
     required: true,
   },

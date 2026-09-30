@@ -150,6 +150,14 @@ const passwordError = ref("");
 const passwordChanged = ref(false);
 const changingPassword = ref(false);
 
+// The success message hides once any password field is edited again.
+const passwordDirty = computed(
+  () =>
+    !!passwordForm.currentPassword ||
+    !!passwordForm.newPassword ||
+    !!passwordForm.confirmPassword,
+);
+
 const newPasswordError = computed(() => {
   const length = passwordForm.newPassword.length;
   if (!length) return undefined;
@@ -190,10 +198,11 @@ async function changePassword() {
     passwordForm.confirmPassword = "";
     passwordChanged.value = true;
   } catch (error) {
-    passwordError.value = extractApiErrorMessage(
-      error,
-      "Could not change password.",
-    );
+    passwordForm.currentPassword = "";
+    passwordError.value =
+      (error as { code?: unknown } | null)?.code === "INVALID_PASSWORD"
+        ? "Current password is incorrect."
+        : extractApiErrorMessage(error, "Could not change password.");
   } finally {
     changingPassword.value = false;
   }
@@ -309,7 +318,7 @@ const groupColumns = [
           :title="passwordError"
         />
         <UAlert
-          v-else-if="passwordChanged"
+          v-else-if="passwordChanged && !passwordDirty"
           color="success"
           variant="subtle"
           title="Password changed."
