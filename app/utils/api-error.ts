@@ -84,5 +84,10 @@ export function extractApiErrorMessage(error: unknown, fallback: string) {
     }
   }
   if (error instanceof Error) return error.message;
+  // Better Auth client calls return `{ error: { message, status } }`.
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message) return message;
+  }
   return fallback;
 }
