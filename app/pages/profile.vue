@@ -5,12 +5,6 @@ import { getReadableIdError } from "~/utils/readable-id";
 
 definePageMeta({ middleware: "auth" });
 
-interface Profile {
-  username: string;
-  iconImageUrl: string | null;
-  role: "admin" | "member";
-}
-
 interface GroupSummary {
   id: string;
   name: string;
@@ -20,10 +14,15 @@ interface GroupSummary {
   role: "admin" | "editor" | "member" | null;
 }
 
+const nuxtApp = useNuxtApp();
 const session = await useAuthSession();
 const user = computed(() => session.data.value?.user);
 
-const { data: profile, refresh } = await useFetch<Profile>("/api/profile");
+// Shared with the header's user menu, so saving here updates it too.
+const { data: profile, refresh } = await useProfile(() => user.value?.id);
+// The header may have loaded it long before: start the form from fresh values
+// (on a full page load it was just fetched).
+if (import.meta.client && !nuxtApp.isHydrating) await refresh();
 const { data: groups } = await useLazyFetch<GroupSummary[]>("/api/group", {
   default: () => [],
 });
