@@ -17,7 +17,10 @@ export const readableIdSchema = Type.String({
 export const profilePatchSchema = Type.Partial(
   Type.Object({
     username: readableIdSchema,
-    iconImageUrl: Type.Union([Type.String(), Type.Null()]),
+    iconImageUrl: Type.Union([
+      Type.String({ pattern: "^https://\\S+$", maxLength: 2000 }),
+      Type.Null(),
+    ]),
   }),
 );
 
