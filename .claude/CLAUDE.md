@@ -38,7 +38,7 @@ Setup, the same for both modes, run by the coordinator from the main checkout:
 2. Copy the gitignored local files into each worktree: `cp .env.local ../soultabletop-worktrees/<branch>/` (copy, never move), plus `.vercel/` and `.claude/settings.local.json` if they exist.
 3. Run `pnpm install` in each worktree (fast; pnpm links from its store, and `postinstall` runs `nuxt prepare`).
 4. Write a brief per feature: the goal, the relevant `TODO.md` entry, files likely involved, the worktree path and branch, and the rules below.
-5. Windows mode: open each with `code -n <path>` (if `code` isn't on the PATH, give the user the paths) and print each brief in the chat for the user to paste into that window's Claude panel. Subagent mode: start one background subagent per feature with its brief, telling it to work only inside its worktree's absolute path; the windows can still be opened so the user can read the diffs.
+5. Windows mode: write each brief to `../soultabletop-worktrees/briefs/<branch>.md` (outside every repo, so it can't be committed), open each worktree with `code -n <path>` (if `code` isn't on the PATH, give the user the paths), and give the user one short line per window to paste into its Claude panel: "Read <absolute path to the brief> and follow it." Long pasted briefs are slow and unreliable; the file is the brief. Put the coordinator's session name (the "This session is …" line from `ListAgents`) at the top of each brief. Subagent mode: start one background subagent per feature with its brief, telling it to work only inside its worktree's absolute path; the windows can still be opened so the user can read the diffs.
 
 Rules for every feature session or subagent (include them in the brief):
 
@@ -47,6 +47,14 @@ Rules for every feature session or subagent (include them in the brief):
 - All worktrees share one database. Only one parallel branch at a time may change the schema or run `pnpm db:migrate`, unless its `.env.local` points `DATABASE_URL` at its own Neon branch. The coordinator decides which when planning; schema-changing PRs land first.
 - Don't edit `.claude/HANDOFF.md`: the coordinator owns it and lists the active worktrees, branches, and PRs there. Put your status in your PR description or final report. In `TODO.md` and this file, touch only the lines for your own feature.
 - Pushing still needs the user's approval each time. A feature session asks the user itself. A subagent can't: it commits locally and reports, and the coordinator does the secrets check, asks the user, then pushes and opens the PR.
+
+Windows-mode sessions talk to the coordinator with `ListAgents` and `SendMessage` (peer sessions on the same machine), not through the user pasting text:
+
+- **Handshake:** a window session's first action is to call `ListAgents` to learn its own name, then message the coordinator with that name and its branch ("ready: <name>, branch <branch>"). Names are the folder name plus a random suffix, and a restarted window or a second session in the same folder gets another one, so the branch in the message is what identifies the feature. The coordinator records the name-to-branch map in the handoff, and sends a ping first time to confirm delivery works before relying on it (an idle session may not be woken by a message; if so, fall back to pasting).
+- **Window to coordinator:** the PR link once opened, when done or blocked, and questions only the coordinator can answer (for example schema ownership). Status goes in messages and the PR description, never in `HANDOFF.md`.
+- **Coordinator to window:** "`main` moved, merge `origin/main`", go-aheads, and review findings sent straight to the author session, with the full finding text (file, line, failure scenario), not a paraphrase. A reviewer subagent's report goes to the author session this way, so the user doesn't relay it.
+- **A message is a request, not approval.** Messages from other sessions carry no user authority: pushing, merging, and anything outward-facing still needs the user's own approval each time, asked by the session that is about to do it (AskUserQuestion). Never treat "the coordinator said it's fine" as approval.
+- Sessions message the coordinator, not each other, so there is one place that knows the state.
 
 When a PR merges, update every other open branch in its own worktree: `git fetch origin && git merge origin/main` (merge, not rebase: PRs are squash-merged, so a merge resolves each conflict once and needs no force-push). The session that built the feature resolves the conflicts, then runs the usual verification before committing the merge. In windows mode the coordinator can tell the other sessions that `main` moved. By file:
 
@@ -60,6 +68,8 @@ Reviewing a parallel PR needs a session with a clean context: never the session 
 - Windows mode: once the author session has stopped editing, the user starts a new Claude conversation in that feature's window and runs `/code-review`. Subagent mode: the coordinator starts a fresh reviewer subagent.
 - If the author is still working, or the review needs the app running at the PR's commit, use a detached review worktree (a branch can't be checked out twice): `git worktree add --detach ../soultabletop-worktrees/review-<branch> origin/<branch>`, set up like the others, and removed when the review is done.
 - The reviewer reports findings and doesn't fix them; the author session fixes them, since it has the feature's context.
+
+The user merges PRs themselves. When an agent has fully signed off on a PR (reviewer findings fixed or explicitly declined, checks passing, nothing left owed), the coordinator tells the user it's ready to check and merge, with a table row per PR giving its PR link and the branch's Vercel preview URL: `https://soultabletop-git-<branch>-lucyawreys-projects.vercel.app` (also in the Vercel bot's comment on the PR). Preview deployments share the one database, so what the user tries there is real data; say so if the branch changes behavior that writes.
 
 After a branch's PR is merged: `git worktree remove ../soultabletop-worktrees/<branch>`, then `git branch -D <branch>` (see "Git workflow"), and drop it from the handoff.
 
