@@ -14,6 +14,11 @@ const value = computed(() => resolved.value.value);
 const label = computed(
   () => attrText(props.node.attrs.label) || props.node.binding?.label || "",
 );
+// `hideLabel` drops the visible label; the label text still names inputs for
+// screen readers.
+const shownLabel = computed(() =>
+  props.node.attrs.hideLabel === true ? "" : label.value,
+);
 const hint = computed(
   () => attrText(props.node.attrs.hint) || props.node.binding?.description || "",
 );
@@ -39,6 +44,24 @@ const boxedView = computed(
 );
 // Laid out like an input: label above, no stat styling.
 const asInput = computed(() => editable.value || boxedView.value);
+
+// The hint sits under editable and boxed inputs only.
+const showHint = computed(
+  () =>
+    !!hint.value &&
+    !props.compact &&
+    ((editable.value && !!resolved.value.path) ||
+      (boxedView.value && display.value !== "ref")),
+);
+// A stat's label goes under its number.
+const showStatLabel = computed(
+  () =>
+    display.value === "stat" &&
+    !asInput.value &&
+    !resolved.value.unavailable &&
+    !!shownLabel.value &&
+    !props.compact,
+);
 
 const text = computed(() =>
   format(value.value, props.node.attrs.format === "signed" ? "signed" : "plain"),
@@ -103,10 +126,10 @@ const imageSize = computed(
     ]"
   >
     <div
-      v-if="(label && !compact && (display !== 'stat' || asInput)) || lockedEditable"
-      class="flex items-center gap-1 text-xs font-medium text-muted"
+      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable"
+      class="sheet-field-label flex items-center gap-1 text-xs font-medium text-muted"
     >
-      <span v-if="!compact">{{ label }}</span>
+      <span v-if="!compact">{{ shownLabel }}</span>
       <UButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
@@ -118,6 +141,7 @@ const imageSize = computed(
       />
     </div>
 
+    <div class="sheet-field-value">
     <template v-if="editable && resolved.path">
       <SheetFieldInput
         :node="node"
@@ -125,7 +149,6 @@ const imageSize = computed(
         :path="resolved.path"
         :label="label"
       />
-      <p v-if="hint && !compact" class="mt-1 text-xs text-dimmed">{{ hint }}</p>
     </template>
 
     <span v-else-if="resolved.unavailable" class="text-sm text-dimmed">
@@ -140,15 +163,11 @@ const imageSize = computed(
         :label="label"
         disabled
       />
-      <p v-if="hint && !compact" class="mt-1 text-xs text-dimmed">{{ hint }}</p>
     </template>
 
     <template v-else-if="display === 'stat'">
       <div class="text-3xl font-bold text-highlighted tabular-nums">
         {{ text || "—" }}
-      </div>
-      <div v-if="label && !compact" class="text-xs font-medium uppercase text-muted">
-        {{ label }}
       </div>
     </template>
 
@@ -247,5 +266,14 @@ const imageSize = computed(
     >{{ value === undefined ? "—" : JSON.stringify(value, null, 2) }}</pre>
 
     <span v-else :class="text ? '' : 'text-dimmed'">{{ text || "—" }}</span>
+    </div>
+
+    <p v-if="showHint" class="mt-1 text-xs text-dimmed">{{ hint }}</p>
+    <div
+      v-if="showStatLabel"
+      class="sheet-field-label text-xs font-medium uppercase text-muted"
+    >
+      {{ shownLabel }}
+    </div>
   </div>
 </template>

@@ -139,7 +139,7 @@ click on its pencil button first.
 
 ## 2. NPC stat block
 
-Read-mostly (a `Markdown` field shows its schema label, here `Text`, above it; there is no way to hide a label yet): `display` is left at its default (text), and everything is `Value`, so nothing is an input.
+Read-mostly (`Markdown` fields use `hideLabel` so the schema label, here "Text", does not repeat above each one): `display` is left at its default (text), and everything is `Value`, so nothing is an input.
 
 ```json
 {
@@ -210,13 +210,13 @@ Read-mostly (a `Markdown` field shows its schema label, here `Text`, above it; t
 
   <List field="traits">
     <Heading level="4">{name}</Heading>
-    <Markdown field="text" />
+    <Markdown field="text" hideLabel />
   </List>
 
   <Heading level="3">Actions</Heading>
   <List field="actions">
     <Collapsible title="{name}" subtitle="+{attackBonus} to hit" open>
-      <Markdown field="text" />
+      <Markdown field="text" hideLabel />
     </Collapsible>
   </List>
 </Sheet>
@@ -267,7 +267,7 @@ A compact card. Shows a `Callout` filled from a field with `{path}`, and `List f
   </Grid>
   <Checkbox field="concentration" />
   <Divider label="Effect" />
-  <Markdown field="description" />
+  <Markdown field="description" hideLabel />
   <Callout color="warning" icon="i-lucide-arrow-up" title="Higher levels">{higherLevels}</Callout>
   <Divider label="Classes" />
   <Stack direction="row" wrap gap="sm">
