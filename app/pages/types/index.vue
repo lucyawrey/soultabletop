@@ -38,7 +38,8 @@ const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
   ([value, label]) => ({ label, value }),
 );
 
-const list = await useResourceList<ContentTypeItem>("/api/content-type", loggedIn);
+const { systemId: currentSystemId } = useCurrentSystem();
+const list = await useResourceList<ContentTypeItem>("/api/content-type", loggedIn, { bySystem: true });
 const { items: contentTypes, status, refresh } = list;
 
 const { data: systems } = await useLazyFetch<SystemItem[]>("/api/system", {
@@ -82,7 +83,8 @@ const brokenSheets = ref<BrokenSheets>();
 
 function openCreate(systemId?: string) {
   const system =
-    systems.value.find((item) => item.id === systemId) ?? systems.value[0];
+    systems.value.find((item) => item.id === systemId) ??
+    systems.value.find((item) => item.id === currentSystemId.value) ?? systems.value[0];
   if (!system) return;
 
   editingType.value = null;

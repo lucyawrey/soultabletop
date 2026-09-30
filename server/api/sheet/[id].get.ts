@@ -12,7 +12,7 @@ defineRouteMeta({
     tags: ["Sheet"],
     summary: "Get a sheet",
     description:
-      "Includes the schemas its markup is checked against (`schemas`), its content type's `contentCategory`, and its CSS scoped for rendering (`css`).",
+      "Includes the schemas its markup is checked against (`schemas`), its content type's `contentCategory` and `systemId`, and its CSS scoped for rendering (`css`).",
     responses: {
       200: { description: "Sheet" },
       404: { description: "Sheet not found" },
@@ -32,7 +32,11 @@ export default defineEventHandler(async (event) => {
   if (item.kind !== "sheet")
     throw createError({ statusCode: 404, statusMessage: "Sheet not found" });
   const [row] = await useDatabase()
-    .select({ sheet, contentCategory: contentType.contentCategory })
+    .select({
+      sheet,
+      contentCategory: contentType.contentCategory,
+      systemId: contentType.systemId,
+    })
     .from(sheet)
     .innerJoin(contentType, eq(contentType.resourceId, sheet.contentTypeId))
     .where(eq(sheet.resourceId, id))
@@ -44,6 +48,7 @@ export default defineEventHandler(async (event) => {
     ...item,
     ...row.sheet,
     contentCategory: row.contentCategory,
+    systemId: row.systemId,
     css: processSheetCss(row.sheet.cssStyles, id).css,
     schemas,
   };

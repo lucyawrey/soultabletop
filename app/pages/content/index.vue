@@ -24,14 +24,16 @@ interface ContentItem {
 }
 
 interface ContentTypeItem {
+  systemId: string;
   id: string;
   name: string;
   contentCategory: ContentCategory;
 }
 
-const list = await useResourceList<ContentItem>("/api/content", loggedIn, { extraQuery: { categories: NON_CHARACTER_CATEGORIES.join(",") } });
+const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySystem: true, extraQuery: { categories: NON_CHARACTER_CATEGORIES.join(",") } });
 const { items: contentRecords, status, refresh } = list;
 
+const { systemId: currentSystemId } = useCurrentSystem();
 const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
@@ -87,7 +89,9 @@ const formBusy = ref(false);
 const formError = ref("");
 
 function openCreate() {
-  const firstContentType = standardContentTypes.value[0];
+  const firstContentType =
+    standardContentTypes.value.find((item) => item.systemId === currentSystemId.value) ??
+    standardContentTypes.value[0];
   if (!firstContentType) return;
 
   formError.value = "";
