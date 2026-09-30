@@ -36,6 +36,10 @@ const options = ref<{ id: string; name: string }[]>([]);
 const loading = ref(false);
 const loadedKind = ref<ResourceLinkKind>();
 const loadError = ref("");
+// The message is about the previous kind's list.
+watch(kind, () => {
+  loadError.value = "";
+});
 
 async function load(open: boolean) {
   if (!open || loadedKind.value === kind.value || loading.value) return;

@@ -36,7 +36,7 @@ const navItems = computed(() =>
 );
 
 const toast = useToast();
-const route = useRoute();
+const router = useRouter();
 const signOutBusy = ref(false);
 async function signOut() {
   signOutBusy.value = true;
@@ -44,7 +44,9 @@ async function signOut() {
     // Leave the page first: if it has unsaved changes and the user cancels
     // leaving, they stay signed in and can still save.
     await navigateTo("/");
-    if (route.path !== "/") return;
+    // The router's own current route: `useRoute()` here still has the old
+    // page until the new one finishes loading.
+    if (router.currentRoute.value.path !== "/") return;
     const result = await authClient.signOut();
     if (result.error) throw new Error(result.error.message);
     // Reload what the home page fetched, now as a logged-out visitor.
