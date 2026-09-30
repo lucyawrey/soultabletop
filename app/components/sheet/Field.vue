@@ -127,9 +127,11 @@ const imageSize = computed(
   >
     <div
       v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable"
-      class="sheet-field-label flex items-center gap-1 text-xs font-medium text-muted"
+      class="flex items-center gap-1 text-xs font-medium text-muted"
     >
-      <span v-if="!compact">{{ shownLabel }}</span>
+      <span v-if="shownLabel && !compact" class="sheet-field-label">{{
+        shownLabel
+      }}</span>
       <UButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
