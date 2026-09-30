@@ -25,6 +25,7 @@ interface ContentItem {
 }
 
 interface ContentTypeItem {
+  systemId: string;
   id: string;
   name: string;
   contentCategory: ContentCategory;
@@ -38,10 +39,11 @@ const categoryFilterOptions = [
   { label: "Non-Player Characters", value: "nonPlayerCharacter" },
 ];
 
-const list = await useResourceList<ContentItem>("/api/content", loggedIn, { extraQuery: () => ({ categories: categoryFilter.value === "all" ? CHARACTER_CATEGORIES.join(",") : categoryFilter.value }) });
+const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySystem: true, extraQuery: () => ({ categories: categoryFilter.value === "all" ? CHARACTER_CATEGORIES.join(",") : categoryFilter.value }) });
 const { items: characters, status, refresh } = list;
 watch(categoryFilter, () => list.setPage(1));
 
+const { systemId: currentSystemId } = useCurrentSystem();
 const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
@@ -99,7 +101,9 @@ const formBusy = ref(false);
 const formError = ref("");
 
 function openCreate() {
-  const firstCharacterType = characterTypes.value[0];
+  const firstCharacterType =
+    characterTypes.value.find((item) => item.systemId === currentSystemId.value) ??
+    characterTypes.value[0];
   if (!firstCharacterType) return;
 
   formError.value = "";

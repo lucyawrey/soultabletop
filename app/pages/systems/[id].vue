@@ -22,9 +22,11 @@ interface ContentTypeOption {
 const route = useRoute();
 const id = route.params.id as string;
 
+const { followSystem } = useCurrentSystem();
 const { data: system, refresh } = await useFetch<SystemDetail>(
   `/api/system/${id}`,
 );
+followSystem(system.value?.id);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
 // sign in, since it may be something their account can see.
@@ -81,7 +83,7 @@ async function submitForm() {
       },
     });
     isFormOpen.value = false;
-    await refresh();
+    await Promise.all([refresh(), refreshNuxtData("system-selector")]);
   } catch (error) {
     formError.value = extractApiErrorMessage(error, "Could not save system.");
   } finally {
@@ -99,6 +101,7 @@ async function remove() {
 
   try {
     await $fetch(`/api/system/${id}`, { method: "DELETE" });
+    await refreshNuxtData("system-selector");
     await navigateTo("/systems");
   } catch (error) {
     deleteError.value = extractApiErrorMessage(

@@ -1,5 +1,5 @@
 import { count, eq } from "drizzle-orm";
-import { group, resource, sheet } from "../../database/schema";
+import { contentType, group, resource, sheet } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
@@ -8,14 +8,16 @@ import {
   listResources,
   officialColumn,
   requireListQuery,
+  requireSystemFilter,
   respondWithList,
+  systemIdParameter,
 } from "../../utils/resource-list";
 
 defineRouteMeta({
   openAPI: {
     tags: ["Sheet"],
     summary: "List accessible sheets",
-    parameters: [...listQueryParameters],
+    parameters: [...listQueryParameters, systemIdParameter],
     responses: {
       200: { description: "Sheet list. Each row has `source`: you, yourGroups, shared, official, or community" },
     },
@@ -25,16 +27,19 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
   const query = requireListQuery(event);
+  const systemId = requireSystemFilter(event);
   const database = useDatabase();
   const { rows, page } = await listResources({
     query,
     user,
     kind: "sheet",
+    where: systemId ? eq(contentType.systemId, systemId) : undefined,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
         .select({ sheet, resource, official: officialColumn })
         .from(sheet)
         .innerJoin(resource, eq(resource.id, sheet.resourceId))
+        .innerJoin(contentType, eq(contentType.resourceId, sheet.contentTypeId))
         .leftJoin(group, eq(group.id, resource.ownerGroupId))
         .where(where)
         .orderBy(...listOrder)
@@ -46,6 +51,7 @@ export default defineEventHandler(async (event) => {
         .select({ total: count() })
         .from(sheet)
         .innerJoin(resource, eq(resource.id, sheet.resourceId))
+        .innerJoin(contentType, eq(contentType.resourceId, sheet.contentTypeId))
         .where(where);
       return row?.total ?? 0;
     },

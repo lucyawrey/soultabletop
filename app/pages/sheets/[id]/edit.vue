@@ -28,6 +28,7 @@ import {
 definePageMeta({ middleware: "auth" });
 
 interface SheetDetail {
+  systemId: string;
   id: string;
   readableId: string;
   name: string;
@@ -68,9 +69,11 @@ const route = useRoute();
 const id = route.params.id as string;
 const toast = useToast();
 
+const { followSystem } = useCurrentSystem();
 const { data: sheet, refresh: refreshSheet } = await useFetch<SheetDetail>(
   `/api/sheet/${id}`,
 );
+followSystem(sheet.value?.systemId);
 if (sheet.value && !sheet.value.canEdit) await navigateTo(`/sheets/${id}`);
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
