@@ -1,4 +1,4 @@
-import { MAX_PAGE, type Paginated } from "../../shared/resource-list";
+import { MAX_PAGE, type Paginated } from "#shared/resource-list";
 
 export type ResourceListTab = "mine" | "find";
 
