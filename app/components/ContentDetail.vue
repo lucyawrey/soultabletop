@@ -32,6 +32,7 @@ interface ResolvedSheet {
 }
 
 interface ContentDetail {
+  systemId: string;
   id: string;
   readableId: string;
   name: string;
@@ -68,9 +69,11 @@ interface SheetItem {
 }
 
 const route = useRoute();
+const { followSystem } = useCurrentSystem();
 const { data: item, refresh } = await useFetch<ContentDetail>(
   `/api/content/${props.id}`,
 );
+followSystem(item.value?.systemId);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
 // sign in, since it may be something their account can see.

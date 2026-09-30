@@ -22,9 +22,11 @@ interface ContentTypeOption {
 const route = useRoute();
 const id = route.params.id as string;
 
+const { followSystem } = useCurrentSystem();
 const { data: system, refresh } = await useFetch<SystemDetail>(
   `/api/system/${id}`,
 );
+followSystem(system.value?.id);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
 // sign in, since it may be something their account can see.

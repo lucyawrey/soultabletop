@@ -52,9 +52,11 @@ const route = useRoute();
 const id = route.params.id as string;
 const toast = useToast();
 
+const { followSystem } = useCurrentSystem();
 const { data: contentType, refresh } = await useFetch<ContentTypeDetail>(
   `/api/content-type/${id}`,
 );
+followSystem(contentType.value?.systemId);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
 // sign in, since it may be something their account can see.

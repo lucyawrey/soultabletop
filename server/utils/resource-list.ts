@@ -22,6 +22,7 @@ import {
   type ResourceSource,
   type Paginated,
 } from "../../shared/resource-list";
+import { requireUuid } from "./resource-management";
 import { excludesMineFromFind, getResourceSource, isListed } from "./resource-list-filter";
 import {
   getResourceAccess,
@@ -46,6 +47,21 @@ export function requireListQuery(event: H3Event): ListQuery {
     throw createError({ statusCode: 400, statusMessage: parsed.error });
   return parsed.query;
 }
+
+// The optional `systemId` filter of the lists tied to a system (campaigns,
+// content types, sheets, content).
+export function requireSystemFilter(event: H3Event) {
+  const { systemId } = getQuery(event);
+  return systemId === undefined ? undefined : requireUuid(systemId, "systemId");
+}
+
+export const systemIdParameter = {
+  name: "systemId",
+  in: "query" as const,
+  required: false,
+  description: "Only resources that belong to this system",
+  schema: { type: "string" as const, format: "uuid" },
+};
 
 // The SQL part of a list query: search over name and readable ID, and scope.
 // "public" is exact; "mine" selects candidates (owned by the user or their

@@ -60,6 +60,7 @@ const navItems = computed(() =>
       </template>
 
       <template #body>
+        <SystemSelector class="mb-2 w-full" />
         <nav class="flex flex-col gap-2">
           <UButton
             v-for="item in navItems"
@@ -74,6 +75,7 @@ const navItems = computed(() =>
       </template>
 
       <template #right>
+        <SystemSelector class="hidden lg:flex" />
         <UButton
           v-if="!loggedIn"
           to="/"
