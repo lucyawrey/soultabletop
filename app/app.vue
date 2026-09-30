@@ -1,4 +1,6 @@
 <script setup>
+import { authClient } from "~/utils/auth-client";
+
 useHead({
   meta: [{ name: "viewport", content: "width=device-width, initial-scale=1" }],
   link: [{ rel: "icon", href: "/favicon.ico" }],
@@ -32,6 +34,27 @@ const navItems = computed(() =>
     { to: "/groups", label: "Groups", account: true },
   ].filter((item) => loggedIn.value || !item.account),
 );
+
+const toast = useToast();
+const signOutBusy = ref(false);
+async function signOut() {
+  signOutBusy.value = true;
+  try {
+    const result = await authClient.signOut();
+    if (result.error) throw new Error(result.error.message);
+    // Reload what the pages fetched, now as a logged-out visitor.
+    await refreshNuxtData();
+    await navigateTo("/");
+  } catch (error) {
+    toast.add({
+      title: "Could not sign out.",
+      description: error instanceof Error ? error.message : undefined,
+      color: "error",
+    });
+  } finally {
+    signOutBusy.value = false;
+  }
+}
 </script>
 
 <template>
@@ -74,7 +97,17 @@ const navItems = computed(() =>
       </template>
 
       <template #right>
-        <UButton v-if="!loggedIn" to="/" color="neutral" variant="outline" size="sm">
+        <UButton
+          v-if="loggedIn"
+          color="neutral"
+          variant="outline"
+          size="sm"
+          :loading="signOutBusy"
+          @click="signOut"
+        >
+          Sign out
+        </UButton>
+        <UButton v-else to="/" color="neutral" variant="outline" size="sm">
           Sign in
         </UButton>
         <UColorModeButton />
