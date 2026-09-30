@@ -1,17 +1,22 @@
-import { asc, eq } from "drizzle-orm";
-import { contentType, resource } from "../../database/schema";
+import { count, eq } from "drizzle-orm";
+import { contentType, group, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
-  getResourceAccessOrPublic,
-  loadResourceAccessContext,
-} from "../../utils/resource-access";
+  listOrder,
+  listQueryParameters,
+  listResources,
+  officialColumn,
+  requireListQuery,
+  respondWithList,
+} from "../../utils/resource-list";
 import { canChangeResourceOwner } from "../../utils/resource-management";
 
 defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
     summary: "List accessible content types",
+    parameters: [...listQueryParameters],
     responses: {
       200: { description: "Content type list" },
     },
@@ -20,29 +25,38 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
+  const query = requireListQuery(event);
   const database = useDatabase();
-  const records = await database
-    .select({ type: contentType, resource })
-    .from(contentType)
-    .innerJoin(resource, eq(resource.id, contentType.resourceId))
-    .orderBy(asc(resource.name));
-  const context = user
-    ? await loadResourceAccessContext(
-        user,
-        records.map(({ resource: item }) => item.id),
-      )
-    : null;
+  const { rows, context, page } = await listResources({
+    query,
+    user,
+    fetchRows: ({ where, limit, offset }) => {
+      const select = database
+        .select({ type: contentType, resource, official: officialColumn })
+        .from(contentType)
+        .innerJoin(resource, eq(resource.id, contentType.resourceId))
+        .leftJoin(group, eq(group.id, resource.ownerGroupId))
+        .where(where)
+        .orderBy(...listOrder)
+        .$dynamic();
+      return limit === undefined ? select : select.limit(limit).offset(offset ?? 0);
+    },
+    countRows: async (where) => {
+      const [row] = await database
+        .select({ total: count() })
+        .from(contentType)
+        .innerJoin(resource, eq(resource.id, contentType.resourceId))
+        .where(where);
+      return row?.total ?? 0;
+    },
+  });
 
-  return records
-    .map((record) => ({
-      ...record,
-      access: getResourceAccessOrPublic(record.resource, context),
-    }))
-    .filter(({ access }) => access.canRead)
-    .map(({ type, resource: item, access }) => ({
+  return respondWithList(
+    rows.map(({ type, resource: item, official, access }) => ({
       id: item.id,
       readableId: item.readableId,
       isPubliclyReadable: item.isPubliclyReadable,
+      official,
       name: item.name,
       systemId: type.systemId,
       contentCategory: type.contentCategory,
@@ -53,5 +67,7 @@ export default defineEventHandler(async (event) => {
       canEdit: access.canEdit,
       canChangeOwner:
         !!user && !!context && canChangeResourceOwner(item, user, context),
-    }));
+    })),
+    page,
+  );
 });
