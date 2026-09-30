@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import type { ContentTypeSchema } from "../../shared/content-schema";
 import { CONTENT_CATEGORIES } from "../../shared/content-categories";
+import { SHEET_DISPLAYS } from "../../shared/sheet/registry";
 import {
   boolean,
   json,
@@ -94,6 +95,7 @@ export const siteRole = pgEnum("site_role", ["member", "admin"]);
 export const groupRole = pgEnum("group_role", ["admin", "editor", "member"]);
 export const campaignRole = pgEnum("campaign_role", ["gm", "player"]);
 export const contentCategory = pgEnum("content_category", CONTENT_CATEGORIES);
+export const sheetDisplay = pgEnum("sheet_display", SHEET_DISPLAYS);
 export const resourceKind = pgEnum("resource_kind", [
   "system",
   "campaign",
@@ -366,6 +368,9 @@ export const sheet = pgTable(
     // Initial state of the Content page's Edit and Autosave switches.
     defaultEditMode: boolean("default_edit_mode").default(false).notNull(),
     defaultAutosave: boolean("default_autosave").default(false).notNull(),
+    // How fields look when they can't be edited; `display` in the markup
+    // overrides it.
+    defaultDisplay: sheetDisplay("default_display").default("text").notNull(),
   },
   (table) => [
     index("sheet_content_type_id_idx").on(table.contentTypeId),

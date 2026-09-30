@@ -202,11 +202,15 @@ describe("escapeSheetAttribute", () => {
 
 describe("generatedSheetDefaults", () => {
   it.each([
-    ["playerCharacter", true, true],
-    ["nonPlayerCharacter", false, true],
-    ["general", false, false],
-    ["page", false, false],
-  ] as const)("%s", (category, defaultEditMode, defaultAutosave) => {
-    expect(generatedSheetDefaults(category)).toEqual({ defaultEditMode, defaultAutosave });
+    ["playerCharacter", true, true, "box"],
+    ["nonPlayerCharacter", false, true, "text"],
+    ["general", false, false, "text"],
+    ["page", false, false, "text"],
+  ] as const)("%s", (category, defaultEditMode, defaultAutosave, defaultDisplay) => {
+    expect(generatedSheetDefaults(category)).toEqual({
+      defaultEditMode,
+      defaultAutosave,
+      defaultDisplay,
+    });
   });
 });

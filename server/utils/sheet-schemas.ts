@@ -15,6 +15,7 @@ import {
 } from "../../shared/sheet/generate";
 import { processSheetCss } from "../../shared/sheet/css";
 import type { SheetDiagnostic } from "../../shared/sheet/parser";
+import type { SheetDisplay } from "../../shared/sheet/registry";
 import {
   compileSheet,
   hasErrors,
@@ -70,6 +71,7 @@ export interface ResolvedSheet {
   source: "selected" | "default" | "generated";
   defaultEditMode: boolean;
   defaultAutosave: boolean;
+  defaultDisplay: SheetDisplay;
   canEdit: boolean;
 }
 
@@ -105,6 +107,7 @@ export async function resolveContentSheet(
         source: selectedSheetId ? "selected" : "default",
         defaultEditMode: row.sheet.defaultEditMode,
         defaultAutosave: row.sheet.defaultAutosave,
+        defaultDisplay: row.sheet.defaultDisplay,
         canEdit: access.canEdit,
       };
     }

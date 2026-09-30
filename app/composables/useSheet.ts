@@ -1,5 +1,6 @@
 import type { InjectionKey, Ref } from "vue";
 import type { Interpolation, TextPart } from "#shared/sheet/parser";
+import type { SheetDisplay } from "#shared/sheet/registry";
 import {
   formatSheetValue,
   interpolateSheetText,
@@ -32,6 +33,8 @@ export interface SheetContext {
   // The viewer may edit the Content, and the Edit switch is on.
   canEdit: Ref<boolean>;
   editMode: Ref<boolean>;
+  // How fields look when they can't be edited, before any `display` attribute.
+  defaultDisplay: Ref<SheetDisplay>;
   // Writes a value into the Content's draft data.
   update: (path: (string | number)[], value: unknown) => void;
   // Makes referenced Content picked while editing displayable before saving.
@@ -42,11 +45,18 @@ export interface SheetContext {
   unlocked: Set<string>;
 }
 
-// `live` / `locked` in effect, inherited from enclosing tags.
+// `live` / `locked` / `display` in effect, inherited from enclosing tags.
 export interface SheetFlags {
   live: boolean;
   locked: boolean;
+  display: SheetDisplay;
 }
+
+const defaultFlags = (): SheetFlags => ({
+  live: false,
+  locked: false,
+  display: "text",
+});
 
 const contextKey: InjectionKey<SheetContext> = Symbol("sheet");
 const scopeKey: InjectionKey<Ref<SheetScope>> = Symbol("sheet-scope");
@@ -55,24 +65,29 @@ const flagsKey: InjectionKey<Ref<SheetFlags>> = Symbol("sheet-flags");
 export function provideSheetContext(context: SheetContext) {
   provide(contextKey, context);
   provide(scopeKey, context.root);
-  provide(flagsKey, ref({ live: false, locked: false }));
+  provide(
+    flagsKey,
+    computed(() => ({ ...defaultFlags(), display: context.defaultDisplay.value })),
+  );
 }
 
 export function provideSheetScope(scope: Ref<SheetScope>) {
   provide(scopeKey, scope);
 }
 
-// Applies a tag's own live/locked attributes on top of the inherited ones, for
-// the tag and everything inside it.
+// Applies a tag's own live/locked/display attributes on top of the inherited
+// ones, for the tag and everything inside it.
 export function provideSheetFlags(node: () => ValidatedNode) {
-  const parent = inject(flagsKey, ref({ live: false, locked: false }));
+  const parent = inject(flagsKey, ref(defaultFlags()));
   const flags = computed<SheetFlags>(() => {
     const current = node();
     if (current.type !== "element") return parent.value;
-    const { live, locked } = current.attrs;
+    const { live, locked, display } = current.attrs;
     return {
       live: typeof live === "boolean" ? live : parent.value.live,
       locked: typeof locked === "boolean" ? locked : parent.value.locked,
+      display:
+        display === "text" || display === "box" ? display : parent.value.display,
     };
   });
   provide(flagsKey, flags);
@@ -86,7 +101,7 @@ export function useSheetEditable(
   path: () => (string | number)[] | null,
 ) {
   const { context } = useSheet();
-  const flags = inject(flagsKey, ref({ live: false, locked: false }));
+  const flags = inject(flagsKey, ref(defaultFlags()));
   const unlockKey = computed(
     () => `${node().loc.start.offset}:${JSON.stringify(path())}`,
   );
@@ -108,6 +123,8 @@ export function useSheetEditable(
       () => allowed.value && flags.value.locked && !unlocked.value,
     ),
     unlock: () => context.unlocked.add(unlockKey.value),
+    // Shown as a disabled input when not editable (`display="box"`).
+    boxed: computed(() => flags.value.display === "box"),
   };
 }
 
