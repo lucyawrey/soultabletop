@@ -16,10 +16,10 @@ defineRouteMeta({
         "application/json": {
           schema: {
             type: "object",
-            required: ["name", "slug"],
+            required: ["name", "readableId"],
             properties: {
               name: { type: "string" },
-              slug: { type: "string" },
+              readableId: { type: "string" },
               official: {
                 type: "boolean",
                 description:
@@ -40,7 +40,7 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const { name, slug, official } = await parseBody(
+  const { name, readableId, official } = await parseBody(
     event,
     groupCreateWithKindSchema,
   );
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
         .insert(group)
         .values({
           name,
-          slug,
+          readableId,
           kind: official ? "system" : "user",
           createdByUserId: user.id,
         })
@@ -79,7 +79,7 @@ export default defineEventHandler(async (event) => {
     if (isUniqueConstraintError(error))
       throw createError({
         statusCode: 409,
-        statusMessage: "Group slug is already in use",
+        statusMessage: "Group ID is already in use",
       });
     throw error;
   }

@@ -8,7 +8,7 @@ definePageMeta({ middleware: "auth" });
 
 interface SheetDetail {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -114,7 +114,7 @@ async function remove() {
             <UBadge v-if="sheet.isDefault" variant="subtle">Default</UBadge>
           </h1>
           <p class="text-sm text-muted">
-            {{ sheet.slug }} ·
+            {{ sheet.readableId }} ·
             {{ visibilityLabel(sheet.isPubliclyReadable) }} ·
             <NuxtLink
               v-if="contentType"

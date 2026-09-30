@@ -5,7 +5,7 @@ definePageMeta({ middleware: "auth" });
 
 interface SystemDetail {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   isPubliclyReadable: boolean;
   updatedAt: string;
@@ -17,7 +17,7 @@ interface SystemDetail {
 interface ContentTypeOption {
   id: string;
   name: string;
-  slug: string;
+  readableId: string;
   systemId: string;
 }
 
@@ -39,23 +39,23 @@ const systemContentTypes = computed(() =>
 
 const isFormOpen = ref(false);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
 });
 const formBusy = ref(false);
 const formError = ref("");
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 function openEdit() {
   if (!system.value) return;
   formError.value = "";
-  form.slug = system.value.slug;
+  form.readableId = system.value.readableId;
   form.name = system.value.name;
   form.isPubliclyReadable = system.value.isPubliclyReadable;
   form.ownerGroupId = system.value.ownerGroupId;
-  resetSlugTouched(true);
+  resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
 
@@ -67,7 +67,7 @@ async function submitForm() {
     await $fetch(`/api/system/${id}`, {
       method: "PATCH",
       body: {
-        slug: form.slug,
+        readableId: form.readableId,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
         ...(form.ownerGroupId !== (system.value?.ownerGroupId ?? null)
@@ -125,7 +125,7 @@ async function remove() {
             {{ system.name }}
           </h1>
           <p class="text-sm text-muted">
-            {{ system.slug }} ·
+            {{ system.readableId }} ·
             {{ visibilityLabel(system.isPubliclyReadable) }}
           </p>
         </div>
@@ -183,7 +183,7 @@ async function remove() {
             >
               {{ type.name }}
             </NuxtLink>
-            <span class="text-sm text-muted">{{ type.slug }}</span>
+            <span class="text-sm text-muted">{{ type.readableId }}</span>
           </li>
         </ul>
         <p v-else class="py-6 text-center text-sm text-muted">
@@ -203,10 +203,10 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField

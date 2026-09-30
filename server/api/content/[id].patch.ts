@@ -13,11 +13,11 @@ import {
 } from "../../utils/resource-access";
 import {
   resolveOwnerChange,
-  rethrowSlugConflict,
+  rethrowReadableIdConflict,
 } from "../../utils/resource-management";
 
 interface UpdateContentBody {
-  slug?: unknown;
+  readableId?: unknown;
   name?: unknown;
   data?: unknown;
   sheetId?: unknown;
@@ -37,7 +37,7 @@ defineRouteMeta({
           schema: {
             type: "object",
             properties: {
-              slug: { type: "string" },
+              readableId: { type: "string" },
               name: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
               ownerGroupId: {
@@ -100,7 +100,7 @@ export default defineEventHandler(async (event) => {
     record.resource,
     body.ownerGroupId,
   );
-  const updates: { slug?: string; name?: string; isPubliclyReadable?: boolean } =
+  const updates: { readableId?: string; name?: string; isPubliclyReadable?: boolean } =
     {};
   if (body.isPubliclyReadable !== undefined) {
     if (typeof body.isPubliclyReadable !== "boolean") {
@@ -111,14 +111,14 @@ export default defineEventHandler(async (event) => {
     }
     updates.isPubliclyReadable = body.isPubliclyReadable;
   }
-  if (body.slug !== undefined) {
+  if (body.readableId !== undefined) {
     if (
-      typeof body.slug !== "string" ||
-      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(body.slug)
+      typeof body.readableId !== "string" ||
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(body.readableId)
     ) {
-      throw createError({ statusCode: 400, statusMessage: "Invalid slug" });
+      throw createError({ statusCode: 400, statusMessage: "Invalid readableId" });
     }
-    updates.slug = body.slug.toLowerCase();
+    updates.readableId = body.readableId.toLowerCase();
   }
   if (body.name !== undefined && typeof body.name !== "string") {
     throw createError({
@@ -247,7 +247,7 @@ export default defineEventHandler(async (event) => {
           updatedAt: now,
         })
         .where(eq(resource.id, record.resource.id))
-        .catch(rethrowSlugConflict);
+        .catch(rethrowReadableIdConflict);
     }
 
     const contentUpdates = {
@@ -264,7 +264,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       id: record.resource.id,
-      slug: updates.slug ?? record.resource.slug,
+      readableId: updates.readableId ?? record.resource.readableId,
       name: updates.name ?? record.resource.name,
       isPubliclyReadable:
         updates.isPubliclyReadable ?? record.resource.isPubliclyReadable,

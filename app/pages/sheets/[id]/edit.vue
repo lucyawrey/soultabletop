@@ -24,7 +24,7 @@ definePageMeta({ middleware: "auth" });
 
 interface SheetDetail {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   contentTypeId: string;
   contentCategory: ContentCategory;
@@ -81,7 +81,7 @@ const canSetDefault = computed(() => contentType.value?.canEdit ?? false);
 
 const form = reactive({
   name: "",
-  slug: "",
+  readableId: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
   isDefault: false,
@@ -90,12 +90,12 @@ const form = reactive({
   markup: "",
   cssStyles: "",
 });
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const saved = ref("");
 function load(detail: SheetDetail) {
   Object.assign(form, {
     name: detail.name,
-    slug: detail.slug,
+    readableId: detail.readableId,
     isPubliclyReadable: detail.isPubliclyReadable,
     ownerGroupId: detail.ownerGroupId,
     isDefault: detail.isDefault,
@@ -104,7 +104,7 @@ function load(detail: SheetDetail) {
     markup: detail.markup,
     cssStyles: detail.cssStyles,
   });
-  resetSlugTouched(true);
+  resetReadableIdTouched(true);
   saved.value = JSON.stringify(form);
 }
 if (sheet.value) load(sheet.value);
@@ -132,7 +132,7 @@ async function save(confirmReplaceDefault = false) {
       method: "PATCH",
       body: {
         name: form.name,
-        slug: form.slug,
+        readableId: form.readableId,
         isPubliclyReadable: form.isPubliclyReadable,
         ...(ownerChanged ? { ownerGroupId: form.ownerGroupId } : {}),
         markup: form.markup,
@@ -276,7 +276,7 @@ function download(kind: SheetFileKind) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = sheetExportFileName(form.slug, kind);
+  link.download = sheetExportFileName(form.readableId, kind);
   link.click();
   setTimeout(() => URL.revokeObjectURL(url));
 }
@@ -550,10 +550,10 @@ async function insertPath(path: string) {
                 <UFormField name="name" label="Name" required>
                   <UInput v-model="form.name" class="w-full" />
                 </UFormField>
-                <SlugField
-                  :model-value="form.slug"
-                  :error="slugError"
-                  @update:model-value="onSlugInput"
+                <ReadableIdField
+                  :model-value="form.readableId"
+                  :error="readableIdError"
+                  @update:model-value="onReadableIdInput"
                 />
                 <VisibilityField v-model="form.isPubliclyReadable" />
                 <OwnerField

@@ -28,7 +28,7 @@ export type SheetLinks = Record<string, SheetLink>;
 
 const RESOURCE_PAGES: Record<ResourceLinkKind, string> = {
   system: "/systems",
-  game: "/games",
+  campaign: "/campaigns",
   contentType: "/types",
   sheet: "/sheets",
   content: "/content",
