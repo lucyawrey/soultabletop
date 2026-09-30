@@ -54,7 +54,7 @@ All field tags take `field` (req; a path, see SKILL.md), `label`, and `hint`, pl
 | `Value` | `format` (`plain` \| `signed`) | any value | Never editable |
 | `Markdown` | none | string | Formatted long text |
 | `Image` | `alt`, `size` (`sm` \| `md` \| `lg` \| `full`, default md) | string | The string must be an https URL |
-| `Column` | `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; no `class` hook of its own |
+| `Column` | `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class` |
 
 Paths the schema does not know (a non-strict content type, or below a free-form `object`) are accepted by every
 field tag, with a warning.

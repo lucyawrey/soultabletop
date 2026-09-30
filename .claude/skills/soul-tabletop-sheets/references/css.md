@@ -25,10 +25,10 @@ Every tag's root element has `sheet-<tag>` in lowercase: `sheet-sheet`, `sheet-s
 `sheet-tabs`, `sheet-tab`, `sheet-divider`, `sheet-heading`, `sheet-note`, `sheet-callout`, `sheet-badge`,
 `sheet-collapsible`, `sheet-list`, `sheet-table`, `sheet-rowdetails`, and one per field tag (`sheet-field`,
 `sheet-text`, `sheet-number`, `sheet-checkbox`, `sheet-toggle`, `sheet-select`, `sheet-tags`, `sheet-tracker`,
-`sheet-ref`, `sheet-value`, `sheet-markdown`, `sheet-image`). Also `sheet-list-item` (each List item),
+`sheet-ref`, `sheet-value`, `sheet-markdown`, `sheet-image`, `sheet-column`). Also `sheet-list-item` (each List item),
 `sheet-text` on plain text paragraphs (the same class as the `Text` tag, so scope with a parent when it matters),
 `sheet-invalid` (placeholder for a broken tag, shown to editors only), and `sheet-root` on the outermost element.
-`Column` has no element or hook of its own. The `class` attribute adds your own classes on the same element.
+Each `Column` cell has `sheet-column`. The `class` attribute adds your own classes on the same element.
 
 Inner parts of Nuxt UI components have no stable hooks: style what the hooks and `class` attributes reach, use
 variables (`--ui-*`), and avoid selectors that depend on Nuxt UI's internal markup.
@@ -43,14 +43,13 @@ Tokens change with color mode by themselves; add `.dark` rules only for things t
 
 Self-hosted and usable by name in `font-family`: Cinzel (classical capitals, titles), Uncial Antiqua (medieval
 uncial), IM Fell English (old printed book), Crimson Pro (readable book serif), Special Elite (typewriter),
-Orbitron (futuristic). Generic families (`serif`, `sans-serif`, `monospace`, `system-ui`, ...), `var(...)`, and CSS
-keywords are fine. Any other family gives a warning (`css-font`), not an error. `@font-face` is rejected.
+Orbitron (futuristic). Generic families (`serif`, `sans-serif`, `monospace`, `system-ui`, ...), `var(...)`, and the keywords `inherit`, `initial`, `unset`, `revert`, `revert-layer` are fine. Any other family gives a warning (`css-font`), not an error. `@font-face` is rejected.
 
 ## Rejected (error; the rule or declaration is dropped)
 
 | Construct | Code |
 |---|---|
-| `@import`, `@font-face`, `@namespace`, `@page`, and any at-rule other than `@media`, `@supports`, `@container`, `@layer`, `@keyframes` | `css-at-rule` |
+| `@import`, `@font-face`, `@namespace`, `@page`, and any at-rule other than `@media`, `@supports`, `@container`, `@layer`, `@keyframes` (or `@-webkit-keyframes`) | `css-at-rule` |
 | `behavior`, `-moz-binding` properties | `css-property` |
 | `url()`, `image-set()`, `-webkit-image-set()`, `image()`, `cross-fade()`, `element()`, `paint()`, `expression()` in any value (CSS escapes are decoded first) | `css-function` |
 | A selector that could style anything outside the Sheet: `:root`/`html`/`body` anywhere but the start of a selector (including inside `:not()`, `:is()`, `:has()`), `~` or `+` after the root, a selector starting with `~` or `+`, `&` inside a pseudo-class function, `& ~` / `& +` or a leading `~` / `+` in a rule nested in a `:root`/`.dark` rule | `css-selector` |

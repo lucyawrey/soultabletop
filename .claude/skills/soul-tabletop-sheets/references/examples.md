@@ -2,7 +2,7 @@
 
 Each example is a content type schema (`json`), Sheet markup (`xml`, saved as `.stts`), and Sheet CSS (`css`).
 All three compile with no errors against that schema (checked with `compileSheet` and `processSheetCss`; see
-`checking.md`). The fence order (json, xml, css) is relied on by the check script, so keep it if you edit these.
+`checking.md`).
 
 The examples use a made-up rules system: swap in the real field names from your content type's schema.
 Example 1 also needs a second content type, `class`, described under it.
@@ -10,7 +10,7 @@ Example 1 also needs a second content type, `class`, described under it.
 ## 1. Player character sheet
 
 Schema of the character content type. `class` is a `content` field pointing at a "Class" content type with
-`hitDie` (number) and `primaryAbility` (string). Its content type ID is the `contentTypeId` above; in a real schema it is the UUID of that content type.
+`hitDie` (number) and `primaryAbility` (string). `class-type` (the `contentTypeId` in the schema below) is a placeholder: in a real schema it is the UUID of that content type, and the `types` map in `schemas.json` (see `checking.md`) must use the same key.
 
 ```json
 {
@@ -139,7 +139,7 @@ click on its pencil button first.
 
 ## 2. NPC stat block
 
-Read-mostly: `display` is left at its default (text), and everything is `Value`, so nothing is an input.
+Read-mostly (a `Markdown` field shows its schema label, here `Text`, above it; there is no way to hide a label yet): `display` is left at its default (text), and everything is `Value`, so nothing is an input.
 
 ```json
 {
@@ -210,13 +210,13 @@ Read-mostly: `display` is left at its default (text), and everything is `Value`,
 
   <List field="traits">
     <Heading level="4">{name}</Heading>
-    <Markdown field="text" label="" />
+    <Markdown field="text" />
   </List>
 
   <Heading level="3">Actions</Heading>
   <List field="actions">
     <Collapsible title="{name}" subtitle="+{attackBonus} to hit" open>
-      <Markdown field="text" label="" />
+      <Markdown field="text" />
     </Collapsible>
   </List>
 </Sheet>
@@ -267,7 +267,7 @@ A compact card. Shows a `Callout` filled from a field with `{path}`, and `List f
   </Grid>
   <Checkbox field="concentration" />
   <Divider label="Effect" />
-  <Markdown field="description" label="" />
+  <Markdown field="description" />
   <Callout color="warning" icon="i-lucide-arrow-up" title="Higher levels">{higherLevels}</Callout>
   <Divider label="Classes" />
   <Stack direction="row" wrap gap="sm">

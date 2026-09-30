@@ -81,7 +81,7 @@ Boolean (`live`, `locked`) or enum (`display`) attributes on any tag; on layout 
 Details and tables are in `references/css.md`. Essentials:
 
 - Every selector is scoped to the Sheet automatically: write `.sheet-section { ... }`, never worry about affecting the app.
-- Hook classes: every tag's root element has `sheet-<tag>` in lowercase (`sheet-section`, `sheet-grid`, `sheet-number`, `sheet-text`, `sheet-tabs`, `sheet-tab`, ...); List items also have `sheet-list-item`; plain text paragraphs have `sheet-text`; broken tags `sheet-invalid`. Add your own with the `class` attribute (names: lowercase letters, digits, hyphens, starting with a letter). Column has no element of its own, so it has no hook.
+- Hook classes: every tag's root element has `sheet-<tag>` in lowercase (`sheet-section`, `sheet-grid`, `sheet-number`, `sheet-text`, `sheet-tabs`, `sheet-tab`, ...); List items also have `sheet-list-item`; plain text paragraphs have `sheet-text`; broken tags `sheet-invalid`. Add your own with the `class` attribute (names: lowercase letters, digits, hyphens, starting with a letter).
 - `:root`, `html`, and `body` mean the Sheet's own root element (only at the start of a selector), so `:root { --accent: teal }` defines variables for the Sheet. A leading `.dark` targets dark mode: `.dark .sheet-section { ... }`.
 - Use Nuxt UI tokens so the Sheet follows the theme: `var(--ui-primary)`, `--ui-text`, `--ui-text-muted`, `--ui-text-highlighted`, `--ui-bg`, `--ui-bg-elevated`, `--ui-border`, `--ui-radius`.
 - Fonts: only these load, by name in `font-family`: Cinzel, Uncial Antiqua, IM Fell English, Crimson Pro, Special Elite, Orbitron (plus generic families). Another name is a warning: it shows only if the viewer has it installed. There is no `@font-face`.
@@ -115,4 +115,4 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 
 ## Known doc drift
 
-`docs/sheet-system.md` disagrees with the code in a few places; follow the code: `Grid`/`Stack` `gap` also accepts `none`; `Table` also allows `RowDetails` children; the doc says `Markdown` renders as plain text until a later phase, but it now renders with the editor's Markdown view; the doc says every tag renders a `sheet-<tag>` hook class, but `Column` renders no element of its own, so it has none.
+`docs/sheet-system.md` disagrees with the code in a few places; follow the code: `Grid`/`Stack` `gap` also accepts `none`; `Table` also allows `RowDetails` children; the doc says `Markdown` renders as plain text until a later phase, but it now renders with the editor's Markdown view.
