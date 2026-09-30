@@ -18,7 +18,7 @@ const emit = defineEmits<{ pick: [id: string, link: SheetLink] }>();
 
 const LIST_URLS: Record<ResourceLinkKind, string> = {
   system: "/api/system",
-  game: "/api/game",
+  campaign: "/api/campaign",
   contentType: "/api/content-type",
   sheet: "/api/sheet",
   content: "/api/content",

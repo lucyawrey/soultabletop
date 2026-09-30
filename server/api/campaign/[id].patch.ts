@@ -7,15 +7,15 @@ import {
   requireName,
   requireResourceEditor,
   resolveOwnerChange,
-  rethrowSlugConflict,
-  requireSlug,
+  rethrowReadableIdConflict,
+  requireReadableId,
 } from "../../utils/resource-management";
-import { parseBody, gamePatchSchema } from "../../utils/api-schemas";
+import { parseBody, campaignPatchSchema } from "../../utils/api-schemas";
 
 defineRouteMeta({
   openAPI: {
-    tags: ["Game"],
-    summary: "Update a game",
+    tags: ["Campaign"],
+    summary: "Update a campaign",
     requestBody: {
       required: true,
       content: {
@@ -24,7 +24,7 @@ defineRouteMeta({
             type: "object",
             properties: {
               name: { type: "string" },
-              slug: { type: "string" },
+              readableId: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
               ownerGroupId: {
                 type: ["string", "null"],
@@ -38,7 +38,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      200: { description: "Updated game" },
+      200: { description: "Updated campaign" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
     },
@@ -53,17 +53,17 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: "Resource ID is required",
     });
-  const body = await parseBody(event, gamePatchSchema);
+  const body = await parseBody(event, campaignPatchSchema);
   const item = await requireResourceEditor(user, id);
   const owner = await resolveOwnerChange(user, item, body.ownerGroupId);
-  if (item.kind !== "game")
-    throw createError({ statusCode: 404, statusMessage: "Game not found" });
+  if (item.kind !== "campaign")
+    throw createError({ statusCode: 404, statusMessage: "Campaign not found" });
   const [updated] = await useDatabase()
     .update(resource)
     .set({
       ...owner,
       ...(body.name !== undefined ? { name: requireName(body.name) } : {}),
-      ...(body.slug !== undefined ? { slug: requireSlug(body.slug) } : {}),
+      ...(body.readableId !== undefined ? { readableId: requireReadableId(body.readableId) } : {}),
       ...(body.isPubliclyReadable !== undefined
         ? { isPubliclyReadable: body.isPubliclyReadable === true }
         : {}),
@@ -72,6 +72,6 @@ export default defineEventHandler(async (event) => {
     })
     .where(eq(resource.id, id))
     .returning()
-    .catch(rethrowSlugConflict);
+    .catch(rethrowReadableIdConflict);
   return updated;
 });

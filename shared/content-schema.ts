@@ -7,7 +7,7 @@ export type ContentFieldAllow = "reference" | "local" | "both";
 // Resource kinds a `resourceLink` field can be limited to.
 export const RESOURCE_LINK_KINDS = [
   "system",
-  "game",
+  "campaign",
   "contentType",
   "sheet",
   "content",

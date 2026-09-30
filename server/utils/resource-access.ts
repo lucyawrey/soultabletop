@@ -1,8 +1,8 @@
 import { eq, inArray } from "drizzle-orm";
 import type { User } from "better-auth";
 import {
-  gameMembership,
-  game,
+  campaignMembership,
+  campaign,
   group,
   groupMembership,
   resourceGrant,
@@ -16,8 +16,8 @@ export interface ResourceAccessContext {
   userId: string;
   isSiteAdmin: boolean;
   groupRoles: Map<string, "admin" | "editor" | "member">;
-  gameRoles: Map<string, "gm" | "player">;
-  gameOwners: Map<string, { userId: string | null; groupId: string | null }>;
+  campaignRoles: Map<string, "gm" | "player">;
+  campaignOwners: Map<string, { userId: string | null; groupId: string | null }>;
   systemGroupIds: Set<string>;
   grants: (typeof resourceGrant.$inferSelect)[];
 }
@@ -33,7 +33,7 @@ export async function loadResourceAccessContext(
   resourceIds: string[],
 ): Promise<ResourceAccessContext> {
   const database = useDatabase();
-  const [profiles, groups, games, grants, systemGroups] = await Promise.all([
+  const [profiles, groups, campaigns, grants, systemGroups] = await Promise.all([
     database
       .select({ role: userProfile.role })
       .from(userProfile)
@@ -44,9 +44,9 @@ export async function loadResourceAccessContext(
       .from(groupMembership)
       .where(eq(groupMembership.userId, user.id)),
     database
-      .select({ gameId: gameMembership.gameId, role: gameMembership.role })
-      .from(gameMembership)
-      .where(eq(gameMembership.userId, user.id)),
+      .select({ campaignId: campaignMembership.campaignId, role: campaignMembership.role })
+      .from(campaignMembership)
+      .where(eq(campaignMembership.userId, user.id)),
     resourceIds.length
       ? database
           .select()
@@ -58,29 +58,29 @@ export async function loadResourceAccessContext(
       .from(group)
       .where(eq(group.kind, "system")),
   ]);
-  const gameIds = [
-    ...new Set(grants.flatMap((grant) => (grant.gameId ? [grant.gameId] : []))),
+  const campaignIds = [
+    ...new Set(grants.flatMap((grant) => (grant.campaignId ? [grant.campaignId] : []))),
   ];
-  const gameOwnerRows = gameIds.length
+  const campaignOwnerRows = campaignIds.length
     ? await database
         .select({
-          gameId: game.resourceId,
+          campaignId: campaign.resourceId,
           userId: resource.ownerUserId,
           groupId: resource.ownerGroupId,
         })
-        .from(game)
-        .innerJoin(resource, eq(resource.id, game.resourceId))
-        .where(inArray(game.resourceId, gameIds))
+        .from(campaign)
+        .innerJoin(resource, eq(resource.id, campaign.resourceId))
+        .where(inArray(campaign.resourceId, campaignIds))
     : [];
 
   return {
     userId: user.id,
     isSiteAdmin: profiles[0]?.role === "admin",
     groupRoles: new Map(groups.map(({ groupId, role }) => [groupId, role])),
-    gameRoles: new Map(games.map(({ gameId, role }) => [gameId, role])),
-    gameOwners: new Map(
-      gameOwnerRows.map(({ gameId, userId, groupId }) => [
-        gameId,
+    campaignRoles: new Map(campaigns.map(({ campaignId, role }) => [campaignId, role])),
+    campaignOwners: new Map(
+      campaignOwnerRows.map(({ campaignId, userId, groupId }) => [
+        campaignId,
         { userId, groupId },
       ]),
     ),
@@ -154,20 +154,20 @@ export function getResourceAccess(
       }
     }
 
-    if (grant.gameId) {
-      const role = context.gameRoles.get(grant.gameId);
-      const gameOwner = context.gameOwners.get(grant.gameId);
-      const isGameOwner =
-        gameOwner?.userId === context.userId ||
-        (!!gameOwner?.groupId &&
+    if (grant.campaignId) {
+      const role = context.campaignRoles.get(grant.campaignId);
+      const campaignOwner = context.campaignOwners.get(grant.campaignId);
+      const isCampaignOwner =
+        campaignOwner?.userId === context.userId ||
+        (!!campaignOwner?.groupId &&
           ["admin", "editor"].includes(
-            context.groupRoles.get(gameOwner.groupId) ?? "",
+            context.groupRoles.get(campaignOwner.groupId) ?? "",
           ));
       const includedInAudience =
-        isGameOwner ||
+        isCampaignOwner ||
         (role !== undefined &&
-          (grant.gameAudience === "members" ||
-            (grant.gameAudience === "gms" && role === "gm")));
+          (grant.campaignAudience === "members" ||
+            (grant.campaignAudience === "gms" && role === "gm")));
       if (includedInAudience) {
         canRead = true;
         canEdit ||= grant.permission === "edit";

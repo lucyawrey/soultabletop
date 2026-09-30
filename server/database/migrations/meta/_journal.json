@@ -64,6 +64,13 @@
       "when": 1790706341868,
       "tag": "0008_rename_official_group",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790729271331,
+      "tag": "0009_rename_game_to_campaign_and_slug_to_readable_id",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 import { createError, getRouterParam } from "h3";
 import { count, eq } from "drizzle-orm";
-import { contentType, game, resource } from "../../database/schema";
+import { contentType, campaign, resource } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { requireResourceEditor } from "../../utils/resource-management";
@@ -14,13 +14,13 @@ defineRouteMeta({
       204: { description: "Deleted" },
       401: { description: "Authentication required" },
       403: { description: "Not editable" },
-      409: { description: "Games or content types still use the system" },
+      409: { description: "Campaigns or content types still use the system" },
     },
   },
 });
 
 const inUseMessage =
-  "Delete this system's games and content types before deleting the system";
+  "Delete this system's campaigns and content types before deleting the system";
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
@@ -34,18 +34,18 @@ export default defineEventHandler(async (event) => {
   if (item.kind !== "system")
     throw createError({ statusCode: 404, statusMessage: "System not found" });
   const database = useDatabase();
-  // Games and ContentTypes reference their System with ON DELETE RESTRICT.
-  const [[games], [types]] = await Promise.all([
-    database.select({ total: count() }).from(game).where(eq(game.systemId, id)),
+  // Campaigns and ContentTypes reference their System with ON DELETE RESTRICT.
+  const [[campaigns], [types]] = await Promise.all([
+    database.select({ total: count() }).from(campaign).where(eq(campaign.systemId, id)),
     database
       .select({ total: count() })
       .from(contentType)
       .where(eq(contentType.systemId, id)),
   ]);
-  if (games?.total || types?.total)
+  if (campaigns?.total || types?.total)
     throw createError({
       statusCode: 409,
-      statusMessage: `${inUseMessage} (${games?.total ?? 0} games, ${types?.total ?? 0} content types)`,
+      statusMessage: `${inUseMessage} (${campaigns?.total ?? 0} campaigns, ${types?.total ?? 0} content types)`,
     });
   try {
     await database.delete(resource).where(eq(resource.id, id));

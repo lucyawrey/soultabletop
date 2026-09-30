@@ -26,9 +26,9 @@ defineRouteMeta({
         "application/json": {
           schema: {
             type: "object",
-            required: ["slug", "name", "contentTypeId"],
+            required: ["readableId", "name", "contentTypeId"],
             properties: {
-              slug: { type: "string" },
+              readableId: { type: "string" },
               name: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
               contentTypeId: { format: "uuid", type: "string" },
@@ -51,7 +51,7 @@ defineRouteMeta({
       401: { description: "Authentication required" },
       403: { description: "Referenced resource is inaccessible" },
       404: { description: "Content type or sheet not found" },
-      409: { description: "Slug already exists" },
+      409: { description: "Readable ID already exists" },
     },
   },
 });
@@ -59,7 +59,7 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const body = await parseBody(event, createContentSchema);
-  const { slug, name } = body;
+  const { readableId, name } = body;
 
   const database = useDatabase();
   const [typeRecord] = await database
@@ -144,7 +144,7 @@ export default defineEventHandler(async (event) => {
         .values({
           kind: "content",
           ...owner,
-          slug,
+          readableId,
           name,
           isPubliclyReadable: body.isPubliclyReadable === true,
           createdByUserId: user.id,
@@ -164,7 +164,7 @@ export default defineEventHandler(async (event) => {
 
       return {
         id: createdResource.id,
-        slug: createdResource.slug,
+        readableId: createdResource.readableId,
         name: createdResource.name,
         isPubliclyReadable: createdResource.isPubliclyReadable,
         ownerUserId: createdResource.ownerUserId,
@@ -181,7 +181,7 @@ export default defineEventHandler(async (event) => {
     if (isUniqueConstraintError(error)) {
       throw createError({
         statusCode: 409,
-        statusMessage: "Slug is already in use",
+        statusMessage: "ID is already in use",
       });
     }
     throw error;

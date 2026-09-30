@@ -77,7 +77,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     id: record.resource.id,
-    slug: record.resource.slug,
+    readableId: record.resource.readableId,
     isPubliclyReadable: record.resource.isPubliclyReadable,
     name: record.resource.name,
     ownerUserId: record.resource.ownerUserId,

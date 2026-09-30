@@ -8,7 +8,7 @@ type GroupRole = "admin" | "editor" | "member";
 
 interface GroupItem {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   kind: "user" | "system";
   // null for a system group a site admin isn't in.
@@ -24,29 +24,29 @@ const {
 
 const columns: TableColumn<GroupItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "role", header: "Your Role" },
   { accessorKey: "memberCount", header: "Members" },
 ];
 
 const isFormOpen = ref(false);
-const form = reactive({ slug: "", name: "", official: false });
+const form = reactive({ readableId: "", name: "", official: false });
 
 // Only site admins can create official (system) groups.
 const { data: profile } = await useLazyFetch<{ role: "member" | "admin" }>(
   "/api/profile",
 );
 const isSiteAdmin = computed(() => profile.value?.role === "admin");
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const formBusy = ref(false);
 const formError = ref("");
 
 function openCreate() {
   formError.value = "";
-  form.slug = "";
+  form.readableId = "";
   form.name = "";
   form.official = false;
-  resetSlugTouched(false);
+  resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
 
@@ -58,7 +58,7 @@ async function submitForm() {
     await $fetch("/api/group", {
       method: "POST",
       body: {
-        slug: form.slug,
+        readableId: form.readableId,
         name: form.name,
         ...(form.official ? { official: true } : {}),
       },
@@ -132,10 +132,10 @@ async function submitForm() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <UFormField
             v-if="isSiteAdmin"

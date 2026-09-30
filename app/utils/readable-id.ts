@@ -1,6 +1,6 @@
-export const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const readableIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export function slugify(value: string) {
+export function toReadableId(value: string) {
   return value
     .trim()
     .toLowerCase()
@@ -10,7 +10,7 @@ export function slugify(value: string) {
 
 // Returns undefined (not "") when valid: UFormField's `error` prop is typed
 // [Boolean, String], so Vue casts "" to `true` and the field renders as errored.
-export function getSlugError(slug: string) {
-  if (!slug || slugPattern.test(slug)) return undefined;
+export function getReadableIdError(readableId: string) {
+  if (!readableId || readableIdPattern.test(readableId)) return undefined;
   return "Use lowercase letters, numbers, and hyphens only.";
 }

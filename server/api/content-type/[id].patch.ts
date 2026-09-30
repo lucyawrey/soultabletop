@@ -10,8 +10,8 @@ import {
   requireName,
   requireResourceEditor,
   resolveOwnerChange,
-  rethrowSlugConflict,
-  requireSlug,
+  rethrowReadableIdConflict,
+  requireReadableId,
 } from "../../utils/resource-management";
 import { parseBody, contentTypePatchSchema } from "../../utils/api-schemas";
 
@@ -34,7 +34,7 @@ defineRouteMeta({
                 description:
                   "Move to this group, or null to move to yourself. Only the owner, or admins of the owning group, may; the target group needs you as admin or editor.",
               },
-              slug: { type: "string" },
+              readableId: { type: "string" },
               contentCategory: {
                 type: "string",
                 enum: [
@@ -117,7 +117,7 @@ export default defineEventHandler(async (event) => {
     .set({
       ...owner,
       ...(body.name !== undefined ? { name: requireName(body.name) } : {}),
-      ...(body.slug !== undefined ? { slug: requireSlug(body.slug) } : {}),
+      ...(body.readableId !== undefined ? { readableId: requireReadableId(body.readableId) } : {}),
       ...(body.isPubliclyReadable !== undefined
         ? { isPubliclyReadable: body.isPubliclyReadable }
         : {}),
@@ -126,7 +126,7 @@ export default defineEventHandler(async (event) => {
     })
     .where(eq(resource.id, id))
     .returning()
-    .catch(rethrowSlugConflict);
+    .catch(rethrowReadableIdConflict);
   const typeValues = {
       ...(body.contentCategory !== undefined
         ? {

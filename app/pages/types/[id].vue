@@ -21,7 +21,7 @@ definePageMeta({ middleware: "auth" });
 
 interface ContentTypeDetail {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   systemId: string;
   contentCategory: ContentCategory;
@@ -41,7 +41,7 @@ interface SystemOption {
 interface SheetOption {
   id: string;
   name: string;
-  slug: string;
+  readableId: string;
   contentTypeId: string;
   isDefault: boolean;
 }
@@ -74,7 +74,7 @@ const typeSheets = computed(() =>
 
 const isFormOpen = ref(false);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   isPubliclyReadable: false,
   contentCategory: "general" as ContentCategory,
@@ -84,19 +84,19 @@ const form = reactive({
 const formBusy = ref(false);
 const formError = ref("");
 const brokenSheets = ref<BrokenSheets>();
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 function openEdit() {
   if (!contentType.value) return;
   formError.value = "";
   brokenSheets.value = undefined;
-  form.slug = contentType.value.slug;
+  form.readableId = contentType.value.readableId;
   form.name = contentType.value.name;
   form.isPubliclyReadable = contentType.value.isPubliclyReadable;
   form.ownerGroupId = contentType.value.ownerGroupId;
   form.contentCategory = contentType.value.contentCategory;
   form.hasStrictSchema = contentType.value.hasStrictSchema;
-  resetSlugTouched(true);
+  resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
 
@@ -109,7 +109,7 @@ async function submitForm(confirmBrokenSheets = false) {
     await $fetch(`/api/content-type/${id}`, {
       method: "PATCH",
       body: {
-        slug: form.slug,
+        readableId: form.readableId,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
         ...(form.ownerGroupId !== (contentType.value?.ownerGroupId ?? null)
@@ -287,7 +287,7 @@ async function remove() {
             {{ contentType.name }}
           </h1>
           <p class="text-sm text-muted">
-            {{ contentType.slug }} ·
+            {{ contentType.readableId }} ·
             {{ visibilityLabel(contentType.isPubliclyReadable) }} ·
             <NuxtLink
               v-if="system"
@@ -356,7 +356,7 @@ async function remove() {
                 Default
               </UBadge>
             </span>
-            <span class="text-sm text-muted">{{ item.slug }}</span>
+            <span class="text-sm text-muted">{{ item.readableId }}</span>
           </li>
         </ul>
         <p v-else class="py-6 text-center text-sm text-muted">
@@ -457,10 +457,10 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField

@@ -14,7 +14,7 @@ definePageMeta({ middleware: "auth" });
 
 interface ContentTypeItem {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   systemId: string;
   contentCategory: ContentCategory;
@@ -57,7 +57,7 @@ function systemName(systemId: string) {
 
 const columns: TableColumn<ContentTypeItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentCategory", header: "Category" },
@@ -68,7 +68,7 @@ const columns: TableColumn<ContentTypeItem>[] = [
 const isFormOpen = ref(false);
 const editingType = ref<ContentTypeItem | null>(null);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
@@ -76,7 +76,7 @@ const form = reactive({
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
 });
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const formBusy = ref(false);
 const formError = ref("");
 const brokenSheets = ref<BrokenSheets>();
@@ -89,14 +89,14 @@ function openCreate(systemId?: string) {
   editingType.value = null;
   formError.value = "";
   brokenSheets.value = undefined;
-  form.slug = "";
+  form.readableId = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
   form.systemId = system.id;
   form.contentCategory = "general";
   form.hasStrictSchema = false;
-  resetSlugTouched(false);
+  resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
 
@@ -105,13 +105,13 @@ function openEdit(item: ContentTypeItem) {
   editingType.value = item;
   formError.value = "";
   brokenSheets.value = undefined;
-  form.slug = item.slug;
+  form.readableId = item.readableId;
   form.name = item.name;
   form.isPubliclyReadable = item.isPubliclyReadable;
   form.systemId = item.systemId;
   form.contentCategory = item.contentCategory;
   form.hasStrictSchema = item.hasStrictSchema;
-  resetSlugTouched(true);
+  resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
 
@@ -144,7 +144,7 @@ async function submitForm(confirmBrokenSheets = false) {
   try {
     // The schema is edited on the content type's page (schema builder).
     const body = {
-      slug: form.slug,
+      readableId: form.readableId,
       name: form.name,
       isPubliclyReadable: form.isPubliclyReadable,
       contentCategory: form.contentCategory,
@@ -332,10 +332,10 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField

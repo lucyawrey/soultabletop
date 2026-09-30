@@ -33,7 +33,7 @@ const schema: ContentTypeSchema = {
   },
   class: { type: "content", contentTypeId: typeId, allow: "reference", required: true },
   link: { type: "resourceLink" },
-  home: { type: "resourceLink", kind: "game" },
+  home: { type: "resourceLink", kind: "campaign" },
   extra: { type: "scalar" },
   alive: { type: "boolean" },
 };

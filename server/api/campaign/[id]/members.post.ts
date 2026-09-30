@@ -1,17 +1,17 @@
 import { createError, getRouterParam } from "h3";
-import { gameMembership } from "../../../database/schema";
+import { campaignMembership } from "../../../database/schema";
 import { requireAuthenticatedUser } from "../../../utils/auth";
 import {
   requireResourceEditor,
   requireUuid,
 } from "../../../utils/resource-management";
 import { useDatabase } from "../../../utils/database";
-import { parseBody, gameMembershipSchema } from "../../../utils/api-schemas";
+import { parseBody, campaignMembershipSchema } from "../../../utils/api-schemas";
 
 defineRouteMeta({
   openAPI: {
-    tags: ["Game Membership"],
-    summary: "Add or update a game member",
+    tags: ["Campaign Membership"],
+    summary: "Add or update a campaign member",
     requestBody: {
       required: true,
       content: {
@@ -37,9 +37,9 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const gameId = requireUuid(getRouterParam(event, "id"), "gameId");
-  await requireResourceEditor(user, gameId);
-  const body = await parseBody(event, gameMembershipSchema);
+  const campaignId = requireUuid(getRouterParam(event, "id"), "campaignId");
+  await requireResourceEditor(user, campaignId);
+  const body = await parseBody(event, campaignMembershipSchema);
   if (
     typeof body.userId !== "string" ||
     (body.role !== "gm" && body.role !== "player")
@@ -49,10 +49,10 @@ export default defineEventHandler(async (event) => {
       statusMessage: "userId and role are required",
     });
   const [membership] = await useDatabase()
-    .insert(gameMembership)
-    .values({ gameId, userId: body.userId, role: body.role })
+    .insert(campaignMembership)
+    .values({ campaignId, userId: body.userId, role: body.role })
     .onConflictDoUpdate({
-      target: [gameMembership.gameId, gameMembership.userId],
+      target: [campaignMembership.campaignId, campaignMembership.userId],
       set: { role: body.role },
     })
     .returning();

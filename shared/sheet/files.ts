@@ -59,7 +59,7 @@ export async function readSheetFile(
   return { text };
 }
 
-// A file name for exporting, from the Sheet's slug.
-export function sheetExportFileName(slug: string, kind: SheetFileKind) {
-  return `${slug || "sheet"}${sheetFileTypes[kind].exportExtension}`;
+// A file name for exporting, from the Sheet's readableId.
+export function sheetExportFileName(readableId: string, kind: SheetFileKind) {
+  return `${readableId || "sheet"}${sheetFileTypes[kind].exportExtension}`;
 }

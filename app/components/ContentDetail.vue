@@ -31,7 +31,7 @@ interface ResolvedSheet {
 
 interface ContentDetail {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -179,7 +179,7 @@ const statusText = computed(() => {
 const TYPE_DEFAULT = "type-default";
 const isFormOpen = ref(false);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   isPubliclyReadable: false,
   // Saved Sheet, or TYPE_DEFAULT for the ContentType's default.
@@ -193,20 +193,20 @@ const savedSheetOptions = computed(() => [
 ]);
 const formBusy = ref(false);
 const formError = ref("");
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 function openEdit() {
   if (!item.value) return;
   formError.value = "";
   // Start from the draft so unsaved sheet edits aren't lost.
   const { name, ...data } = draft.value;
-  form.slug = item.value.slug;
+  form.readableId = item.value.readableId;
   form.name = typeof name === "string" ? name : item.value.name;
   form.isPubliclyReadable = item.value.isPubliclyReadable;
   form.ownerGroupId = item.value.ownerGroupId;
   form.sheetId = item.value.sheetId ?? TYPE_DEFAULT;
   form.data = JSON.stringify(data, null, 2);
-  resetSlugTouched(true);
+  resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
 
@@ -222,7 +222,7 @@ async function submitForm() {
     await $fetch(`/api/content/${props.id}`, {
       method: "PATCH",
       body: {
-        slug: form.slug,
+        readableId: form.readableId,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
         ...(form.ownerGroupId !== (item.value?.ownerGroupId ?? null)
@@ -284,7 +284,7 @@ async function remove() {
         <div>
           <h1 class="text-2xl font-bold text-highlighted">{{ item.name }}</h1>
           <p class="text-sm text-muted">
-            {{ item.slug }} ·
+            {{ item.readableId }} ·
             {{ visibilityLabel(item.isPubliclyReadable) }} ·
             <NuxtLink
               v-if="contentType"
@@ -412,10 +412,10 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField

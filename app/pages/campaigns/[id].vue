@@ -3,9 +3,9 @@ import { extractApiErrorMessage } from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
 
-interface GameDetail {
+interface CampaignDetail {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   isPubliclyReadable: boolean;
   updatedAt: string;
@@ -23,35 +23,35 @@ interface SystemOption {
 const route = useRoute();
 const id = route.params.id as string;
 
-const { data: game, refresh } = await useFetch<GameDetail>(`/api/game/${id}`);
+const { data: campaign, refresh } = await useFetch<CampaignDetail>(`/api/campaign/${id}`);
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
 });
 
 const system = computed(() =>
-  systems.value.find((item) => item.id === game.value?.systemId),
+  systems.value.find((item) => item.id === campaign.value?.systemId),
 );
 
 const isFormOpen = ref(false);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
 });
 const formBusy = ref(false);
 const formError = ref("");
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 function openEdit() {
-  if (!game.value) return;
+  if (!campaign.value) return;
   formError.value = "";
-  form.slug = game.value.slug;
-  form.name = game.value.name;
-  form.isPubliclyReadable = game.value.isPubliclyReadable;
-  form.ownerGroupId = game.value.ownerGroupId;
-  resetSlugTouched(true);
+  form.readableId = campaign.value.readableId;
+  form.name = campaign.value.name;
+  form.isPubliclyReadable = campaign.value.isPubliclyReadable;
+  form.ownerGroupId = campaign.value.ownerGroupId;
+  resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
 
@@ -60,13 +60,13 @@ async function submitForm() {
   formError.value = "";
 
   try {
-    await $fetch(`/api/game/${id}`, {
+    await $fetch(`/api/campaign/${id}`, {
       method: "PATCH",
       body: {
-        slug: form.slug,
+        readableId: form.readableId,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
-        ...(form.ownerGroupId !== (game.value?.ownerGroupId ?? null)
+        ...(form.ownerGroupId !== (campaign.value?.ownerGroupId ?? null)
           ? { ownerGroupId: form.ownerGroupId }
           : {}),
       },
@@ -74,7 +74,7 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save game.");
+    formError.value = extractApiErrorMessage(error, "Could not save campaign.");
   } finally {
     formBusy.value = false;
   }
@@ -89,12 +89,12 @@ async function remove() {
   deleteError.value = "";
 
   try {
-    await $fetch(`/api/game/${id}`, { method: "DELETE" });
-    await navigateTo("/games");
+    await $fetch(`/api/campaign/${id}`, { method: "DELETE" });
+    await navigateTo("/campaigns");
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete game.",
+      "Could not delete campaign.",
     );
   } finally {
     deleteBusy.value = false;
@@ -105,22 +105,22 @@ async function remove() {
 <template>
   <div class="mx-auto w-full max-w-(--ui-container) space-y-6 p-4 py-8">
     <UButton
-      to="/games"
+      to="/campaigns"
       icon="i-lucide-arrow-left"
       color="neutral"
       variant="link"
       size="sm"
     >
-      Back to Games
+      Back to Campaigns
     </UButton>
 
-    <template v-if="game">
+    <template v-if="campaign">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-highlighted">{{ game.name }}</h1>
+          <h1 class="text-2xl font-bold text-highlighted">{{ campaign.name }}</h1>
           <p class="text-sm text-muted">
-            {{ game.slug }} ·
-            {{ visibilityLabel(game.isPubliclyReadable) }}
+            {{ campaign.readableId }} ·
+            {{ visibilityLabel(campaign.isPubliclyReadable) }}
           </p>
           <p v-if="system" class="mt-1 text-sm">
             System:
@@ -132,7 +132,7 @@ async function remove() {
             </NuxtLink>
           </p>
         </div>
-        <div v-if="game?.canEdit" class="flex gap-2">
+        <div v-if="campaign?.canEdit" class="flex gap-2">
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
@@ -156,10 +156,10 @@ async function remove() {
       </div>
     </template>
 
-    <UModal v-model:open="isFormOpen" title="Edit Game">
+    <UModal v-model:open="isFormOpen" title="Edit Campaign">
       <template #body>
         <UForm
-          id="game-detail-form"
+          id="campaign-detail-form"
           :state="form"
           class="space-y-4"
           @submit="submitForm"
@@ -167,16 +167,16 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField
-            v-if="game?.canChangeOwner"
+            v-if="campaign?.canChangeOwner"
             v-model="form.ownerGroupId"
-            :original="game?.ownerGroupId ?? null"
+            :original="campaign?.ownerGroupId ?? null"
           />
           <UAlert
             v-if="formError"
@@ -196,7 +196,7 @@ async function remove() {
         />
         <UButton
           type="submit"
-          form="game-detail-form"
+          form="campaign-detail-form"
           label="Save"
           :loading="formBusy"
         />
@@ -205,8 +205,8 @@ async function remove() {
 
     <UModal
       v-model:open="isDeleteOpen"
-      title="Delete Game"
-      :description="`Are you sure you want to delete &quot;${game?.name}&quot;? This action cannot be undone.`"
+      title="Delete Campaign"
+      :description="`Are you sure you want to delete &quot;${campaign?.name}&quot;? This action cannot be undone.`"
       :ui="{ footer: 'justify-end' }"
     >
       <template v-if="deleteError" #body>

@@ -1,6 +1,6 @@
 import { createError } from "h3";
 import { eq } from "drizzle-orm";
-import { game, resource, system } from "../../database/schema";
+import { campaign, resource, system } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
@@ -9,26 +9,26 @@ import {
 } from "../../utils/resource-access";
 import {
   requireName,
-  requireSlug,
+  requireReadableId,
   resolveResourceOwner,
 } from "../../utils/resource-management";
 import { isUniqueConstraintError } from "../../utils/user-profile";
-import { parseBody, gameCreateSchema } from "../../utils/api-schemas";
+import { parseBody, campaignCreateSchema } from "../../utils/api-schemas";
 
 defineRouteMeta({
   openAPI: {
-    tags: ["Game"],
-    summary: "Create a game",
+    tags: ["Campaign"],
+    summary: "Create a campaign",
     requestBody: {
       required: true,
       content: {
         "application/json": {
           schema: {
             type: "object",
-            required: ["name", "slug", "systemId"],
+            required: ["name", "readableId", "systemId"],
             properties: {
               name: { type: "string" },
-              slug: { type: "string" },
+              readableId: { type: "string" },
               systemId: { type: "string", format: "uuid" },
               ownerGroupId: { type: "string", format: "uuid" },
               isPubliclyReadable: { type: "boolean" },
@@ -38,7 +38,7 @@ defineRouteMeta({
       },
     },
     responses: {
-      201: { description: "Created game" },
+      201: { description: "Created campaign" },
       400: { description: "Invalid request" },
       401: { description: "Authentication required" },
     },
@@ -47,9 +47,9 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const body = await parseBody(event, gameCreateSchema);
+  const body = await parseBody(event, campaignCreateSchema);
   const name = requireName(body?.name);
-  const slug = requireSlug(body?.slug);
+  const readableId = requireReadableId(body?.readableId);
   if (typeof body.systemId !== "string")
     throw createError({
       statusCode: 400,
@@ -78,24 +78,24 @@ export default defineEventHandler(async (event) => {
       const [createdResource] = await tx
         .insert(resource)
         .values({
-          kind: "game",
+          kind: "campaign",
           ...owner,
-          slug,
+          readableId,
           name,
           isPubliclyReadable: body.isPubliclyReadable === true,
           createdByUserId: user.id,
           updatedByUserId: user.id,
         })
         .returning();
-      if (!createdResource) throw new Error("Game Resource was not created");
-      const [createdGame] = await tx
-        .insert(game)
+      if (!createdResource) throw new Error("Campaign Resource was not created");
+      const [createdCampaign] = await tx
+        .insert(campaign)
         .values({
           resourceId: createdResource.id,
           systemId: body.systemId as string,
         })
         .returning();
-      return { ...createdResource, ...createdGame };
+      return { ...createdResource, ...createdCampaign };
     });
     setResponseStatus(event, 201);
     return result;
@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
     if (isUniqueConstraintError(error))
       throw createError({
         statusCode: 409,
-        statusMessage: "Slug is already in use",
+        statusMessage: "ID is already in use",
       });
     throw error;
   }

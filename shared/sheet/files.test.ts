@@ -51,7 +51,7 @@ describe("readSheetFile", () => {
 });
 
 describe("sheetExportFileName", () => {
-  it("names files after the slug", () => {
+  it("names files after the readableId", () => {
     expect(sheetExportFileName("fighter", "markup")).toBe("fighter.stts");
     expect(sheetExportFileName("fighter", "css")).toBe("fighter.css");
     expect(sheetExportFileName("", "css")).toBe("sheet.css");

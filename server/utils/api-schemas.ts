@@ -9,19 +9,19 @@ import { RESOURCE_LINK_KINDS } from "../../shared/content-schema";
 FormatRegistry.Set("uuid", (value) => uuidPattern.test(value));
 
 export const uuidSchema = Type.String({ format: "uuid" });
-export const slugSchema = Type.String({
+export const readableIdSchema = Type.String({
   pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$",
 });
 
 export const profilePatchSchema = Type.Partial(
   Type.Object({
-    username: slugSchema,
+    username: readableIdSchema,
     iconImageUrl: Type.Union([Type.String(), Type.Null()]),
   }),
 );
 
 export const createContentSchema = Type.Object({
-  slug: slugSchema,
+  readableId: readableIdSchema,
   name: Type.String({ minLength: 1 }),
   contentTypeId: uuidSchema,
   ownerGroupId: Type.Optional(uuidSchema),
@@ -32,7 +32,7 @@ export const createContentSchema = Type.Object({
 
 export const resourceCreateSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
-  slug: slugSchema,
+  readableId: readableIdSchema,
   ownerGroupId: Type.Optional(uuidSchema),
   isPubliclyReadable: Type.Optional(Type.Boolean()),
 });
@@ -40,7 +40,7 @@ export const resourceCreateSchema = Type.Object({
 export const resourcePatchSchema = Type.Partial(
   Type.Object({
     name: Type.String({ minLength: 1 }),
-    slug: slugSchema,
+    readableId: readableIdSchema,
     isPubliclyReadable: Type.Boolean(),
     // Move to a group, or null for the acting user (see resolveOwnerChange).
     ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
@@ -133,7 +133,7 @@ export const contentTypeCreateSchema = Type.Intersect([
 export const contentTypePatchSchema = Type.Partial(
   Type.Object({
     name: Type.String({ minLength: 1 }),
-    slug: slugSchema,
+    readableId: readableIdSchema,
     isPubliclyReadable: Type.Boolean(),
     // Move to a group, or null for the acting user (see resolveOwnerChange).
     ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
@@ -162,7 +162,7 @@ export const sheetCreateSchema = Type.Intersect([
 export const sheetPatchSchema = Type.Partial(
   Type.Object({
     name: Type.String({ minLength: 1 }),
-    slug: slugSchema,
+    readableId: readableIdSchema,
     isPubliclyReadable: Type.Boolean(),
     // Move to a group, or null for the acting user (see resolveOwnerChange).
     ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
@@ -176,16 +176,16 @@ export const sheetPatchSchema = Type.Partial(
   }),
 );
 
-export const gameCreateSchema = Type.Intersect([
+export const campaignCreateSchema = Type.Intersect([
   resourceCreateSchema,
   Type.Object({ systemId: uuidSchema }),
 ]);
 
-export const gamePatchSchema = resourcePatchSchema;
+export const campaignPatchSchema = resourcePatchSchema;
 
 export const groupCreateSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
-  slug: slugSchema,
+  readableId: readableIdSchema,
 });
 
 export const groupPatchSchema = Type.Partial(groupCreateSchema);
@@ -196,7 +196,7 @@ export const groupCreateWithKindSchema = Type.Intersect([
   Type.Object({ official: Type.Optional(Type.Boolean()) }),
 ]);
 
-export const gameMembershipSchema = Type.Object({
+export const campaignMembershipSchema = Type.Object({
   userId: Type.String({ minLength: 1 }),
   role: Type.Union([Type.Literal("gm"), Type.Literal("player")]),
 });
@@ -215,9 +215,9 @@ export const groupMembershipSchema = Type.Object({
 export const resourceGrantSchema = Type.Object({
   userId: Type.Optional(Type.String({ minLength: 1 })),
   groupId: Type.Optional(uuidSchema),
-  gameId: Type.Optional(uuidSchema),
+  campaignId: Type.Optional(uuidSchema),
   permission: Type.Union([Type.Literal("read"), Type.Literal("edit")]),
-  gameAudience: Type.Optional(
+  campaignAudience: Type.Optional(
     Type.Union([Type.Literal("members"), Type.Literal("gms")]),
   ),
 });
@@ -229,8 +229,8 @@ export async function parseBody<T extends TSchema>(
   const body = await readBody(event);
   if (body && typeof body === "object") {
     const record = body as Record<string, unknown>;
-    if (typeof record.slug === "string")
-      record.slug = record.slug.trim().toLowerCase();
+    if (typeof record.readableId === "string")
+      record.readableId = record.readableId.trim().toLowerCase();
     if (record.ownerGroupId === "") delete record.ownerGroupId;
   }
   if (!Value.Check(schema, body)) {
