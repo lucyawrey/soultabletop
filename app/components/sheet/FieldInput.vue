@@ -21,8 +21,13 @@ const attrText = useSheetAttrText();
 const display = computed(() => sheetFieldDisplay(props.node));
 const field = computed(() => props.node.binding?.field);
 
+// A disabled input never writes: the Markdown editor re-emits its normalized
+// text when its value changes from outside, even when it isn't editable.
+function update(path: (string | number)[], value: unknown) {
+  if (!props.disabled) context.update(path, value);
+}
 function set(value: unknown) {
-  context.update(props.path, value);
+  update(props.path, value);
 }
 
 const text = computed({
@@ -138,7 +143,7 @@ const localName = computed({
     isLocal.value
       ? String((props.value as Record<string, unknown>).name ?? "")
       : "",
-  set: (name: string) => context.update([...props.path, "name"], name),
+  set: (name: string) => update([...props.path, "name"], name),
 });
 
 const linkField = computed(() =>
