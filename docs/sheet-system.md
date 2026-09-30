@@ -83,7 +83,7 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list; required; default), allowed children, and which schema field types it may bind to. Numeric/text attrs accept
 `{path}` interpolation (e.g. `max="{hpMax}"`). Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`) and
-renders a fixed hook class `sheet-<tag>`.
+`live`, `locked`, and `display` (section 5), and renders a fixed hook class `sheet-<tag>`.
 
 ### Layout
 | Tag | Attrs | Children | Renders |
@@ -254,7 +254,7 @@ Edit + Autosave switches (decided):
 - New `sheet` columns: `defaultEditMode boolean not null default false`, `defaultAutosave boolean not null default
   false`, editable in the sheet form/editor and accepted on sheet create/update.
 - Generated sheets take defaults from the content type's `contentCategory`: `playerCharacter` → both on;
-  `nonPlayerCharacter` → edit off, autosave on; `general`/`page` → both off.
+  `nonPlayerCharacter` → edit off, autosave on; `general`/`page` → both off. (Also `defaultDisplay`, below.)
 - Edit on, Autosave off: draft copy, Save/Cancel buttons, unsaved-changes guard on navigation.
 - Edit on, Autosave on: each change saves after ~800 ms of inactivity; status indicator (Saving… / Saved / Error).
   A validation error keeps the draft and shows the message; the next change retries.
@@ -270,6 +270,18 @@ Per-field attributes (decided), boolean, allowed on any field tag and on `List`/
   unlock click. `live locked` = editable in view mode after unlocking.
 - Also allowed on layout tags, where they are inherited by every field inside; a descendant opts out with
   `live="false"` / `locked="false"`.
+
+Display of non-editable fields (decided): `display="text" | "box"`, allowed on any tag and inherited like `live`/`locked`.
+- `text` shows the plain value (good for stat blocks like a spell); `box` shows the field's edit control, disabled, so a
+  sheet looks the same with Edit on and off (good for character sheets). It applies wherever a field isn't editable:
+  Edit off, `locked` fields before their unlock click, viewers without edit access, and values reached through references.
+- Not every field has a useful disabled control: `Value` and `Image` keep their normal view in `box`, and `Ref` /
+  `content` / `resourceLink` fields show their link inside an input-style box so it stays clickable.
+- The starting value comes from the sheet: new `sheet` column `defaultDisplay` (`sheet_display` enum, `text` | `box`,
+  default `text`), accepted on sheet create/update and set in the editor's Settings as "Non-editable fields". New
+  sheets and generated sheets take it from the content category: `playerCharacter` → `box`, everything else → `text`.
+- Rendering: `SheetRenderer`'s `defaultDisplay` prop seeds the inherited flags (`provideSheetFlags` in `useSheet.ts`);
+  `sheet/Field.vue` renders `sheet/FieldInput.vue` with `disabled` for boxed fields.
 
 Concurrent edits (decided): content PATCH accepts `expectedUpdatedAt`; if `resource.updatedAt` differs → 409. UI
 offers Reload (discard mine) or Overwrite (resend without the check). Autosave pauses on 409 until resolved, and
@@ -328,7 +340,7 @@ editors, an Edit switch whose changes never save), with the markup and CSS in ta
 
 Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
 - Left: tabs **Markup** | **CSS** | **Settings** (Name, ID, Visibility, Default sheet, Default edit mode, Default
-  autosave), then a diagnostics list (errors + warnings, click → jump to line).
+  autosave, Non-editable fields), then a diagnostics list (errors + warnings, click → jump to line).
 - The Markup and CSS tabs have **Upload** and **Download** buttons, and a file dropped on either editor loads into it.
   Files are read in the browser (`shared/sheet/files.ts`), never stored on the server: markup accepts `.stts` (Soul Tabletop Sheet),
   `.xml`, `.html`, `.htm`, `.txt`; CSS accepts `.css`, `.txt`; both are capped at the save limits (100,000 / 50,000

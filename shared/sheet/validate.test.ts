@@ -140,7 +140,7 @@ describe("valid sheets", () => {
 
   it("types attribute values", () => {
     const node = first(compile(
-      `<Number field="hp" min="-3" max="{hpMax}" step="0.5" live="false" locked="true" class="a b-c" />`,
+      `<Number field="hp" min="-3" max="{hpMax}" step="0.5" live="false" locked="true" display="box" class="a b-c" />`,
     ).nodes);
     expect(node.attrs).toMatchObject({
       field: "hp",
@@ -149,8 +149,16 @@ describe("valid sheets", () => {
       step: 0.5,
       live: false,
       locked: true,
+      display: "box",
       class: ["a", "b-c"],
     });
+  });
+
+  it("accepts display on any tag, with text or box only", () => {
+    expect(messages(`<Section display="text"><Grid display="box" /></Section>`)).toEqual([]);
+    expect(messages(`<Section display="boxed" />`)).toEqual([
+      "error invalid-attribute: display on <Section> must be one of: text, box",
+    ]);
   });
 });
 

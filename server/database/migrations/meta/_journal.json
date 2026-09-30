@@ -71,6 +71,13 @@
       "when": 1790729271331,
       "tag": "0009_rename_game_to_campaign_and_slug_to_readable_id",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790743099454,
+      "tag": "0010_free_chat",
+      "breakpoints": true
     }
   ]
 }
