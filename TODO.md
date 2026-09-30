@@ -1,4 +1,4 @@
-# Improvements
+# Current tasks
 
 - **(Important)** Current-system selector in the header: a dropdown to pick the system most pages are filtered by, defaulting to "All Systems". Filters every list tied to a system (campaigns and content types directly; sheets, characters, and content through their content type) and the search above, and new-resource forms preselect it. The dashboard ignores it. Opening a resource that belongs to a different system while a specific system is selected switches the selector to that system. Decide where the choice is kept (per browser, e.g. a cookie so SSR renders the filtered list, or per account) and how list endpoints take it (e.g. `?systemId=`).
 - List filters and column choice, after the My/Find tabs and search are done (check what they already include before starting, and skip anything they cover): filters on each resource list (e.g. Visibility, Official/Community, owner, content type for sheets and content, content category), kept in the URL like the tab and search box, and the ability for a user to choose which fields are displayed as columns on a list (per list page, remembered per browser or per account; decide which). Needs the list endpoints to take the filters server-side, as search does, rather than filtering in the browser.
@@ -38,7 +38,7 @@
 - Group invite approval (low priority): when a non-site-admin adds someone to a Group, create a pending invite the invited user must accept instead of adding them directly. Site admins can still add users directly. Currently `POST /api/group/[id]/members` adds immediately.
 - Catch undeclared imports with ESLint's `import/no-extraneous-dependencies`: server code imported `h3` for a long time without declaring it, and nothing flagged it until code ran outside Nuxt. Check that the rule works with Nuxt's auto-imports and aliases (`~`, `#imports`), and with the hoisted layout if that is ever revisited (see `CLAUDE.md`).
 
-# Before launch
+# Pre launch tasks
 
 Not soon, but required before any public launch.
 
@@ -48,6 +48,12 @@ Not soon, but required before any public launch.
   2. **Automated QA of the running app**: browser tests driving the real app end to end (sign-up and sign-in, creating and editing every resource kind, sharing and visibility, sheets in view and edit mode, group roles), as a suite in the repo that runs against a dev or preview deployment and cleans up after itself. Also an agent exploring the app in a headless browser for issues scripted tests can't catch: broken or odd-looking layouts, confusing states, errors in the console, and flows nobody wrote a test for.
   3. **Manual QA by a person**: clicking through the app on desktop and phone, light and dark mode, and the main browsers, for the things automated tests miss (layout, wording, confusing flows).
 
-# Post launch
+# Post launch tasks
 
 - Prepare for dual licensing (low priority): the plan is MIT for most of the app plus a smaller set of proprietary premium features. Code already released under MIT stays MIT, so premium features will live in their own folder of all-new code under a separate license. Before accepting outside contributions, add a contributor license agreement (CLA) so contributed code can be relicensed; without one, each contributor keeps the copyright on their code. Also decide how the premium folder is licensed and marked (its own LICENSE file, headers) and how the MIT app loads it.
+
+# Rough tasks that need to be expanded/integrated into an existing task, then assigned to a phase
+
+- Make cascadig loading look more professional and less janky. Its not to bad right now but there are things like a flash of "content type needs to be created before creating a content" text even when that stuff exists. Tables could also use fake rows befoee content genrates etc.
+- Fix refreshing page while logged in logging the user out for some reason.
+- Make the "create one" links for having zero resources of a type actually open the create menu for that resource.
