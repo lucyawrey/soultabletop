@@ -8,7 +8,7 @@ type GroupRole = "admin" | "editor" | "member";
 
 interface GroupDetail {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   kind: "user" | "system";
   // null for a site admin viewing a system group they aren't in.
@@ -121,17 +121,17 @@ async function removeMember(member: Member) {
 }
 
 const isFormOpen = ref(false);
-const form = reactive({ slug: "", name: "" });
+const form = reactive({ readableId: "", name: "" });
 const formBusy = ref(false);
 const formError = ref("");
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 function openEdit() {
   if (!group.value) return;
   formError.value = "";
-  form.slug = group.value.slug;
+  form.readableId = group.value.readableId;
   form.name = group.value.name;
-  resetSlugTouched(true);
+  resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
 
@@ -142,7 +142,7 @@ async function submitForm() {
   try {
     await $fetch(`/api/group/${id}`, {
       method: "PATCH",
-      body: { slug: form.slug, name: form.name },
+      body: { readableId: form.readableId, name: form.name },
     });
     isFormOpen.value = false;
     await refresh();
@@ -197,7 +197,7 @@ async function remove() {
             </UBadge>
           </h1>
           <p class="text-sm text-muted">
-            {{ group.slug }} ·
+            {{ group.readableId }} ·
             <template v-if="group.role">
               You are <span class="capitalize">{{ group.role }}</span>
             </template>
@@ -328,10 +328,10 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <UAlert
             v-if="formError"

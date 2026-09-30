@@ -7,8 +7,8 @@ import {
   requireName,
   requireResourceEditor,
   resolveOwnerChange,
-  rethrowSlugConflict,
-  requireSlug,
+  rethrowReadableIdConflict,
+  requireReadableId,
 } from "../../utils/resource-management";
 
 defineRouteMeta({
@@ -23,7 +23,7 @@ defineRouteMeta({
             type: "object",
             properties: {
               name: { type: "string" },
-              slug: { type: "string" },
+              readableId: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
               ownerGroupId: {
                 type: ["string", "null"],
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
     });
   const body = await readBody<{
     name?: unknown;
-    slug?: unknown;
+    readableId?: unknown;
     isPubliclyReadable?: unknown;
     ownerGroupId?: unknown;
   }>(event);
@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
     .set({
       ...owner,
       ...(body.name !== undefined ? { name: requireName(body.name) } : {}),
-      ...(body.slug !== undefined ? { slug: requireSlug(body.slug) } : {}),
+      ...(body.readableId !== undefined ? { readableId: requireReadableId(body.readableId) } : {}),
       ...(body.isPubliclyReadable !== undefined
         ? { isPubliclyReadable: body.isPubliclyReadable === true }
         : {}),
@@ -77,6 +77,6 @@ export default defineEventHandler(async (event) => {
     })
     .where(eq(resource.id, id))
     .returning()
-    .catch(rethrowSlugConflict);
+    .catch(rethrowReadableIdConflict);
   return updated;
 });

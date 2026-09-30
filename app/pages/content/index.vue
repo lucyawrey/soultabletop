@@ -10,7 +10,7 @@ definePageMeta({ middleware: "auth" });
 
 interface ContentItem {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -72,7 +72,7 @@ function contentTypeName(contentTypeId: string) {
 
 const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Type" },
   {
@@ -85,13 +85,13 @@ const columns: TableColumn<ContentItem>[] = [
 
 const isFormOpen = ref(false);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
   contentTypeId: "",
 });
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const formBusy = ref(false);
 const formError = ref("");
 
@@ -100,12 +100,12 @@ function openCreate() {
   if (!firstContentType) return;
 
   formError.value = "";
-  form.slug = "";
+  form.readableId = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
   form.contentTypeId = firstContentType.id;
-  resetSlugTouched(false);
+  resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
 
@@ -118,7 +118,7 @@ async function submitForm() {
     const created = await $fetch<{ id: string }>("/api/content", {
       method: "POST",
       body: {
-        slug: form.slug,
+        readableId: form.readableId,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
         contentTypeId: form.contentTypeId,
@@ -272,10 +272,10 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField v-model="form.ownerGroupId" />

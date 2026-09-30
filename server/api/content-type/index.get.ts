@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
     .filter(({ access }) => access.canRead)
     .map(({ type, resource: item, access }) => ({
       id: item.id,
-      slug: item.slug,
+      readableId: item.readableId,
       isPubliclyReadable: item.isPubliclyReadable,
       name: item.name,
       systemId: type.systemId,

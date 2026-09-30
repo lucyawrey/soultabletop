@@ -4,9 +4,9 @@ import type { TableColumn } from "@nuxt/ui";
 
 definePageMeta({ middleware: "auth" });
 
-interface GameItem {
+interface CampaignItem {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   systemId: string;
   isPubliclyReadable: boolean;
@@ -22,10 +22,10 @@ interface SystemOption {
 }
 
 const {
-  data: games,
+  data: campaigns,
   status,
   refresh,
-} = await useLazyFetch<GameItem[]>("/api/game", { default: () => [] });
+} = await useLazyFetch<CampaignItem[]>("/api/campaign", { default: () => [] });
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
@@ -41,9 +41,9 @@ function systemName(systemId: string) {
   );
 }
 
-const columns: TableColumn<GameItem>[] = [
+const columns: TableColumn<CampaignItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   {
@@ -55,9 +55,9 @@ const columns: TableColumn<GameItem>[] = [
 ];
 
 const isFormOpen = ref(false);
-const editingGame = ref<GameItem | null>(null);
+const editingCampaign = ref<CampaignItem | null>(null);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   systemId: "",
   isPubliclyReadable: false,
@@ -65,35 +65,35 @@ const form = reactive({
 });
 const formBusy = ref(false);
 const formError = ref("");
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 function openCreate() {
   const firstSystem = systems.value[0];
-  editingGame.value = null;
+  editingCampaign.value = null;
   formError.value = "";
-  form.slug = "";
+  form.readableId = "";
   form.name = "";
   form.systemId = firstSystem?.id ?? "";
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
-  resetSlugTouched(false);
+  resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
 
-function openEdit(item: GameItem) {
+function openEdit(item: CampaignItem) {
   form.ownerGroupId = item.ownerGroupId;
-  editingGame.value = item;
+  editingCampaign.value = item;
   formError.value = "";
-  form.slug = item.slug;
+  form.readableId = item.readableId;
   form.name = item.name;
   form.systemId = item.systemId;
   form.isPubliclyReadable = item.isPubliclyReadable;
-  resetSlugTouched(true);
+  resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
 
 // Sends ownerGroupId only when the Owner field changed it.
-function ownerChange(item: GameItem) {
+function ownerChange(item: CampaignItem) {
   return form.ownerGroupId !== item.ownerGroupId
     ? { ownerGroupId: form.ownerGroupId }
     : {};
@@ -104,21 +104,21 @@ async function submitForm() {
   formError.value = "";
 
   try {
-    if (editingGame.value) {
-      await $fetch(`/api/game/${editingGame.value.id}`, {
+    if (editingCampaign.value) {
+      await $fetch(`/api/campaign/${editingCampaign.value.id}`, {
         method: "PATCH",
         body: {
-          slug: form.slug,
+          readableId: form.readableId,
           name: form.name,
           isPubliclyReadable: form.isPubliclyReadable,
-          ...ownerChange(editingGame.value),
+          ...ownerChange(editingCampaign.value),
         },
       });
     } else {
-      await $fetch("/api/game", {
+      await $fetch("/api/campaign", {
         method: "POST",
         body: {
-          slug: form.slug,
+          readableId: form.readableId,
           name: form.name,
           systemId: form.systemId,
           isPubliclyReadable: form.isPubliclyReadable,
@@ -130,36 +130,36 @@ async function submitForm() {
     isFormOpen.value = false;
     await refresh();
   } catch (error) {
-    formError.value = extractApiErrorMessage(error, "Could not save game.");
+    formError.value = extractApiErrorMessage(error, "Could not save campaign.");
   } finally {
     formBusy.value = false;
   }
 }
 
 const isDeleteOpen = ref(false);
-const deletingGame = ref<GameItem | null>(null);
+const deletingCampaign = ref<CampaignItem | null>(null);
 const deleteBusy = ref(false);
 const deleteError = ref("");
 
-function confirmDelete(item: GameItem) {
+function confirmDelete(item: CampaignItem) {
   deleteError.value = "";
-  deletingGame.value = item;
+  deletingCampaign.value = item;
   isDeleteOpen.value = true;
 }
 
 async function remove() {
-  if (!deletingGame.value) return;
+  if (!deletingCampaign.value) return;
   deleteBusy.value = true;
   deleteError.value = "";
 
   try {
-    await $fetch(`/api/game/${deletingGame.value.id}`, { method: "DELETE" });
+    await $fetch(`/api/campaign/${deletingCampaign.value.id}`, { method: "DELETE" });
     isDeleteOpen.value = false;
     await refresh();
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
       error,
-      "Could not delete game.",
+      "Could not delete campaign.",
     );
   } finally {
     deleteBusy.value = false;
@@ -170,24 +170,24 @@ async function remove() {
 <template>
   <div class="mx-auto w-full max-w-(--ui-container) space-y-6 p-4 py-8">
     <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Games</h1>
+      <h1 class="text-2xl font-bold text-highlighted">Campaigns</h1>
       <UButton
         icon="i-lucide-plus"
         size="sm"
         :disabled="systems.length === 0"
         @click="openCreate"
       >
-        New Game
+        New Campaign
       </UButton>
     </div>
     <p v-if="systems.length === 0" class="text-sm text-muted">
-      Create a system before adding games.
+      Create a system before adding campaigns.
     </p>
 
-    <UTable :data="games" :columns="columns" :loading="status === 'pending'">
+    <UTable :data="campaigns" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
         <NuxtLink
-          :to="`/games/${row.original.id}`"
+          :to="`/campaigns/${row.original.id}`"
           class="font-medium text-highlighted hover:underline"
         >
           {{ row.original.name }}
@@ -242,17 +242,17 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">No games yet.</p>
+        <p class="py-6 text-center text-sm text-muted">No campaigns yet.</p>
       </template>
     </UTable>
 
     <UModal
       v-model:open="isFormOpen"
-      :title="editingGame ? 'Edit Game' : 'New Game'"
+      :title="editingCampaign ? 'Edit Campaign' : 'New Campaign'"
     >
       <template #body>
         <UForm
-          id="game-form"
+          id="campaign-form"
           :state="form"
           class="space-y-4"
           @submit="submitForm"
@@ -260,23 +260,23 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField
-            v-if="!editingGame || editingGame.canChangeOwner"
+            v-if="!editingCampaign || editingCampaign.canChangeOwner"
             v-model="form.ownerGroupId"
-            :original="editingGame ? editingGame.ownerGroupId : undefined"
+            :original="editingCampaign ? editingCampaign.ownerGroupId : undefined"
           />
           <UFormField name="systemId" label="System" required>
             <USelect
               v-model="form.systemId"
               :items="systemOptions"
               class="w-full"
-              :disabled="!!editingGame"
+              :disabled="!!editingCampaign"
             />
           </UFormField>
           <UAlert
@@ -297,7 +297,7 @@ async function remove() {
         />
         <UButton
           type="submit"
-          form="game-form"
+          form="campaign-form"
           label="Save"
           :loading="formBusy"
         />
@@ -306,8 +306,8 @@ async function remove() {
 
     <UModal
       v-model:open="isDeleteOpen"
-      title="Delete Game"
-      :description="`Are you sure you want to delete &quot;${deletingGame?.name}&quot;? This action cannot be undone.`"
+      title="Delete Campaign"
+      :description="`Are you sure you want to delete &quot;${deletingCampaign?.name}&quot;? This action cannot be undone.`"
       :ui="{ footer: 'justify-end' }"
     >
       <template v-if="deleteError" #body>

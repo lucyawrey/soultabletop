@@ -2,8 +2,8 @@ import { and, desc, eq, inArray, or, type SQL } from "drizzle-orm";
 import {
   content,
   contentType,
-  game,
-  gameMembership,
+  campaign,
+  campaignMembership,
   groupMembership,
   resource,
 } from "../database/schema";
@@ -21,9 +21,9 @@ defineRouteMeta({
     tags: ["Dashboard"],
     summary: "Recently updated items for the current user",
     description:
-      "Games the user or their groups own or that the user is a member of, and characters/content owned by the user or their groups. Public or merely shared resources are excluded.",
+      "Campaigns the user or their groups own or that the user is a member of, and characters/content owned by the user or their groups. Public or merely shared resources are excluded.",
     responses: {
-      200: { description: "Recent games, characters, and content" },
+      200: { description: "Recent campaigns, characters, and content" },
       401: { description: "Authentication required" },
     },
   },
@@ -33,18 +33,18 @@ export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const database = useDatabase();
 
-  const [groups, games] = await Promise.all([
+  const [groups, campaigns] = await Promise.all([
     database
       .select({ groupId: groupMembership.groupId })
       .from(groupMembership)
       .where(eq(groupMembership.userId, user.id)),
     database
-      .select({ gameId: gameMembership.gameId })
-      .from(gameMembership)
-      .where(eq(gameMembership.userId, user.id)),
+      .select({ campaignId: campaignMembership.campaignId })
+      .from(campaignMembership)
+      .where(eq(campaignMembership.userId, user.id)),
   ]);
   const groupIds = groups.map(({ groupId }) => groupId);
-  const gameIds = games.map(({ gameId }) => gameId);
+  const campaignIds = campaigns.map(({ campaignId }) => campaignId);
 
   // Owned by the user directly or by one of their Groups.
   const ownedConditions: SQL[] = [eq(resource.ownerUserId, user.id)];
@@ -76,14 +76,14 @@ export default defineEventHandler(async (event) => {
       .orderBy(desc(resource.updatedAt))
       .limit(RECENT_LIMIT);
 
-  const [recentGames, characters, otherContent] = await Promise.all([
+  const [recentCampaigns, characters, otherContent] = await Promise.all([
     database
       .select(summary)
-      .from(game)
-      .innerJoin(resource, eq(resource.id, game.resourceId))
+      .from(campaign)
+      .innerJoin(resource, eq(resource.id, campaign.resourceId))
       .where(
-        gameIds.length
-          ? or(isOwned, inArray(game.resourceId, gameIds))
+        campaignIds.length
+          ? or(isOwned, inArray(campaign.resourceId, campaignIds))
           : isOwned,
       )
       .orderBy(desc(resource.updatedAt))
@@ -93,7 +93,7 @@ export default defineEventHandler(async (event) => {
   ]);
 
   return {
-    games: recentGames,
+    campaigns: recentCampaigns,
     characters,
     content: otherContent,
   };

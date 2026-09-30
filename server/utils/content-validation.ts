@@ -301,7 +301,7 @@ async function checkLinks(user: Pick<User, "id" | "name">, pending: Pending) {
 
 const RESOURCE_KIND_NAMES: Record<ResourceLinkKind, string> = {
   system: "system",
-  game: "game",
+  campaign: "campaign",
   contentType: "content type",
   sheet: "sheet",
   content: "content record",

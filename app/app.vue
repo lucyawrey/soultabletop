@@ -33,7 +33,7 @@ useSeoMeta({
       </template>
 
       <template #default>
-        <UButton to="/games" color="neutral" variant="link">Games</UButton>
+        <UButton to="/campaigns" color="neutral" variant="link">Campaigns</UButton>
         <UButton to="/characters" color="neutral" variant="link">
           Characters
         </UButton>
@@ -54,7 +54,7 @@ useSeoMeta({
 
       <template #body>
         <nav class="flex flex-col gap-2">
-          <UButton to="/games" color="neutral" variant="link">Games</UButton>
+          <UButton to="/campaigns" color="neutral" variant="link">Campaigns</UButton>
           <UButton to="/characters" color="neutral" variant="link">
             Characters
           </UButton>

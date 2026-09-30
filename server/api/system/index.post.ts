@@ -16,10 +16,10 @@ defineRouteMeta({
         "application/json": {
           schema: {
             type: "object",
-            required: ["name", "slug"],
+            required: ["name", "readableId"],
             properties: {
               name: { type: "string" },
-              slug: { type: "string" },
+              readableId: { type: "string" },
               ownerGroupId: { type: "string", format: "uuid" },
               isPubliclyReadable: { type: "boolean" },
             },
@@ -38,7 +38,7 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const body = await parseBody(event, resourceCreateSchema);
-  const { name, slug } = body;
+  const { name, readableId } = body;
   const database = useDatabase();
   const owner = await resolveResourceOwner(user, body.ownerGroupId);
   try {
@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
         .values({
           kind: "system",
           ...owner,
-          slug,
+          readableId,
           name,
           isPubliclyReadable: body.isPubliclyReadable === true,
           createdByUserId: user.id,
@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
     if (isUniqueConstraintError(error))
       throw createError({
         statusCode: 409,
-        statusMessage: "Slug is already in use",
+        statusMessage: "ID is already in use",
       });
     throw error;
   }

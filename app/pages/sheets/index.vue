@@ -9,7 +9,7 @@ definePageMeta({ middleware: "auth" });
 
 interface SheetItem {
   id: string;
-  slug: string;
+  readableId: string;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -50,7 +50,7 @@ function contentTypeName(contentTypeId: string) {
 
 const columns: TableColumn<SheetItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "contentTypeId", header: "Content Type" },
   { accessorKey: "isDefault", header: "Default" },
@@ -64,14 +64,14 @@ const columns: TableColumn<SheetItem>[] = [
 
 const isFormOpen = ref(false);
 const form = reactive({
-  slug: "",
+  readableId: "",
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
   contentTypeId: "",
   isDefault: false,
 });
-const { onSlugInput, resetSlugTouched, slugError } = useSlugFromName(form);
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 
 // Only editors of the ContentType may change its default Sheet (enforced
 // server-side too), so the switch is hidden for everyone else.
@@ -101,13 +101,13 @@ function openCreate(contentTypeId?: string) {
 
   formError.value = "";
   replaceDefault.value = undefined;
-  form.slug = "";
+  form.readableId = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
   form.contentTypeId = selectedType.id;
   form.isDefault = false;
-  resetSlugTouched(false);
+  resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
 
@@ -136,7 +136,7 @@ async function submitForm(confirmReplaceDefault = false) {
     const created = await $fetch<{ id: string }>("/api/sheet", {
       method: "POST",
       body: {
-        slug: form.slug,
+        readableId: form.readableId,
         name: form.name,
         isPubliclyReadable: form.isPubliclyReadable,
         contentTypeId: form.contentTypeId,
@@ -290,10 +290,10 @@ async function remove() {
           <UFormField name="name" label="Name" required>
             <UInput v-model="form.name" class="w-full" required />
           </UFormField>
-          <SlugField
-            :model-value="form.slug"
-            :error="slugError"
-            @update:model-value="onSlugInput"
+          <ReadableIdField
+            :model-value="form.readableId"
+            :error="readableIdError"
+            @update:model-value="onReadableIdInput"
           />
           <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField v-model="form.ownerGroupId" />

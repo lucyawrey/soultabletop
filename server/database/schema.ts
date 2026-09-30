@@ -92,17 +92,17 @@ export const verification = pgTable("verification", {
 
 export const siteRole = pgEnum("site_role", ["member", "admin"]);
 export const groupRole = pgEnum("group_role", ["admin", "editor", "member"]);
-export const gameRole = pgEnum("game_role", ["gm", "player"]);
+export const campaignRole = pgEnum("campaign_role", ["gm", "player"]);
 export const contentCategory = pgEnum("content_category", CONTENT_CATEGORIES);
 export const resourceKind = pgEnum("resource_kind", [
   "system",
-  "game",
+  "campaign",
   "contentType",
   "sheet",
   "content",
 ]);
 export const sharePermission = pgEnum("share_permission", ["read", "edit"]);
-export const gameAudience = pgEnum("game_audience", ["members", "gms"]);
+export const campaignAudience = pgEnum("campaign_audience", ["members", "gms"]);
 export const groupKind = pgEnum("group_kind", ["user", "system"]);
 
 export type {
@@ -141,7 +141,7 @@ export const group = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     name: text("name").notNull(),
-    slug: text("slug").notNull(),
+    readableId: text("readable_id").notNull(),
     kind: groupKind("kind").default("user").notNull(),
     createdByUserId: text("created_by_user_id").references(() => user.id, {
       onDelete: "set null",
@@ -155,10 +155,10 @@ export const group = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("group_slug_unique").on(sql`lower(${table.slug})`),
+    uniqueIndex("group_readable_id_unique").on(sql`lower(${table.readableId})`),
     check(
-      "group_slug_format_check",
-      sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`,
+      "group_readable_id_format_check",
+      sql`${table.readableId} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`,
     ),
   ],
 );
@@ -194,7 +194,7 @@ export const resource = pgTable(
     ownerGroupId: uuid("owner_group_id").references(() => group.id, {
       onDelete: "restrict",
     }),
-    slug: text("slug").notNull(),
+    readableId: text("readable_id").notNull(),
     name: text("name").notNull(),
     isPubliclyReadable: boolean("is_publicly_readable")
       .default(false)
@@ -225,22 +225,22 @@ export const resource = pgTable(
       sql`num_nonnulls(${table.ownerUserId}, ${table.ownerGroupId}) = 1`,
     ),
     check(
-      "resource_slug_format_check",
-      sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`,
+      "resource_readable_id_format_check",
+      sql`${table.readableId} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`,
     ),
     check(
       "resource_moderation_metadata_check",
       sql`(${table.isAdminHidden} = false AND ${table.moderationReason} IS NULL AND ${table.moderatedAt} IS NULL AND ${table.moderatedByUserId} IS NULL) OR (${table.isAdminHidden} = true AND ${table.moderationReason} IS NOT NULL AND ${table.moderatedAt} IS NOT NULL)`,
     ),
-    uniqueIndex("resource_user_slug_kind_unique").on(
+    uniqueIndex("resource_user_readable_id_kind_unique").on(
       table.ownerUserId,
       table.kind,
-      sql`lower(${table.slug})`,
+      sql`lower(${table.readableId})`,
     ),
-    uniqueIndex("resource_group_slug_kind_unique").on(
+    uniqueIndex("resource_group_readable_id_kind_unique").on(
       table.ownerGroupId,
       table.kind,
-      sql`lower(${table.slug})`,
+      sql`lower(${table.readableId})`,
     ),
     index("resource_owner_user_id_idx").on(table.ownerUserId),
     index("resource_owner_group_id_idx").on(table.ownerGroupId),
@@ -261,10 +261,10 @@ export const resourceGrant = pgTable(
     groupId: uuid("group_id").references(() => group.id, {
       onDelete: "cascade",
     }),
-    gameId: uuid("game_id").references(() => game.resourceId, {
+    campaignId: uuid("campaign_id").references(() => campaign.resourceId, {
       onDelete: "cascade",
     }),
-    gameAudience: gameAudience("game_audience"),
+    campaignAudience: campaignAudience("campaign_audience"),
     createdByUserId: text("created_by_user_id").references(() => user.id, {
       onDelete: "set null",
     }),
@@ -275,11 +275,11 @@ export const resourceGrant = pgTable(
   (table) => [
     check(
       "resource_grant_exactly_one_target_check",
-      sql`num_nonnulls(${table.userId}, ${table.groupId}, ${table.gameId}) = 1`,
+      sql`num_nonnulls(${table.userId}, ${table.groupId}, ${table.campaignId}) = 1`,
     ),
     check(
-      "resource_grant_game_audience_check",
-      sql`(${table.gameId} IS NULL AND ${table.gameAudience} IS NULL) OR (${table.gameId} IS NOT NULL AND ${table.gameAudience} IS NOT NULL)`,
+      "resource_grant_campaign_audience_check",
+      sql`(${table.campaignId} IS NULL AND ${table.campaignAudience} IS NULL) OR (${table.campaignId} IS NOT NULL AND ${table.campaignAudience} IS NOT NULL)`,
     ),
     uniqueIndex("resource_grant_user_unique")
       .on(table.resourceId, table.userId)
@@ -287,13 +287,13 @@ export const resourceGrant = pgTable(
     uniqueIndex("resource_grant_group_unique")
       .on(table.resourceId, table.groupId)
       .where(sql`${table.groupId} IS NOT NULL`),
-    uniqueIndex("resource_grant_game_unique")
-      .on(table.resourceId, table.gameId)
-      .where(sql`${table.gameId} IS NOT NULL`),
+    uniqueIndex("resource_grant_campaign_unique")
+      .on(table.resourceId, table.campaignId)
+      .where(sql`${table.campaignId} IS NOT NULL`),
     index("resource_grant_resource_id_idx").on(table.resourceId),
     index("resource_grant_user_id_idx").on(table.userId),
     index("resource_grant_group_id_idx").on(table.groupId),
-    index("resource_grant_game_id_idx").on(table.gameId),
+    index("resource_grant_campaign_id_idx").on(table.campaignId),
   ],
 );
 
@@ -303,7 +303,7 @@ export const system = pgTable("system", {
     .references(() => resource.id, { onDelete: "cascade" }),
 });
 
-export const game = pgTable("game", {
+export const campaign = pgTable("campaign", {
   resourceId: uuid("resource_id")
     .primaryKey()
     .references(() => resource.id, { onDelete: "cascade" }),
@@ -312,23 +312,23 @@ export const game = pgTable("game", {
     .references(() => system.resourceId, { onDelete: "restrict" }),
 });
 
-export const gameMembership = pgTable(
-  "game_membership",
+export const campaignMembership = pgTable(
+  "campaign_membership",
   {
-    gameId: uuid("game_id")
+    campaignId: uuid("campaign_id")
       .notNull()
-      .references(() => game.resourceId, { onDelete: "cascade" }),
+      .references(() => campaign.resourceId, { onDelete: "cascade" }),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    role: gameRole("role").default("player").notNull(),
+    role: campaignRole("role").default("player").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.gameId, table.userId] }),
-    index("game_membership_user_id_idx").on(table.userId),
+    primaryKey({ columns: [table.campaignId, table.userId] }),
+    index("campaign_membership_user_id_idx").on(table.userId),
   ],
 );
 
@@ -408,8 +408,8 @@ export type ResourceGrant = typeof resourceGrant.$inferSelect;
 export type NewResourceGrant = typeof resourceGrant.$inferInsert;
 export type System = typeof system.$inferSelect;
 export type NewSystem = typeof system.$inferInsert;
-export type Game = typeof game.$inferSelect;
-export type NewGame = typeof game.$inferInsert;
+export type Campaign = typeof campaign.$inferSelect;
+export type NewCampaign = typeof campaign.$inferInsert;
 export type ContentType = typeof contentType.$inferSelect;
 export type NewContentType = typeof contentType.$inferInsert;
 export type Sheet = typeof sheet.$inferSelect;

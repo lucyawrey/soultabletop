@@ -243,7 +243,7 @@ Components (`app/components/sheet/`):
 
 `ContentDetail.vue`:
 - Replaces the Data card with `<SheetRenderer>`. The header's former Edit button is now **Settings** (so it isn't
-  confused with the Edit switch); its modal keeps Name, Slug, Visibility, the saved sheet, and the raw JSON editor.
+  confused with the Edit switch); its modal keeps Name, ID, Visibility, the saved sheet, and the raw JSON editor.
 - The draft lives in `app/composables/useContentDraft.ts` (compares with sorted keys, since `content.data` is jsonb).
   Editing controls are `sheet/FieldInput.vue`; List/Table add/remove/reorder use `useSheetListEditing` and
   `sheet/ListAdd.vue`; `sheet/ContentPicker.vue` picks referenced content.
@@ -320,21 +320,21 @@ runs the exact same code in the browser, lazy-loaded there).
 
 Route `app/pages/sheets/[id]/edit.vue` (`middleware: "auth"`; redirects to `/sheets/[id]` when `!canEdit`). The sheet
 detail page moved to `sheets/[id]/index.vue` so the editor is a sibling route, not a child. The detail page's and the
-list's Edit go here; the edit modals are gone. The list's create modal only asks for name, slug, visibility,
+list's Edit go here; the edit modals are gone. The list's create modal only asks for name, readable ID, visibility,
 content type, and default, then opens the editor: a sheet created without markup starts with the generated markup
 (this is the "Copy to new Sheet" path). `GET /api/sheet/[id]` includes `schemas`, `contentCategory`, and the scoped
 `css`. The detail page previews the sheet with `SheetRenderer` against `sampleSheetData` (broken-tag placeholders for
 editors, an Edit switch whose changes never save), with the markup and CSS in tabs beside the preview (a read-only `CodeEditor`, for the same syntax colors).
 
 Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
-- Left: tabs **Markup** | **CSS** | **Settings** (Name, Slug, Visibility, Default sheet, Default edit mode, Default
+- Left: tabs **Markup** | **CSS** | **Settings** (Name, ID, Visibility, Default sheet, Default edit mode, Default
   autosave), then a diagnostics list (errors + warnings, click → jump to line).
 - The Markup and CSS tabs have **Upload** and **Download** buttons, and a file dropped on either editor loads into it.
   Files are read in the browser (`shared/sheet/files.ts`), never stored on the server: markup accepts `.stts` (Soul Tabletop Sheet),
   `.xml`, `.html`, `.htm`, `.txt`; CSS accepts `.css`, `.txt`; both are capped at the save limits (100,000 / 50,000
   characters) and rejected if they aren't text. A loaded file replaces the editor's content as an unsaved change (undo
   restores it), so it's checked and previewed before saving. Download saves the editor's current content as
-  `<slug>.stts` or `<slug>.css`.
+  `<readableId>.stts` or `<readableId>.css`.
 - Right: live preview via the real `SheetRenderer` with its Edit/Autosave switches (preview edits never save), plus a
   data picker: **Sample data** (generated from the schema: labels as text, 10 for numbers, 2 items per array) or any
   readable content of this content type.
@@ -378,7 +378,7 @@ Each phase ends with `pnpm test && pnpm typecheck && pnpm lint`, template compil
    referenced schemas and `refs`; `?contentTypeId=` filter on `GET /api/content`;
    `ContentDetail.vue` renders it; viewer sheet switcher.
 6. **Edit mode** — draft model, Edit/Autosave switches, Save/Discard bar, autosave, `live`/`locked`, 409 handling,
-   Markdown (`UEditor`) and Image fields, content-field picker / Custom / "Make custom copy"; content Edit modal keeps slug/visibility/sheet/raw JSON.
+   Markdown (`UEditor`) and Image fields, content-field picker / Custom / "Make custom copy"; content Edit modal keeps readable ID/visibility/sheet/raw JSON.
 7. **Scoped CSS + fonts** — `shared/sheet/css.ts` + tests (every rejected construct, prefixing, `.dark`, `:root`,
    keyframes); sheet save validation; curated fonts in `nuxt.config.ts`.
 8. **Sheet editor page** — `app/pages/sheets/[id]/edit.vue`, CodeMirror, preview, reference slide-over, "Copy to new

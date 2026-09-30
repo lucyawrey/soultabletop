@@ -7,8 +7,8 @@ import { requireResourceEditor } from "../../utils/resource-management";
 
 defineRouteMeta({
   openAPI: {
-    tags: ["Game"],
-    summary: "Delete a game",
+    tags: ["Campaign"],
+    summary: "Delete a campaign",
     responses: {
       204: { description: "Deleted" },
       401: { description: "Authentication required" },
@@ -26,8 +26,8 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Resource ID is required",
     });
   const item = await requireResourceEditor(user, id);
-  if (item.kind !== "game")
-    throw createError({ statusCode: 404, statusMessage: "Game not found" });
+  if (item.kind !== "campaign")
+    throw createError({ statusCode: 404, statusMessage: "Campaign not found" });
   await useDatabase().delete(resource).where(eq(resource.id, id));
   setResponseStatus(event, 204);
 });
