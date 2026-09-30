@@ -1,6 +1,4 @@
 <script setup>
-import { authClient } from "~/utils/auth-client";
-
 useHead({
   meta: [{ name: "viewport", content: "width=device-width, initial-scale=1" }],
   link: [{ rel: "icon", href: "/favicon.ico" }],
@@ -34,33 +32,6 @@ const navItems = computed(() =>
     { to: "/groups", label: "Groups", account: true },
   ].filter((item) => loggedIn.value || !item.account),
 );
-
-const toast = useToast();
-const router = useRouter();
-const signOutBusy = ref(false);
-async function signOut() {
-  signOutBusy.value = true;
-  try {
-    // Leave the page first: if it has unsaved changes and the user cancels
-    // leaving, they stay signed in and can still save.
-    await navigateTo("/");
-    // The router's own current route: `useRoute()` here still has the old
-    // page until the new one finishes loading.
-    if (router.currentRoute.value.path !== "/") return;
-    const result = await authClient.signOut();
-    if (result.error) throw new Error(result.error.message);
-    // Reload what the home page fetched, now as a logged-out visitor.
-    await refreshNuxtData();
-  } catch (error) {
-    toast.add({
-      title: "Could not sign out.",
-      description: error instanceof Error ? error.message : undefined,
-      color: "error",
-    });
-  } finally {
-    signOutBusy.value = false;
-  }
-}
 </script>
 
 <template>
@@ -104,29 +75,16 @@ async function signOut() {
 
       <template #right>
         <UButton
-          v-if="loggedIn"
-          to="/profile"
-          icon="i-lucide-user"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-        >
-          Profile
-        </UButton>
-        <UButton
-          v-if="loggedIn"
+          v-if="!loggedIn"
+          to="/"
           color="neutral"
           variant="outline"
           size="sm"
-          :loading="signOutBusy"
-          @click="signOut"
         >
-          Sign out
-        </UButton>
-        <UButton v-else to="/" color="neutral" variant="outline" size="sm">
           Sign in
         </UButton>
         <UColorModeButton />
+        <UserMenu v-if="loggedIn" />
       </template>
     </UHeader>
 
