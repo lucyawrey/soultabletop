@@ -92,6 +92,11 @@ const icon: AttrSpec = {
   description: "Icon name, e.g. i-lucide-sword",
 };
 
+// How fields look when they can't be edited: plain text, or their input box,
+// disabled. Also the values of the `sheet_display` Postgres enum.
+export const SHEET_DISPLAYS = ["text", "box"] as const;
+export type SheetDisplay = (typeof SHEET_DISPLAYS)[number];
+
 // Accepted by every tag.
 export const commonAttrs: Record<string, AttrSpec> = {
   class: {
@@ -103,6 +108,10 @@ export const commonAttrs: Record<string, AttrSpec> = {
   ),
   locked: bool(
     "Fields inside need their pencil button clicked before editing; locked=\"false\" opts out",
+  ),
+  display: oneOf(
+    SHEET_DISPLAYS,
+    "How fields inside look when they can't be edited: text, or box (their input, disabled); defaults to the sheet's setting",
   ),
 };
 

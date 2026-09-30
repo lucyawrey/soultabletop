@@ -5,6 +5,7 @@ import { createError, readBody, type H3Event } from "h3";
 import { uuidPattern } from "./resource-management";
 import { CONTENT_CATEGORIES } from "../../shared/content-categories";
 import { RESOURCE_LINK_KINDS } from "../../shared/content-schema";
+import { SHEET_DISPLAYS } from "../../shared/sheet/registry";
 
 FormatRegistry.Set("uuid", (value) => uuidPattern.test(value));
 
@@ -118,6 +119,10 @@ const contentCategorySchema = Type.Union(
   CONTENT_CATEGORIES.map((category) => Type.Literal(category)),
 );
 
+const sheetDisplaySchema = Type.Union(
+  SHEET_DISPLAYS.map((display) => Type.Literal(display)),
+);
+
 export const contentTypeCreateSchema = Type.Intersect([
   resourceCreateSchema,
   Type.Object({
@@ -156,6 +161,7 @@ export const sheetCreateSchema = Type.Intersect([
     confirmReplaceDefault: Type.Optional(Type.Boolean()),
     defaultEditMode: Type.Optional(Type.Boolean()),
     defaultAutosave: Type.Optional(Type.Boolean()),
+    defaultDisplay: Type.Optional(sheetDisplaySchema),
   }),
 ]);
 
@@ -173,6 +179,7 @@ export const sheetPatchSchema = Type.Partial(
     confirmReplaceDefault: Type.Boolean(),
     defaultEditMode: Type.Boolean(),
     defaultAutosave: Type.Boolean(),
+    defaultDisplay: sheetDisplaySchema,
   }),
 );
 

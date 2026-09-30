@@ -5,6 +5,7 @@ import {
   generateSheetMarkup,
   type ContentCategory,
 } from "#shared/sheet/generate";
+import type { SheetDisplay } from "#shared/sheet/registry";
 import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import type { SheetSchemas } from "#shared/sheet/validate";
 import { extractApiErrorMessage } from "~/utils/api-error";
@@ -26,6 +27,7 @@ interface ResolvedSheet {
   source: "selected" | "default" | "generated";
   defaultEditMode: boolean;
   defaultAutosave: boolean;
+  defaultDisplay: SheetDisplay;
   canEdit: boolean;
 }
 
@@ -61,6 +63,7 @@ interface SheetItem {
   cssStyles: string;
   defaultEditMode: boolean;
   defaultAutosave: boolean;
+  defaultDisplay: SheetDisplay;
   canEdit: boolean;
 }
 
@@ -359,6 +362,7 @@ async function remove() {
         :can-edit-sheet="viewSheet.canEdit"
         :can-edit="item.canEdit"
         :edit-mode="editMode"
+        :default-display="viewSheet.defaultDisplay"
         @add-ref="addRef"
         @add-link="addLink"
       />

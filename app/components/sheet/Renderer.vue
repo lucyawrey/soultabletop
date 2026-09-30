@@ -4,6 +4,7 @@ import {
   type SheetLinks,
   type SheetRefs,
 } from "#shared/sheet/runtime";
+import type { SheetDisplay } from "#shared/sheet/registry";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
 
 // Renders Content with Sheet markup, for viewing and editing. See
@@ -26,6 +27,9 @@ const props = defineProps<{
   canEdit?: boolean;
   // The Edit switch.
   editMode?: boolean;
+  // How fields look when they can't be edited, unless the markup's `display`
+  // says otherwise (the Sheet's setting).
+  defaultDisplay?: SheetDisplay;
 }>();
 
 useHead({
@@ -53,6 +57,7 @@ provideSheetContext({
   showInvalid: computed(() => props.canEditSheet ?? false),
   canEdit: computed(() => props.canEdit ?? false),
   editMode: computed(() => props.editMode ?? false),
+  defaultDisplay: computed(() => props.defaultDisplay ?? "text"),
   update: (path, value) => setSheetValue(props.data, path, value),
   addRef: (id, ref) => emit("addRef", id, ref),
   addLink: (id, link) => emit("addLink", id, link),

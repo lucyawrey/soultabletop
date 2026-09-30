@@ -4,13 +4,15 @@ import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
 import { defaultSheetValue, refRecord } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
-// The editing control of a field tag (see Field.vue for viewing).
+// The editing control of a field tag (see Field.vue for viewing). Disabled, it
+// shows a non-editable field with `display="box"`.
 const props = defineProps<{
   node: ValidatedElement;
   value: unknown;
   // Where the value lives in the draft data.
   path: (string | number)[];
   label: string;
+  disabled?: boolean;
 }>();
 
 const { context, number } = useSheet();
@@ -19,8 +21,13 @@ const attrText = useSheetAttrText();
 const display = computed(() => sheetFieldDisplay(props.node));
 const field = computed(() => props.node.binding?.field);
 
+// A disabled input never writes: the Markdown editor re-emits its normalized
+// text when its value changes from outside, even when it isn't editable.
+function update(path: (string | number)[], value: unknown) {
+  if (!props.disabled) context.update(path, value);
+}
 function set(value: unknown) {
-  context.update(props.path, value);
+  update(props.path, value);
 }
 
 const text = computed({
@@ -136,7 +143,7 @@ const localName = computed({
     isLocal.value
       ? String((props.value as Record<string, unknown>).name ?? "")
       : "",
-  set: (name: string) => context.update([...props.path, "name"], name),
+  set: (name: string) => update([...props.path, "name"], name),
 });
 
 const linkField = computed(() =>
@@ -173,6 +180,7 @@ const imageError = computed(() =>
   <UTextarea
     v-if="display === 'text' && node.attrs.multiline === true"
     v-model="text"
+    :disabled="disabled"
     :placeholder="placeholder"
     :aria-label="label"
     autoresize
@@ -181,6 +189,7 @@ const imageError = computed(() =>
   <UInput
     v-else-if="display === 'text'"
     v-model="text"
+    :disabled="disabled"
     :placeholder="placeholder"
     :aria-label="label"
     class="w-full"
@@ -189,6 +198,7 @@ const imageError = computed(() =>
   <USelect
     v-else-if="display === 'select'"
     v-model="text"
+    :disabled="disabled"
     :items="options"
     :aria-label="label"
     class="w-full"
@@ -197,6 +207,7 @@ const imageError = computed(() =>
   <UInputNumber
     v-else-if="display === 'number' || display === 'stat'"
     v-model="numberValue"
+    :disabled="disabled"
     :min="min"
     :max="max"
     :step="step"
@@ -207,17 +218,20 @@ const imageError = computed(() =>
   <USwitch
     v-else-if="display === 'boolean' && node.tag === 'Toggle'"
     v-model="booleanValue"
+    :disabled="disabled"
     :aria-label="label"
   />
   <UCheckbox
     v-else-if="display === 'boolean'"
     v-model="booleanValue"
+    :disabled="disabled"
     :aria-label="label"
   />
 
   <UInputTags
     v-else-if="display === 'tags'"
     v-model="tags"
+    :disabled="disabled"
     :aria-label="label"
     class="w-full"
   />
@@ -228,7 +242,8 @@ const imageError = computed(() =>
         v-for="index in pips"
         :key="index"
         type="button"
-        class="size-5 rounded-full border border-primary"
+        :disabled="disabled"
+        class="size-5 rounded-full border border-primary disabled:cursor-not-allowed disabled:opacity-75"
         :class="index < (typeof value === 'number' ? value : 0) ? 'bg-primary' : ''"
         :aria-label="`Set ${label} to ${index + 1}`"
         @click="clickPip(index)"
@@ -237,6 +252,7 @@ const imageError = computed(() =>
     <UInputNumber
       v-else
       v-model="numberValue"
+      :disabled="disabled"
       :min="0"
       :max="trackerMax"
       :aria-label="label"
@@ -258,6 +274,7 @@ const imageError = computed(() =>
     <UInput
       v-if="isLocal"
       v-model="localName"
+      :disabled="disabled"
       placeholder="Name"
       :aria-label="`${label} name`"
       class="w-full"
@@ -288,6 +305,7 @@ const imageError = computed(() =>
     <UEditor
       v-model="text"
       content-type="markdown"
+      :editable="!disabled"
       :image="false"
       :mention="false"
       :placeholder="placeholder ?? 'Write here…'"
@@ -298,6 +316,7 @@ const imageError = computed(() =>
   <div v-else-if="display === 'scalar'" class="flex gap-2">
     <USelect
       v-model="scalarType"
+      :disabled="disabled"
       :items="scalarTypes"
       :aria-label="`${label} type`"
       class="w-28 shrink-0"
@@ -305,18 +324,21 @@ const imageError = computed(() =>
     <UInput
       v-if="scalarType === 'string'"
       v-model="text"
+      :disabled="disabled"
       :aria-label="label"
       class="min-w-0 flex-1"
     />
     <UInputNumber
       v-else-if="scalarType === 'number'"
       v-model="scalarNumber"
+      :disabled="disabled"
       :aria-label="label"
       class="min-w-0 flex-1"
     />
     <USwitch
       v-else-if="scalarType === 'boolean'"
       v-model="booleanValue"
+      :disabled="disabled"
       :aria-label="label"
       class="mt-1.5"
     />
@@ -328,6 +350,7 @@ const imageError = computed(() =>
         :model-value="jsonText"
         language="json"
         :label="label"
+        :readonly="disabled"
         class="h-48"
         @update:model-value="updateJson"
       />
@@ -337,6 +360,7 @@ const imageError = computed(() =>
   <UFormField v-else-if="display === 'image'" :error="imageError">
     <UInput
       v-model="text"
+      :disabled="disabled"
       type="url"
       placeholder="https://…"
       :aria-label="label"

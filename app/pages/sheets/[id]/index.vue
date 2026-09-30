@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { sampleSheetData } from "#shared/sheet/editor";
+import type { SheetDisplay } from "#shared/sheet/registry";
 import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import type { SheetSchemas } from "#shared/sheet/validate";
 import { extractApiErrorMessage } from "~/utils/api-error";
@@ -17,6 +18,7 @@ interface SheetDetail {
   // cssStyles scoped for rendering.
   css: string;
   isDefault: boolean;
+  defaultDisplay: SheetDisplay;
   canEdit: boolean;
   isPubliclyReadable: boolean;
   schemas: SheetSchemas;
@@ -169,6 +171,7 @@ async function remove() {
               :can-edit-sheet="sheet.canEdit"
               can-edit
               :edit-mode="previewEditMode"
+              :default-display="sheet.defaultDisplay"
               @add-ref="addPreviewRef"
               @add-link="addPreviewLink"
             />

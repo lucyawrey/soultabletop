@@ -8,7 +8,7 @@ import type {
   ContentFieldSchema,
   ContentTypeSchema,
 } from "../content-schema";
-import { humanizeFieldName } from "./registry";
+import { humanizeFieldName, type SheetDisplay } from "./registry";
 import type { SheetSchemas } from "./validate";
 import type { ContentCategory } from "../content-categories";
 
@@ -16,15 +16,19 @@ export const GENERATED_SHEET_NAME = "Generated (from schema)";
 
 export type { ContentCategory } from "../content-categories";
 
-// Initial Edit/Autosave switch state for generated sheets.
-export function generatedSheetDefaults(category: ContentCategory) {
+// Initial Edit/Autosave switch state and field display for generated sheets.
+export function generatedSheetDefaults(category: ContentCategory): {
+  defaultEditMode: boolean;
+  defaultAutosave: boolean;
+  defaultDisplay: SheetDisplay;
+} {
   switch (category) {
     case "playerCharacter":
-      return { defaultEditMode: true, defaultAutosave: true };
+      return { defaultEditMode: true, defaultAutosave: true, defaultDisplay: "box" };
     case "nonPlayerCharacter":
-      return { defaultEditMode: false, defaultAutosave: true };
+      return { defaultEditMode: false, defaultAutosave: true, defaultDisplay: "text" };
     default:
-      return { defaultEditMode: false, defaultAutosave: false };
+      return { defaultEditMode: false, defaultAutosave: false, defaultDisplay: "text" };
   }
 }
 
