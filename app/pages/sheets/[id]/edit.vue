@@ -550,19 +550,11 @@ async function insertPath(path: string) {
                 <UFormField name="name" label="Name" required>
                   <UInput v-model="form.name" class="w-full" />
                 </UFormField>
-                <UFormField
-                  name="slug"
-                  label="Slug"
-                  description="Auto-generated from the name — edit if you need something different or unique."
+                <SlugField
+                  :model-value="form.slug"
                   :error="slugError"
-                  required
-                >
-                  <UInput
-                    :model-value="form.slug"
-                    class="w-full"
-                    @update:model-value="onSlugInput"
-                  />
-                </UFormField>
+                  @update:model-value="onSlugInput"
+                />
                 <VisibilityField v-model="form.isPubliclyReadable" />
                 <OwnerField
                   v-if="sheet?.canChangeOwner"
