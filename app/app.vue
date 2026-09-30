@@ -105,6 +105,16 @@ async function signOut() {
       <template #right>
         <UButton
           v-if="loggedIn"
+          to="/profile"
+          icon="i-lucide-user"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+        >
+          Profile
+        </UButton>
+        <UButton
+          v-if="loggedIn"
           color="neutral"
           variant="outline"
           size="sm"
