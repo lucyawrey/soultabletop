@@ -107,6 +107,19 @@ function validateAuthForm(state: Partial<AuthFormData>): FormError[] {
   return [];
 }
 
+// UForm only re-validates the field being edited, so editing Password would
+// leave a stale "Passwords don't match." on Confirm Password.
+watch(
+  () => authForm.value?.state.password,
+  () => {
+    if (!isRegistering.value || !authForm.value?.state.confirmPassword) return;
+    authForm.value.formRef?.validate({
+      name: "confirmPassword",
+      silent: true,
+    });
+  },
+);
+
 function setMode(nextMode: AuthMode) {
   if (authBusy.value) return;
   mode.value = nextMode;
