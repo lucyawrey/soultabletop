@@ -81,8 +81,12 @@ const usernameHint = computed(() => {
   return undefined;
 });
 
+const iconChanged = computed(
+  () => iconUrl.value !== (profile.value?.iconImageUrl ?? ""),
+);
+// Only checked when edited, so a stored legacy icon doesn't block other changes.
 const iconError = computed(() => {
-  if (!iconUrl.value) return undefined;
+  if (!iconChanged.value || !iconUrl.value) return undefined;
   if (!/^https:\/\/\S+$/.test(iconUrl.value))
     return "Use an https:// image URL.";
   return undefined;
@@ -91,11 +95,7 @@ const iconError = computed(() => {
 const iconFailed = ref(false);
 watch(iconUrl, () => (iconFailed.value = false));
 
-const dirty = computed(
-  () =>
-    usernameChanged.value ||
-    iconUrl.value !== (profile.value?.iconImageUrl ?? ""),
-);
+const dirty = computed(() => usernameChanged.value || iconChanged.value);
 const canSave = computed(
   () =>
     dirty.value &&
@@ -118,7 +118,7 @@ async function save() {
       method: "PATCH",
       body: {
         ...(usernameChanged.value ? { username: username.value } : {}),
-        iconImageUrl: iconUrl.value || null,
+        ...(iconChanged.value ? { iconImageUrl: iconUrl.value || null } : {}),
       },
     });
     await refresh();
@@ -166,7 +166,10 @@ const groupColumns = [
         <h2 class="text-lg font-semibold text-highlighted">Edit Profile</h2>
       </template>
 
-      <form class="space-y-4" @submit.prevent="save">
+      <!-- Deliberately not a <form>: Firefox treats a username-like field in a
+           form as a login form and autofills saved credentials, ignoring
+           autocomplete="off". -->
+      <div class="space-y-4">
         <UAlert
           v-if="saveError"
           color="error"
@@ -182,7 +185,7 @@ const groupColumns = [
 
         <ReadableIdField
           v-model="form.username"
-          name="username"
+          name="handle"
           label="Username"
           description="Lowercase letters, numbers, and hyphens."
           :error="usernameError"
@@ -222,10 +225,10 @@ const groupColumns = [
           </p>
         </div>
 
-        <UButton type="submit" :loading="saving" :disabled="!canSave">
+        <UButton :loading="saving" :disabled="!canSave" @click="save">
           Save
         </UButton>
-      </form>
+      </div>
     </UPageCard>
 
     <UPageCard>

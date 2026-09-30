@@ -32,6 +32,10 @@ defineEmits<{ "update:modelValue": [value: string] }>();
       :model-value="modelValue"
       class="w-full"
       required
+      autocomplete="off"
+      autocapitalize="none"
+      :spellcheck="false"
+      data-1p-ignore
       @update:model-value="$emit('update:modelValue', String($event))"
     />
   </UFormField>
