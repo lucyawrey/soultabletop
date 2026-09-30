@@ -3,14 +3,23 @@
 const ALL = "all";
 
 const { systemId, setSystem } = useCurrentSystem();
-const { data: systems } = await useFetch<{ id: string; name: string }[]>(
+const loggedIn = await useLoggedIn();
+const { data: systems, refresh } = await useFetch<{ id: string; name: string }[]>(
   "/api/system",
   { key: "system-selector", default: () => [] },
 );
 
+// The list changes on sign-in and sign-out, and after system changes (the
+// Systems pages call `refreshNuxtData("system-selector")`).
+watch(loggedIn, () => refresh());
+
 // A saved system that was deleted or is no longer readable goes back to all.
-if (systemId.value && !systems.value.some((item) => item.id === systemId.value))
-  setSystem(null);
+function dropMissingSystem() {
+  if (systemId.value && !systems.value.some((item) => item.id === systemId.value))
+    setSystem(null);
+}
+dropMissingSystem();
+watch(systems, dropMissingSystem);
 
 const items = computed(() => [
   { label: "All Systems", value: ALL },

@@ -83,7 +83,7 @@ async function submitForm() {
       },
     });
     isFormOpen.value = false;
-    await refresh();
+    await Promise.all([refresh(), refreshNuxtData("system-selector")]);
   } catch (error) {
     formError.value = extractApiErrorMessage(error, "Could not save system.");
   } finally {
@@ -101,6 +101,7 @@ async function remove() {
 
   try {
     await $fetch(`/api/system/${id}`, { method: "DELETE" });
+    await refreshNuxtData("system-selector");
     await navigateTo("/systems");
   } catch (error) {
     deleteError.value = extractApiErrorMessage(
