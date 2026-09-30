@@ -317,6 +317,31 @@ describe("tags and attributes", () => {
     expect(bad.diagnostics).toHaveLength(1);
   });
 
+  it("accepts hideLabel on every field tag and Column, and format on Number", () => {
+    expect(
+      messages(
+        `<Number field="hp" hideLabel /><Text field="notes" hideLabel="true" /><Field field="notes" hideLabel="false" />` +
+          `<Number field="hp" format="signed" variant="stat" /><Value field="hp" format="signed" hideLabel />` +
+          `<Select field="notes" options="a,b" hideLabel />`,
+      ),
+    ).toEqual([]);
+    expect(messages(`<Table field="attacks"><Column field="name" hideLabel /></Table>`)).toEqual([]);
+  });
+
+  it("rejects bad hideLabel and format values, and hideLabel on non-field tags", () => {
+    expect(errorCodes(`<Number field="hp" hideLabel="maybe" />`)).toEqual(["invalid-attribute"]);
+    expect(errorCodes(`<Number field="hp" format="roman" />`)).toEqual(["invalid-attribute"]);
+    expect(messages(`<Divider hideLabel />`)).toEqual([
+      "error unknown-attribute: <Divider> has no hideLabel attribute (it has: label)",
+    ]);
+  });
+
+  it("keeps hideLabel and the resolved label on the validated node", () => {
+    const node = first(compile(`<Number field="hp" hideLabel />`).nodes);
+    expect(node.attrs.hideLabel).toBe(true);
+    expect(node.binding?.label).toBe("Hit Points");
+  });
+
   it("validates attribute values", () => {
     expect(messages(`<Grid cols="0" gap="huge"><Section span="1.5" icon="sword" class="Bad_name" /></Grid>`)).toEqual([
       "error invalid-attribute: cols on <Grid> must be between 1 and 12",

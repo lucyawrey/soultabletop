@@ -124,8 +124,16 @@ const fieldAttrs: Record<string, AttrSpec> = {
   label: text(
     "Label; defaults to the schema label, then the field name",
   ),
+  hideLabel: bool(
+    "Doesn't show the label (a Column's header is left empty); it still names the input for screen readers",
+  ),
   hint: text("Help text; defaults to the schema description"),
 };
+
+const formatAttr = oneOf(
+  ["plain", "signed"],
+  "signed shows +2 for positive numbers (an editable input shows the sign too; the saved value stays a number)",
+);
 
 const tagList: TagSpec[] = [
   // Layout
@@ -293,6 +301,7 @@ const tagList: TagSpec[] = [
       min: { type: { kind: "number" }, description: "Smallest value" },
       max: { type: { kind: "number" }, description: "Largest value" },
       step: { type: { kind: "number" }, description: "Increment" },
+      format: formatAttr,
       variant: oneOf(
         ["input", "stat"],
         "stat shows a large number with a small label",
@@ -370,7 +379,7 @@ const tagList: TagSpec[] = [
     description: "Shows a value; never editable",
     attrs: {
       ...fieldAttrs,
-      format: oneOf(["plain", "signed"], "signed shows +2 for positive numbers"),
+      format: formatAttr,
     },
     children: "none",
     binds: ["anyValue"],
