@@ -115,6 +115,13 @@ const options = computed(() => (props.node.attrs.options as string[] | undefined
 const min = computed(() => number(props.node.attrs.min));
 const max = computed(() => number(props.node.attrs.max));
 const step = computed(() => number(props.node.attrs.step));
+// `format="signed"`: the input shows "+3" (zero stays "0"); the saved value is
+// still the plain number.
+const numberFormat = computed(() =>
+  props.node.attrs.format === "signed"
+    ? ({ signDisplay: "exceptZero" } as const)
+    : undefined,
+);
 
 // Tracker
 const trackerMax = computed(() => Math.max(number(props.node.attrs.max) ?? 0, 0));
@@ -211,6 +218,7 @@ const imageError = computed(() =>
     :min="min"
     :max="max"
     :step="step"
+    :format-options="numberFormat"
     :aria-label="label"
     class="w-full"
   />

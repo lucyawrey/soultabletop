@@ -83,7 +83,7 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list; required; default), allowed children, and which schema field types it may bind to. Numeric/text attrs accept
 `{path}` interpolation (e.g. `max="{hpMax}"`). Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`) and
-`live`, `locked`, and `display` (section 5), and renders a fixed hook class `sheet-<tag>`.
+`live`, `locked`, and `display` (section 5), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixed hooks inside: `sheet-field-label` on the visible label (for `Number variant="stat"` the small label under the number; not rendered with `hideLabel` or in `Column` cells) and `sheet-field-value` on a wrapper around the value or input. Sheet CSS targets these instead of `:first-child` or component classes.
 
 ### Layout
 | Tag | Attrs | Children | Renders |
@@ -104,13 +104,13 @@ list; required; default), allowed children, and which schema field types it may 
 in `UTable`'s expandable rows.
 
 ### Fields
-Common attrs: `field` (req), `label` (default: humanized last path segment, `hitPoints` → "Hit Points"), `hint`.
+Common attrs: `field` (req), `label` (default: humanized last path segment, `hitPoints` → "Hit Points"), `hideLabel` (boolean), `hint`.
 View mode renders formatted values, edit mode renders the input.
 
 | Tag | Extra attrs | Binds | Edit input |
 |---|---|---|---|
 | `Text` | `multiline`, `placeholder` | string | `UInput` / `UTextarea` |
-| `Number` | `min`, `max`, `step`, `variant` (input/stat) | number | `UInputNumber`; `stat` = big centered number + small label (no separate `Stat` tag — decided) |
+| `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "exceptZero"` so the input shows "+3" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
 | `Checkbox` / `Toggle` | — | boolean | `UCheckbox` / `USwitch` |
 | `Select` | `options` (comma list, req) | string | `USelect` |
 | `Tags` | — | array of string | `UInputTags` |
@@ -126,6 +126,8 @@ https URLs, and its edit input validates client-side. Uploads later, same field 
 
 Label resolution: `label` attr → schema field `label` → humanized field name. `hint` falls back to schema
 `description`. (decided: `ContentFieldSchema` entries gain optional `label` and `description`.)
+
+Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is not shown (a Column's header is left empty) but still names the input for screen readers. An explicit `label=""` is not used for this: it stays "no label given" and falls back to the schema label, so the two are not confused. `List` and `Table` already show no label unless `label` is given.
 
 ### Content fields: references and local data (decided)
 - Schema type `{ type: "content", contentTypeId, allow: "reference" | "local" | "both", required }` replaces the old

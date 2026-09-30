@@ -42,7 +42,9 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
   ...columnNodes.value.map((column, index) => ({
     id: `c${index}`,
     header:
-      attrText(column.attrs.label) || column.binding?.label || "",
+      column.attrs.hideLabel === true
+        ? ""
+        : attrText(column.attrs.label) || column.binding?.label || "",
     meta: {
       class: {
         th: widths[column.attrs.width as string],
