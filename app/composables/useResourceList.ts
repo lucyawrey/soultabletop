@@ -1,4 +1,4 @@
-import type { Paginated } from "../../shared/resource-list";
+import { MAX_PAGE, type Paginated } from "../../shared/resource-list";
 
 export type ResourceListTab = "mine" | "find";
 
@@ -33,8 +33,8 @@ export async function useResourceList<T>(
   );
   const q = computed(() => first(route.query.q).trim());
   const page = computed(() => {
-    const value = Number(first(route.query.page));
-    return Number.isInteger(value) && value > 0 ? value : 1;
+    const text = first(route.query.page);
+    return /^\d+$/.test(text) ? Math.min(Math.max(Number(text), 1), MAX_PAGE) : 1;
   });
 
   function setQuery(changes: { tab?: string; q?: string; page?: number }) {
@@ -78,12 +78,30 @@ export async function useResourceList<T>(
     default: () => ({ items: [], total: 0, page: 1, pageSize: 25 }),
   });
   const { data, status, refresh } = request;
+  // A page past the end (an old link, or the last row of the last page was
+  // deleted) goes back to the last page that exists.
+  watch(
+    () => [request.status.value, data.value] as const,
+    ([state, result]) => {
+      if (state !== "success" || page.value === 1 || result.items.length) return;
+      const last = Math.max(1, Math.ceil(result.total / result.pageSize));
+      if (last < page.value) setQuery({ page: last });
+    },
+  );
   await request;
+
+  // What an empty list says: what's missing, for what was searched or shown.
+  function emptyMessage(plural: string) {
+    if (q.value) return `No ${plural} match your search.`;
+    return scope.value === "public" ? `No public ${plural} yet.` : `No ${plural} yet.`;
+  }
 
   return {
     loggedIn,
     hasTabs,
     tab,
+    query: q,
+    emptyMessage,
     search,
     page,
     items: computed(() => data.value.items),

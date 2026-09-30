@@ -3,6 +3,8 @@ import { and, count, eq, inArray } from "drizzle-orm";
 import { content, contentType, group, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
+import { loadResourceAccessContext } from "../../utils/resource-access";
+import { readableResourceIds } from "../../utils/resource-list-filter";
 import { requireUuid } from "../../utils/resource-management";
 import { CONTENT_CATEGORIES, type ContentCategory } from "../../../shared/content-categories";
 import {
@@ -57,7 +59,26 @@ export default defineEventHandler(async (event) => {
         statusMessage: `categories must be a comma-separated list of: ${CONTENT_CATEGORIES.join(", ")}`,
       });
   }
+  // Content is listed only when its content type is readable too (sheets and
+  // schemas come from the type); the set is small, so it's resolved up front
+  // and the list query, totals, and pages all use it.
+  const database = useDatabase();
+  const typeResources = await database
+    .select({ resource })
+    .from(contentType)
+    .innerJoin(resource, eq(resource.id, contentType.resourceId));
+  const typeContext = user
+    ? await loadResourceAccessContext(
+        user,
+        typeResources.map((row) => row.resource.id),
+      )
+    : null;
+  const readableTypeIds = readableResourceIds(
+    typeResources.map((row) => row.resource),
+    typeContext,
+  );
   const filter = and(
+    inArray(content.contentTypeId, readableTypeIds),
     typeof contentTypeId === "string"
       ? eq(content.contentTypeId, contentTypeId)
       : undefined,
@@ -65,7 +86,6 @@ export default defineEventHandler(async (event) => {
       ? inArray(contentType.contentCategory, categoryFilter)
       : undefined,
   );
-  const database = useDatabase();
   const { rows, page } = await listResources({
     query,
     user,

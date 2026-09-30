@@ -98,7 +98,7 @@ async function submitForm() {
     <UInput
       v-model="search"
       icon="i-lucide-search"
-      placeholder="Search Groups by name or ID"
+      placeholder="Search groups by name or ID"
       class="w-full max-w-md"
     />
 
@@ -136,7 +136,7 @@ async function submitForm() {
 
       <template #empty>
         <p class="py-6 text-center text-sm text-muted">
-          You aren't in any groups yet.
+          {{ search.trim() ? "No groups match your search." : "You aren't in any groups yet." }}
         </p>
       </template>
     </UTable>

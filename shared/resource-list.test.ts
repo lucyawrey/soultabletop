@@ -32,6 +32,37 @@ describe("parseListQuery", () => {
     expect(parseListQuery({ page: "1.5" })).toHaveProperty("error");
     expect(parseListQuery({ page: "x" })).toHaveProperty("error");
   });
+
+  it("rejects page values that aren't plain digits or are out of range", () => {
+    for (const page of [
+      "-1",
+      "0x10",
+      "1e3",
+      " 2 ",
+      "2.0",
+      "10001",
+      "400000000000000000",
+      "1e20",
+      "",
+      {},
+    ])
+      expect(parseListQuery({ page }), String(page)).toHaveProperty("error");
+    expect(parseListQuery({ page: "10000" })).toHaveProperty("query");
+  });
+
+  it("uses the first value of a repeated parameter", () => {
+    expect(parseListQuery({ q: ["a", "b"], page: ["2", "x"] })).toEqual({
+      query: { q: "a", scope: undefined, page: 2 },
+    });
+  });
+
+  it("treats whitespace-only search as empty and rejects non-string search", () => {
+    expect(parseListQuery({ q: "   " })).toEqual({
+      query: { q: "", scope: undefined, page: undefined },
+    });
+    expect(parseListQuery({ q: {} })).toHaveProperty("error");
+    expect(parseListQuery({ q: 5 })).toHaveProperty("error");
+  });
 });
 
 describe("escapeLike", () => {

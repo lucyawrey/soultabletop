@@ -238,7 +238,7 @@ async function remove() {
       Create a system before adding content types.
     </p>
 
-    <ResourceList :list="list" noun="Types">
+    <ResourceList :list="list" noun="Content Types">
 <UTable
       :data="contentTypes"
       :columns="columns"
@@ -312,7 +312,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.search.value ? 'Nothing matches your search.' : 'No content types yet.' }}</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('content types') }}</p>
       </template>
     </UTable>
     </ResourceList>

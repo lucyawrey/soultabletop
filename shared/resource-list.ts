@@ -6,6 +6,7 @@ export type ListScope = (typeof LIST_SCOPES)[number];
 
 export const LIST_PAGE_SIZE = 25;
 export const MAX_SEARCH_LENGTH = 100;
+export const MAX_PAGE = 10000;
 
 export interface ListQuery {
   q: string;
@@ -44,9 +45,10 @@ export function parseListQuery(
 
   let pageNumber: number | undefined;
   if (page !== undefined) {
-    pageNumber = Number(page);
-    if (!Number.isInteger(pageNumber) || pageNumber < 1)
-      return { error: "page must be a positive integer" };
+    // Plain digits only: Number() would also accept "0x10", "1e3", " 2 ".
+    pageNumber = typeof page === "string" && /^\d+$/.test(page) ? Number(page) : 0;
+    if (pageNumber < 1 || pageNumber > MAX_PAGE)
+      return { error: `page must be a whole number from 1 to ${MAX_PAGE}` };
   }
 
   return {

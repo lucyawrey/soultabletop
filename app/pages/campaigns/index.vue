@@ -22,7 +22,9 @@ interface SystemOption {
   name: string;
 }
 
-const list = await useResourceList<CampaignItem>("/api/campaign", toRef(true), { tabs: false });
+// The page needs an account (auth middleware), so visitors never reach it.
+const loggedIn = await useLoggedIn();
+const list = await useResourceList<CampaignItem>("/api/campaign", loggedIn);
 const { items: campaigns, status, refresh } = list;
 
 const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
@@ -246,7 +248,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.search.value ? 'Nothing matches your search.' : 'No campaigns yet.' }}</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('campaigns') }}</p>
       </template>
     </UTable>
     </ResourceList>

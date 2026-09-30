@@ -282,7 +282,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.search.value ? 'Nothing matches your search.' : 'No sheets yet.' }}</p>
+        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('sheets') }}</p>
       </template>
     </UTable>
     </ResourceList>

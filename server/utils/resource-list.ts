@@ -2,6 +2,7 @@ import { createError, getQuery, type H3Event } from "h3";
 import { and, asc, desc, eq, exists, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
 import type { User } from "better-auth";
 import {
+  campaignMembership,
   group,
   groupMembership,
   resource,
@@ -18,6 +19,7 @@ import {
   type ListQuery,
   type Paginated,
 } from "../../shared/resource-list";
+import { isListed } from "./resource-list-filter";
 import {
   getResourceAccessOrPublic,
   loadResourceAccessContext,
@@ -43,8 +45,8 @@ export function requireListQuery(event: H3Event): ListQuery {
 
 // The SQL part of a list query: search over name and readable ID, and scope.
 // "public" is exact; "mine" selects candidates (owned by the user or their
-// groups, or carrying any edit grant) that `listResources` then checks against
-// the real access rules.
+// groups, campaigns they belong to, or carrying any edit grant) that
+// `listResources` then checks against the real access rules.
 export function listCondition(query: ListQuery, user: User | null) {
   const conditions: (SQL | undefined)[] = [];
   if (query.q) {
@@ -72,6 +74,13 @@ export function listCondition(query: ListQuery, user: User | null) {
             .from(groupMembership)
             .where(eq(groupMembership.userId, user.id)),
         ),
+        inArray(
+          resource.id,
+          database
+            .select({ id: campaignMembership.campaignId })
+            .from(campaignMembership)
+            .where(eq(campaignMembership.userId, user.id)),
+        ),
         exists(
           database
             .select({ one: sql`1` })
@@ -87,13 +96,6 @@ export function listCondition(query: ListQuery, user: User | null) {
     );
   }
   return and(...conditions);
-}
-
-function isOwnedBy(item: Resource, context: ResourceAccessContext) {
-  return (
-    item.ownerUserId === context.userId ||
-    (!!item.ownerGroupId && context.groupRoles.has(item.ownerGroupId))
-  );
 }
 
 interface ListRow {
@@ -137,14 +139,8 @@ export async function listResources<T extends ListRow>(options: {
           ...row,
           access: getResourceAccessOrPublic(row.resource, context),
         }))
-        // "Mine" counts shared resources only when the user can edit them.
-        .filter(
-          ({ access, resource: item }) =>
-            access.canRead &&
-            (query.scope !== "mine" ||
-              !context ||
-              isOwnedBy(item, context) ||
-              access.canEdit),
+        .filter(({ access, resource: item }) =>
+          isListed(item, access, context, query.scope),
         ),
     };
   }

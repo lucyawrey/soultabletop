@@ -28,14 +28,14 @@ const tabs = computed(() => [
     <UInput
       :model-value="list.search.value"
       icon="i-lucide-search"
-      :placeholder="`Search ${noun} by name or ID`"
+      :placeholder="`Search ${noun.toLowerCase()} by name or ID`"
       class="w-full max-w-md"
       @update:model-value="list.setSearch(String($event))"
     />
 
     <slot />
 
-    <div v-if="list.total.value > list.pageSize.value" class="flex justify-center">
+    <div v-if="list.total.value > list.pageSize.value || list.page.value > 1" class="flex justify-center">
       <UPagination
         :page="list.page.value"
         :total="list.total.value"
