@@ -3,7 +3,7 @@ import { campaign, resource } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
-  getResourceAccessOrPublic,
+  getResourceAccess,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
 import { canChangeResourceOwner } from "../../utils/resource-management";
@@ -27,23 +27,20 @@ export default defineEventHandler(async (event) => {
     .from(campaign)
     .innerJoin(resource, eq(resource.id, campaign.resourceId))
     .orderBy(asc(resource.name));
-  const context = user
-    ? await loadResourceAccessContext(
-        user,
-        rows.map(({ resource: item }) => item.id),
-      )
-    : null;
+  const context = await loadResourceAccessContext(
+    user,
+    rows.map(({ resource: item }) => item.id),
+  );
   return rows
     .map((row) => ({
       ...row,
-      access: getResourceAccessOrPublic(row.resource, context),
+      access: getResourceAccess(row.resource, context),
     }))
     .filter(({ access }) => access.canRead)
     .map(({ campaign: item, resource: owner, access }) => ({
       ...owner,
       ...item,
       canEdit: access.canEdit,
-      canChangeOwner:
-        !!user && !!context && canChangeResourceOwner(owner, user, context),
+      canChangeOwner: canChangeResourceOwner(owner, user, context),
     }));
 });

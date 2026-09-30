@@ -36,15 +36,19 @@ const navItems = computed(() =>
 );
 
 const toast = useToast();
+const route = useRoute();
 const signOutBusy = ref(false);
 async function signOut() {
   signOutBusy.value = true;
   try {
+    // Leave the page first: if it has unsaved changes and the user cancels
+    // leaving, they stay signed in and can still save.
+    await navigateTo("/");
+    if (route.path !== "/") return;
     const result = await authClient.signOut();
     if (result.error) throw new Error(result.error.message);
-    // Reload what the pages fetched, now as a logged-out visitor.
+    // Reload what the home page fetched, now as a logged-out visitor.
     await refreshNuxtData();
-    await navigateTo("/");
   } catch (error) {
     toast.add({
       title: "Could not sign out.",
