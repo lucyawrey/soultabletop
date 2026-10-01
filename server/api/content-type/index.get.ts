@@ -65,6 +65,7 @@ export default defineEventHandler(async (event) => {
       systemId: type.systemId,
       contentCategory: type.contentCategory,
       hasStrictSchema: type.hasStrictSchema,
+      showSheetWarnings: type.showSheetWarnings,
       schema: type.schema,
       ownerUserId: item.ownerUserId,
       ownerGroupId: item.ownerGroupId,

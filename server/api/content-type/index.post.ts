@@ -44,6 +44,11 @@ defineRouteMeta({
                 ],
               },
               hasStrictSchema: { type: "boolean" },
+              showSheetWarnings: {
+                type: "boolean",
+                description:
+                  "Show schema-related warnings (paths not in a non-strict schema, paths into free-form objects) in the Sheet editor. Defaults to false; when an update switches hasStrictSchema from true to false and this is omitted, it is turned on.",
+              },
               schema: { type: "object", additionalProperties: true },
             },
           },
@@ -108,6 +113,7 @@ export default defineEventHandler(async (event) => {
           systemId: body.systemId as string,
           contentCategory: body.contentCategory ?? "general",
           hasStrictSchema: body.hasStrictSchema === true,
+          showSheetWarnings: body.showSheetWarnings === true,
           schema,
         })
         .returning();

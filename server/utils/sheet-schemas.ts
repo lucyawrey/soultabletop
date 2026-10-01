@@ -47,6 +47,7 @@ export async function loadSheetSchemas(
           id: contentType.resourceId,
           schema: contentType.schema,
           hasStrictSchema: contentType.hasStrictSchema,
+          showSheetWarnings: contentType.showSheetWarnings,
         })
         .from(contentType)
         .where(inArray(contentType.resourceId, missing));
