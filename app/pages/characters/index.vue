@@ -44,7 +44,7 @@ const { items: characters, status, refresh } = list;
 watch(categoryFilter, () => list.setPage(1));
 
 const { systemId: currentSystemId } = useCurrentSystem();
-const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
     default: () => [],
@@ -115,6 +115,25 @@ function openCreate() {
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
+
+// `?new=1` (the dashboard's "Create one" link) opens the New dialog once the
+// content types have loaded, then drops that query param so a refresh doesn't reopen it.
+const route = useRoute();
+const router = useRouter();
+// Only after mount, so the dialog doesn't open mid-hydration.
+let mounted = false;
+function openNewFromQuery() {
+  if (!mounted || route.query.new === undefined) return;
+  if (contentTypesStatus.value === "pending" || contentTypesStatus.value === "idle") return;
+  if (contentTypesStatus.value === "success" && loggedIn.value) openCreate();
+  const { new: _new, ...rest } = route.query;
+  router.replace({ query: rest });
+}
+watch(contentTypesStatus, openNewFromQuery);
+onMounted(() => {
+  mounted = true;
+  openNewFromQuery();
+});
 
 // Creates with just the basics; the characters page's sheet fills in the rest.
 async function submitForm() {
@@ -276,7 +295,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('characters') }}</p>
+        <ResourceListEmpty :list="list" plural="characters" />
       </template>
     </UTable>
     </ResourceList>
