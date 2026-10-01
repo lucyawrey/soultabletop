@@ -231,7 +231,7 @@ const recentSections = computed(() => {
   // "idle" counts too: the fetch only starts once signed in, so on the server
   // (and before the client's first watch run) nothing has been requested yet,
   // and showing the empty state there would flash "No ... yet." before loading.
-  const loading = dashboardStatus.value === "pending" || dashboardStatus.value === "idle";
+  const loading = isLoading(dashboardStatus.value);
   return [
     {
       title: "Campaigns",
@@ -420,12 +420,18 @@ function formatUpdated(updatedAt: string) {
               </span>
             </li>
           </ul>
-          <p
-            v-else-if="section.loading"
-            class="py-6 text-center text-sm text-muted"
-          >
-            Loading…
-          </p>
+          <!-- One row, as tall as a real item: the shortest loaded card, so the
+               page only grows when the entries arrive. -->
+          <div v-else-if="section.loading" role="status">
+            <span class="sr-only">Loading</span>
+            <div
+              aria-hidden="true"
+              class="flex h-10 items-center justify-between gap-2"
+            >
+              <LookupSkeleton size-class="h-4 w-40 max-w-2/3" />
+              <LookupSkeleton size-class="h-3.5 w-16" />
+            </div>
+          </div>
           <p v-else class="py-6 text-center text-sm text-muted">
             {{ section.empty }}
             <NuxtLink

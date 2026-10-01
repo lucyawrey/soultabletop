@@ -22,7 +22,7 @@ interface ApiKeyItem {
   lastUsedAt: string | null;
 }
 
-const { data: keys, error: listError, refresh } = await useLazyFetch<ApiKeyItem[]>(
+const { data: keys, status, error: listError, refresh } = await useLazyFetch<ApiKeyItem[]>(
   "/api/profile/api-keys",
   { default: () => [] },
 );
@@ -211,7 +211,10 @@ async function remove() {
           />
         </div>
       </template>
-      <template #empty>No API keys yet.</template>
+      <template #empty>
+        <TableSkeleton v-if="isLoading(status)" :rows="2" />
+        <template v-else>No API keys yet.</template>
+      </template>
     </UTable>
 
     <UModal
