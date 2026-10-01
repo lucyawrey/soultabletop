@@ -16,7 +16,8 @@
     "admin:set": "node --env-file-if-exists=.env.local scripts/set-site-admin.mjs",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
-    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run format:check"
+    "check": "node scripts/check.mjs",
+    "check:templates": "node scripts/check-templates.mjs"
   },
   "dependencies": {
     "@better-auth/api-key": "^1.7.6",
