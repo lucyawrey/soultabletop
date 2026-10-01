@@ -107,11 +107,14 @@ pnpm admin:set <username> --remove   # back to a regular member
 pnpm typecheck
 pnpm lint
 pnpm test        # vitest
-pnpm check       # all of the above plus a Prettier check
+pnpm check       # typecheck, lint, and test in parallel (what CI runs)
+pnpm check:templates   # compile the .vue templates changed since origin/main
+pnpm format:check      # Prettier, not part of pnpm check
 ```
 
-There is no CI: run these before opening a pull request. Vercel builds every
-push, which catches build errors but not lint, type, or test failures.
+CI (GitHub Actions, the `ci` check) runs typecheck, lint, and tests on every
+pull request; run `pnpm check` before opening one. Vercel also builds every
+push, which catches build errors.
 
 ## Sheets agent skill
 
