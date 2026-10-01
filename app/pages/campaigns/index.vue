@@ -204,7 +204,7 @@ async function remove() {
         New Campaign
       </UButton>
     </div>
-    <p v-if="systems.length === 0" class="text-sm text-muted">
+    <p v-if="systemsStatus === 'success' && systems.length === 0" class="text-sm text-muted">
       Create a system before adding campaigns.
     </p>
 
@@ -227,6 +227,10 @@ async function remove() {
         >
           {{ systemName(row.original.systemId) }}
         </NuxtLink>
+        <USkeleton
+          v-else-if="systemsStatus === 'pending' || systemsStatus === 'idle'"
+          class="h-4 w-24"
+        />
         <template v-else>Unknown</template>
       </template>
 

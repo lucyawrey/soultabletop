@@ -199,7 +199,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="loggedIn && standardContentTypes.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && contentTypesStatus === 'success' && standardContentTypes.length === 0" class="text-sm text-muted">
       Create a content type with the General or Page category before adding
       content records.
     </p>
@@ -227,6 +227,10 @@ async function remove() {
         >
           {{ contentTypeName(row.original.contentTypeId) }}
         </NuxtLink>
+        <USkeleton
+          v-else-if="contentTypesStatus === 'pending' || contentTypesStatus === 'idle'"
+          class="h-4 w-24"
+        />
         <template v-else>Unknown</template>
       </template>
 

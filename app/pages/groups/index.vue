@@ -135,7 +135,8 @@ async function submitForm() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">
+        <TableSkeleton v-if="status === 'pending' || status === 'idle'" />
+        <p v-else class="py-6 text-center text-sm text-muted">
           {{ search.trim() ? "No groups match your search." : "You aren't in any groups yet." }}
         </p>
       </template>

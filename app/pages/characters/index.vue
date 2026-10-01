@@ -211,7 +211,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="loggedIn && characterTypes.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && contentTypesStatus === 'success' && characterTypes.length === 0" class="text-sm text-muted">
       Create a content type with the Player Character or Non-Player Character
       category before adding characters.
     </p>
@@ -247,6 +247,10 @@ async function remove() {
         >
           {{ contentTypeName(row.original.contentTypeId) }}
         </NuxtLink>
+        <USkeleton
+          v-else-if="contentTypesStatus === 'pending' || contentTypesStatus === 'idle'"
+          class="h-4 w-24"
+        />
         <template v-else>Unknown</template>
       </template>
 

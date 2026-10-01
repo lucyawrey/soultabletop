@@ -34,7 +34,7 @@ const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<SheetItem>("/api/sheet", loggedIn, { bySystem: true });
 const { items: sheets, status, refresh } = list;
 
-const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   { default: () => [] },
 );
@@ -213,7 +213,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="loggedIn && contentTypes.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && contentTypesStatus === 'success' && contentTypes.length === 0" class="text-sm text-muted">
       Create a content type before adding sheets.
     </p>
 
@@ -236,6 +236,10 @@ async function remove() {
         >
           {{ contentTypeName(row.original.contentTypeId) }}
         </NuxtLink>
+        <USkeleton
+          v-else-if="contentTypesStatus === 'pending' || contentTypesStatus === 'idle'"
+          class="h-4 w-24"
+        />
         <template v-else>Unknown</template>
       </template>
 

@@ -42,7 +42,7 @@ const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<ContentTypeItem>("/api/content-type", loggedIn, { bySystem: true });
 const { items: contentTypes, status, refresh } = list;
 
-const { data: systems } = await useLazyFetch<SystemItem[]>("/api/system", {
+const { data: systems, status: systemsStatus } = await useLazyFetch<SystemItem[]>("/api/system", {
   default: () => [],
 });
 
@@ -237,7 +237,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="loggedIn && systems.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && systemsStatus === 'success' && systems.length === 0" class="text-sm text-muted">
       Create a system before adding content types.
     </p>
 
@@ -257,7 +257,12 @@ async function remove() {
       </template>
 
       <template #systemId-cell="{ row }">
+        <USkeleton
+          v-if="systemsStatus === 'pending' || systemsStatus === 'idle'"
+          class="h-4 w-24"
+        />
         <NuxtLink
+          v-else
           :to="`/systems/${row.original.systemId}`"
           class="text-primary hover:underline"
         >

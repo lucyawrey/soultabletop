@@ -82,11 +82,11 @@ if (!item.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: contentTypes } = await useLazyFetch<NamedItem[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<NamedItem[]>(
   "/api/content-type",
   { default: () => [] },
 );
-const { data: sheets } = await useLazyFetch<SheetItem[]>("/api/sheet", {
+const { data: sheets, status: sheetsStatus } = await useLazyFetch<SheetItem[]>("/api/sheet", {
   default: () => [],
 });
 
@@ -300,8 +300,12 @@ async function remove() {
           <p class="text-sm text-muted">
             {{ item.readableId }} ·
             {{ visibilityLabel(item.isPubliclyReadable) }} ·
+            <USkeleton
+              v-if="!contentType && (contentTypesStatus === 'pending' || contentTypesStatus === 'idle')"
+              class="inline-block h-3.5 w-20 align-middle"
+            />
             <NuxtLink
-              v-if="contentType"
+              v-else-if="contentType"
               :to="`/types/${contentType.id}`"
               class="hover:underline"
             >
@@ -341,7 +345,12 @@ async function remove() {
         </div>
         <div class="ms-auto flex items-center gap-2">
           <span class="text-muted">View with</span>
+          <USkeleton
+            v-if="sheetsStatus === 'pending' || sheetsStatus === 'idle'"
+            class="h-8 w-56"
+          />
           <USelect
+            v-else
             :model-value="viewSheetId ?? item.sheet.id ?? GENERATED"
             :items="sheetOptions"
             class="w-56"
