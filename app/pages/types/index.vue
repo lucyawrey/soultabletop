@@ -22,6 +22,7 @@ interface ContentTypeItem {
   systemId: string;
   contentCategory: ContentCategory;
   hasStrictSchema: boolean;
+  showSheetWarnings: boolean;
   schema: Record<string, unknown>;
   canEdit: boolean;
   ownerGroupId: string | null;
@@ -65,6 +66,7 @@ const form = reactive({
   systemId: "",
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
+  showSheetWarnings: false,
 });
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const idAvailability = useResourceIdAvailability(form, "contentType", () => editingType.value ?? undefined);
@@ -88,6 +90,7 @@ function openCreate(systemId?: string) {
   form.systemId = system.id;
   form.contentCategory = "general";
   form.hasStrictSchema = false;
+  form.showSheetWarnings = false;
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
@@ -103,6 +106,7 @@ function openEdit(item: ContentTypeItem) {
   form.systemId = item.systemId;
   form.contentCategory = item.contentCategory;
   form.hasStrictSchema = item.hasStrictSchema;
+  form.showSheetWarnings = item.showSheetWarnings;
   resetReadableIdTouched(true);
   isFormOpen.value = true;
 }
@@ -129,6 +133,16 @@ function ownerChange(item: ContentTypeItem) {
     : {};
 }
 
+// Switching an existing content type from strict to non-strict pre-sets the
+// warnings to on (still changeable); switching back restores the saved value.
+function onStrictChange(strict: boolean) {
+  const original = editingType.value;
+  if (!original) return;
+  form.showSheetWarnings = strict
+    ? original.showSheetWarnings
+    : original.hasStrictSchema || original.showSheetWarnings;
+}
+
 async function submitForm(confirmBrokenSheets = false) {
   formBusy.value = true;
   formError.value = "";
@@ -142,6 +156,7 @@ async function submitForm(confirmBrokenSheets = false) {
       isPubliclyReadable: form.isPubliclyReadable,
       contentCategory: form.contentCategory,
       hasStrictSchema: form.hasStrictSchema,
+      showSheetWarnings: form.showSheetWarnings,
     };
 
     if (editingType.value) {
@@ -370,7 +385,18 @@ async function remove() {
             label="Strict schema"
             description="Reject content data that does not match the schema."
           >
-            <USwitch v-model="form.hasStrictSchema" />
+            <USwitch
+              v-model="form.hasStrictSchema"
+              @update:model-value="onStrictChange"
+            />
+          </UFormField>
+          <UFormField
+            v-if="!form.hasStrictSchema"
+            name="showSheetWarnings"
+            label="Show Sheet Warnings"
+            description="In the Sheet editor, warn about field paths and {interpolations} that are not in the schema, and paths into free-form objects."
+          >
+            <USwitch v-model="form.showSheetWarnings" />
           </UFormField>
           <UAlert
             v-if="formError"
