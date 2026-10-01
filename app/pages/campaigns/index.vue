@@ -86,20 +86,23 @@ function openCreate() {
 }
 
 // `?new=1` (the dashboard's "Create one" link) opens the New dialog once the
-// systems have loaded, then drops the query so a refresh doesn't reopen it.
+// systems have loaded, then drops that query param so a refresh doesn't reopen it.
 const route = useRoute();
 const router = useRouter();
-watch(
-  systemsStatus,
-  (state) => {
-    // Client only: the server can't open a dialog or change the address.
-    if (!import.meta.client || state !== "success" || route.query.new === undefined)
-      return;
-    if (loggedIn.value) openCreate();
-    router.replace({ query: {} });
-  },
-  { immediate: true },
-);
+// Only after mount, so the dialog doesn't open mid-hydration.
+let mounted = false;
+function openNewFromQuery() {
+  if (!mounted || route.query.new === undefined) return;
+  if (systemsStatus.value === "pending" || systemsStatus.value === "idle") return;
+  if (systemsStatus.value === "success" && loggedIn.value) openCreate();
+  const { new: _new, ...rest } = route.query;
+  router.replace({ query: rest });
+}
+watch(systemsStatus, openNewFromQuery);
+onMounted(() => {
+  mounted = true;
+  openNewFromQuery();
+});
 
 function openEdit(item: CampaignItem) {
   form.ownerGroupId = item.ownerGroupId;
