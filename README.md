@@ -113,6 +113,20 @@ pnpm check       # all of the above plus a Prettier check
 There is no CI: run these before opening a pull request. Vercel builds every
 push, which catches build errors but not lint, type, or test failures.
 
+## Sheets agent skill
+
+The repo includes an agent skill for writing Sheet markup and CSS
+(`.claude/skills/soul-tabletop-sheets/`). Install it into another project with
+the [`skills` CLI](https://skills.sh):
+
+```bash
+npx skills add lucyawrey/soultabletop -s soul-tabletop-sheets -a claude-code
+```
+
+Without `-s` the CLI lists the skills it finds and asks which to install. The
+skill points at files in this repo (`shared/sheet/`, `docs/sheet-system.md`),
+so it works best in a checkout of it.
+
 ## API reference
 
 With the server running, the interactive API reference is at `/docs`,
