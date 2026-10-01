@@ -29,7 +29,7 @@ const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<CampaignItem>("/api/campaign", loggedIn, { bySystem: true });
 const { items: campaigns, status, refresh } = list;
 
-const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
+const { data: systems, status: systemsStatus } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
 });
 
@@ -84,6 +84,25 @@ function openCreate() {
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
+
+// `?new=1` (the dashboard's "Create one" link) opens the New dialog once the
+// systems have loaded, then drops that query param so a refresh doesn't reopen it.
+const route = useRoute();
+const router = useRouter();
+// Only after mount, so the dialog doesn't open mid-hydration.
+let mounted = false;
+function openNewFromQuery() {
+  if (!mounted || route.query.new === undefined) return;
+  if (systemsStatus.value === "pending" || systemsStatus.value === "idle") return;
+  if (systemsStatus.value === "success" && loggedIn.value) openCreate();
+  const { new: _new, ...rest } = route.query;
+  router.replace({ query: rest });
+}
+watch(systemsStatus, openNewFromQuery);
+onMounted(() => {
+  mounted = true;
+  openNewFromQuery();
+});
 
 function openEdit(item: CampaignItem) {
   form.ownerGroupId = item.ownerGroupId;
@@ -252,7 +271,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('campaigns') }}</p>
+        <ResourceListEmpty :list="list" plural="campaigns" />
       </template>
     </UTable>
     </ResourceList>

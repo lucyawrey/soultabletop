@@ -160,7 +160,7 @@ async function remove() {
         </div>
       </div>
 
-      <UPageCard>
+      <UPageCard :ui="{ header: 'w-full' }">
         <template #header>
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-lg font-semibold text-highlighted">

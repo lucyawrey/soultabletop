@@ -218,19 +218,20 @@ const {
   refresh: refreshDashboard,
 } = useLazyFetch<Dashboard>("/api/dashboard", {
   default: () => ({ campaigns: [], characters: [], content: [] }),
-  immediate: false,
+  // Already signed in: fetch during the server render, so it and the client's
+  // first render agree. Otherwise the watch below fetches after sign-in.
+  immediate: isLoggedIn.value,
 });
 
-watch(
-  [isLoggedIn, authBusy],
-  ([loggedIn, submittingAuth]) => {
-    if (loggedIn && !submittingAuth) refreshDashboard();
-  },
-  { immediate: true },
-);
+watch([isLoggedIn, authBusy], ([loggedIn, submittingAuth]) => {
+  if (loggedIn && !submittingAuth) refreshDashboard();
+});
 
 const recentSections = computed(() => {
-  const loading = dashboardStatus.value === "pending";
+  // "idle" counts too: the fetch only starts once signed in, so on the server
+  // (and before the client's first watch run) nothing has been requested yet,
+  // and showing the empty state there would flash "No ... yet." before loading.
+  const loading = dashboardStatus.value === "pending" || dashboardStatus.value === "idle";
   return [
     {
       title: "Campaigns",
@@ -433,7 +434,10 @@ function formatUpdated(updatedAt: string) {
           </p>
           <p v-else class="py-6 text-center text-sm text-muted">
             {{ section.empty }}
-            <NuxtLink :to="section.path" class="text-primary hover:underline">
+            <NuxtLink
+              :to="{ path: section.path, query: { new: '1' } }"
+              class="text-primary hover:underline"
+            >
               Create one.
             </NuxtLink>
           </p>

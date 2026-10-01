@@ -286,7 +286,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('sheets') }}</p>
+        <ResourceListEmpty :list="list" plural="sheets" />
       </template>
     </UTable>
     </ResourceList>
