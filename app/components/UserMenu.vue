@@ -9,6 +9,14 @@ const user = computed(() => session.data.value?.user);
 const { data: profile } = await useProfile(() => user.value?.id);
 
 const displayName = computed(() => user.value?.name ?? "");
+// Names aren't unique, so the username is shown with it, unless the name is
+// the username itself.
+const showUsername = computed(
+  () =>
+    !!profile.value?.username &&
+    profile.value.username.toLowerCase() !== displayName.value.toLowerCase(),
+);
+const username = computed(() => profile.value?.username ?? "");
 
 // Shown when there is no icon or it fails to load (UAvatar falls back on its
 // own): the display name's initials, else the username's first letter.
@@ -144,11 +152,11 @@ const items = computed<DropdownMenuItem[][]>(() => [
             {{ displayName }}
           </p>
           <p
-            v-if="profile?.username"
+            v-if="showUsername"
             class="truncate text-muted"
-            :title="`@${profile.username}`"
+            :title="`@${username}`"
           >
-            @{{ profile.username }}
+            @{{ username }}
           </p>
           <p class="truncate text-muted" :title="user?.email">
             {{ user?.email }}
