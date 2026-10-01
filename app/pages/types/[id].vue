@@ -96,6 +96,7 @@ const formBusy = ref(false);
 const formError = ref("");
 const brokenSheets = ref<BrokenSheets>();
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "contentType", () => contentType.value ?? undefined);
 
 function openEdit() {
   if (!contentType.value) return;
@@ -476,6 +477,7 @@ async function remove() {
           </UFormField>
           <ReadableIdField
             :model-value="form.readableId"
+            :availability="idAvailability"
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />

@@ -55,6 +55,7 @@ const form = reactive({
 const formBusy = ref(false);
 const formError = ref("");
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "system", () => system.value ?? undefined);
 
 function openEdit() {
   if (!system.value) return;
@@ -219,6 +220,7 @@ async function remove() {
           </UFormField>
           <ReadableIdField
             :model-value="form.readableId"
+            :availability="idAvailability"
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />

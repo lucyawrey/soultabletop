@@ -52,38 +52,18 @@ const usernameChanged = computed(
   () => username.value !== (profile.value?.username ?? ""),
 );
 
-// Live availability check, debounced; only for a changed, well-formed username.
-const availability = ref<"idle" | "checking" | "available" | "taken" | "failed">(
-  "idle",
+// Live availability check; only for a changed, well-formed username.
+const availability = useReadableIdAvailability(() =>
+  !username.value ||
+  !usernameChanged.value ||
+  usernameFormatError.value ||
+  username.value.length > MAX_USERNAME_LENGTH
+    ? null
+    : {
+        endpoint: "/api/profile/username-availability",
+        query: { username: username.value },
+      },
 );
-let checkTimer: ReturnType<typeof setTimeout> | undefined;
-watch(username, (value) => {
-  clearTimeout(checkTimer);
-  if (
-    !value ||
-    !usernameChanged.value ||
-    usernameFormatError.value ||
-    value.length > MAX_USERNAME_LENGTH
-  ) {
-    availability.value = "idle";
-    return;
-  }
-  availability.value = "checking";
-  checkTimer = setTimeout(async () => {
-    try {
-      const result = await $fetch<{ available: boolean }>(
-        "/api/profile/username-availability",
-        { query: { username: value } },
-      );
-      // Ignore a result for something the user has since edited.
-      if (value !== username.value) return;
-      availability.value = result.available ? "available" : "taken";
-    } catch {
-      if (value === username.value) availability.value = "failed";
-    }
-  }, 350);
-});
-onBeforeUnmount(() => clearTimeout(checkTimer));
 
 const usernameError = computed(() => {
   if (!username.value) return "Username is required.";
@@ -93,13 +73,6 @@ const usernameError = computed(() => {
   if (availability.value === "taken") return "That username is already in use.";
   return undefined;
 });
-const usernameHint = computed(() => {
-  if (availability.value === "checking") return "Checking availability…";
-  if (availability.value === "available") return "That username is available.";
-  if (availability.value === "failed") return "Could not check availability.";
-  return undefined;
-});
-
 const displayName = computed(() => form.name.trim());
 // Clearing it resets the display name to the username.
 const nameChanged = computed(
@@ -312,14 +285,9 @@ const groupColumns = [
           label="Username"
           description="Lowercase letters, numbers, and hyphens."
           :error="usernameError"
+          :availability="availability"
+          subject="username"
         />
-        <p
-          v-if="usernameHint"
-          class="-mt-2 text-sm"
-          :class="availability === 'available' ? 'text-success' : 'text-muted'"
-        >
-          {{ usernameHint }}
-        </p>
 
         <UFormField
           name="iconImageUrl"

@@ -13,7 +13,7 @@ import { EditorState, type Text } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import type { Position, SheetDiagnostic } from "#shared/sheet/parser";
-import { commonAttrs, sheetTags } from "#shared/sheet/registry";
+import { commonAttrsFor, sheetTags } from "#shared/sheet/registry";
 
 // CodeMirror for Sheet markup and CSS (our diagnostics inline, and for markup
 // completion of tags, attributes, and field paths) and for raw JSON (syntax
@@ -46,7 +46,7 @@ function markupExtensions() {
         : typeof spec.children === "object"
           ? [...spec.children.only]
           : [],
-    attributes: Object.entries({ ...spec.attrs, ...commonAttrs }).map(
+    attributes: Object.entries({ ...spec.attrs, ...commonAttrsFor(spec) }).map(
       ([name, attr]) => ({
         name,
         values:
