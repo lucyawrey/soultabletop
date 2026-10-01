@@ -22,6 +22,18 @@ export default defineNuxtConfig({
     experimental: {
       openAPI: true,
     },
+    // The API reference's own heading and how to authenticate. The security
+    // schemes themselves are declared in `server/api/profile/api-keys/index.get.ts`.
+    openAPI: {
+      meta: {
+        title: "Soul Tabletop API",
+        description: [
+          "Requests are authenticated by the session cookie (signed in to the site) or by a user API key, created on your profile page. Send the key as `Authorization: Bearer <key>` or `x-api-key: <key>`; a session cookie, if there is one, is used instead.",
+          "",
+          "A key acts as the user who made it. A Read Only key gets 403 on any request that changes data (anything but GET, HEAD, and OPTIONS); a Full Access key can do anything the user can, except manage API keys, which needs a signed-in session. A key that is invalid, expired, or deleted gets 401 even on endpoints that are public, and a key over its rate limit (600 requests a minute) gets 429.",
+        ].join("\n"),
+      },
+    },
   },
 
   // Lets `content/copy.yml` be imported.
@@ -57,5 +69,6 @@ export default defineNuxtConfig({
     // generated spec builds an absolute server URL from the SSR request that
     // fetched it, which lacks the real host and port.
     servers: [{ url: "/" }],
+    authentication: { preferredSecurityScheme: "bearerAuth" },
   },
 });
