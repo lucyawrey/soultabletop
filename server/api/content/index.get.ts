@@ -23,7 +23,8 @@ defineRouteMeta({
   openAPI: {
     tags: ["Content"],
     summary: "List accessible content records",
-    description: "Without signing in, lists public content only.",
+    description:
+      "Without signing in, lists public content only. Each row has the `systemId` of its content type's system.",
     parameters: [
       ...listQueryParameters,
       systemIdParameter,
@@ -101,7 +102,12 @@ export default defineEventHandler(async (event) => {
     where: filter,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
-        .select({ item: content, resource, official: officialColumn })
+        .select({
+          item: content,
+          resource,
+          systemId: contentType.systemId,
+          official: officialColumn,
+        })
         .from(content)
         .innerJoin(resource, eq(resource.id, content.resourceId))
         .innerJoin(contentType, eq(contentType.resourceId, content.contentTypeId))
@@ -123,7 +129,7 @@ export default defineEventHandler(async (event) => {
   });
 
   return respondWithList(
-    rows.map(({ item, resource: resourceItem, source, access }) => ({
+    rows.map(({ item, resource: resourceItem, systemId: typeSystemId, source, access }) => ({
       id: resourceItem.id,
       readableId: resourceItem.readableId,
       isPubliclyReadable: resourceItem.isPubliclyReadable,
@@ -132,6 +138,7 @@ export default defineEventHandler(async (event) => {
       createdAt: resourceItem.createdAt,
       updatedAt: resourceItem.updatedAt,
       contentTypeId: item.contentTypeId,
+      systemId: typeSystemId,
       sheetId: item.sheetId,
       data: item.data,
       canEdit: access.canEdit,

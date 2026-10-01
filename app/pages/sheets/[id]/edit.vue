@@ -413,6 +413,7 @@ async function insertPath(path: string) {
             Edit {{ sheet.name }}
           </h1>
           <p class="text-sm text-muted">
+            <SystemLink :system-id="sheet.systemId" /> ·
             <NuxtLink
               v-if="contentType"
               :to="`/types/${contentType.id}`"

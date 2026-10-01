@@ -18,6 +18,7 @@ interface ContentItem {
   name: string;
   updatedAt: string;
   contentTypeId: string;
+  systemId: string;
   data: Record<string, unknown>;
   canEdit: boolean;
   isPubliclyReadable: boolean;
@@ -27,6 +28,7 @@ interface ContentTypeItem {
   systemId: string;
   id: string;
   name: string;
+  source: ResourceSource;
   contentCategory: ContentCategory;
 }
 
@@ -47,11 +49,15 @@ const standardContentTypes = computed(() =>
   ),
 );
 
+const { systemLabel } = useSystems();
 const contentTypeOptions = computed(() =>
-  standardContentTypes.value.map((item) => ({
-    label: item.name,
-    value: item.id,
-  })),
+  standardContentTypes.value.map((item) =>
+    resourceOption(item.id, {
+      name: item.name,
+      systemName: systemLabel(item.systemId),
+      source: item.source,
+    }),
+  ),
 );
 
 
@@ -67,6 +73,7 @@ const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
+  { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentTypeId", header: "Type" },
   {
     accessorKey: "updatedAt",
@@ -219,6 +226,10 @@ async function remove() {
         </NuxtLink>
       </template>
 
+      <template #systemId-cell="{ row }">
+        <SystemLink :system-id="row.original.systemId" />
+      </template>
+
       <template #contentTypeId-cell="{ row }">
         <NuxtLink
           v-if="standardContentTypes.some((item) => item.id === row.original.contentTypeId)"
@@ -304,7 +315,11 @@ async function remove() {
               v-model="form.contentTypeId"
               :items="contentTypeOptions"
               class="w-full"
-            />
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
           </UFormField>
           <UAlert
             v-if="formError"
