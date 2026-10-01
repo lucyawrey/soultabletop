@@ -24,7 +24,6 @@ const {
 
 const columns: TableColumn<GroupItem>[] = [
   { accessorKey: "name", header: "Name" },
-  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "role", header: "Your Role" },
   { accessorKey: "memberCount", header: "Members" },
 ];

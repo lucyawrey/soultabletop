@@ -291,11 +291,11 @@ async function remove() {
     <template v-if="contentType">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-highlighted">
+          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
             {{ contentType.name }}
+            <ReadableIdBadge :readable-id="contentType.readableId" />
           </h1>
           <p class="text-sm text-muted">
-            {{ contentType.readableId }} ·
             {{ visibilityLabel(contentType.isPubliclyReadable) }} ·
             <LookupSkeleton v-if="!system && isLoading(systemsStatus)" />
             <NuxtLink

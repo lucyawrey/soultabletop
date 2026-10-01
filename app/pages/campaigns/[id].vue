@@ -120,9 +120,11 @@ async function remove() {
     <template v-if="campaign">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-highlighted">{{ campaign.name }}</h1>
+          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
+            {{ campaign.name }}
+            <ReadableIdBadge :readable-id="campaign.readableId" />
+          </h1>
           <p class="text-sm text-muted">
-            {{ campaign.readableId }} ·
             {{ visibilityLabel(campaign.isPubliclyReadable) }}
           </p>
           <p v-if="system || isLoading(systemsStatus)" class="mt-1 text-sm">

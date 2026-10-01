@@ -48,7 +48,6 @@ const systemOptions = computed(() =>
 const columns: TableColumn<ContentTypeItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "source", header: "Source" },
-  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentCategory", header: "Category" },

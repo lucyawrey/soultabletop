@@ -192,14 +192,14 @@ async function remove() {
     <template v-if="group">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="flex items-center gap-2 text-2xl font-bold text-highlighted">
+          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
             {{ group.name }}
+            <ReadableIdBadge :readable-id="group.readableId" />
             <UBadge v-if="group.kind === 'system'" variant="subtle">
               Official
             </UBadge>
           </h1>
           <p class="text-sm text-muted">
-            {{ group.readableId }} ·
             <template v-if="group.role">
               You are <span class="capitalize">{{ group.role }}</span>
             </template>

@@ -303,9 +303,11 @@ async function remove() {
     <template v-if="item">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-highlighted">{{ item.name }}</h1>
+          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
+            {{ item.name }}
+            <ReadableIdBadge :readable-id="item.readableId" />
+          </h1>
           <p class="text-sm text-muted">
-            {{ item.readableId }} ·
             {{ visibilityLabel(item.isPubliclyReadable) }} ·
             <SystemLink :system-id="item.systemId" /> ·
             <LookupSkeleton
