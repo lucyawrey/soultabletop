@@ -43,6 +43,8 @@ Nothing right now.
 
 # Later
 
+- **Unsupported methods on campaign `/members` routes run another route's handler** · bug
+  Found by a reviewer (2026-10-01), existing on `main`: when `/api/campaign/:id/members` gets a method it has no handler for, h3's router falls back to another route's handler but keeps the static route's params, so `GET /api/campaign/<uuid>/members` returns the campaign itself, and by the same logic `DELETE /api/campaign/<uuid>/members` would run the campaign delete handler (an editor can already delete the campaign, so it's wrong behavior rather than a privilege gain; the delete case was inferred, not run). Add explicit 405 handlers (or a guard) for unsupported methods on the member routes, and check the other nested routes (`resource/[id]/grants*`, `profile/api-keys`) for the same fallback.
 - **Keep old readable IDs as redirects after a rename** · feature · needs decision: how long, and whether old IDs stay reserved
   Resources are now addressable by owner + readable ID (`/sheets/lucy/fighter`), and a URL copied from the address bar breaks when the owner or the resource's readable ID is renamed (internal links use UUIDs and don't). Keep the old owner/readable ID pairs (a table of previous addresses) and redirect them to the current one, for the API and the pages. Decide how long old IDs are kept, and whether someone else may take a released ID, which would turn the redirect into someone else's resource.
 - **Campaign players can't read the campaign itself** · bug · needs decision: verify, then whether members should read it
