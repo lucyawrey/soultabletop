@@ -143,10 +143,21 @@ export async function listResources<T extends ListRow>(options: {
           source: getResourceSource(row.resource, row.official, context),
         }))
         // The SQL condition already applies these rules; this keeps
-        // `getResourceAccess` the last word if the two ever disagree.
-        .filter(({ access, resource: item }) =>
-          isListed(item, access, context, query.scope),
-        ),
+        // `getResourceAccess` the last word if the two ever disagree, and
+        // logs the disagreement (the page comes out short and `total` high).
+        .filter(({ access, resource: item }) => {
+          if (isListed(item, access, context, query.scope)) return true;
+          console.warn(
+            "listResources: SQL list rules returned a row the access rules drop",
+            {
+              kind: item.kind,
+              resourceId: item.id,
+              viewerId: context?.userId ?? null,
+              scope: query.scope ?? null,
+            },
+          );
+          return false;
+        }),
     };
   }
 
