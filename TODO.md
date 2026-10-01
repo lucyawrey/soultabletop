@@ -96,8 +96,6 @@ Nothing right now.
 - **TypeBox-based OpenAPI generation** · chore · needs decision: which approach
   Generate the OpenAPI request schemas from the TypeBox schemas in `server/utils/api-schemas.ts` instead of writing them by hand in each route's `defineRouteMeta`. Worth doing eventually: today every request body is described twice, and the two drift.
   Likely hard: an earlier attempt found that Nitro reads `defineRouteMeta` statically at build time (it extracts the object literal from the source, without running the route file), so the meta can't reference an imported TypeBox schema or call a function to build one. Approaches to weigh: a build step or script that writes the schemas into the route files or a generated module the meta doesn't need to import; serving our own spec route that merges TypeBox schemas into Nitro's generated spec (e.g. keyed by route and method). A test that checks the hand-written meta against the TypeBox schemas would catch drift but keeps the duplication, so it's a stopgap, not the fix.
-- **Catch undeclared imports with ESLint** · chore
-  Use ESLint's `import/no-extraneous-dependencies`: server code imported `h3` for a long time without declaring it, and nothing flagged it until code ran outside Nuxt. Check that the rule works with Nuxt's auto-imports and aliases (`~`, `#imports`), and with the hoisted layout if that is ever revisited (see `CLAUDE.md`).
 
 # Before launch
 
