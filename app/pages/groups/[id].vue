@@ -126,6 +126,7 @@ const form = reactive({ readableId: "", name: "" });
 const formBusy = ref(false);
 const formError = ref("");
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "group", () => group.value ?? undefined);
 
 function openEdit() {
   if (!group.value) return;
@@ -336,6 +337,7 @@ async function remove() {
           </UFormField>
           <ReadableIdField
             :model-value="form.readableId"
+            :availability="idAvailability"
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
