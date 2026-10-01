@@ -8,12 +8,19 @@ export function useCurrentSystem() {
     sameSite: "lax",
     default: () => null,
   });
+  // The server renders the page's components one after another and each
+  // `useCookie` reads the request's cookie afresh, so a change made while
+  // rendering (by the `current-system` middleware or `followSystem`) would not
+  // reach components that were set up earlier or later. This state is shared
+  // by all of them and carried to the client with the page.
   // Anything but a UUID (a hand-edited cookie) counts as All Systems.
-  const systemId = computed(() =>
+  const state = useState<string | null>("current-system", () =>
     cookie.value && UUID_PATTERN.test(cookie.value) ? cookie.value : null,
   );
+  const systemId = computed(() => state.value);
 
   function setSystem(id: string | null) {
+    state.value = id;
     cookie.value = id;
   }
 
