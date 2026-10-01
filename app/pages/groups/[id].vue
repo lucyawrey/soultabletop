@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
+import { formatUserLabel } from "#shared/display-name";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
@@ -49,7 +50,7 @@ const {
 });
 
 const memberColumns = computed<TableColumn<Member>[]>(() => [
-  { accessorKey: "name", header: "Name" },
+  { accessorKey: "name", header: "Display Name" },
   { accessorKey: "username", header: "Username" },
   { accessorKey: "role", header: "Role" },
   ...(isAdmin.value ? [{ id: "actions" }] : []),
@@ -281,8 +282,13 @@ async function remove() {
             :columns="memberColumns"
             :loading="membersStatus === 'pending'"
           >
+            <template #empty>
+              <TableSkeleton v-if="isLoading(membersStatus)" :rows="3" />
+              <p v-else class="py-6 text-center text-sm text-muted">No members.</p>
+            </template>
+
             <template #username-cell="{ row }">
-              <span class="text-muted">{{ row.original.username ?? "—" }}</span>
+              <span class="text-muted">{{ row.original.username ? `@${row.original.username}` : "—" }}</span>
             </template>
 
             <template #role-cell="{ row }">
@@ -308,7 +314,7 @@ async function remove() {
                 variant="ghost"
                 size="sm"
                 :disabled="memberBusy"
-                :aria-label="`Remove ${row.original.name}`"
+                :aria-label="`Remove ${formatUserLabel(row.original.name, row.original.username)}`"
                 @click="removeMember(row.original)"
               />
             </template>

@@ -21,7 +21,12 @@ export async function useResourceList<T>(
   } = {},
 ) {
   const hasTabs = options.tabs ?? true;
-  const { systemId } = useCurrentSystem();
+  const { systemId, setSystem } = useCurrentSystem();
+  // The header selector's systems, for naming the filter in empty states.
+  // Called before the first await, which would lose the Nuxt instance.
+  const { data: selectorSystems } = useNuxtData<{ id: string; name: string }[]>(
+    "system-selector",
+  );
   const route = useRoute();
   const router = useRouter();
 
@@ -96,13 +101,27 @@ export async function useResourceList<T>(
   );
   await request;
 
+  // The name of the current system when this list is filtered by it; "the
+  // current system" until the header selector's list has loaded.
+  const systemFilter = computed(() => {
+    if (!options.bySystem || !systemId.value) return null;
+    return (
+      selectorSystems.value?.find((item) => item.id === systemId.value)?.name ??
+      "the current system"
+    );
+  });
+
   // What an empty list says: what's missing, for what was searched or shown.
-  // `uncountable` is for nouns like "content" that take "matches".
+  // `uncountable` is for nouns like "content" that take "matches". When the
+  // header's system filter is on, it says so (see `systemFilter`).
   function emptyMessage(plural: string, uncountable = false) {
     if (data.value.total > 0) return "No results on this page.";
+    const inSystem = systemFilter.value ? ` in ${systemFilter.value}` : "";
     if (q.value)
-      return `No ${plural} ${uncountable ? "matches" : "match"} your search.`;
-    return scope.value === "public" ? `No public ${plural} yet.` : `No ${plural} yet.`;
+      return `No ${plural}${inSystem} ${uncountable ? "matches" : "match"} your search.`;
+    return scope.value === "public"
+      ? `No public ${plural}${inSystem} yet.`
+      : `No ${plural}${inSystem} yet.`;
   }
 
   return {
@@ -111,6 +130,8 @@ export async function useResourceList<T>(
     tab,
     query: q,
     emptyMessage,
+    systemFilter,
+    showAllSystems: () => setSystem(null),
     search,
     page: computed(() => data.value.page),
     items: computed(() => data.value.items),

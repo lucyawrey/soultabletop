@@ -18,30 +18,19 @@ interface CampaignItem {
   canChangeOwner: boolean;
 }
 
-interface SystemOption {
-  id: string;
-  name: string;
-}
-
 // The page needs an account (auth middleware), so visitors never reach it.
 const loggedIn = await useLoggedIn();
 const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<CampaignItem>("/api/campaign", loggedIn, { bySystem: true });
 const { items: campaigns, status, refresh } = list;
 
-const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
-  default: () => [],
-});
+const { systems, status: systemsStatus } = useSystems();
 
 const systemOptions = computed(() =>
-  systems.value.map((system) => ({ label: system.name, value: system.id })),
+  systems.value.map((system) =>
+    resourceOption(system.id, { name: system.name, source: system.source }),
+  ),
 );
-
-function systemName(systemId: string) {
-  return (
-    systems.value.find((system) => system.id === systemId)?.name ?? "Unknown"
-  );
-}
 
 const columns: TableColumn<CampaignItem>[] = [
   { accessorKey: "name", header: "Name" },
@@ -84,6 +73,25 @@ function openCreate() {
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
+
+// `?new=1` (the dashboard's "Create one" link) opens the New dialog once the
+// systems have loaded, then drops that query param so a refresh doesn't reopen it.
+const route = useRoute();
+const router = useRouter();
+// Only after mount, so the dialog doesn't open mid-hydration.
+let mounted = false;
+function openNewFromQuery() {
+  if (!mounted || route.query.new === undefined) return;
+  if (isLoading(systemsStatus.value)) return;
+  if (systemsStatus.value === "success" && loggedIn.value) openCreate();
+  const { new: _new, ...rest } = route.query;
+  router.replace({ query: rest });
+}
+watch(systemsStatus, openNewFromQuery);
+onMounted(() => {
+  mounted = true;
+  openNewFromQuery();
+});
 
 function openEdit(item: CampaignItem) {
   form.ownerGroupId = item.ownerGroupId;
@@ -185,7 +193,7 @@ async function remove() {
         New Campaign
       </UButton>
     </div>
-    <p v-if="systems.length === 0" class="text-sm text-muted">
+    <p v-if="systemsStatus === 'success' && systems.length === 0" class="text-sm text-muted">
       Create a system before adding campaigns.
     </p>
 
@@ -201,14 +209,7 @@ async function remove() {
       </template>
 
       <template #systemId-cell="{ row }">
-        <NuxtLink
-          v-if="systems.some((system) => system.id === row.original.systemId)"
-          :to="`/systems/${row.original.systemId}`"
-          class="text-primary hover:underline"
-        >
-          {{ systemName(row.original.systemId) }}
-        </NuxtLink>
-        <template v-else>Unknown</template>
+        <SystemLink :system-id="row.original.systemId" />
       </template>
 
       <template #source-cell="{ row }">
@@ -252,7 +253,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('campaigns') }}</p>
+        <ResourceListEmpty :list="list" plural="campaigns" />
       </template>
     </UTable>
     </ResourceList>
@@ -288,7 +289,11 @@ async function remove() {
               :items="systemOptions"
               class="w-full"
               :disabled="!!editingCampaign"
-            />
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
           </UFormField>
           <UAlert
             v-if="formError"

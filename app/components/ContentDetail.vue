@@ -5,6 +5,7 @@ import {
   generateSheetMarkup,
   type ContentCategory,
 } from "#shared/sheet/generate";
+import type { ResourceSource } from "#shared/resource-list";
 import type { SheetDisplay } from "#shared/sheet/registry";
 import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import type { SheetSchemas } from "#shared/sheet/validate";
@@ -59,6 +60,7 @@ interface NamedItem {
 interface SheetItem {
   id: string;
   name: string;
+  source: ResourceSource;
   contentTypeId: string;
   markup: string;
   cssStyles: string;
@@ -82,11 +84,11 @@ if (!item.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: contentTypes } = await useLazyFetch<NamedItem[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<NamedItem[]>(
   "/api/content-type",
   { default: () => [] },
 );
-const { data: sheets } = await useLazyFetch<SheetItem[]>("/api/sheet", {
+const { data: sheets, status: sheetsStatus } = await useLazyFetch<SheetItem[]>("/api/sheet", {
   default: () => [],
 });
 
@@ -103,7 +105,9 @@ const GENERATED = "generated";
 const viewSheetId = ref<string | null>(null);
 const sheetOptions = computed(() => [
   { label: GENERATED_SHEET_NAME, value: GENERATED },
-  ...typeSheets.value.map((entry) => ({ label: entry.name, value: entry.id })),
+  ...typeSheets.value.map((entry) =>
+    resourceOption(entry.id, { name: entry.name, source: entry.source }),
+  ),
 ]);
 const viewSheet = computed(() => {
   const content = item.value;
@@ -203,7 +207,9 @@ const form = reactive({
 });
 const savedSheetOptions = computed(() => [
   { label: "Content Type default", value: TYPE_DEFAULT },
-  ...typeSheets.value.map((entry) => ({ label: entry.name, value: entry.id })),
+  ...typeSheets.value.map((entry) =>
+    resourceOption(entry.id, { name: entry.name, source: entry.source }),
+  ),
 ]);
 const formBusy = ref(false);
 const formError = ref("");
@@ -300,8 +306,12 @@ async function remove() {
           <p class="text-sm text-muted">
             {{ item.readableId }} ·
             {{ visibilityLabel(item.isPubliclyReadable) }} ·
+            <SystemLink :system-id="item.systemId" /> ·
+            <LookupSkeleton
+              v-if="!contentType && isLoading(contentTypesStatus)"
+            />
             <NuxtLink
-              v-if="contentType"
+              v-else-if="contentType"
               :to="`/types/${contentType.id}`"
               class="hover:underline"
             >
@@ -341,13 +351,22 @@ async function remove() {
         </div>
         <div class="ms-auto flex items-center gap-2">
           <span class="text-muted">View with</span>
+          <LookupSkeleton
+            v-if="isLoading(sheetsStatus)"
+            size-class="h-8 w-56"
+          />
           <USelect
+            v-else
             :model-value="viewSheetId ?? item.sheet.id ?? GENERATED"
             :items="sheetOptions"
             class="w-56"
             aria-label="Sheet to view with"
             @update:model-value="viewSheetId = $event as string"
-          />
+          >
+            <template #item-label="{ item: option }">
+              <ResourceOption :option="option as ResourceOptionItem" />
+            </template>
+          </USelect>
           <UButton
             v-if="viewSheet?.id"
             :to="`/sheets/${viewSheet.id}`"
@@ -447,7 +466,11 @@ async function remove() {
               v-model="form.sheetId"
               :items="savedSheetOptions"
               class="w-full"
-            />
+            >
+              <template #item-label="{ item: option }">
+                <ResourceOption :option="option as ResourceOptionItem" />
+              </template>
+            </USelect>
           </UFormField>
           <UFormField
             name="data"

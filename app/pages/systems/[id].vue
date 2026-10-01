@@ -35,7 +35,7 @@ if (!system.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeOption[]>(
   "/api/content-type",
   { default: () => [] },
 );
@@ -160,7 +160,7 @@ async function remove() {
         </div>
       </div>
 
-      <UPageCard>
+      <UPageCard :ui="{ header: 'w-full' }">
         <template #header>
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-lg font-semibold text-highlighted">
@@ -195,6 +195,10 @@ async function remove() {
             <span class="text-sm text-muted">{{ type.readableId }}</span>
           </li>
         </ul>
+        <TableSkeleton
+          v-else-if="isLoading(contentTypesStatus)"
+          :rows="2"
+        />
         <p v-else class="py-6 text-center text-sm text-muted">
           No content types for this system yet.
         </p>

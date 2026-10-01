@@ -65,14 +65,14 @@ if (!contentType.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
+const { data: systems, status: systemsStatus } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
 });
 const system = computed(() =>
   systems.value.find((item) => item.id === contentType.value?.systemId),
 );
 
-const { data: sheets } = await useLazyFetch<SheetOption[]>("/api/sheet", {
+const { data: sheets, status: sheetsStatus } = await useLazyFetch<SheetOption[]>("/api/sheet", {
   default: () => [],
 });
 const typeSheets = computed(() =>
@@ -296,8 +296,9 @@ async function remove() {
           <p class="text-sm text-muted">
             {{ contentType.readableId }} ·
             {{ visibilityLabel(contentType.isPubliclyReadable) }} ·
+            <LookupSkeleton v-if="!system && isLoading(systemsStatus)" />
             <NuxtLink
-              v-if="system"
+              v-else-if="system"
               :to="`/systems/${system.id}`"
               class="hover:underline"
             >
@@ -332,7 +333,7 @@ async function remove() {
         </div>
       </div>
 
-      <UPageCard>
+      <UPageCard :ui="{ header: 'w-full' }">
         <template #header>
           <div class="flex items-center justify-between gap-4">
             <h2 class="text-lg font-semibold text-highlighted">Sheets</h2>
@@ -367,12 +368,16 @@ async function remove() {
             <span class="text-sm text-muted">{{ item.readableId }}</span>
           </li>
         </ul>
+        <TableSkeleton
+          v-else-if="isLoading(sheetsStatus)"
+          :rows="2"
+        />
         <p v-else class="py-6 text-center text-sm text-muted">
           No sheets for this content type yet.
         </p>
       </UPageCard>
 
-      <UPageCard>
+      <UPageCard :ui="{ header: 'w-full' }">
         <template #header>
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div>

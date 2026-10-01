@@ -18,6 +18,7 @@ interface ContentItem {
   name: string;
   updatedAt: string;
   contentTypeId: string;
+  systemId: string;
   data: Record<string, unknown>;
   canEdit: boolean;
   isPubliclyReadable: boolean;
@@ -27,6 +28,7 @@ interface ContentTypeItem {
   systemId: string;
   id: string;
   name: string;
+  source: ResourceSource;
   contentCategory: ContentCategory;
 }
 
@@ -34,7 +36,7 @@ const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySy
 const { items: contentRecords, status, refresh } = list;
 
 const { systemId: currentSystemId } = useCurrentSystem();
-const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
     default: () => [],
@@ -47,11 +49,15 @@ const standardContentTypes = computed(() =>
   ),
 );
 
+const { systemLabel } = useSystems();
 const contentTypeOptions = computed(() =>
-  standardContentTypes.value.map((item) => ({
-    label: item.name,
-    value: item.id,
-  })),
+  standardContentTypes.value.map((item) =>
+    resourceOption(item.id, {
+      name: item.name,
+      systemName: systemLabel(item.systemId),
+      source: item.source,
+    }),
+  ),
 );
 
 
@@ -67,6 +73,7 @@ const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
+  { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentTypeId", header: "Type" },
   {
     accessorKey: "updatedAt",
@@ -103,6 +110,25 @@ function openCreate() {
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
+
+// `?new=1` (the dashboard's "Create one" link) opens the New dialog once the
+// content types have loaded, then drops that query param so a refresh doesn't reopen it.
+const route = useRoute();
+const router = useRouter();
+// Only after mount, so the dialog doesn't open mid-hydration.
+let mounted = false;
+function openNewFromQuery() {
+  if (!mounted || route.query.new === undefined) return;
+  if (isLoading(contentTypesStatus.value)) return;
+  if (contentTypesStatus.value === "success" && loggedIn.value) openCreate();
+  const { new: _new, ...rest } = route.query;
+  router.replace({ query: rest });
+}
+watch(contentTypesStatus, openNewFromQuery);
+onMounted(() => {
+  mounted = true;
+  openNewFromQuery();
+});
 
 // Creates with just the basics; the content page's sheet fills in the rest.
 async function submitForm() {
@@ -180,7 +206,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="loggedIn && standardContentTypes.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && contentTypesStatus === 'success' && standardContentTypes.length === 0" class="text-sm text-muted">
       Create a content type with the General or Page category before adding
       content records.
     </p>
@@ -200,6 +226,10 @@ async function remove() {
         </NuxtLink>
       </template>
 
+      <template #systemId-cell="{ row }">
+        <SystemLink :system-id="row.original.systemId" />
+      </template>
+
       <template #contentTypeId-cell="{ row }">
         <NuxtLink
           v-if="standardContentTypes.some((item) => item.id === row.original.contentTypeId)"
@@ -208,6 +238,7 @@ async function remove() {
         >
           {{ contentTypeName(row.original.contentTypeId) }}
         </NuxtLink>
+        <LookupSkeleton v-else-if="isLoading(contentTypesStatus)" />
         <template v-else>Unknown</template>
       </template>
 
@@ -252,7 +283,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('content', true) }}</p>
+        <ResourceListEmpty :list="list" plural="content" uncountable />
       </template>
     </UTable>
     </ResourceList>
@@ -284,7 +315,11 @@ async function remove() {
               v-model="form.contentTypeId"
               :items="contentTypeOptions"
               class="w-full"
-            />
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
           </UFormField>
           <UAlert
             v-if="formError"

@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import type { AuthFormField, FormError, FormSubmitEvent } from "@nuxt/ui";
+import {
+  MAX_USERNAME_LENGTH,
+  getDisplayNameError,
+} from "#shared/display-name";
 import { safeRedirectPath } from "#shared/sign-in-redirect";
 import { authClient } from "~/utils/auth-client";
+import { getReadableIdError } from "~/utils/readable-id";
 
 type AuthMode = "login" | "register";
 type AuthFormData = {
@@ -25,14 +30,21 @@ interface Dashboard {
 
 const mode = ref<AuthMode>("login");
 const registerForm = reactive({ name: "", username: "" });
-const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(
-  registerForm,
-  "username",
+// The username as typed is also the default display name, so capitalization is
+// accepted here (the server stores the username lowercase).
+const usernameError = computed(() => {
+  const typed = registerForm.username.trim();
+  if (typed.length > MAX_USERNAME_LENGTH)
+    return `Use at most ${MAX_USERNAME_LENGTH} characters.`;
+  return getReadableIdError(typed.toLowerCase());
+});
+const displayNamePlaceholder = computed(
+  () => registerForm.username.trim() || "Your display name",
 );
 const authBusy = ref(false);
 const errorMessage = ref("");
 
-const sessionState = await authClient.useSession(useFetch);
+const sessionState = await useAuthSession();
 const isLoggedIn = computed(() => !!sessionState.data.value?.user);
 
 // Pages that need an account send visitors here with `?redirect=<path>`; they
@@ -49,21 +61,22 @@ const fields = computed<AuthFormField[]>(() => [
   ...(isRegistering.value
     ? [
         {
-          name: "name",
-          type: "text",
-          label: "Display Name",
-          placeholder: "Your display name",
-          required: true,
-        } satisfies AuthFormField,
-        {
           name: "username",
           type: "text",
           label: "Username",
           description:
-            "Auto-generated from your display name — edit if you need something different or unique.",
+            "Letters, numbers, and hyphens. Must be unique; stored in lowercase.",
           placeholder: "your-name",
           required: true,
-          error: readableIdError.value,
+          error: usernameError.value,
+        } satisfies AuthFormField,
+        {
+          name: "name",
+          type: "text",
+          label: "Display Name",
+          description: "Optional. Defaults to your username.",
+          placeholder: displayNamePlaceholder.value,
+          error: getDisplayNameError(registerForm.name),
         } satisfies AuthFormField,
       ]
     : []),
@@ -103,8 +116,9 @@ const canSubmit = computed(() => {
   if (!state?.email?.trim() || !state.password) return false;
   if (!isRegistering.value) return true;
   return (
-    !!registerForm.name.trim() &&
     !!registerForm.username.trim() &&
+    !usernameError.value &&
+    !getDisplayNameError(registerForm.name) &&
     state.password === state.confirmPassword
   );
 });
@@ -135,7 +149,6 @@ function setMode(nextMode: AuthMode) {
   if (nextMode === "register") {
     registerForm.name = "";
     registerForm.username = "";
-    resetReadableIdTouched(false);
   }
   errorMessage.value = "";
 }
@@ -146,15 +159,20 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
   errorMessage.value = "";
 
   try {
-    const username = registerForm.username.trim().toLowerCase();
+    const typedUsername = registerForm.username.trim();
+    const username = typedUsername.toLowerCase();
     if (registering) {
       if (!username) {
         errorMessage.value = "Username is required.";
         return;
       }
+      if (usernameError.value) {
+        errorMessage.value = usernameError.value;
+        return;
+      }
       if (getReadableIdError(username)) {
         errorMessage.value =
-          "Username must use lowercase letters, numbers, and hyphens only.";
+          "Username must use letters, numbers, and hyphens only.";
         return;
       }
 
@@ -172,10 +190,11 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
       await $fetch("/api/register", {
         method: "POST",
         body: {
-          name: registerForm.name.trim(),
+          // Empty: the server uses the username as typed.
+          ...(registerForm.name.trim() ? { name: registerForm.name.trim() } : {}),
           email: event.data.email.trim(),
           password: event.data.password,
-          username,
+          username: typedUsername,
         },
       });
       const session = await authClient.getSession();
@@ -218,19 +237,20 @@ const {
   refresh: refreshDashboard,
 } = useLazyFetch<Dashboard>("/api/dashboard", {
   default: () => ({ campaigns: [], characters: [], content: [] }),
-  immediate: false,
+  // Already signed in: fetch during the server render, so it and the client's
+  // first render agree. Otherwise the watch below fetches after sign-in.
+  immediate: isLoggedIn.value,
 });
 
-watch(
-  [isLoggedIn, authBusy],
-  ([loggedIn, submittingAuth]) => {
-    if (loggedIn && !submittingAuth) refreshDashboard();
-  },
-  { immediate: true },
-);
+watch([isLoggedIn, authBusy], ([loggedIn, submittingAuth]) => {
+  if (loggedIn && !submittingAuth) refreshDashboard();
+});
 
 const recentSections = computed(() => {
-  const loading = dashboardStatus.value === "pending";
+  // "idle" counts too: the fetch only starts once signed in, so on the server
+  // (and before the client's first watch run) nothing has been requested yet,
+  // and showing the empty state there would flash "No ... yet." before loading.
+  const loading = isLoading(dashboardStatus.value);
   return [
     {
       title: "Campaigns",
@@ -313,19 +333,9 @@ function formatUpdated(updatedAt: string) {
           :validate="validateAuthForm"
           @submit="onSubmit"
         >
-          <template #name-field>
-            <UInput
-              v-model="registerForm.name"
-              class="w-full"
-              size="md"
-              name="name"
-              placeholder="Your display name"
-              required
-            />
-          </template>
           <template #username-field>
             <UInput
-              :model-value="registerForm.username"
+              v-model="registerForm.username"
               class="w-full"
               size="md"
               name="username"
@@ -333,7 +343,15 @@ function formatUpdated(updatedAt: string) {
               autocapitalize="none"
               placeholder="your-name"
               required
-              @update:model-value="onReadableIdInput"
+            />
+          </template>
+          <template #name-field>
+            <UInput
+              v-model="registerForm.name"
+              class="w-full"
+              size="md"
+              name="name"
+              :placeholder="displayNamePlaceholder"
             />
           </template>
           <template #description>
@@ -358,12 +376,6 @@ function formatUpdated(updatedAt: string) {
               variant="subtle"
               :description="errorMessage"
             />
-          </template>
-
-          <template #footer>
-            <p class="text-center text-sm text-muted">
-              {{ copy.home.formNote }}
-            </p>
           </template>
         </UAuthForm>
       </UPageCard>
@@ -425,15 +437,24 @@ function formatUpdated(updatedAt: string) {
               </span>
             </li>
           </ul>
-          <p
-            v-else-if="section.loading"
-            class="py-6 text-center text-sm text-muted"
-          >
-            Loading…
-          </p>
+          <!-- One row, as tall as a real item: the shortest loaded card, so the
+               page only grows when the entries arrive. -->
+          <div v-else-if="section.loading" role="status">
+            <span class="sr-only">Loading</span>
+            <div
+              aria-hidden="true"
+              class="flex h-10 items-center justify-between gap-2"
+            >
+              <LookupSkeleton size-class="h-4 w-40 max-w-2/3" />
+              <LookupSkeleton size-class="h-3.5 w-16" />
+            </div>
+          </div>
           <p v-else class="py-6 text-center text-sm text-muted">
             {{ section.empty }}
-            <NuxtLink :to="section.path" class="text-primary hover:underline">
+            <NuxtLink
+              :to="{ path: section.path, query: { new: '1' } }"
+              class="text-primary hover:underline"
+            >
               Create one.
             </NuxtLink>
           </p>

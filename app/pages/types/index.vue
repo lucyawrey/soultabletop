@@ -29,11 +29,6 @@ interface ContentTypeItem {
   isPubliclyReadable: boolean;
 }
 
-interface SystemItem {
-  id: string;
-  name: string;
-}
-
 const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
   ([value, label]) => ({ label, value }),
 );
@@ -42,17 +37,13 @@ const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<ContentTypeItem>("/api/content-type", loggedIn, { bySystem: true });
 const { items: contentTypes, status, refresh } = list;
 
-const { data: systems } = await useLazyFetch<SystemItem[]>("/api/system", {
-  default: () => [],
-});
+const { systems, status: systemsStatus } = useSystems();
 
 const systemOptions = computed(() =>
-  systems.value.map((item) => ({ label: item.name, value: item.id })),
+  systems.value.map((item) =>
+    resourceOption(item.id, { name: item.name, source: item.source }),
+  ),
 );
-
-function systemName(systemId: string) {
-  return systems.value.find((item) => item.id === systemId)?.name ?? "Unknown";
-}
 
 const columns: TableColumn<ContentTypeItem>[] = [
   { accessorKey: "name", header: "Name" },
@@ -237,7 +228,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="loggedIn && systems.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && systemsStatus === 'success' && systems.length === 0" class="text-sm text-muted">
       Create a system before adding content types.
     </p>
 
@@ -257,12 +248,7 @@ async function remove() {
       </template>
 
       <template #systemId-cell="{ row }">
-        <NuxtLink
-          :to="`/systems/${row.original.systemId}`"
-          class="text-primary hover:underline"
-        >
-          {{ systemName(row.original.systemId) }}
-        </NuxtLink>
+        <SystemLink :system-id="row.original.systemId" />
       </template>
 
       <template #contentCategory-cell="{ row }">
@@ -315,7 +301,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('content types') }}</p>
+        <ResourceListEmpty :list="list" plural="content types" />
       </template>
     </UTable>
     </ResourceList>
@@ -365,7 +351,11 @@ async function remove() {
               :items="systemOptions"
               class="w-full"
               :disabled="!!editingType"
-            />
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
           </UFormField>
           <UFormField name="contentCategory" label="Category" required>
             <USelect

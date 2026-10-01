@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MAX_USERNAME_LENGTH, getDisplayNameError } from "#shared/display-name";
 import { extractApiErrorMessage } from "~/utils/api-error";
 import { authClient } from "~/utils/auth-client";
 import { getReadableIdError } from "~/utils/readable-id";
@@ -23,11 +24,22 @@ const { data: profile, refresh } = await useProfile(() => user.value?.id);
 // The header may have loaded it long before: start the form from fresh values
 // (on a full page load it was just fetched).
 if (import.meta.client && !nuxtApp.isHydrating) await refresh();
-const { data: groups } = await useLazyFetch<GroupSummary[]>("/api/group", {
+const { data: groups, status: groupsStatus } = await useLazyFetch<GroupSummary[]>("/api/group", {
   default: () => [],
 });
 
+// A display name that is just the username (the default) shows as empty, so
+// the field's placeholder, the username, is visible.
+function isDefaultName(name: string) {
+  return name.toLowerCase() === (profile.value?.username ?? "").toLowerCase();
+}
+function formName() {
+  const name = user.value?.name ?? "";
+  return isDefaultName(name) ? "" : name;
+}
+
 const form = reactive({
+  name: formName(),
   username: profile.value?.username ?? "",
   iconImageUrl: profile.value?.iconImageUrl ?? "",
 });
@@ -47,7 +59,12 @@ const availability = ref<"idle" | "checking" | "available" | "taken" | "failed">
 let checkTimer: ReturnType<typeof setTimeout> | undefined;
 watch(username, (value) => {
   clearTimeout(checkTimer);
-  if (!value || !usernameChanged.value || usernameFormatError.value) {
+  if (
+    !value ||
+    !usernameChanged.value ||
+    usernameFormatError.value ||
+    value.length > MAX_USERNAME_LENGTH
+  ) {
     availability.value = "idle";
     return;
   }
@@ -71,6 +88,8 @@ onBeforeUnmount(() => clearTimeout(checkTimer));
 const usernameError = computed(() => {
   if (!username.value) return "Username is required.";
   if (usernameFormatError.value) return usernameFormatError.value;
+  if (username.value.length > MAX_USERNAME_LENGTH)
+    return `Use at most ${MAX_USERNAME_LENGTH} characters.`;
   if (availability.value === "taken") return "That username is already in use.";
   return undefined;
 });
@@ -80,6 +99,13 @@ const usernameHint = computed(() => {
   if (availability.value === "failed") return "Could not check availability.";
   return undefined;
 });
+
+const displayName = computed(() => form.name.trim());
+// Clearing it resets the display name to the username.
+const nameChanged = computed(
+  () => displayName.value !== formName(),
+);
+const nameError = computed(() => getDisplayNameError(form.name));
 
 const iconChanged = computed(
   () => iconUrl.value !== (profile.value?.iconImageUrl ?? ""),
@@ -95,11 +121,14 @@ const iconError = computed(() => {
 const iconFailed = ref(false);
 watch(iconUrl, () => (iconFailed.value = false));
 
-const dirty = computed(() => usernameChanged.value || iconChanged.value);
+const dirty = computed(
+  () => nameChanged.value || usernameChanged.value || iconChanged.value,
+);
 const canSave = computed(
   () =>
     dirty.value &&
     !usernameError.value &&
+    !nameError.value &&
     !iconError.value &&
     availability.value !== "checking",
 );
@@ -117,11 +146,20 @@ async function save() {
     await $fetch("/api/profile", {
       method: "PATCH",
       body: {
-        ...(usernameChanged.value ? { username: username.value } : {}),
+        ...(nameChanged.value ? { name: displayName.value || null } : {}),
+        ...(usernameChanged.value ? { username: form.username.trim() } : {}),
         ...(iconChanged.value ? { iconImageUrl: iconUrl.value || null } : {}),
       },
     });
-    await refresh();
+    // The display name is Better Auth's `user.name`, read from the session, so
+    // refresh the session too: the header menu shows both.
+    const [, fresh] = await Promise.all([refresh(), authClient.getSession()]);
+    if (fresh.data) {
+      authClient.hydrateSession(fresh.data);
+      // `useAuthSession` reads through its own fetch, so set its data too.
+      session.data.value = fresh.data;
+    }
+    form.name = formName();
     form.username = profile.value?.username ?? "";
     form.iconImageUrl = profile.value?.iconImageUrl ?? "";
     availability.value = "idle";
@@ -224,8 +262,6 @@ const groupColumns = [
       </template>
 
       <dl class="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[max-content_1fr]">
-        <dt class="text-muted">Display Name</dt>
-        <dd>{{ user?.name }}</dd>
         <dt class="text-muted">Email</dt>
         <dd>{{ user?.email }}</dd>
         <dt class="text-muted">Site Role</dt>
@@ -254,6 +290,21 @@ const groupColumns = [
           variant="subtle"
           title="Profile saved."
         />
+
+        <UFormField
+          name="name"
+          label="Display Name"
+          description="Optional. Leave empty to use your username."
+          :error="nameError"
+        >
+          <UInput
+            v-model="form.name"
+            class="w-full"
+            :placeholder="profile?.username"
+            autocomplete="off"
+            data-1p-ignore
+          />
+        </UFormField>
 
         <ReadableIdField
           v-model="form.username"
@@ -396,7 +447,10 @@ const groupColumns = [
           </span>
           <span v-else class="text-muted">Site admin</span>
         </template>
-        <template #empty>No groups yet.</template>
+        <template #empty>
+          <TableSkeleton v-if="isLoading(groupsStatus)" :rows="2" />
+          <template v-else>No groups yet.</template>
+        </template>
       </UTable>
     </UPageCard>
   </div>
