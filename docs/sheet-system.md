@@ -245,7 +245,7 @@ Components (`app/components/sheet/`):
 
 `ContentDetail.vue`:
 - Replaces the Data card with `<SheetRenderer>`. The header's former Edit button is now **Settings** (so it isn't
-  confused with the Edit switch); its modal keeps Name, ID, Visibility, the saved sheet, and the raw JSON editor.
+  confused with the Edit Fields switch); its modal keeps Name, ID, Visibility, the saved sheet, and the raw JSON editor.
 - The draft lives in `app/composables/useContentDraft.ts` (compares with sorted keys, since `content.data` is jsonb).
   Editing controls are `sheet/FieldInput.vue`; List/Table add/remove/reorder use `useSheetListEditing` and
   `sheet/ListAdd.vue`; `sheet/ContentPicker.vue` picks referenced content.
@@ -338,10 +338,10 @@ list's Edit go here; the edit modals are gone. The list's create modal only asks
 content type, and default, then opens the editor: a sheet created without markup starts with the generated markup
 (this is the "Copy to new Sheet" path). `GET /api/sheet/[id]` includes `schemas`, `contentCategory`, and the scoped
 `css`. The detail page previews the sheet with `SheetRenderer` against `sampleSheetData` (broken-tag placeholders for
-editors, an Edit switch whose changes never save), with the markup and CSS in tabs beside the preview (a read-only `CodeEditor`, for the same syntax colors).
+editors, an Edit Fields switch whose changes never save), with the markup and CSS in tabs beside the preview (a read-only `CodeEditor`, for the same syntax colors).
 
 Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
-- Left: tabs **Markup** | **CSS** | **Settings** (Name, ID, Visibility, Default sheet, Default edit mode, Default
+- Left: tabs **Markup** | **CSS** | **Settings** (Name, ID, Visibility, Default sheet, Start with Edit Fields on, Default
   autosave, Non-editable fields), then a diagnostics list (errors + warnings, click → jump to line).
 - The Markup and CSS tabs have **Upload** and **Download** buttons, and a file dropped on either editor loads into it.
   Files are read in the browser (`shared/sheet/files.ts`), never stored on the server: markup accepts `.stts` (Soul Tabletop Sheet),
@@ -349,7 +349,7 @@ Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
   characters) and rejected if they aren't text. A loaded file replaces the editor's content as an unsaved change (undo
   restores it), so it's checked and previewed before saving. Download saves the editor's current content as
   `<readableId>.stts` or `<readableId>.css`.
-- Right: live preview via the real `SheetRenderer` with its Edit/Autosave switches (preview edits never save), plus a
+- Right: live preview via the real `SheetRenderer` with its Edit Fields/Autosave switches (preview edits never save), plus a
   data picker: **Sample data** (generated from the schema: labels as text, 10 for numbers, 2 items per array) or any
   readable content of this content type.
 - Parse/validate/CSS-scope run client-side, debounced ~200 ms, with the same `shared/sheet` code the server uses.
@@ -391,7 +391,7 @@ Each phase ends with `pnpm test && pnpm typecheck && pnpm lint`, template compil
 5. **Renderer, view mode** — `app/components/sheet/*`; `GET /api/content/[id]` returns resolved sheet, schema,
    referenced schemas and `refs`; `?contentTypeId=` filter on `GET /api/content`;
    `ContentDetail.vue` renders it; viewer sheet switcher.
-6. **Edit mode** — draft model, Edit/Autosave switches, Save/Discard bar, autosave, `live`/`locked`, 409 handling,
+6. **Edit mode** — draft model, Edit Fields/Autosave switches, Save/Discard bar, autosave, `live`/`locked`, 409 handling,
    Markdown (`UEditor`) and Image fields, content-field picker / Custom / "Make custom copy"; content Edit modal keeps readable ID/visibility/sheet/raw JSON.
 7. **Scoped CSS + fonts** — `shared/sheet/css.ts` + tests (every rejected construct, prefixing, `.dark`, `:root`,
    keyframes); sheet save validation; curated fonts in `nuxt.config.ts`.

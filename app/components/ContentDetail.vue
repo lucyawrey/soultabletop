@@ -345,7 +345,7 @@ async function remove() {
 
       <div class="flex flex-wrap items-center justify-between gap-4 text-sm">
         <div v-if="item.canEdit" class="flex flex-wrap items-center gap-4">
-          <USwitch v-model="editMode" label="Edit" />
+          <USwitch v-model="editMode" label="Edit Fields" />
           <USwitch v-model="autosave" label="Autosave" />
           <span class="text-muted" aria-live="polite">{{ statusText }}</span>
         </div>
