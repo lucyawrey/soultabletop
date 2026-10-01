@@ -51,6 +51,7 @@ const { data: profile } = await useLazyFetch<{ role: "member" | "admin" }>(
 );
 const isSiteAdmin = computed(() => profile.value?.role === "admin");
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "group");
 const formBusy = ref(false);
 const formError = ref("");
 
@@ -155,6 +156,7 @@ async function submitForm() {
           </UFormField>
           <ReadableIdField
             :model-value="form.readableId"
+            :availability="idAvailability"
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />

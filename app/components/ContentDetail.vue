@@ -214,6 +214,7 @@ const savedSheetOptions = computed(() => [
 const formBusy = ref(false);
 const formError = ref("");
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "content", () => item.value ?? undefined);
 
 function openEdit() {
   if (!item.value) return;
@@ -448,6 +449,7 @@ async function remove() {
           </UFormField>
           <ReadableIdField
             :model-value="form.readableId"
+            :availability="idAvailability"
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />

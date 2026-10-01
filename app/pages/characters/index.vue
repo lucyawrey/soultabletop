@@ -107,6 +107,7 @@ const form = reactive({
   contentTypeId: "",
 });
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "content");
 const formBusy = ref(false);
 const formError = ref("");
 
@@ -332,6 +333,7 @@ async function remove() {
           </UFormField>
           <ReadableIdField
             :model-value="form.readableId"
+            :availability="idAvailability"
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
