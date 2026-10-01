@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(scripts/agent-run.sh pnpm check)",
+      "Bash(scripts/agent-run.sh pnpm check *)",
+      "Bash(scripts/agent-run.sh pnpm typecheck)",
+      "Bash(scripts/agent-run.sh pnpm lint)",
+      "Bash(scripts/agent-run.sh pnpm test)",
+      "Bash(scripts/agent-run.sh pnpm test *)",
+      "Bash(scripts/agent-run.sh pnpm check:templates*)",
+      "Bash(scripts/agent-run.sh pnpm exec eslint *)",
+      "Bash(scripts/agent-run.sh pnpm exec vitest run *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git fetch origin)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/agent-run.sh\" node \"$CLAUDE_PROJECT_DIR/scripts/check-templates.mjs\" --hook 1>&2"
+          }
+        ]
+      }
+    ]
+  }
+}
