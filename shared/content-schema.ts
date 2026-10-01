@@ -54,6 +54,19 @@ export const MAX_CONTENT_REFS = 300;
 export interface ContentTypeRules {
   schema: ContentTypeSchema;
   hasStrictSchema: boolean;
+  // Only the Sheet's own content type's value is used. Missing counts as off.
+  showSheetWarnings?: boolean;
+}
+
+// The value of `showSheetWarnings` after a content type update: switching from
+// strict to non-strict turns it on unless the request sets it.
+export function resolveShowSheetWarnings(
+  current: { hasStrictSchema: boolean; showSheetWarnings: boolean },
+  body: { hasStrictSchema?: boolean; showSheetWarnings?: boolean },
+): boolean {
+  if (body.showSheetWarnings !== undefined) return body.showSheetWarnings;
+  if (current.hasStrictSchema && body.hasStrictSchema === false) return true;
+  return current.showSheetWarnings;
 }
 
 // IDs of the ContentTypes that `content` fields in `schema` point at.

@@ -164,6 +164,7 @@ export const contentTypeCreateSchema = Type.Intersect([
       contentCategorySchema,
     ),
     hasStrictSchema: Type.Optional(Type.Boolean()),
+    showSheetWarnings: Type.Optional(Type.Boolean()),
     schema: Type.Optional(contentTypeSchemaSchema),
   }),
 ]);
@@ -177,6 +178,8 @@ export const contentTypePatchSchema = Type.Partial(
     ownerGroupId: Type.Union([uuidSchema, Type.Null()]),
     contentCategory: contentCategorySchema,
     hasStrictSchema: Type.Boolean(),
+    // Omitted: turned on when switching from strict to non-strict.
+    showSheetWarnings: Type.Boolean(),
     schema: contentTypeSchemaSchema,
     // Save even if the change breaks existing Sheets (otherwise 409).
     confirmBrokenSheets: Type.Boolean(),

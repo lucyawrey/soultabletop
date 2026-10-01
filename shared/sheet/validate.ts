@@ -183,6 +183,13 @@ class Validator {
     this.diagnostics.push({ severity: "warning", code, message, loc });
   }
 
+  // Warnings about paths the schema doesn't pin down (not in a non-strict
+  // schema, or inside a free-form object). The Sheet's own content type
+  // decides whether they show; errors are never affected.
+  private warnSchema(code: string, message: string, loc: Loc) {
+    if (this.schemas.root.showSheetWarnings === true) this.warn(code, message, loc);
+  }
+
   // Paths
 
   // Turns a `struct` or `content` field into the record of its fields.
@@ -253,7 +260,7 @@ class Validator {
         this.error("unknown-field", `"${path}": ${where} has no field "${segment}"`, loc);
         return undefined;
       }
-      this.warn(
+      this.warnSchema(
         "unknown-field",
         `"${path}": ${where} has no field "${segment}"; it will show whatever the data holds`,
         loc,
@@ -263,7 +270,7 @@ class Validator {
 
     const { field } = shape;
     if (field.type === "object") {
-      this.warn(
+      this.warnSchema(
         "free-form-path",
         `"${path}": "${walked}" is a free-form object, so "${segment}" isn't checked; it will show whatever the data holds`,
         loc,

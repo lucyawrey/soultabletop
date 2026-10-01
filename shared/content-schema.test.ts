@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultContentData, type ContentTypeSchema } from "./content-schema";
+import { defaultContentData, resolveShowSheetWarnings, type ContentTypeSchema } from "./content-schema";
 
 describe("defaultContentData", () => {
   it("fills required fields with empty values and skips optional ones", () => {
@@ -46,5 +46,22 @@ describe("defaultContentData", () => {
       },
     };
     expect(defaultContentData(schema)).toEqual({});
+  });
+});
+
+describe("resolveShowSheetWarnings", () => {
+  const strictOff = { hasStrictSchema: true, showSheetWarnings: false };
+  it("turns on when switching from strict to non-strict without a value", () => {
+    expect(resolveShowSheetWarnings(strictOff, { hasStrictSchema: false })).toBe(true);
+  });
+  it("uses the explicit value when given", () => {
+    expect(resolveShowSheetWarnings(strictOff, { hasStrictSchema: false, showSheetWarnings: false })).toBe(false);
+    expect(resolveShowSheetWarnings({ ...strictOff, showSheetWarnings: true }, { showSheetWarnings: false })).toBe(false);
+  });
+  it("keeps the stored value otherwise", () => {
+    expect(resolveShowSheetWarnings({ hasStrictSchema: false, showSheetWarnings: false }, { hasStrictSchema: false })).toBe(false);
+    expect(resolveShowSheetWarnings(strictOff, {})).toBe(false);
+    expect(resolveShowSheetWarnings(strictOff, { hasStrictSchema: true })).toBe(false);
+    expect(resolveShowSheetWarnings({ hasStrictSchema: false, showSheetWarnings: true }, { hasStrictSchema: true })).toBe(true);
   });
 });

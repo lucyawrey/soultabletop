@@ -1,0 +1,1 @@
+ALTER TABLE "content_type" ADD COLUMN "show_sheet_warnings" boolean DEFAULT false NOT NULL;
