@@ -1,7 +1,6 @@
-# Copy written by the team: text that says what Soul Tabletop is or speaks to
-# its users. Edit the values freely; keep the keys (the app looks them up, and
-# the tests fail if one is missing). `{name}` marks a value filled in by the app.
-# Functional text (labels, buttons, errors) stays in the components.
+# Edit values freely, but keep the keys as is (the app looks them up, and the tests fail if one is missing).
+# Bracketed values like `{name}` are dynamically filled in by the app.
+# Functional text (labels, buttons, errors) are directly in the components.
 
 site:
   # Browser tab title and the description search engines and link previews show.
