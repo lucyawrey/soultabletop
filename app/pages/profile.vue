@@ -374,6 +374,8 @@ const groupColumns = [
       </form>
     </UPageCard>
 
+    <ApiKeysCard />
+
     <UPageCard>
       <template #header>
         <h2 class="text-lg font-semibold text-highlighted">Groups</h2>

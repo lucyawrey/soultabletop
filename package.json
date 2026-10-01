@@ -19,6 +19,7 @@
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run format:check"
   },
   "dependencies": {
+    "@better-auth/api-key": "^1.7.6",
     "@better-auth/drizzle-adapter": "^1.7.6",
     "@codemirror/autocomplete": "^6.20.3",
     "@codemirror/lang-css": "^6.3.1",

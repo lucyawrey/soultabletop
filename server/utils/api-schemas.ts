@@ -6,6 +6,11 @@ import { uuidPattern } from "./resource-management";
 import { CONTENT_CATEGORIES } from "../../shared/content-categories";
 import { RESOURCE_LINK_KINDS } from "../../shared/content-schema";
 import { SHEET_DISPLAYS } from "../../shared/sheet/registry";
+import {
+  API_KEY_ACCESS,
+  API_KEY_EXPIRY_DAYS,
+  MAX_API_KEY_NAME_LENGTH,
+} from "../../shared/api-keys";
 
 FormatRegistry.Set("uuid", (value) => uuidPattern.test(value));
 
@@ -23,6 +28,20 @@ export const profilePatchSchema = Type.Partial(
     ]),
   }),
 );
+
+export const createApiKeySchema = Type.Object({
+  name: Type.String({
+    minLength: 1,
+    maxLength: MAX_API_KEY_NAME_LENGTH,
+    pattern: "\\S",
+  }),
+  access: Type.Union(API_KEY_ACCESS.map((access) => Type.Literal(access))),
+  // `null` for a key that never expires.
+  expiresInDays: Type.Union([
+    ...API_KEY_EXPIRY_DAYS.map((days) => Type.Literal(days)),
+    Type.Null(),
+  ]),
+});
 
 export const createContentSchema = Type.Object({
   readableId: readableIdSchema,
