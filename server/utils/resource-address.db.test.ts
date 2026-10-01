@@ -160,6 +160,12 @@ describe.skipIf(!runDbTests)(
       const { isOwnerReadableIdTaken } = await import("./owner-readable-id");
       expect(await isOwnerReadableIdTaken(ids.viewer.toUpperCase())).toBe(true);
       expect(await isOwnerReadableIdTaken(groupReadableId)).toBe(true);
+      // Availability (`/api/readable-id-availability` for groups, and the
+      // username checks): a group ID equal to a username is taken, and so is a
+      // username equal to a group ID; a group's own ID is free for its rename.
+      expect(await isOwnerReadableIdTaken(ids.viewer, groupId)).toBe(true);
+      expect(await isOwnerReadableIdTaken(groupReadableId, groupId)).toBe(false);
+      expect(await isOwnerReadableIdTaken(`${groupReadableId}-free`)).toBe(false);
 
       const clash = async (write: () => Promise<unknown>) => {
         try {
