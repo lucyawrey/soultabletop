@@ -7,8 +7,7 @@ useHead({
   },
 });
 
-const title = "Page title placeholder | Soul Tabletop";
-const description = "Page description placeholder.";
+const { title, description } = copy.site;
 
 useSeoMeta({
   title,
