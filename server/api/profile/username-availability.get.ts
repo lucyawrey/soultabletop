@@ -1,3 +1,4 @@
+import { MAX_USERNAME_LENGTH } from "../../../shared/display-name";
 import { createError, getQuery } from "h3";
 import { sql } from "drizzle-orm";
 import { userProfile } from "../../database/schema";
@@ -28,6 +29,13 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: "username must use lowercase letters, numbers, and hyphens",
+    });
+  }
+
+  if (username.length > MAX_USERNAME_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `username must be at most ${MAX_USERNAME_LENGTH} characters`,
     });
   }
 
