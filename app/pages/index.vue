@@ -359,12 +359,6 @@ function formatUpdated(updatedAt: string) {
               :description="errorMessage"
             />
           </template>
-
-          <template #footer>
-            <p class="text-center text-sm text-muted">
-              {{ copy.home.formNote }}
-            </p>
-          </template>
         </UAuthForm>
       </UPageCard>
     </div>
