@@ -4,6 +4,7 @@ import { contentType, resource } from "../../database/schema";
 import type { ContentTypeSchema } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { assertContentTypeSchema } from "../../utils/content-validation";
+import { resolveShowSheetWarnings } from "../../../shared/content-schema";
 import { findSheetsBrokenBy } from "../../utils/sheet-schemas";
 import { useDatabase } from "../../utils/database";
 import {
@@ -46,6 +47,11 @@ defineRouteMeta({
                 ],
               },
               hasStrictSchema: { type: "boolean" },
+              showSheetWarnings: {
+                type: "boolean",
+                description:
+                  "Show schema-related warnings (paths not in a non-strict schema, paths into free-form objects) in the Sheet editor. Defaults to false; when an update switches hasStrictSchema from true to false and this is omitted, it is turned on.",
+              },
               schema: { type: "object", additionalProperties: true },
               confirmBrokenSheets: { type: "boolean" },
             },
@@ -123,6 +129,22 @@ export default defineEventHandler(async (event) => {
     .where(eq(resource.id, id))
     .returning()
     .catch(rethrowReadableIdConflict);
+  // Switching from strict to non-strict turns the warnings on unless the
+  // request says otherwise.
+  let showSheetWarnings: boolean | undefined = body.showSheetWarnings;
+  if (showSheetWarnings === undefined && body.hasStrictSchema === false) {
+    const [current] = await database
+      .select({
+        hasStrictSchema: contentType.hasStrictSchema,
+        showSheetWarnings: contentType.showSheetWarnings,
+      })
+      .from(contentType)
+      .where(eq(contentType.resourceId, id));
+    if (current) {
+      const resolved = resolveShowSheetWarnings(current, body);
+      if (resolved !== current.showSheetWarnings) showSheetWarnings = resolved;
+    }
+  }
   const typeValues = {
       ...(body.contentCategory !== undefined
         ? {
@@ -132,6 +154,7 @@ export default defineEventHandler(async (event) => {
       ...(body.hasStrictSchema !== undefined
         ? { hasStrictSchema: body.hasStrictSchema === true }
         : {}),
+      ...(showSheetWarnings !== undefined ? { showSheetWarnings } : {}),
       ...(body.schema !== undefined
         ? { schema: body.schema as ContentTypeSchema }
         : {}),

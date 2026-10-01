@@ -25,6 +25,7 @@ interface ContentTypeDetail {
   systemId: string;
   contentCategory: ContentCategory;
   hasStrictSchema: boolean;
+  showSheetWarnings: boolean;
   schema: Record<string, unknown>;
   canEdit: boolean;
   ownerGroupId: string | null;
@@ -90,6 +91,7 @@ const form = reactive({
   isPubliclyReadable: false,
   contentCategory: "general" as ContentCategory,
   hasStrictSchema: false,
+  showSheetWarnings: false,
   ownerGroupId: null as string | null,
 });
 const formBusy = ref(false);
@@ -108,8 +110,19 @@ function openEdit() {
   form.ownerGroupId = contentType.value.ownerGroupId;
   form.contentCategory = contentType.value.contentCategory;
   form.hasStrictSchema = contentType.value.hasStrictSchema;
+  form.showSheetWarnings = contentType.value.showSheetWarnings;
   resetReadableIdTouched(true);
   isFormOpen.value = true;
+}
+
+// Switching from strict to non-strict pre-sets the warnings to on (still
+// changeable); switching back restores the saved value.
+function onStrictChange(strict: boolean) {
+  const original = contentType.value;
+  if (!original) return;
+  form.showSheetWarnings = strict
+    ? original.showSheetWarnings
+    : original.hasStrictSchema || original.showSheetWarnings;
 }
 
 async function submitForm(confirmBrokenSheets = false) {
@@ -129,6 +142,7 @@ async function submitForm(confirmBrokenSheets = false) {
           : {}),
         contentCategory: form.contentCategory,
         hasStrictSchema: form.hasStrictSchema,
+        showSheetWarnings: form.showSheetWarnings,
         ...(confirmBrokenSheets ? { confirmBrokenSheets: true } : {}),
       },
     });
@@ -499,7 +513,18 @@ async function remove() {
             label="Strict schema"
             description="Reject content data that does not match the schema."
           >
-            <USwitch v-model="form.hasStrictSchema" />
+            <USwitch
+              v-model="form.hasStrictSchema"
+              @update:model-value="onStrictChange"
+            />
+          </UFormField>
+          <UFormField
+            v-if="!form.hasStrictSchema"
+            name="showSheetWarnings"
+            label="Show Sheet Warnings"
+            description="In the Sheet editor, warn about field paths and {interpolations} that are not in the schema, and paths into free-form objects."
+          >
+            <USwitch v-model="form.showSheetWarnings" />
           </UFormField>
           <UAlert
             v-if="formError"

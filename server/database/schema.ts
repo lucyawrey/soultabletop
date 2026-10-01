@@ -420,6 +420,8 @@ export const contentType = pgTable("content_type", {
     .default("general")
     .notNull(),
   hasStrictSchema: boolean("has_strict_schema").default(false).notNull(),
+  // Show schema-related Sheet warnings in the editor (see shared/sheet/validate.ts).
+  showSheetWarnings: boolean("show_sheet_warnings").default(false).notNull(),
   // `json`, not `jsonb`: jsonb reorders object keys, and field order matters
   // for generated sheets.
   schema: json("schema")
