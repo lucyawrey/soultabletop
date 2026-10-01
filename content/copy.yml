@@ -16,6 +16,9 @@ home:
     Placeholder for introductory copy. Replace this text with your own
     page content.
   formNote: Optional supporting text placeholder.
+  # Under the form while registering and while signing in.
+  registerNote: Placeholder for registration copy.
+  signInNote: Placeholder for sign-in copy.
 
 # The page at `/` once signed in.
 dashboard:
