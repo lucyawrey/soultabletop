@@ -35,7 +35,6 @@ const systemOptions = computed(() =>
 const columns: TableColumn<CampaignItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "source", header: "Source" },
-  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   {

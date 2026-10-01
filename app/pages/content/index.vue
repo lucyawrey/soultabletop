@@ -71,7 +71,6 @@ function contentTypeName(contentTypeId: string) {
 const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "source", header: "Source" },
-  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentTypeId", header: "Type" },

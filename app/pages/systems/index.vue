@@ -25,7 +25,6 @@ const { items: systems, status, refresh } = list;
 const columns: TableColumn<SystemItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "source", header: "Source" },
-  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   {
     accessorKey: "updatedAt",

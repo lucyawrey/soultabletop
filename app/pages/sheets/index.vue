@@ -62,7 +62,6 @@ function contentTypeName(contentTypeId: string) {
 const columns: TableColumn<SheetItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "source", header: "Source" },
-  { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentTypeId", header: "Content Type" },
