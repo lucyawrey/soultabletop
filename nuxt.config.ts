@@ -16,6 +16,12 @@ export default defineNuxtConfig({
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? "",
   },
 
+  // Scalar's API reference logs hydration mismatches inside its own
+  // components when server-rendered, so render it in the browser only.
+  routeRules: {
+    "/docs": { ssr: false },
+  },
+
   compatibilityDate: "2026-06-30",
 
   nitro: {
