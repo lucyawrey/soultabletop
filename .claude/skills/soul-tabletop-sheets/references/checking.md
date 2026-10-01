@@ -25,7 +25,8 @@ Put three files in a folder outside the repo (for example a scratch directory):
 ```
 
 `root.schema` is the content type's `schema` (from `GET /api/content-type/[id]`, or the content type page's JSON
-view). `hasStrictSchema` is that content type's flag (strict: unknown paths are errors; not strict: warnings).
+view). `hasStrictSchema` is that content type's flag (strict: unknown paths are errors; not strict: warnings). `showSheetWarnings` (default off when missing) must be `true` to see those
+warnings and the free-form `object` path warning; errors are never affected. Only `root`'s value is used.
 `types` holds the schema of every content type reachable through `content` fields, keyed by content type ID, up to 3
 hops; leave it `{}` if there are none. If a `content` field's type is missing from `types`, using paths through it gives
 a `missing-content-type` warning and is not checked.

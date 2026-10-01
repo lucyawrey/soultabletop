@@ -172,6 +172,13 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 
 `validate()` in `shared/sheet/validate.ts`. Errors block sheet save; warnings are shown in the editor only.
 
+Schema-related warnings (the two "warning" rows marked \* below, plus paths into free-form `object`s) are hidden unless
+the Sheet's own content type has `showSheetWarnings` on (`content_type.show_sheet_warnings`, default off; the switch
+is shown only while Strict schema is off). Referenced content types' flags are not consulted. Errors, and other warnings
+(e.g. a content type that could not be loaded), are never affected, and the "break existing sheets" check on content type
+edits counts errors only. Switching a content type from strict to non-strict turns the option on unless the request sets
+it (server: `resolveShowSheetWarnings` in `shared/content-schema.ts`; the form pre-sets it).
+
 Structural (errors): unknown tag; unknown attr; missing required attr; attr value not coercible (e.g. `cols="abc"`,
 enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Divider`).
 
@@ -179,13 +186,13 @@ Field paths — resolved through the schema, following `List` scopes (relative t
 the item):
 | Case | Strict schema | Non-strict schema |
 |---|---|---|
-| Path not in schema | error | warning (data may hold extra keys) |
+| Path not in schema | error | warning\* (data may hold extra keys) |
 | Tag can't bind that field type (e.g. `Number` on a string) | error | error |
 | Field is `scalar` | binds `Field`, `Value`, `Column`; no paths below it | same |
-| Path goes into a free-form `object` | warning (not checked; shows whatever the data holds) | same |
+| Path goes into a free-form `object` | warning\* (not checked; shows whatever the data holds) | same |
 | `List`/`Table` on a non-array | error | error |
 | Relative path inside a `List` of primitives (other than `.`) | error | error |
-| `{path}` interpolation not in schema | error | warning |
+| `{path}` interpolation not in schema | error | warning\* |
 | Path crosses > 3 `content` fields | error | error |
 | Path continues into a `content` field | resolved against the referenced content type's schema (its strictness applies) | same |
 
