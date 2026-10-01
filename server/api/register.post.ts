@@ -4,6 +4,7 @@ import { userProfile } from "../database/schema";
 import { useDatabase } from "../utils/database";
 import { useAuth } from "../utils/auth";
 import { isUniqueConstraintError } from "../utils/user-profile";
+import { resolveDisplayName, MAX_DISPLAY_NAME_LENGTH } from "../../shared/display-name";
 
 interface RegisterBody {
   name?: unknown;
@@ -22,12 +23,20 @@ defineRouteMeta({
         "application/json": {
           schema: {
             type: "object",
-            required: ["name", "email", "password", "username"],
+            required: ["email", "password", "username"],
             properties: {
-              name: { type: "string" },
+              name: {
+                type: "string",
+                description:
+                  "Display name; optional, defaults to the username as typed",
+              },
               email: { type: "string", format: "email" },
               password: { type: "string" },
-              username: { type: "string" },
+              username: {
+                type: "string",
+                description:
+                  "Display name; optional, defaults to the username as typed",
+              },
             },
           },
         },
@@ -43,16 +52,25 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<RegisterBody>(event);
-  const name = typeof body?.name === "string" ? body.name.trim() : "";
   const email = typeof body?.email === "string" ? body.email.trim() : "";
   const password = typeof body?.password === "string" ? body.password : "";
-  const username =
-    typeof body?.username === "string" ? body.username.trim().toLowerCase() : "";
+  // The username as typed: stored lowercase, but it is the default display
+  // name, which keeps the capitalization.
+  const typedUsername =
+    typeof body?.username === "string" ? body.username.trim() : "";
+  const username = typedUsername.toLowerCase();
+  const name = resolveDisplayName(body?.name, typedUsername);
 
-  if (!name || !email || !password || !username) {
+  if (!email || !password || !username) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Display name, email, password, and username are required",
+      statusMessage: "Email, password, and username are required",
+    });
+  }
+  if (name.length > MAX_DISPLAY_NAME_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Display name must be at most ${MAX_DISPLAY_NAME_LENGTH} characters`,
     });
   }
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(username)) {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MAX_DISPLAY_NAME_LENGTH } from "#shared/display-name";
 import { extractApiErrorMessage } from "~/utils/api-error";
 import { authClient } from "~/utils/auth-client";
 import { getReadableIdError } from "~/utils/readable-id";
@@ -28,6 +29,7 @@ const { data: groups } = await useLazyFetch<GroupSummary[]>("/api/group", {
 });
 
 const form = reactive({
+  name: user.value?.name ?? "",
   username: profile.value?.username ?? "",
   iconImageUrl: profile.value?.iconImageUrl ?? "",
 });
@@ -81,6 +83,21 @@ const usernameHint = computed(() => {
   return undefined;
 });
 
+const displayName = computed(() => form.name.trim());
+// Clearing it resets the display name to the username, so a blank field is a
+// change whenever the current name isn't already the username.
+const nameChanged = computed(() => {
+  const current = user.value?.name ?? "";
+  return displayName.value
+    ? displayName.value !== current
+    : current !== (profile.value?.username ?? "");
+});
+const nameError = computed(() =>
+  displayName.value.length > MAX_DISPLAY_NAME_LENGTH
+    ? `Use at most ${MAX_DISPLAY_NAME_LENGTH} characters.`
+    : undefined,
+);
+
 const iconChanged = computed(
   () => iconUrl.value !== (profile.value?.iconImageUrl ?? ""),
 );
@@ -95,11 +112,14 @@ const iconError = computed(() => {
 const iconFailed = ref(false);
 watch(iconUrl, () => (iconFailed.value = false));
 
-const dirty = computed(() => usernameChanged.value || iconChanged.value);
+const dirty = computed(
+  () => nameChanged.value || usernameChanged.value || iconChanged.value,
+);
 const canSave = computed(
   () =>
     dirty.value &&
     !usernameError.value &&
+    !nameError.value &&
     !iconError.value &&
     availability.value !== "checking",
 );
@@ -117,11 +137,16 @@ async function save() {
     await $fetch("/api/profile", {
       method: "PATCH",
       body: {
+        ...(nameChanged.value ? { name: displayName.value || null } : {}),
         ...(usernameChanged.value ? { username: username.value } : {}),
         ...(iconChanged.value ? { iconImageUrl: iconUrl.value || null } : {}),
       },
     });
-    await refresh();
+    // The display name is Better Auth's `user.name`, read from the session, so
+    // refresh the session too: the header menu shows both.
+    const [, fresh] = await Promise.all([refresh(), authClient.getSession()]);
+    if (fresh.data) authClient.hydrateSession(fresh.data);
+    form.name = user.value?.name ?? "";
     form.username = profile.value?.username ?? "";
     form.iconImageUrl = profile.value?.iconImageUrl ?? "";
     availability.value = "idle";
@@ -224,8 +249,6 @@ const groupColumns = [
       </template>
 
       <dl class="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[max-content_1fr]">
-        <dt class="text-muted">Display Name</dt>
-        <dd>{{ user?.name }}</dd>
         <dt class="text-muted">Email</dt>
         <dd>{{ user?.email }}</dd>
         <dt class="text-muted">Site Role</dt>
@@ -254,6 +277,21 @@ const groupColumns = [
           variant="subtle"
           title="Profile saved."
         />
+
+        <UFormField
+          name="name"
+          label="Display Name"
+          description="Optional. Leave empty to use your username."
+          :error="nameError"
+        >
+          <UInput
+            v-model="form.name"
+            class="w-full"
+            :placeholder="profile?.username"
+            autocomplete="off"
+            data-1p-ignore
+          />
+        </UFormField>
 
         <ReadableIdField
           v-model="form.username"

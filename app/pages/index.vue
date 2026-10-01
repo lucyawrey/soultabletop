@@ -2,6 +2,7 @@
 import type { AuthFormField, FormError, FormSubmitEvent } from "@nuxt/ui";
 import { safeRedirectPath } from "#shared/sign-in-redirect";
 import { authClient } from "~/utils/auth-client";
+import { getReadableIdError } from "~/utils/readable-id";
 
 type AuthMode = "login" | "register";
 type AuthFormData = {
@@ -25,9 +26,13 @@ interface Dashboard {
 
 const mode = ref<AuthMode>("login");
 const registerForm = reactive({ name: "", username: "" });
-const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(
-  registerForm,
-  "username",
+// The username as typed is also the default display name, so capitalization is
+// accepted here (the server stores the username lowercase).
+const usernameError = computed(() =>
+  getReadableIdError(registerForm.username.trim().toLowerCase()),
+);
+const displayNamePlaceholder = computed(
+  () => registerForm.username.trim() || "Your display name",
 );
 const authBusy = ref(false);
 const errorMessage = ref("");
@@ -49,21 +54,21 @@ const fields = computed<AuthFormField[]>(() => [
   ...(isRegistering.value
     ? [
         {
-          name: "name",
-          type: "text",
-          label: "Display Name",
-          placeholder: "Your display name",
-          required: true,
-        } satisfies AuthFormField,
-        {
           name: "username",
           type: "text",
           label: "Username",
           description:
-            "Auto-generated from your display name — edit if you need something different or unique.",
+            "Letters, numbers, and hyphens. Must be unique; stored in lowercase.",
           placeholder: "your-name",
           required: true,
-          error: readableIdError.value,
+          error: usernameError.value,
+        } satisfies AuthFormField,
+        {
+          name: "name",
+          type: "text",
+          label: "Display Name",
+          description: "Optional. Defaults to your username.",
+          placeholder: displayNamePlaceholder.value,
         } satisfies AuthFormField,
       ]
     : []),
@@ -103,7 +108,6 @@ const canSubmit = computed(() => {
   if (!state?.email?.trim() || !state.password) return false;
   if (!isRegistering.value) return true;
   return (
-    !!registerForm.name.trim() &&
     !!registerForm.username.trim() &&
     state.password === state.confirmPassword
   );
@@ -135,7 +139,6 @@ function setMode(nextMode: AuthMode) {
   if (nextMode === "register") {
     registerForm.name = "";
     registerForm.username = "";
-    resetReadableIdTouched(false);
   }
   errorMessage.value = "";
 }
@@ -146,7 +149,8 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
   errorMessage.value = "";
 
   try {
-    const username = registerForm.username.trim().toLowerCase();
+    const typedUsername = registerForm.username.trim();
+    const username = typedUsername.toLowerCase();
     if (registering) {
       if (!username) {
         errorMessage.value = "Username is required.";
@@ -154,7 +158,7 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
       }
       if (getReadableIdError(username)) {
         errorMessage.value =
-          "Username must use lowercase letters, numbers, and hyphens only.";
+          "Username must use letters, numbers, and hyphens only.";
         return;
       }
 
@@ -172,10 +176,11 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
       await $fetch("/api/register", {
         method: "POST",
         body: {
-          name: registerForm.name.trim(),
+          // Empty: the server uses the username as typed.
+          ...(registerForm.name.trim() ? { name: registerForm.name.trim() } : {}),
           email: event.data.email.trim(),
           password: event.data.password,
-          username,
+          username: typedUsername,
         },
       });
       const session = await authClient.getSession();
@@ -314,19 +319,9 @@ function formatUpdated(updatedAt: string) {
           :validate="validateAuthForm"
           @submit="onSubmit"
         >
-          <template #name-field>
-            <UInput
-              v-model="registerForm.name"
-              class="w-full"
-              size="md"
-              name="name"
-              placeholder="Your display name"
-              required
-            />
-          </template>
           <template #username-field>
             <UInput
-              :model-value="registerForm.username"
+              v-model="registerForm.username"
               class="w-full"
               size="md"
               name="username"
@@ -334,7 +329,15 @@ function formatUpdated(updatedAt: string) {
               autocapitalize="none"
               placeholder="your-name"
               required
-              @update:model-value="onReadableIdInput"
+            />
+          </template>
+          <template #name-field>
+            <UInput
+              v-model="registerForm.name"
+              class="w-full"
+              size="md"
+              name="name"
+              :placeholder="displayNamePlaceholder"
             />
           </template>
           <template #description>

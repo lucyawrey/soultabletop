@@ -1,9 +1,10 @@
 import { createError } from "h3";
 import { eq } from "drizzle-orm";
-import { userProfile } from "../../database/schema";
+import { user as userTable, userProfile } from "../../database/schema";
 import { parseBody, profilePatchSchema } from "../../utils/api-schemas";
 import { useDatabase } from "../../utils/database";
 import { requireAuthenticatedUser } from "../../utils/auth";
+import { resolveDisplayName } from "../../../shared/display-name";
 import {
   ensureUserProfile,
   isUniqueConstraintError,
@@ -21,6 +22,11 @@ defineRouteMeta({
             type: "object",
             properties: {
               username: { type: "string" },
+              name: {
+                type: ["string", "null"],
+                description:
+                  "Display name; empty or null resets it to the username",
+              },
               iconImageUrl: { type: ["string", "null"] },
             },
           },
@@ -40,13 +46,17 @@ export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const body = await parseBody(event, profilePatchSchema);
 
-  if (body.username === undefined && body.iconImageUrl === undefined)
+  if (
+    body.username === undefined &&
+    body.name === undefined &&
+    body.iconImageUrl === undefined
+  )
     throw createError({
       statusCode: 400,
       statusMessage: "No profile fields provided",
     });
 
-  await ensureUserProfile(user);
+  const currentProfile = await ensureUserProfile(user);
 
   try {
     const database = useDatabase();
@@ -61,6 +71,18 @@ export default defineEventHandler(async (event) => {
       })
       .where(eq(userProfile.userId, user.id))
       .returning();
+
+    // Better Auth's `user.name` is the display name. It is required, so an
+    // empty one is stored as the username.
+    if (body.name !== undefined) {
+      await database
+        .update(userTable)
+        .set({
+          name: resolveDisplayName(body.name, profile?.username ?? currentProfile.username),
+          updatedAt: new Date(),
+        })
+        .where(eq(userTable.id, user.id));
+    }
 
     return profile;
   } catch (error) {

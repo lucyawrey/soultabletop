@@ -11,6 +11,7 @@ import {
   API_KEY_EXPIRY_DAYS,
   MAX_API_KEY_NAME_LENGTH,
 } from "../../shared/api-keys";
+import { MAX_DISPLAY_NAME_LENGTH } from "../../shared/display-name";
 
 FormatRegistry.Set("uuid", (value) => uuidPattern.test(value));
 
@@ -22,6 +23,11 @@ export const readableIdSchema = Type.String({
 export const profilePatchSchema = Type.Partial(
   Type.Object({
     username: readableIdSchema,
+    // Empty or null resets the display name to the username.
+    name: Type.Union([
+      Type.String({ maxLength: MAX_DISPLAY_NAME_LENGTH }),
+      Type.Null(),
+    ]),
     iconImageUrl: Type.Union([
       Type.String({ pattern: "^https://\\S+$", maxLength: 2000 }),
       Type.Null(),
