@@ -4,7 +4,7 @@
 declare module "*.yml" {
   const data: {
     site: { title: string; description: string };
-    home: { badge: string; heading: string; intro: string; formNote: string; registerNote: string; signInNote: string };
+    home: { badge: string; heading: string; intro: string; registerNote: string; signInNote: string };
     dashboard: { heading: string; subheading: string };
   };
   export default data;
