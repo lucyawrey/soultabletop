@@ -22,7 +22,7 @@ interface ApiKeyItem {
   lastUsedAt: string | null;
 }
 
-const { data: keys, refresh } = await useLazyFetch<ApiKeyItem[]>(
+const { data: keys, error: listError, refresh } = await useLazyFetch<ApiKeyItem[]>(
   "/api/profile/api-keys",
   { default: () => [] },
 );
@@ -174,6 +174,14 @@ async function remove() {
         </p>
       </div>
     </template>
+
+    <UAlert
+      v-if="listError"
+      color="error"
+      variant="subtle"
+      class="mb-4"
+      :description="extractApiErrorMessage(listError, 'Could not load API keys.')"
+    />
 
     <UTable :data="keys" :columns="columns">
       <template #start-cell="{ row }">

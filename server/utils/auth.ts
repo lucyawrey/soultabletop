@@ -4,7 +4,10 @@ import { betterAuth, type User } from "better-auth";
 import { eq } from "drizzle-orm";
 import { createError, getRequestHeaders, type H3Event } from "h3";
 import { user as userTable } from "../database/schema";
-import type { ApiKeyAccess } from "../../shared/api-keys";
+import {
+  MAX_API_KEY_NAME_LENGTH,
+  type ApiKeyAccess,
+} from "../../shared/api-keys";
 import {
   API_KEY_PREFIX,
   apiKeyAccess,
@@ -45,10 +48,13 @@ function createAuth() {
         // Enough of the key (after the prefix) to tell keys apart in a list.
         startingCharactersConfig: { charactersLength: API_KEY_PREFIX.length + 6 },
         requireName: true,
+        maximumNameLength: MAX_API_KEY_NAME_LENGTH,
         enableMetadata: false,
         keyExpiration: { defaultExpiresIn: null, minExpiresIn: 1, maxExpiresIn: 365 },
-        // Per key. The plugin's default (10 a day) would stop scripts cold.
-        rateLimit: { enabled: true, timeWindow: 60 * 1000, maxRequests: 600 },
+        // Off: the plugin's window only resets after a full window with no
+        // requests, so any steady script would end up locked out. Sessions
+        // have no per-user limit either; a real limiter is in TODO.md.
+        rateLimit: { enabled: false },
       }),
     ],
     // The plugin's own HTTP routes are off: keys are managed through
@@ -83,6 +89,7 @@ declare module "h3" {
   }
 }
 
+// Only reachable if the plugin's rate or usage limits are turned on.
 const RATE_LIMIT_CODES = ["RATE_LIMITED", "RATE_LIMIT_EXCEEDED", "USAGE_EXCEEDED"];
 
 // Checks an API key and loads its user. A key that is sent but doesn't work

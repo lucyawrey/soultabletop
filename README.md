@@ -132,8 +132,13 @@ curl -H "Authorization: Bearer st_..." https://<host>/api/profile
   but GET, HEAD, and OPTIONS; **Full Access** keys can do anything the user
   can, except manage API keys, which needs a signed-in session.
 - A request with a session cookie uses the session and ignores any key.
-- An invalid, expired, or deleted key gets 401, even on public endpoints.
-- Each key is limited to 600 requests a minute (429 past that).
+- On any endpoint that looks up who is calling, public ones included, an
+  invalid, expired, or deleted key gets 401 rather than being treated as
+  logged out.
+- Expired keys are deleted by the plugin (when used, or when any key is
+  created), so they soon drop out of the list.
+- There is no per-key rate limit yet: the plugin's limit is off, since its
+  window only resets after a full window with no requests.
 
 Keys are stored hashed by Better Auth's API key plugin (`apikey` table;
 config in `server/utils/auth.ts`). The plugin's own `/api/auth/api-key/*`
