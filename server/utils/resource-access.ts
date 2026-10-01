@@ -28,12 +28,38 @@ export interface ResourceAccess {
   canDelete: boolean;
 }
 
+// Postgres takes at most 65,535 bound parameters per query, so long ID lists
+// are looked up in batches.
+const ID_BATCH_SIZE = 5000;
+
+function batches<T>(items: T[]) {
+  const result: T[][] = [];
+  for (let start = 0; start < items.length; start += ID_BATCH_SIZE)
+    result.push(items.slice(start, start + ID_BATCH_SIZE));
+  return result;
+}
+
+// The access context for `user` over `resourceIds`: the user's site role,
+// group and campaign roles, and the grants on those resources.
 export async function loadResourceAccessContext(
   user: Pick<User, "id" | "name">,
   resourceIds: string[],
 ): Promise<ResourceAccessContext> {
+  const [context, grants] = await Promise.all([
+    loadViewerAccessContext(user),
+    loadResourceGrants(resourceIds),
+  ]);
+  return { ...context, ...grants };
+}
+
+// The part of the access context that depends only on the user, with no
+// grants loaded. Add the grants of the resources being checked with
+// `withResourceGrants` before calling `getResourceAccess`.
+export async function loadViewerAccessContext(
+  user: Pick<User, "id" | "name">,
+): Promise<ResourceAccessContext> {
   const database = useDatabase();
-  const [profiles, groups, campaigns, grants, systemGroups] = await Promise.all([
+  const [profiles, groups, campaigns, systemGroups] = await Promise.all([
     database
       .select({ role: userProfile.role })
       .from(userProfile)
@@ -47,44 +73,73 @@ export async function loadResourceAccessContext(
       .select({ campaignId: campaignMembership.campaignId, role: campaignMembership.role })
       .from(campaignMembership)
       .where(eq(campaignMembership.userId, user.id)),
-    resourceIds.length
-      ? database
-          .select()
-          .from(resourceGrant)
-          .where(inArray(resourceGrant.resourceId, resourceIds))
-      : Promise.resolve([]),
     database
       .select({ id: group.id })
       .from(group)
       .where(eq(group.kind, "system")),
   ]);
-  const campaignIds = [
-    ...new Set(grants.flatMap((grant) => (grant.campaignId ? [grant.campaignId] : []))),
-  ];
-  const campaignOwnerRows = campaignIds.length
-    ? await database
-        .select({
-          campaignId: campaign.resourceId,
-          userId: resource.ownerUserId,
-          groupId: resource.ownerGroupId,
-        })
-        .from(campaign)
-        .innerJoin(resource, eq(resource.id, campaign.resourceId))
-        .where(inArray(campaign.resourceId, campaignIds))
-    : [];
 
   return {
     userId: user.id,
     isSiteAdmin: profiles[0]?.role === "admin",
     groupRoles: new Map(groups.map(({ groupId, role }) => [groupId, role])),
     campaignRoles: new Map(campaigns.map(({ campaignId, role }) => [campaignId, role])),
+    campaignOwners: new Map(),
+    systemGroupIds: new Set(systemGroups.map(({ id }) => id)),
+    grants: [],
+  };
+}
+
+// `context` with the grants on `resourceIds` (and the owners of the campaigns
+// those grants name) in place of any it had.
+export async function withResourceGrants(
+  context: ResourceAccessContext,
+  resourceIds: string[],
+): Promise<ResourceAccessContext> {
+  return { ...context, ...(await loadResourceGrants(resourceIds)) };
+}
+
+async function loadResourceGrants(
+  resourceIds: string[],
+): Promise<Pick<ResourceAccessContext, "grants" | "campaignOwners">> {
+  const database = useDatabase();
+  const ids = [...new Set(resourceIds)];
+  const grants = (
+    await Promise.all(
+      batches(ids).map((batch) =>
+        database
+          .select()
+          .from(resourceGrant)
+          .where(inArray(resourceGrant.resourceId, batch)),
+      ),
+    )
+  ).flat();
+  const campaignIds = [
+    ...new Set(grants.flatMap((grant) => (grant.campaignId ? [grant.campaignId] : []))),
+  ];
+  const campaignOwnerRows = (
+    await Promise.all(
+      batches(campaignIds).map((batch) =>
+        database
+          .select({
+            campaignId: campaign.resourceId,
+            userId: resource.ownerUserId,
+            groupId: resource.ownerGroupId,
+          })
+          .from(campaign)
+          .innerJoin(resource, eq(resource.id, campaign.resourceId))
+          .where(inArray(campaign.resourceId, batch)),
+      ),
+    )
+  ).flat();
+
+  return {
     campaignOwners: new Map(
       campaignOwnerRows.map(({ campaignId, userId, groupId }) => [
         campaignId,
         { userId, groupId },
       ]),
     ),
-    systemGroupIds: new Set(systemGroups.map(({ id }) => id)),
     grants,
   };
 }

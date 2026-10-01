@@ -5,7 +5,6 @@ import {
   excludesMineFromFind,
   getResourceSource,
   isListed,
-  readableResourceIds,
   requiresReadableType,
 } from "./resource-list-filter";
 
@@ -109,16 +108,6 @@ describe("isListed", () => {
   });
 });
 
-describe("readableResourceIds", () => {
-  it("returns only the readable resources' IDs", () => {
-    const open = resource({ id: "a", isPubliclyReadable: true });
-    const closed = resource({ id: "b" });
-    const mine = resource({ id: "c", ownerUserId: "me" });
-    expect(readableResourceIds([open, closed, mine], context())).toEqual(["a", "c"]);
-    expect(readableResourceIds([open, closed, mine], null)).toEqual(["a"]);
-  });
-});
-
 describe("requiresReadableType", () => {
   it("applies only to the lists that send categories", () => {
     expect(requiresReadableType("playerCharacter")).toBe(true);
@@ -139,11 +128,19 @@ describe("site admins and hidden resources", () => {
     expect(listed(resource({ ownerUserId: "me" }), admin, "mine")).toBe(true);
   });
 
-  it("readableResourceIds includes hidden resources for a site admin only", () => {
+  it("keeps official resources they can edit only as admins out of their Mine list", () => {
+    const official = resource({ ownerUserId: null, ownerGroupId: PARTY });
+    const ctx = context({ isSiteAdmin: true, systemGroupIds: new Set([PARTY]) });
+    expect(getResourceAccessOrPublic(official, ctx).canEdit).toBe(true);
+    expect(listed(official, ctx, "mine")).toBe(false);
+    expect(listed(official, ctx, undefined)).toBe(true);
+  });
+
+  it("lists hidden resources for a site admin only", () => {
     const hidden = resource({ id: "h", isPubliclyReadable: true, isAdminHidden: true });
-    expect(readableResourceIds([hidden], admin)).toEqual(["h"]);
-    expect(readableResourceIds([hidden], context())).toEqual([]);
-    expect(readableResourceIds([hidden], null)).toEqual([]);
+    expect(listed(hidden, admin, undefined)).toBe(true);
+    expect(listed(hidden, context(), undefined)).toBe(false);
+    expect(listed(hidden, null, undefined)).toBe(false);
   });
 });
 
@@ -158,7 +155,7 @@ describe("admin-hidden group-owned resources", () => {
   it("stay listed for group members, including in Mine", () => {
     const member = context({ groupRoles: new Map([[PARTY, "member"]]) });
     expect(listed(hidden, member, "mine")).toBe(true);
-    expect(readableResourceIds([hidden], member)).toEqual([hidden.id]);
+    expect(listed(hidden, member, undefined)).toBe(true);
   });
 
   it("are dropped for everyone else", () => {
@@ -236,5 +233,192 @@ describe("excludesMineFromFind", () => {
     expect(excludesMineFromFind(find, false)).toBe(false);
     expect(excludesMineFromFind({ q: "", scope: "mine" }, true)).toBe(false);
     expect(excludesMineFromFind({ q: "" }, true)).toBe(false);
+  });
+});
+
+// The rules in `resource-access-sql.ts`, transcribed over the rows the SQL reads
+// (memberships, campaign owners, grants) rather than over an access context.
+// Keep this in step with that file; the test below checks it agrees with
+// `getResourceAccess` and `isListed` across every combination.
+interface Facts {
+  viewer: { userId: string; isSiteAdmin: boolean } | null;
+  groupRoles: Map<string, "admin" | "editor" | "member">;
+  campaignRoles: Map<string, "gm" | "player">;
+  campaigns: Map<string, { ownerUserId: string | null; ownerGroupId: string | null }>;
+  grants: ResourceAccessContext["grants"];
+}
+
+function sqlListed(
+  item: Resource,
+  facts: Facts,
+  scope: "mine" | "public" | undefined,
+  excludeMineFromFind = false,
+) {
+  const { viewer } = facts;
+  const publiclyListed = item.isPubliclyReadable && !item.isAdminHidden;
+  if (!viewer) return scope === "mine" ? false : publiclyListed;
+  const userId = viewer.userId;
+  const groupIds = (roles?: string[]) =>
+    [...facts.groupRoles]
+      .filter(([, role]) => !roles || roles.includes(role))
+      .map(([id]) => id);
+  const campaignIds = (role?: string) =>
+    [...facts.campaignRoles]
+      .filter(([, r]) => !role || r === role)
+      .map(([id]) => id);
+  const ownedCampaignIds = [...facts.campaigns]
+    .filter(
+      ([, owner]) =>
+        owner.ownerUserId === userId ||
+        groupIds(["admin", "editor"]).includes(owner.ownerGroupId ?? ""),
+    )
+    .map(([id]) => id);
+  const ownedByViewer =
+    item.ownerUserId === userId || groupIds().includes(item.ownerGroupId ?? "");
+  const grantReaches = (permission: "read" | "edit") => {
+    const edit = permission === "edit";
+    return facts.grants.some(
+      (grant) =>
+        grant.resourceId === item.id &&
+        (!edit || grant.permission === "edit") &&
+        (grant.userId === userId ||
+          groupIds(edit ? ["admin", "editor"] : undefined).includes(grant.groupId ?? "") ||
+          ownedCampaignIds.includes(grant.campaignId ?? "") ||
+          (grant.campaignAudience === "members" &&
+            campaignIds().includes(grant.campaignId ?? "")) ||
+          (grant.campaignAudience === "gms" &&
+            campaignIds("gm").includes(grant.campaignId ?? ""))),
+    );
+  };
+  const readable =
+    viewer.isSiteAdmin ||
+    ownedByViewer ||
+    (!item.isAdminHidden && (item.isPubliclyReadable || grantReaches("read")));
+  const stake =
+    ownedByViewer ||
+    (!item.isAdminHidden && grantReaches("edit")) ||
+    campaignIds().includes(item.id);
+  const inMine = readable && stake;
+  if (scope === "mine") return inMine;
+  if (scope === "public") return publiclyListed && !(excludeMineFromFind && inMine);
+  return readable;
+}
+
+describe("the SQL list rules agree with getResourceAccess", () => {
+  const ITEM = "00000000-0000-4000-8000-000000000001";
+  const CAMP = "00000000-0000-4000-8000-0000000000c1";
+  const SYSTEM_GROUP = "00000000-0000-4000-8000-00000000000a";
+  const grant = (overrides: object) =>
+    ({
+      id: "g",
+      resourceId: ITEM,
+      permission: "read",
+      userId: null,
+      groupId: null,
+      campaignId: null,
+      campaignAudience: null,
+      createdByUserId: null,
+      createdAt: new Date(),
+      ...overrides,
+    }) as ResourceAccessContext["grants"][number];
+
+  const owners = [
+    { ownerUserId: "me", ownerGroupId: null },
+    { ownerUserId: "someone", ownerGroupId: null },
+    { ownerUserId: null, ownerGroupId: PARTY },
+    { ownerUserId: null, ownerGroupId: SYSTEM_GROUP },
+  ];
+  const grantSets = [
+    [],
+    [grant({ userId: "me" })],
+    [grant({ userId: "me", permission: "edit" })],
+    [grant({ userId: "someone", permission: "edit" })],
+    [grant({ groupId: PARTY })],
+    [grant({ groupId: PARTY, permission: "edit" })],
+    [grant({ groupId: SYSTEM_GROUP, permission: "edit" })],
+    ...(["read", "edit"] as const).flatMap((permission) =>
+      (["members", "gms"] as const).map((campaignAudience) => [
+        grant({ campaignId: CAMP, campaignAudience, permission }),
+      ]),
+    ),
+    [grant({ userId: "me" }), grant({ groupId: PARTY, permission: "edit" })],
+    [grant({ resourceId: "other", userId: "me", permission: "edit" })],
+  ];
+  const campaignOwners = [
+    { ownerUserId: "me", ownerGroupId: null },
+    { ownerUserId: "someone", ownerGroupId: null },
+    { ownerUserId: null, ownerGroupId: PARTY },
+  ];
+  const groupRoleOptions = [undefined, "member", "editor", "admin"] as const;
+  const campaignRoleOptions = [undefined, "player", "gm"] as const;
+
+  it("for every viewer, resource, membership, and grant combination", () => {
+    let checked = 0;
+    const failures: string[] = [];
+    for (const viewerKind of ["anonymous", "user", "admin"] as const)
+      for (const owner of owners)
+        for (const isPubliclyReadable of [false, true])
+          for (const isAdminHidden of [false, true])
+            for (const isCampaign of [false, true])
+              for (const grants of grantSets)
+                for (const groupRole of groupRoleOptions)
+                  for (const systemGroupRole of [undefined, "member"] as const)
+                    for (const campaignRole of campaignRoleOptions)
+                      for (const campaignOwner of campaignOwners) {
+                        const id = isCampaign ? CAMP : ITEM;
+                        const item = resource({ id, ...owner, isPubliclyReadable, isAdminHidden });
+                        const itemGrants = grants.map((g) =>
+                          g.resourceId === ITEM ? { ...g, resourceId: id } : g,
+                        );
+                        const groupRoles = new Map<string, "admin" | "editor" | "member">();
+                        if (groupRole) groupRoles.set(PARTY, groupRole);
+                        if (systemGroupRole) groupRoles.set(SYSTEM_GROUP, systemGroupRole);
+                        const campaignRoles = new Map<string, "gm" | "player">();
+                        if (campaignRole) campaignRoles.set(CAMP, campaignRole);
+                        const campaigns = new Map([[CAMP, campaignOwner]]);
+                        const viewer =
+                          viewerKind === "anonymous"
+                            ? null
+                            : { userId: "me", isSiteAdmin: viewerKind === "admin" };
+                        const facts: Facts = { viewer, groupRoles, campaignRoles, campaigns, grants: itemGrants };
+                        // What `loadResourceAccessContext` builds from the same rows.
+                        const ctx: ResourceAccessContext | null = viewer && {
+                          userId: viewer.userId,
+                          isSiteAdmin: viewer.isSiteAdmin,
+                          groupRoles,
+                          campaignRoles,
+                          campaignOwners: new Map(
+                            itemGrants.some((g) => g.campaignId === CAMP)
+                              ? [[CAMP, { userId: campaignOwner.ownerUserId, groupId: campaignOwner.ownerGroupId }]]
+                              : [],
+                          ),
+                          systemGroupIds: new Set([SYSTEM_GROUP]),
+                          grants: itemGrants,
+                        };
+                        const access = getResourceAccessOrPublic(item, ctx);
+                        // Find (public scope) lists only public, non-hidden
+                        // resources, even for viewers who can read more.
+                        const inFind =
+                          isPubliclyReadable && !isAdminHidden && isListed(item, access, ctx, "public");
+                        const expected = {
+                          unscoped: isListed(item, access, ctx, undefined),
+                          mine: !!ctx && isListed(item, access, ctx, "mine"),
+                          public: inFind,
+                          find: inFind && !(ctx && isListed(item, access, ctx, "mine")),
+                        };
+                        const actual = {
+                          unscoped: sqlListed(item, facts, undefined),
+                          mine: sqlListed(item, facts, "mine"),
+                          public: sqlListed(item, facts, "public"),
+                          find: sqlListed(item, facts, "public", true),
+                        };
+                        checked++;
+                        if (JSON.stringify(expected) !== JSON.stringify(actual) && failures.length < 5)
+                          failures.push(
+                            JSON.stringify({ viewerKind, owner, isPubliclyReadable, isAdminHidden, isCampaign, grants: itemGrants.map(({ resourceId, permission, userId, groupId, campaignId, campaignAudience }) => ({ resourceId, permission, userId, groupId, campaignId, campaignAudience })), groupRole, systemGroupRole, campaignRole, campaignOwner, expected, actual }),
+                          );
+                      }
+    expect(failures).toEqual([]);
+    expect(checked).toBeGreaterThan(50_000);
   });
 });

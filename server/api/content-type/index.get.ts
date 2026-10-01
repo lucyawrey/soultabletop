@@ -33,7 +33,6 @@ export default defineEventHandler(async (event) => {
   const { rows, context, page } = await listResources({
     query,
     user,
-    kind: "contentType",
     where: systemId ? eq(contentType.systemId, systemId) : undefined,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
