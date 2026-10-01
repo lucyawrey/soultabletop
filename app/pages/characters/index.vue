@@ -289,7 +289,7 @@ async function remove() {
       </template>
 
       <template #empty>
-        <p class="py-6 text-center text-sm text-muted">{{ list.emptyMessage('characters') }}</p>
+        <ResourceListEmpty :list="list" plural="characters" />
       </template>
     </UTable>
     </ResourceList>
