@@ -10,8 +10,6 @@ Nothing right now.
 
 # Next up
 
-- **`/docs` hydration warnings** · bug · small
-  `/docs` still logs hydration mismatches, all inside Scalar's own components (`AgentScalarButton`, `OpenMCPButton`, theme toggle); not fixable here short of rendering it client-only.
 
 # Soon
 
@@ -72,10 +70,6 @@ Nothing right now.
   A Print button on the Content detail page (`ContentDetail.vue`) calling `window.print()`, plus print styles that hide the app chrome and print just the rendered sheet. Decide in `docs/sheet-system.md` whether Sheet CSS may use `@media print`.
 - **Onboarding for new users** · feature · explanations and welcome text written by the team
   Test users were unsure what a "game" is. A Getting Started page or dashboard panel explaining the concepts (system, content type, sheet, content, campaign) with links, and next-step suggestions in empty states and after creating something (e.g. a new system's page offers "Add a Content Type"). Agents build the structure and button labels; the explanations and welcome text are written by the team (placeholders until then).
-- **Live readable ID availability on every ID field** · feature
-  The profile page checks a username as soon as it changes (debounced, with an "available"/"in use" hint). Carry that to the sign-up username field and to every resource and group readable ID field (`ReadableIdField`, create and edit forms). Probably one shared composable plus a check endpoint per kind, scoped to the owner and kind since resource readable IDs are unique per owner and kind; the server stays the authority (409 on conflict).
-- **Make `live`, `locked`, and `display` work on `<Tab>` and `<RowDetails>`** · bug · needs decision: support them there or reject them
-  The registry accepts them there (`commonAttrs` in `shared/sheet/registry.ts`), so `<Tab display="text">` validates with no diagnostic, but has no effect: those tags are rendered by their parents (`sheet/Tabs.vue`, `sheet/Table.vue`) and never reach `provideSheetFlags` in `sheet/Node.vue`. Either provide the flags where those parents render them, or stop accepting the attributes on those two tags so the editor's Problems list reports them.
 - **Personal library, and pickers that show only what you use** · feature · large · depends on: SQL-side list access filtering (for paging and search in pickers), Show the system everything belongs to; campaign entries (below) for the campaign part
   Meant to make the site friendlier to people coming from other TTRPG sites, who expect a short list of what they'd use, not every public resource on the site. Today pickers and dropdowns load the plain list endpoints, which return everything the viewer can read, public community resources from strangers included: the system dropdowns on campaign and content type forms and the header's `SystemSelector`, the content type dropdowns on the Characters, Content, and Sheets create forms, the sheet and type lists on content pages (`ContentDetail.vue`), and the sheet editor's `ContentPicker` and `ResourcePicker`. As the site grows these fill up with random community content.
   Decided (2026-09-30):
