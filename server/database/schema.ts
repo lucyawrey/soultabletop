@@ -211,6 +211,34 @@ export const group = pgTable(
   ],
 );
 
+// Usernames and group readable IDs share one namespace, so an owner readable
+// ID alone says whose resource a URL like `/sheets/lucy/fighter` means. This
+// table holds every one of them (lowercase), and its primary key is the
+// guarantee: database triggers on `user_profile` and `group` (migration
+// `0012_owner_readable_id_namespace`) keep it in step on insert and rename, so
+// taking a name the other table has fails with a unique violation (23505),
+// race-free, whatever code writes the row. Rows go away with their user
+// profile or group. Don't write it directly; only availability checks read it
+// (`isOwnerReadableIdTaken`).
+export const ownerReadableId = pgTable(
+  "owner_readable_id",
+  {
+    readableId: text("readable_id").primaryKey(),
+    userId: text("user_id")
+      .unique("owner_readable_id_user_id_unique")
+      .references(() => userProfile.userId, { onDelete: "cascade" }),
+    groupId: uuid("group_id")
+      .unique("owner_readable_id_group_id_unique")
+      .references(() => group.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    check(
+      "owner_readable_id_exactly_one_owner_check",
+      sql`num_nonnulls(${table.userId}, ${table.groupId}) = 1`,
+    ),
+  ],
+);
+
 export const groupMembership = pgTable(
   "group_membership",
   {

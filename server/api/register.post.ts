@@ -1,9 +1,9 @@
 import { appendResponseHeader, createError, readBody, toWebRequest } from "h3";
-import { sql } from "drizzle-orm";
 import { userProfile } from "../database/schema";
 import { useDatabase } from "../utils/database";
 import { useAuth } from "../utils/auth";
 import { isUniqueConstraintError } from "../utils/user-profile";
+import { isOwnerReadableIdTaken } from "../utils/owner-readable-id";
 import {
   MAX_USERNAME_LENGTH,
   getDisplayNameError,
@@ -49,7 +49,7 @@ defineRouteMeta({
     responses: {
       200: { description: "Registered user" },
       400: { description: "Invalid registration" },
-      409: { description: "Username already exists" },
+      409: { description: "Username already in use by a user or group" },
     },
   },
 });
@@ -90,12 +90,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const database = useDatabase();
-  const [existingProfile] = await database
-    .select({ userId: userProfile.userId })
-    .from(userProfile)
-    .where(sql`lower(${userProfile.username}) = ${username}`)
-    .limit(1);
-  if (existingProfile) {
+  // Usernames share a namespace with group readable IDs. Checked before
+  // signing up, so a taken name doesn't leave a user without a profile.
+  if (await isOwnerReadableIdTaken(username)) {
     throw createError({
       statusCode: 409,
       statusMessage: "That username is already in use",
