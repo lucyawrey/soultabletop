@@ -1,5 +1,9 @@
 Planned work, most important first within each tier: reorder items to reprioritize. Each item is a bold title with its type (bug, feature, chore) and, where they apply, *needs decision* (blocked on a choice, with the open question) and *depends on* (items to do first), then the details.
 
+# Unsorted
+
+Quick, rough ideas go here, in any form, without a tier. An agent goes through them with the user from time to time: asks what each one means, fills in the details, and moves it into a tier with the usual format.
+
 # In progress
 
 - **User API keys** · feature · PR #31, waiting for review and merge
