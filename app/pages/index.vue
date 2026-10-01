@@ -420,15 +420,11 @@ function formatUpdated(updatedAt: string) {
               </span>
             </li>
           </ul>
-          <div
-            v-else-if="section.loading"
-            role="status"
-            class="divide-y divide-default"
-          >
+          <!-- One row, as tall as a real item: the shortest loaded card, so the
+               page only grows when the entries arrive. -->
+          <div v-else-if="section.loading" role="status">
             <span class="sr-only">Loading</span>
             <div
-              v-for="row in 3"
-              :key="row"
               aria-hidden="true"
               class="flex h-10 items-center justify-between gap-2"
             >
