@@ -196,7 +196,7 @@ async function remove() {
           </li>
         </ul>
         <TableSkeleton
-          v-else-if="contentTypesStatus === 'pending' || contentTypesStatus === 'idle'"
+          v-else-if="isLoading(contentTypesStatus)"
           :rows="2"
         />
         <p v-else class="py-6 text-center text-sm text-muted">

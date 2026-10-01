@@ -126,9 +126,8 @@ async function remove() {
           <p class="text-sm text-muted">
             {{ sheet.readableId }} ·
             {{ visibilityLabel(sheet.isPubliclyReadable) }} ·
-            <USkeleton
-              v-if="!contentType && (contentTypesStatus === 'pending' || contentTypesStatus === 'idle')"
-              class="inline-block h-3.5 w-20 align-middle"
+            <LookupSkeleton
+              v-if="!contentType && isLoading(contentTypesStatus)"
             />
             <NuxtLink
               v-else-if="contentType"

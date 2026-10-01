@@ -236,10 +236,7 @@ async function remove() {
         >
           {{ contentTypeName(row.original.contentTypeId) }}
         </NuxtLink>
-        <USkeleton
-          v-else-if="contentTypesStatus === 'pending' || contentTypesStatus === 'idle'"
-          class="h-4 w-24"
-        />
+        <LookupSkeleton v-else-if="isLoading(contentTypesStatus)" />
         <template v-else>Unknown</template>
       </template>
 

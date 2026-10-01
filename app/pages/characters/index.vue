@@ -124,7 +124,7 @@ const router = useRouter();
 let mounted = false;
 function openNewFromQuery() {
   if (!mounted || route.query.new === undefined) return;
-  if (contentTypesStatus.value === "pending" || contentTypesStatus.value === "idle") return;
+  if (isLoading(contentTypesStatus.value)) return;
   if (contentTypesStatus.value === "success" && loggedIn.value) openCreate();
   const { new: _new, ...rest } = route.query;
   router.replace({ query: rest });
@@ -247,10 +247,7 @@ async function remove() {
         >
           {{ contentTypeName(row.original.contentTypeId) }}
         </NuxtLink>
-        <USkeleton
-          v-else-if="contentTypesStatus === 'pending' || contentTypesStatus === 'idle'"
-          class="h-4 w-24"
-        />
+        <LookupSkeleton v-else-if="isLoading(contentTypesStatus)" />
         <template v-else>Unknown</template>
       </template>
 

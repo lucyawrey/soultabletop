@@ -300,9 +300,8 @@ async function remove() {
           <p class="text-sm text-muted">
             {{ item.readableId }} ·
             {{ visibilityLabel(item.isPubliclyReadable) }} ·
-            <USkeleton
-              v-if="!contentType && (contentTypesStatus === 'pending' || contentTypesStatus === 'idle')"
-              class="inline-block h-3.5 w-20 align-middle"
+            <LookupSkeleton
+              v-if="!contentType && isLoading(contentTypesStatus)"
             />
             <NuxtLink
               v-else-if="contentType"
@@ -345,9 +344,9 @@ async function remove() {
         </div>
         <div class="ms-auto flex items-center gap-2">
           <span class="text-muted">View with</span>
-          <USkeleton
-            v-if="sheetsStatus === 'pending' || sheetsStatus === 'idle'"
-            class="h-8 w-56"
+          <LookupSkeleton
+            v-if="isLoading(sheetsStatus)"
+            size-class="h-8 w-56"
           />
           <USelect
             v-else

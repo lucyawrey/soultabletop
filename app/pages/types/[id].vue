@@ -296,10 +296,7 @@ async function remove() {
           <p class="text-sm text-muted">
             {{ contentType.readableId }} ·
             {{ visibilityLabel(contentType.isPubliclyReadable) }} ·
-            <USkeleton
-              v-if="!system && (systemsStatus === 'pending' || systemsStatus === 'idle')"
-              class="inline-block h-3.5 w-20 align-middle"
-            />
+            <LookupSkeleton v-if="!system && isLoading(systemsStatus)" />
             <NuxtLink
               v-else-if="system"
               :to="`/systems/${system.id}`"
@@ -372,7 +369,7 @@ async function remove() {
           </li>
         </ul>
         <TableSkeleton
-          v-else-if="sheetsStatus === 'pending' || sheetsStatus === 'idle'"
+          v-else-if="isLoading(sheetsStatus)"
           :rows="2"
         />
         <p v-else class="py-6 text-center text-sm text-muted">

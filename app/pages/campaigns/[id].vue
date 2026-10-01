@@ -124,12 +124,9 @@ async function remove() {
             {{ campaign.readableId }} ·
             {{ visibilityLabel(campaign.isPubliclyReadable) }}
           </p>
-          <p v-if="system || systemsStatus === 'pending' || systemsStatus === 'idle'" class="mt-1 text-sm">
+          <p v-if="system || isLoading(systemsStatus)" class="mt-1 text-sm">
             System:
-            <USkeleton
-              v-if="!system"
-              class="inline-block h-3.5 w-20 align-middle"
-            />
+            <LookupSkeleton v-if="!system" />
             <NuxtLink
               v-else
               :to="`/systems/${system.id}`"

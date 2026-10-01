@@ -282,7 +282,7 @@ async function remove() {
             :loading="membersStatus === 'pending'"
           >
             <template #empty>
-              <TableSkeleton v-if="membersStatus === 'pending' || membersStatus === 'idle'" :rows="3" />
+              <TableSkeleton v-if="isLoading(membersStatus)" :rows="3" />
               <p v-else class="py-6 text-center text-sm text-muted">No members.</p>
             </template>
 

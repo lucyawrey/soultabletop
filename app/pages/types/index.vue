@@ -257,17 +257,15 @@ async function remove() {
       </template>
 
       <template #systemId-cell="{ row }">
-        <USkeleton
-          v-if="systemsStatus === 'pending' || systemsStatus === 'idle'"
-          class="h-4 w-24"
-        />
         <NuxtLink
-          v-else
+          v-if="systems.some((item) => item.id === row.original.systemId)"
           :to="`/systems/${row.original.systemId}`"
           class="text-primary hover:underline"
         >
           {{ systemName(row.original.systemId) }}
         </NuxtLink>
+        <LookupSkeleton v-else-if="isLoading(systemsStatus)" />
+        <template v-else>Unknown</template>
       </template>
 
       <template #contentCategory-cell="{ row }">

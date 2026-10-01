@@ -397,7 +397,7 @@ const groupColumns = [
           <span v-else class="text-muted">Site admin</span>
         </template>
         <template #empty>
-          <TableSkeleton v-if="groupsStatus === 'pending' || groupsStatus === 'idle'" :rows="2" />
+          <TableSkeleton v-if="isLoading(groupsStatus)" :rows="2" />
           <template v-else>No groups yet.</template>
         </template>
       </UTable>

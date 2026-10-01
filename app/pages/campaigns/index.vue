@@ -93,7 +93,7 @@ const router = useRouter();
 let mounted = false;
 function openNewFromQuery() {
   if (!mounted || route.query.new === undefined) return;
-  if (systemsStatus.value === "pending" || systemsStatus.value === "idle") return;
+  if (isLoading(systemsStatus.value)) return;
   if (systemsStatus.value === "success" && loggedIn.value) openCreate();
   const { new: _new, ...rest } = route.query;
   router.replace({ query: rest });
@@ -227,10 +227,7 @@ async function remove() {
         >
           {{ systemName(row.original.systemId) }}
         </NuxtLink>
-        <USkeleton
-          v-else-if="systemsStatus === 'pending' || systemsStatus === 'idle'"
-          class="h-4 w-24"
-        />
+        <LookupSkeleton v-else-if="isLoading(systemsStatus)" />
         <template v-else>Unknown</template>
       </template>
 

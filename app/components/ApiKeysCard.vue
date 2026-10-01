@@ -212,7 +212,7 @@ async function remove() {
         </div>
       </template>
       <template #empty>
-        <TableSkeleton v-if="status === 'pending' || status === 'idle'" :rows="2" />
+        <TableSkeleton v-if="isLoading(status)" :rows="2" />
         <template v-else>No API keys yet.</template>
       </template>
     </UTable>

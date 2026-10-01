@@ -10,7 +10,7 @@ defineProps<{
 </script>
 
 <template>
-  <TableSkeleton v-if="list.status.value === 'pending' || list.status.value === 'idle'" />
+  <TableSkeleton v-if="isLoading(list.status.value)" />
   <p v-else class="py-6 text-center text-sm text-muted">
     {{ list.emptyMessage(plural, uncountable) }}
     <UButton
