@@ -201,3 +201,48 @@ describe.skipIf(!runDbTests)(
     }, 120_000);
   },
 );
+
+describe.skipIf(!runDbTests)(
+  "registration cleanup against the database (skipped unless RUN_DB_TESTS=1)",
+  () => {
+    it("removes a just-created user whose username was taken meanwhile", async () => {
+      const { useDatabase } = await import("./database");
+      const { createProfileOrRemoveUser, isUniqueConstraintError } = await import(
+        "./user-profile"
+      );
+      const { session } = await import("../database/schema");
+      const database = useDatabase();
+      const tag = randomUUID().slice(0, 8);
+      const userId = `claude-smoke-reg-${tag}`;
+      const email = `${userId}@example.invalid`;
+      const name = `claude-smoke-taken-${tag}`;
+      // The name is taken (by a group) after the registration checked it.
+      const [taken] = await database
+        .insert(group)
+        .values({ name: "smoke", readableId: name })
+        .returning();
+      try {
+        await database.insert(user).values({ id: userId, name: userId, email });
+        await database.insert(session).values({
+          id: `${userId}-session`,
+          userId,
+          token: `${userId}-token`,
+          expiresAt: new Date(Date.now() + 60_000),
+        });
+        let failure: unknown;
+        await createProfileOrRemoveUser(userId, name).catch((error) => (failure = error));
+        expect(isUniqueConstraintError(failure)).toBe(true);
+        expect(await database.select().from(user).where(eq(user.email, email))).toEqual([]);
+        expect(await database.select().from(session).where(eq(session.userId, userId))).toEqual([]);
+        // The email can register again.
+        await database.insert(user).values({ id: `${userId}-2`, name: userId, email });
+        expect(await createProfileOrRemoveUser(`${userId}-2`, `${userId}-2`)).toMatchObject({
+          username: `${userId}-2`,
+        });
+      } finally {
+        await database.delete(user).where(inArray(user.id, [userId, `${userId}-2`]));
+        await database.delete(group).where(eq(group.id, taken!.id));
+      }
+    });
+  },
+);

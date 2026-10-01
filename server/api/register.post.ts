@@ -1,8 +1,9 @@
 import { appendResponseHeader, createError, readBody, toWebRequest } from "h3";
-import { userProfile } from "../database/schema";
-import { useDatabase } from "../utils/database";
 import { useAuth } from "../utils/auth";
-import { isUniqueConstraintError } from "../utils/user-profile";
+import {
+  createProfileOrRemoveUser,
+  isUniqueConstraintError,
+} from "../utils/user-profile";
 import { isOwnerReadableIdTaken } from "../utils/owner-readable-id";
 import {
   MAX_USERNAME_LENGTH,
@@ -89,7 +90,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: nameError });
   }
 
-  const database = useDatabase();
   // Usernames share a namespace with group readable IDs. Checked before
   // signing up, so a taken name doesn't leave a user without a profile.
   if (await isOwnerReadableIdTaken(username)) {
@@ -99,23 +99,19 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const headers = Object.fromEntries(toWebRequest(event).headers.entries());
+  const signup = await useAuth().api.signUpEmail({
+    body: { name, email, password },
+    headers,
+    returnHeaders: true,
+  });
+
+  // The name can still be taken between the check above and here (a
+  // concurrent registration, or a group created or renamed to it). Then the
+  // user just created is removed again, so the email can register again.
+  let profile;
   try {
-    const headers = Object.fromEntries(toWebRequest(event).headers.entries());
-    const signup = await useAuth().api.signUpEmail({
-      body: { name, email, password },
-      headers,
-      returnHeaders: true,
-    });
-
-    const [profile] = await database
-      .insert(userProfile)
-      .values({ userId: signup.response.user.id, username })
-      .returning();
-
-    for (const cookie of signup.headers.getSetCookie()) {
-      appendResponseHeader(event, "set-cookie", cookie);
-    }
-    return { user: signup.response.user, profile };
+    profile = await createProfileOrRemoveUser(signup.response.user.id, username);
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       throw createError({
@@ -125,4 +121,9 @@ export default defineEventHandler(async (event) => {
     }
     throw error;
   }
+
+  for (const cookie of signup.headers.getSetCookie()) {
+    appendResponseHeader(event, "set-cookie", cookie);
+  }
+  return { user: signup.response.user, profile };
 });
