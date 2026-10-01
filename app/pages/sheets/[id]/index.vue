@@ -120,12 +120,12 @@ async function remove() {
     <template v-if="sheet">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="flex items-center gap-2 text-2xl font-bold text-highlighted">
+          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
             {{ sheet.name }}
+            <ReadableIdBadge :readable-id="sheet.readableId" />
             <UBadge v-if="sheet.isDefault" variant="subtle">Default</UBadge>
           </h1>
           <p class="text-sm text-muted">
-            {{ sheet.readableId }} ·
             {{ visibilityLabel(sheet.isPubliclyReadable) }} ·
             <SystemLink :system-id="sheet.systemId" /> ·
             <LookupSkeleton
