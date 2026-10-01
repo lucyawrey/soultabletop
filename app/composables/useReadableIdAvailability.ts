@@ -1,3 +1,4 @@
+import { MAX_READABLE_ID_CHECK_LENGTH } from "#shared/readable-id";
 import { getReadableIdError } from "~/utils/readable-id";
 
 export type AvailabilityStatus =
@@ -69,6 +70,7 @@ export function useResourceIdAvailability(
   return useReadableIdAvailability(() => {
     const readableId = form.readableId.trim().toLowerCase();
     if (!readableId || getReadableIdError(readableId)) return null;
+    if (readableId.length > MAX_READABLE_ID_CHECK_LENGTH) return null;
     const saved = editing?.();
     const query: Record<string, string> = { kind, readableId };
     if (saved) query.resourceId = saved.id;

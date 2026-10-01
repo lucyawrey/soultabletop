@@ -2,6 +2,7 @@ import { createError, getQuery } from "h3";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { group, resource } from "../database/schema";
 import { requireAuthenticatedUser } from "../utils/auth";
+import { requireGroupAdmin } from "../utils/group";
 import { useDatabase } from "../utils/database";
 import { parseAvailabilityQuery } from "../utils/readable-id-availability";
 import {
@@ -39,7 +40,7 @@ defineRouteMeta({
         in: "query",
         required: false,
         description:
-          "The resource (which the caller must be able to edit) or group being edited; its own ID counts as available.",
+          "The resource (which the caller must be able to edit) or group (which the caller must administer) being edited; its own ID counts as available.",
         schema: { type: "string", format: "uuid" },
       },
     ],
@@ -61,6 +62,10 @@ export default defineEventHandler(async (event) => {
   const database = useDatabase();
 
   if (kind === "group") {
+    // Leaving a group out of the lookup would confirm its ID, so only for
+    // someone who manages it (404 for a missing or non-group ID, 403 for a
+    // member who isn't an admin).
+    if (resourceId) await requireGroupAdmin(resourceId, user.id);
     const [taken] = await database
       .select({ id: group.id })
       .from(group)

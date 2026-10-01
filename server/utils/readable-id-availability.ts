@@ -1,5 +1,6 @@
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
+import { MAX_READABLE_ID_CHECK_LENGTH } from "../../shared/readable-id";
 import { uuidPattern } from "./resource-management";
 
 // What a readable ID can be checked for: a resource kind, or a group.
@@ -17,7 +18,11 @@ const readableIdPattern = "^[a-z0-9]+(?:-[a-z0-9]+)*$";
 
 const availabilityQuerySchema = Type.Object({
   kind: Type.Union(AVAILABILITY_KINDS.map((kind) => Type.Literal(kind))),
-  readableId: Type.String({ pattern: readableIdPattern, minLength: 1 }),
+  readableId: Type.String({
+    pattern: readableIdPattern,
+    minLength: 1,
+    maxLength: MAX_READABLE_ID_CHECK_LENGTH,
+  }),
   // Resource kinds only: "me" or a group ID. Left out: the owner the resource
   // already has (with `resourceId`), else the caller.
   owner: Type.Optional(Type.String()),
@@ -47,7 +52,7 @@ export function parseAvailabilityQuery(
     return {
       error:
         field === "readableId"
-          ? "readableId must use lowercase letters, numbers, and hyphens"
+          ? `readableId must use lowercase letters, numbers, and hyphens, at most ${MAX_READABLE_ID_CHECK_LENGTH} characters`
           : `${field} is missing or invalid`,
     };
   }

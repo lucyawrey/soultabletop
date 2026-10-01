@@ -28,6 +28,11 @@ describe("parseAvailabilityQuery", () => {
     expect("error" in parseAvailabilityQuery({ kind: "sheet", readableId: "a", resourceId: "x" })).toBe(true);
   });
 
+  it("rejects a readable ID that is too long", () => {
+    expect("error" in parseAvailabilityQuery({ kind: "sheet", readableId: "a".repeat(101) })).toBe(true);
+    expect("error" in parseAvailabilityQuery({ kind: "sheet", readableId: "a".repeat(100) })).toBe(false);
+  });
+
   it("rejects arrays and an owner on groups", () => {
     expect("error" in parseAvailabilityQuery({ kind: "sheet", readableId: ["a", "b"] })).toBe(true);
     expect("error" in parseAvailabilityQuery({ kind: "group", readableId: "a", owner: "me" })).toBe(true);
