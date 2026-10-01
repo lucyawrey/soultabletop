@@ -78,6 +78,13 @@
       "when": 1790743099454,
       "tag": "0010_free_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790817372550,
+      "tag": "0011_stale_spitfire",
+      "breakpoints": true
     }
   ]
 }
