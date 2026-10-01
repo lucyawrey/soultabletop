@@ -107,11 +107,28 @@ pnpm admin:set <username> --remove   # back to a regular member
 pnpm typecheck
 pnpm lint
 pnpm test        # vitest
-pnpm check       # all of the above plus a Prettier check
+pnpm check       # typecheck, lint, and test in parallel (what CI runs)
+pnpm check:templates   # compile the .vue templates changed since origin/main
+pnpm format:check      # Prettier, not part of pnpm check
 ```
 
-There is no CI: run these before opening a pull request. Vercel builds every
-push, which catches build errors but not lint, type, or test failures.
+CI (GitHub Actions, the `ci` check) runs typecheck, lint, and tests on every
+pull request; run `pnpm check` before opening one. Vercel also builds every
+push, which catches build errors.
+
+## Sheets agent skill
+
+The repo includes an agent skill for writing Sheet markup and CSS
+(`.claude/skills/soul-tabletop-sheets/`). Install it into another project with
+the [`skills` CLI](https://skills.sh):
+
+```bash
+npx skills add lucyawrey/soultabletop -s soul-tabletop-sheets -a claude-code
+```
+
+Without `-s` the CLI lists the skills it finds and asks which to install. The
+skill points at files in this repo (`shared/sheet/`, `docs/sheet-system.md`),
+so it works best in a checkout of it.
 
 ## API reference
 
