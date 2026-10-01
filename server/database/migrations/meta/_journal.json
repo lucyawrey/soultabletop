@@ -85,6 +85,13 @@
       "when": 1790817372550,
       "tag": "0011_stale_spitfire",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790865873196,
+      "tag": "0012_owner_readable_id_namespace",
+      "breakpoints": true
     }
   ]
 }

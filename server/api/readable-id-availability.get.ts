@@ -1,10 +1,11 @@
 import { createError, getQuery } from "h3";
 import { and, eq, ne, sql } from "drizzle-orm";
-import { group, resource } from "../database/schema";
+import { resource } from "../database/schema";
 import { requireAuthenticatedUser } from "../utils/auth";
 import { requireGroupAdmin } from "../utils/group";
 import { useDatabase } from "../utils/database";
 import { parseAvailabilityQuery } from "../utils/readable-id-availability";
+import { isOwnerReadableIdTaken } from "../utils/owner-readable-id";
 import {
   requireResourceEditor,
   resolveResourceOwner,
@@ -15,7 +16,7 @@ defineRouteMeta({
     tags: ["Resource"],
     summary: "Check readable ID availability",
     description:
-      "Whether a readable ID is free for a resource kind under an owner, or among groups. Resource readable IDs are unique per owner and kind; group readable IDs are unique among groups. Only answers for owners the caller could create resources for.",
+      "Whether a readable ID is free for a resource kind under an owner, or among groups and usernames. Resource readable IDs are unique per owner and kind; group readable IDs share one namespace with usernames, so a username counts as taken. Only answers for owners the caller could create resources for.",
     parameters: [
       {
         name: "kind",
@@ -66,17 +67,8 @@ export default defineEventHandler(async (event) => {
     // someone who manages it (404 for a missing or non-group ID, 403 for a
     // member who isn't an admin).
     if (resourceId) await requireGroupAdmin(resourceId, user.id);
-    const [taken] = await database
-      .select({ id: group.id })
-      .from(group)
-      .where(
-        and(
-          sql`lower(${group.readableId}) = ${readableId}`,
-          resourceId ? ne(group.id, resourceId) : undefined,
-        ),
-      )
-      .limit(1);
-    return { available: !taken };
+    // Group readable IDs share one namespace with usernames.
+    return { available: !(await isOwnerReadableIdTaken(readableId, resourceId)) };
   }
 
   // Whose resources to look through. Never an owner the caller couldn't create

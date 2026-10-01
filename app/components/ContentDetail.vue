@@ -11,10 +11,11 @@ import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
 import type { SheetSchemas } from "#shared/sheet/validate";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
-// Shared by /content/[id] and /characters/[id]: both are `content` Resources,
-// differing only in their ContentType's category and where "back" goes.
+// Shared by /content/[id] and /characters/[id] (and their owner + readable ID
+// routes): both are `content` Resources, differing only in their
+// ContentType's category and where "back" goes.
 const props = defineProps<{
-  id: string;
+  section: "content" | "characters";
   label: string;
   listPath: string;
   listLabel: string;
@@ -36,6 +37,7 @@ interface ContentDetail {
   systemId: string;
   id: string;
   readableId: string;
+  ownerReadableId: string | null;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -72,9 +74,8 @@ interface SheetItem {
 
 const route = useRoute();
 const { followSystem } = useCurrentSystem();
-const { data: item, refresh } = await useFetch<ContentDetail>(
-  `/api/content/${props.id}`,
-);
+const { data: item, refresh } = await useResourceFetch<ContentDetail>("/api/content");
+useReadableAddress(props.section, item);
 followSystem(item.value?.systemId);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
@@ -240,7 +241,7 @@ async function submitForm() {
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       throw new Error("Data must be a JSON object.");
     }
-    await $fetch(`/api/content/${props.id}`, {
+    await $fetch(`/api/content/${item.value!.id}`, {
       method: "PATCH",
       body: {
         readableId: form.readableId,
@@ -275,7 +276,7 @@ async function remove() {
   deleteError.value = "";
 
   try {
-    await $fetch(`/api/content/${props.id}`, { method: "DELETE" });
+    await $fetch(`/api/content/${item.value!.id}`, { method: "DELETE" });
     await navigateTo(props.listPath);
   } catch (error) {
     deleteError.value = extractApiErrorMessage(

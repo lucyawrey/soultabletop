@@ -6,6 +6,7 @@ definePageMeta({ middleware: "auth" });
 interface CampaignDetail {
   id: string;
   readableId: string;
+  ownerReadableId: string | null;
   name: string;
   isPubliclyReadable: boolean;
   updatedAt: string;
@@ -20,11 +21,11 @@ interface SystemOption {
   name: string;
 }
 
-const route = useRoute();
-const id = route.params.id as string;
-
 const { followSystem } = useCurrentSystem();
-const { data: campaign, refresh } = await useFetch<CampaignDetail>(`/api/campaign/${id}`);
+const { data: campaign, refresh } = await useResourceFetch<CampaignDetail>("/api/campaign");
+useReadableAddress("campaigns", campaign);
+// The route may address the campaign by owner + readable ID; changes go by ID.
+const id = computed(() => campaign.value?.id ?? "");
 followSystem(campaign.value?.systemId);
 
 const { data: systems, status: systemsStatus } = await useLazyFetch<SystemOption[]>("/api/system", {
@@ -63,7 +64,7 @@ async function submitForm() {
   formError.value = "";
 
   try {
-    await $fetch(`/api/campaign/${id}`, {
+    await $fetch(`/api/campaign/${id.value}`, {
       method: "PATCH",
       body: {
         readableId: form.readableId,
@@ -92,7 +93,7 @@ async function remove() {
   deleteError.value = "";
 
   try {
-    await $fetch(`/api/campaign/${id}`, { method: "DELETE" });
+    await $fetch(`/api/campaign/${id.value}`, { method: "DELETE" });
     await navigateTo("/campaigns");
   } catch (error) {
     deleteError.value = extractApiErrorMessage(

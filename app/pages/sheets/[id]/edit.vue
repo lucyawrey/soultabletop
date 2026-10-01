@@ -31,6 +31,7 @@ interface SheetDetail {
   systemId: string;
   id: string;
   readableId: string;
+  ownerReadableId: string | null;
   name: string;
   contentTypeId: string;
   contentCategory: ContentCategory;
@@ -65,16 +66,15 @@ interface ContentDetail {
   links: SheetLinks;
 }
 
-const route = useRoute();
-const id = route.params.id as string;
 const toast = useToast();
 
 const { followSystem } = useCurrentSystem();
-const { data: sheet, refresh: refreshSheet } = await useFetch<SheetDetail>(
-  `/api/sheet/${id}`,
-);
+const { data: sheet, refresh: refreshSheet } = await useResourceFetch<SheetDetail>("/api/sheet");
+useReadableAddress("sheets", sheet, "/edit");
+// The route may address the sheet by owner + readable ID; changes go by ID.
+const id = computed(() => sheet.value?.id ?? "");
 followSystem(sheet.value?.systemId);
-if (sheet.value && !sheet.value.canEdit) await navigateTo(`/sheets/${id}`);
+if (sheet.value && !sheet.value.canEdit) await navigateTo(`/sheets/${id.value}`);
 
 const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
   "/api/content-type",
@@ -144,7 +144,7 @@ async function save(confirmReplaceDefault = false) {
   const snapshot = JSON.stringify(form);
   const ownerChanged = form.ownerGroupId !== (sheet.value?.ownerGroupId ?? null);
   try {
-    await $fetch(`/api/sheet/${id}`, {
+    await $fetch(`/api/sheet/${id.value}`, {
       method: "PATCH",
       body: {
         name: form.name,
@@ -200,7 +200,7 @@ watch(
     // postcss only loads on this page, on the client.
     if (import.meta.server) return;
     const { processSheetCss } = await import("#shared/sheet/css");
-    cssResult.value = processSheetCss(value, id);
+    cssResult.value = processSheetCss(value, id.value);
   },
   { immediate: true },
 );
