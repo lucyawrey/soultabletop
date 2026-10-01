@@ -1,11 +1,11 @@
-import type { User } from "better-auth";
 import { createError, getQuery } from "h3";
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq, exists, inArray, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { content, contentType, group, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
-import { loadResourceAccessContext } from "../../utils/resource-access";
-import { readableResourceIds, requiresReadableType } from "../../utils/resource-list-filter";
+import { readableBy, type ListViewer } from "../../utils/resource-access-sql";
+import { requiresReadableType } from "../../utils/resource-list-filter";
 import { requireUuid } from "../../utils/resource-management";
 import { CONTENT_CATEGORIES, type ContentCategory } from "../../../shared/content-categories";
 import {
@@ -49,23 +49,8 @@ defineRouteMeta({
   },
 });
 
-async function loadReadableTypeIds(user: User | null) {
-  const database = useDatabase();
-  const typeResources = await database
-    .select({ resource })
-    .from(contentType)
-    .innerJoin(resource, eq(resource.id, contentType.resourceId));
-  const context = user
-    ? await loadResourceAccessContext(
-        user,
-        typeResources.map((row) => row.resource.id),
-      )
-    : null;
-  return readableResourceIds(
-    typeResources.map((row) => row.resource),
-    context,
-  );
-}
+// The content's content type, as a resource, for checking it's readable.
+const typeResource = alias(resource, "type_resource");
 
 export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
@@ -84,28 +69,35 @@ export default defineEventHandler(async (event) => {
   }
   // The Characters and Content lists (which send `categories`) show content
   // only when its content type is readable too, since sheets and schemas come
-  // from the type. The set is resolved up front so totals and pages stay
-  // right. Pickers and dropdowns (no `categories`) get everything readable.
+  // from the type. Pickers and dropdowns (no `categories`) get everything
+  // readable.
   const database = useDatabase();
-  const readableTypeIds = requiresReadableType(categories)
-    ? await loadReadableTypeIds(user)
-    : undefined;
-  const filter = and(
-    readableTypeIds
-      ? inArray(content.contentTypeId, readableTypeIds)
-      : undefined,
-    systemId ? eq(contentType.systemId, systemId) : undefined,
-    typeof contentTypeId === "string"
-      ? eq(content.contentTypeId, contentTypeId)
-      : undefined,
-    categoryFilter
-      ? inArray(contentType.contentCategory, categoryFilter)
-      : undefined,
-  );
+  const filter = (viewer: ListViewer | null) =>
+    and(
+      requiresReadableType(categories)
+        ? exists(
+            database
+              .select({ one: sql`1` })
+              .from(typeResource)
+              .where(
+                and(
+                  eq(typeResource.id, content.contentTypeId),
+                  readableBy(typeResource, viewer),
+                ),
+              ),
+          )
+        : undefined,
+      systemId ? eq(contentType.systemId, systemId) : undefined,
+      typeof contentTypeId === "string"
+        ? eq(content.contentTypeId, contentTypeId)
+        : undefined,
+      categoryFilter
+        ? inArray(contentType.contentCategory, categoryFilter)
+        : undefined,
+    );
   const { rows, page } = await listResources({
     query,
     user,
-    kind: "content",
     where: filter,
     fetchRows: ({ where, limit, offset }) => {
       const select = database

@@ -2,7 +2,7 @@ import type { Resource } from "../database/schema";
 import type { ListQuery, ListScope, ResourceSource } from "../../shared/resource-list";
 import {
   getGrantEffect,
-  getResourceAccessOrPublic,
+  getResourceAccess,
   type ResourceAccess,
   type ResourceAccessContext,
 } from "./resource-access";
@@ -10,7 +10,10 @@ import {
 // Whether a row belongs in a list, given the user's access to it. Everything
 // listed must be readable. "Mine" also needs a stake in it: owned by the user
 // or their groups, edit access (for shared resources), or, for a campaign,
-// membership. Public and unscoped lists need nothing more than read access.
+// membership. A site admin's moderation powers (editing every official
+// resource) don't count as a stake. Public and unscoped lists need nothing
+// more than read access.
+// `resource-access-sql.ts` applies the same rules in SQL.
 export function isListed(
   item: Resource,
   access: ResourceAccess,
@@ -19,23 +22,15 @@ export function isListed(
 ) {
   if (!access.canRead) return false;
   if (scope !== "mine" || !context) return true;
+  const ownAccess = context.isSiteAdmin
+    ? getResourceAccess(item, { ...context, isSiteAdmin: false })
+    : access;
   return (
     item.ownerUserId === context.userId ||
     (!!item.ownerGroupId && context.groupRoles.has(item.ownerGroupId)) ||
-    access.canEdit ||
+    ownAccess.canEdit ||
     context.campaignRoles.has(item.id)
   );
-}
-
-// The IDs among `resources` that the viewer can read, for restricting a list
-// to rows whose parent (a content's content type) is readable too.
-export function readableResourceIds(
-  resources: Resource[],
-  context: ResourceAccessContext | null,
-) {
-  return resources
-    .filter((item) => getResourceAccessOrPublic(item, context).canRead)
-    .map((item) => item.id);
 }
 
 // `/api/content` restricts to readable content types only for the Characters
