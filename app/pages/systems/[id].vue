@@ -4,6 +4,7 @@ import { extractApiErrorMessage } from "~/utils/api-error";
 interface SystemDetail {
   id: string;
   readableId: string;
+  ownerReadableId: string | null;
   name: string;
   isPubliclyReadable: boolean;
   updatedAt: string;
@@ -20,12 +21,12 @@ interface ContentTypeOption {
 }
 
 const route = useRoute();
-const id = route.params.id as string;
 
 const { followSystem } = useCurrentSystem();
-const { data: system, refresh } = await useFetch<SystemDetail>(
-  `/api/system/${id}`,
-);
+const { data: system, refresh } = await useResourceFetch<SystemDetail>("/api/system");
+useReadableAddress("systems", system);
+// The route may address the system by owner + readable ID; changes go by ID.
+const id = computed(() => system.value?.id ?? "");
 followSystem(system.value?.id);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
@@ -41,7 +42,7 @@ const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<Co
 );
 
 const systemContentTypes = computed(() =>
-  contentTypes.value.filter((type) => type.systemId === id),
+  contentTypes.value.filter((type) => type.systemId === id.value),
 );
 
 const isFormOpen = ref(false);
@@ -71,7 +72,7 @@ async function submitForm() {
   formError.value = "";
 
   try {
-    await $fetch(`/api/system/${id}`, {
+    await $fetch(`/api/system/${id.value}`, {
       method: "PATCH",
       body: {
         readableId: form.readableId,
@@ -100,7 +101,7 @@ async function remove() {
   deleteError.value = "";
 
   try {
-    await $fetch(`/api/system/${id}`, { method: "DELETE" });
+    await $fetch(`/api/system/${id.value}`, { method: "DELETE" });
     await refreshNuxtData("system-selector");
     await navigateTo("/systems");
   } catch (error) {

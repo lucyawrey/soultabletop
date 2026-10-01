@@ -1,5 +1,25 @@
 import yaml from "@rollup/plugin-yaml";
+import type { NuxtPage } from "nuxt/schema";
 import { sheetFonts } from "./shared/sheet/fonts";
+import { RESOURCE_PAGE_SECTIONS } from "./shared/resource-address";
+
+// Every resource detail page also answers at its owner + readable ID address
+// (`shared/resource-address.ts`): the same page file under a second route,
+// e.g. `/sheets/:owner()/:readableId()` beside `/sheets/:id()` and
+// `/sheets/:owner()/:readableId()/edit` beside `/sheets/:id()/edit`.
+function addReadableResourceRoutes(pages: NuxtPage[]) {
+  const sections = Object.keys(RESOURCE_PAGE_SECTIONS).join("|");
+  const idRoute = new RegExp(`^/(${sections})/:id\\(\\)(/.*)?$`);
+  for (const page of [...pages]) {
+    const match = page.path.match(idRoute);
+    if (!match || !page.name) continue;
+    pages.push({
+      ...page,
+      name: `${page.name}-readable`,
+      path: `/${match[1]}/:owner()/:readableId()${match[2] ?? ""}`,
+    });
+  }
+}
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -39,6 +59,10 @@ export default defineNuxtConfig({
   // Lets `content/copy.yml` be imported.
   vite: {
     plugins: [yaml()],
+  },
+
+  hooks: {
+    "pages:extend": addReadableResourceRoutes,
   },
 
   eslint: {
