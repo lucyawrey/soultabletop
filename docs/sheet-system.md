@@ -332,7 +332,8 @@ runs the exact same code in the browser, lazy-loaded there).
 
 ## 7. Sheet editor page
 
-Route `app/pages/sheets/[id]/edit.vue` (`middleware: "auth"`; redirects to `/sheets/[id]` when `!canEdit`). The sheet
+Route `app/pages/sheets/[id]/edit.vue` (`middleware: "auth"`; redirects to `/sheets/[id]` when `!canEdit`; also served at
+`/sheets/<owner>/<readableId>/edit`, see "Addressing resources" in the README). The sheet
 detail page moved to `sheets/[id]/index.vue` so the editor is a sibling route, not a child. The detail page's and the
 list's Edit go here; the edit modals are gone. The list's create modal only asks for name, readable ID, visibility,
 content type, and default, then opens the editor: a sheet created without markup starts with the generated markup

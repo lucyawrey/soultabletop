@@ -51,6 +51,8 @@ export default defineNuxtConfig({
           "Requests are authenticated by the session cookie (signed in to the site) or by a user API key, created on your profile page. Send the key as `Authorization: Bearer <key>` or `x-api-key: <key>`; a session cookie, if there is one, is used instead.",
           "",
           "A key acts as the user who made it. A Read Only key gets 403 on any request that changes data (anything but GET, HEAD, and OPTIONS); a Full Access key can do anything the user can, except manage API keys, which needs a signed-in session. On any endpoint that looks up who is calling, including public ones, a key that is invalid, expired, or deleted gets 401 rather than being treated as logged out.",
+          "",
+          "Single-resource routes take the resource's ID or its owner and readable ID, e.g. `/api/sheet/{id}` or `/api/sheet/{owner}/{readableId}` (listed as `/api/sheet/{id}/{readableId}`, with the owner in `id`). The owner is a username or a group readable ID; both parts are case-insensitive. Addressed that way, a resource you can't read answers like one that doesn't exist (404), whatever the method.",
         ].join("\n"),
       },
     },
