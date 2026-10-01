@@ -230,7 +230,10 @@ watch(
 );
 
 const recentSections = computed(() => {
-  const loading = dashboardStatus.value === "pending";
+  // "idle" counts too: the fetch only starts once signed in, so on the server
+  // (and before the client's first watch run) nothing has been requested yet,
+  // and showing the empty state there would flash "No ... yet." before loading.
+  const loading = dashboardStatus.value === "pending" || dashboardStatus.value === "idle";
   return [
     {
       title: "Campaigns",
