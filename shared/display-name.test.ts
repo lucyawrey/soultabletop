@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatUserLabel, resolveDisplayName, syncedDisplayName } from "./display-name";
+import {
+  MAX_DISPLAY_NAME_LENGTH,
+  getDisplayNameError,
+  getStoredNameError,
+  nameForNewUsername,
+  formatUserLabel, resolveDisplayName,
+  syncedDisplayName,
+} from "./display-name";
 
 describe("resolveDisplayName", () => {
   it("keeps a given name, trimmed", () => {
@@ -48,5 +55,41 @@ describe("syncedDisplayName", () => {
   it("does nothing when the username is unchanged apart from case or empty", () => {
     expect(syncedDisplayName("lucy", "lucy", "Lucy")).toBeUndefined();
     expect(syncedDisplayName("lucy", "lucy", "  ")).toBeUndefined();
+  });
+});
+
+describe("getDisplayNameError", () => {
+  it("accepts ordinary names, including other scripts and emoji", () => {
+    for (const name of ["Lucy", "José", "田中", "Zoë O'Neil", "👨\u200D👩\u200D👧", ""])
+      expect(getDisplayNameError(name)).toBeUndefined();
+  });
+
+  it("rejects invisible, direction, and control characters", () => {
+    for (const name of ["\u200B", "a\u200Bb", "\u202Eevil", "a\u2066b", "a\u0000b", "a\nb", "a\uFEFFb", "a\u200Eb"])
+      expect(getDisplayNameError(name)).toBeDefined();
+  });
+
+  it("rejects names that are too long", () => {
+    expect(getDisplayNameError("a".repeat(MAX_DISPLAY_NAME_LENGTH))).toBeUndefined();
+    expect(getDisplayNameError("a".repeat(MAX_DISPLAY_NAME_LENGTH + 1))).toBeDefined();
+  });
+});
+
+describe("getStoredNameError", () => {
+  it("also rejects empty names", () => {
+    expect(getStoredNameError("  ")).toBeDefined();
+    expect(getStoredNameError("Lucy")).toBeUndefined();
+  });
+});
+
+describe("nameForNewUsername", () => {
+  it("returns the typed username, or undefined when nothing changes", () => {
+    expect(nameForNewUsername("lucy", " Bee ")).toBe("Bee");
+    expect(nameForNewUsername("lucy", "LUCY")).toBeUndefined();
+    expect(nameForNewUsername("lucy", "")).toBeUndefined();
+  });
+
+  it("never exceeds the display name length", () => {
+    expect(nameForNewUsername("a", "b".repeat(500))).toHaveLength(MAX_DISPLAY_NAME_LENGTH);
   });
 });

@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import type { AuthFormField, FormError, FormSubmitEvent } from "@nuxt/ui";
+import {
+  MAX_USERNAME_LENGTH,
+  getDisplayNameError,
+} from "#shared/display-name";
 import { safeRedirectPath } from "#shared/sign-in-redirect";
 import { authClient } from "~/utils/auth-client";
 import { getReadableIdError } from "~/utils/readable-id";
@@ -28,9 +32,12 @@ const mode = ref<AuthMode>("login");
 const registerForm = reactive({ name: "", username: "" });
 // The username as typed is also the default display name, so capitalization is
 // accepted here (the server stores the username lowercase).
-const usernameError = computed(() =>
-  getReadableIdError(registerForm.username.trim().toLowerCase()),
-);
+const usernameError = computed(() => {
+  const typed = registerForm.username.trim();
+  if (typed.length > MAX_USERNAME_LENGTH)
+    return `Use at most ${MAX_USERNAME_LENGTH} characters.`;
+  return getReadableIdError(typed.toLowerCase());
+});
 const displayNamePlaceholder = computed(
   () => registerForm.username.trim() || "Your display name",
 );
@@ -69,6 +76,7 @@ const fields = computed<AuthFormField[]>(() => [
           label: "Display Name",
           description: "Optional. Defaults to your username.",
           placeholder: displayNamePlaceholder.value,
+          error: getDisplayNameError(registerForm.name),
         } satisfies AuthFormField,
       ]
     : []),
@@ -109,6 +117,8 @@ const canSubmit = computed(() => {
   if (!isRegistering.value) return true;
   return (
     !!registerForm.username.trim() &&
+    !usernameError.value &&
+    !getDisplayNameError(registerForm.name) &&
     state.password === state.confirmPassword
   );
 });
@@ -154,6 +164,10 @@ async function onSubmit(event: FormSubmitEvent<AuthFormData>) {
     if (registering) {
       if (!username) {
         errorMessage.value = "Username is required.";
+        return;
+      }
+      if (usernameError.value) {
+        errorMessage.value = usernameError.value;
         return;
       }
       if (getReadableIdError(username)) {

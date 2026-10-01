@@ -1,10 +1,14 @@
 import { createError } from "h3";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { user as userTable, userProfile } from "../../database/schema";
 import { parseBody, profilePatchSchema } from "../../utils/api-schemas";
 import { useDatabase } from "../../utils/database";
 import { requireAuthenticatedUser } from "../../utils/auth";
-import { resolveDisplayName, syncedDisplayName } from "../../../shared/display-name";
+import {
+  getDisplayNameError,
+  nameForNewUsername,
+  resolveDisplayName,
+} from "../../../shared/display-name";
 import {
   ensureUserProfile,
   isUniqueConstraintError,
@@ -24,12 +28,12 @@ defineRouteMeta({
               username: {
                 type: "string",
                 description:
-                  "Stored lowercase; a display name that is still the old username follows it, with this capitalization",
+                  "At most 40 characters; stored lowercase. A display name that is still the old username follows it, with this capitalization",
               },
               name: {
                 type: ["string", "null"],
                 description:
-                  "Display name; empty or null resets it to the username",
+                  "Display name; empty or null resets it to the username. At most 100 characters, with no control or invisible characters",
               },
               iconImageUrl: { type: ["string", "null"] },
             },
@@ -60,46 +64,69 @@ export default defineEventHandler(async (event) => {
       statusMessage: "No profile fields provided",
     });
 
-  const currentProfile = await ensureUserProfile(user);
+  if (body.name !== undefined && body.name !== null) {
+    const nameError = getDisplayNameError(body.name);
+    if (nameError) throw createError({ statusCode: 400, statusMessage: nameError });
+  }
+
+  await ensureUserProfile(user);
 
   try {
     const database = useDatabase();
     const newUsername = body.username?.toLowerCase();
-    const [profile] = await database
-      .update(userProfile)
-      .set({
-        ...(body.username !== undefined ? { username: newUsername } : {}),
-        ...(body.iconImageUrl !== undefined
-          ? { iconImageUrl: body.iconImageUrl }
-          : {}),
-        updatedAt: new Date(),
-      })
-      .where(eq(userProfile.userId, user.id))
-      .returning();
-
-    // Better Auth's `user.name` is the display name. It is required, so an
-    // empty one is stored as the username.
-    // When the username changes and the name is still the default (the old
-    // username), the name follows it, unless this request sets the name.
-    const followedName =
-      body.name === undefined && body.username !== undefined
-        ? syncedDisplayName(user.name, currentProfile.username, body.username)
-        : undefined;
-    if (followedName !== undefined) {
-      await database
-        .update(userTable)
-        .set({ name: followedName, updatedAt: new Date() })
-        .where(eq(userTable.id, user.id));
-    }
-    if (body.name !== undefined) {
-      await database
-        .update(userTable)
+    // One transaction, so a failure can't leave the username changed and the
+    // display name stale.
+    const profile = await database.transaction(async (tx) => {
+      // Locked, so concurrent requests see each other's username.
+      const [before] = await tx
+        .select()
+        .from(userProfile)
+        .where(eq(userProfile.userId, user.id))
+        .for("update");
+      const [updated] = await tx
+        .update(userProfile)
         .set({
-          name: resolveDisplayName(body.name, profile?.username ?? currentProfile.username),
+          ...(newUsername !== undefined ? { username: newUsername } : {}),
+          ...(body.iconImageUrl !== undefined
+            ? { iconImageUrl: body.iconImageUrl }
+            : {}),
           updatedAt: new Date(),
         })
-        .where(eq(userTable.id, user.id));
-    }
+        .where(eq(userProfile.userId, user.id))
+        .returning();
+      if (!before || !updated) throw new Error("Profile not found");
+
+      // Better Auth's `user.name` is the display name. It is required, so an
+      // empty one is stored as the username (as typed, when it changes too).
+      if (body.name !== undefined) {
+        await tx
+          .update(userTable)
+          .set({
+            name: resolveDisplayName(
+              body.name,
+              body.username?.trim() ?? updated.username,
+            ),
+            updatedAt: new Date(),
+          })
+          .where(eq(userTable.id, user.id));
+      } else if (body.username !== undefined) {
+        // The name follows the username while it is still the default (the
+        // old username in any capitalization), decided in the update itself.
+        const followed = nameForNewUsername(before.username, body.username);
+        if (followed !== undefined) {
+          await tx
+            .update(userTable)
+            .set({ name: followed, updatedAt: new Date() })
+            .where(
+              and(
+                eq(userTable.id, user.id),
+                sql`lower(${userTable.name}) = ${before.username.toLowerCase()}`,
+              ),
+            );
+        }
+      }
+      return updated;
+    });
 
     return profile;
   } catch (error) {

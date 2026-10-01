@@ -4,7 +4,11 @@ import { userProfile } from "../database/schema";
 import { useDatabase } from "../utils/database";
 import { useAuth } from "../utils/auth";
 import { isUniqueConstraintError } from "../utils/user-profile";
-import { resolveDisplayName, MAX_DISPLAY_NAME_LENGTH } from "../../shared/display-name";
+import {
+  MAX_USERNAME_LENGTH,
+  getDisplayNameError,
+  resolveDisplayName,
+} from "../../shared/display-name";
 
 interface RegisterBody {
   name?: unknown;
@@ -28,14 +32,14 @@ defineRouteMeta({
               name: {
                 type: "string",
                 description:
-                  "Display name; optional, defaults to the username as typed",
+                  "Display name; optional, defaults to the username as typed. At most 100 characters, with no control or invisible characters",
               },
               email: { type: "string", format: "email" },
               password: { type: "string" },
               username: {
                 type: "string",
                 description:
-                  "Display name; optional, defaults to the username as typed",
+                  "Display name; optional, defaults to the username as typed. At most 100 characters, with no control or invisible characters",
               },
             },
           },
@@ -67,18 +71,22 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Email, password, and username are required",
     });
   }
-  if (name.length > MAX_DISPLAY_NAME_LENGTH) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: `Display name must be at most ${MAX_DISPLAY_NAME_LENGTH} characters`,
-    });
-  }
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(username)) {
     throw createError({
       statusCode: 400,
       statusMessage:
-        "Username must use lowercase letters, numbers, and hyphens",
+        "Username must use letters, numbers, and hyphens",
     });
+  }
+  if (username.length > MAX_USERNAME_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Username must be at most ${MAX_USERNAME_LENGTH} characters`,
+    });
+  }
+  const nameError = getDisplayNameError(name);
+  if (nameError) {
+    throw createError({ statusCode: 400, statusMessage: nameError });
   }
 
   const database = useDatabase();

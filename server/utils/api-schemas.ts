@@ -11,7 +11,7 @@ import {
   API_KEY_EXPIRY_DAYS,
   MAX_API_KEY_NAME_LENGTH,
 } from "../../shared/api-keys";
-import { MAX_DISPLAY_NAME_LENGTH } from "../../shared/display-name";
+import { MAX_DISPLAY_NAME_LENGTH, MAX_USERNAME_LENGTH } from "../../shared/display-name";
 
 FormatRegistry.Set("uuid", (value) => uuidPattern.test(value));
 
@@ -24,7 +24,10 @@ export const profilePatchSchema = Type.Partial(
   Type.Object({
     // Any capitalization: it is stored lowercase, but the default display
     // name keeps what was typed.
-    username: Type.String({ pattern: "^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$" }),
+    username: Type.String({
+      pattern: "^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$",
+      maxLength: MAX_USERNAME_LENGTH,
+    }),
     // Empty or null resets the display name to the username.
     name: Type.Union([
       Type.String({ maxLength: MAX_DISPLAY_NAME_LENGTH }),

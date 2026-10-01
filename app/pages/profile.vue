@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MAX_DISPLAY_NAME_LENGTH } from "#shared/display-name";
+import { MAX_USERNAME_LENGTH, getDisplayNameError } from "#shared/display-name";
 import { extractApiErrorMessage } from "~/utils/api-error";
 import { authClient } from "~/utils/auth-client";
 import { getReadableIdError } from "~/utils/readable-id";
@@ -59,7 +59,12 @@ const availability = ref<"idle" | "checking" | "available" | "taken" | "failed">
 let checkTimer: ReturnType<typeof setTimeout> | undefined;
 watch(username, (value) => {
   clearTimeout(checkTimer);
-  if (!value || !usernameChanged.value || usernameFormatError.value) {
+  if (
+    !value ||
+    !usernameChanged.value ||
+    usernameFormatError.value ||
+    value.length > MAX_USERNAME_LENGTH
+  ) {
     availability.value = "idle";
     return;
   }
@@ -83,6 +88,8 @@ onBeforeUnmount(() => clearTimeout(checkTimer));
 const usernameError = computed(() => {
   if (!username.value) return "Username is required.";
   if (usernameFormatError.value) return usernameFormatError.value;
+  if (username.value.length > MAX_USERNAME_LENGTH)
+    return `Use at most ${MAX_USERNAME_LENGTH} characters.`;
   if (availability.value === "taken") return "That username is already in use.";
   return undefined;
 });
@@ -98,11 +105,7 @@ const displayName = computed(() => form.name.trim());
 const nameChanged = computed(
   () => displayName.value !== formName(),
 );
-const nameError = computed(() =>
-  displayName.value.length > MAX_DISPLAY_NAME_LENGTH
-    ? `Use at most ${MAX_DISPLAY_NAME_LENGTH} characters.`
-    : undefined,
-);
+const nameError = computed(() => getDisplayNameError(form.name));
 
 const iconChanged = computed(
   () => iconUrl.value !== (profile.value?.iconImageUrl ?? ""),
