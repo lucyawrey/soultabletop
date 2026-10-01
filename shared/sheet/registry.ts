@@ -61,6 +61,9 @@ export interface TagSpec {
   binds?: readonly BindKind[];
   // Children are resolved against each item of the bound array.
   itemScope?: boolean;
+  // The parent renders this tag itself, so live/locked/display on it would do
+  // nothing: only `class` is common to it.
+  noFlagAttrs?: boolean;
 }
 
 export const colors = [
@@ -114,6 +117,13 @@ export const commonAttrs: Record<string, AttrSpec> = {
     "How fields inside look when they can't be edited: text, or box (their input, disabled); defaults to the sheet's setting",
   ),
 };
+
+// The common attributes a tag accepts.
+export function commonAttrsFor(spec: TagSpec): Record<string, AttrSpec> {
+  if (!spec.noFlagAttrs) return commonAttrs;
+  const { class: className } = commonAttrs;
+  return { class: className! };
+}
 
 const fieldAttrs: Record<string, AttrSpec> = {
   field: {
@@ -204,6 +214,7 @@ const tagList: TagSpec[] = [
     attrs: { label: text("Tab title", true), icon },
     children: "any",
     parents: ["Tabs"],
+    noFlagAttrs: true,
   },
   {
     name: "Divider",
@@ -453,6 +464,7 @@ const tagList: TagSpec[] = [
     attrs: {},
     children: "any",
     parents: ["Table"],
+    noFlagAttrs: true,
   },
 ];
 

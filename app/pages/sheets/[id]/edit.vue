@@ -752,7 +752,8 @@ async function insertPath(path: string) {
             </div>
             <p v-if="group.title === 'Layout'" class="text-xs text-muted">
               Every tag also accepts
-              <code v-for="name in Object.keys(commonAttrs)" :key="name" class="me-1">{{ name }}</code>.
+              <code v-for="name in Object.keys(commonAttrs)" :key="name" class="me-1">{{ name }}</code>
+              (<code>Tab</code> and <code>RowDetails</code> only <code>class</code>).
             </p>
           </section>
 
