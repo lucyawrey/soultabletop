@@ -257,6 +257,8 @@ async function remove() {
         <UBadge v-if="row.original.isDefault" variant="subtle">
           Default
         </UBadge>
+        <!-- An empty slot makes the table print the raw `false` instead. -->
+        <span v-else />
       </template>
 
       <template #source-cell="{ row }">
