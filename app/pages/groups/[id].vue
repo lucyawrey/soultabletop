@@ -282,6 +282,11 @@ async function remove() {
             :columns="memberColumns"
             :loading="membersStatus === 'pending'"
           >
+            <template #empty>
+              <TableSkeleton v-if="isLoading(membersStatus)" :rows="3" />
+              <p v-else class="py-6 text-center text-sm text-muted">No members.</p>
+            </template>
+
             <template #username-cell="{ row }">
               <span class="text-muted">{{ row.original.username ? `@${row.original.username}` : "—" }}</span>
             </template>
