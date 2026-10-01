@@ -28,8 +28,18 @@ const { data: groups } = await useLazyFetch<GroupSummary[]>("/api/group", {
   default: () => [],
 });
 
+// A display name that is just the username (the default) shows as empty, so
+// the field's placeholder, the username, is visible.
+function isDefaultName(name: string) {
+  return name.toLowerCase() === (profile.value?.username ?? "").toLowerCase();
+}
+function formName() {
+  const name = user.value?.name ?? "";
+  return isDefaultName(name) ? "" : name;
+}
+
 const form = reactive({
-  name: user.value?.name ?? "",
+  name: formName(),
   username: profile.value?.username ?? "",
   iconImageUrl: profile.value?.iconImageUrl ?? "",
 });
@@ -84,14 +94,10 @@ const usernameHint = computed(() => {
 });
 
 const displayName = computed(() => form.name.trim());
-// Clearing it resets the display name to the username, so a blank field is a
-// change whenever the current name isn't already the username.
-const nameChanged = computed(() => {
-  const current = user.value?.name ?? "";
-  return displayName.value
-    ? displayName.value !== current
-    : current !== (profile.value?.username ?? "");
-});
+// Clearing it resets the display name to the username.
+const nameChanged = computed(
+  () => displayName.value !== formName(),
+);
 const nameError = computed(() =>
   displayName.value.length > MAX_DISPLAY_NAME_LENGTH
     ? `Use at most ${MAX_DISPLAY_NAME_LENGTH} characters.`
@@ -145,8 +151,12 @@ async function save() {
     // The display name is Better Auth's `user.name`, read from the session, so
     // refresh the session too: the header menu shows both.
     const [, fresh] = await Promise.all([refresh(), authClient.getSession()]);
-    if (fresh.data) authClient.hydrateSession(fresh.data);
-    form.name = user.value?.name ?? "";
+    if (fresh.data) {
+      authClient.hydrateSession(fresh.data);
+      // `useAuthSession` reads through its own fetch, so set its data too.
+      session.data.value = fresh.data;
+    }
+    form.name = formName();
     form.username = profile.value?.username ?? "";
     form.iconImageUrl = profile.value?.iconImageUrl ?? "";
     availability.value = "idle";
