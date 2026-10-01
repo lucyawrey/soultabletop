@@ -4,7 +4,7 @@ import copy from "../content/copy.yml";
 // The keys `shared/yaml.d.ts` declares for `content/copy.yml`. Keep the three in step.
 const declaredKeys = {
   site: ["title", "description"],
-  home: ["badge", "heading", "intro", "formNote", "registerNote", "signInNote"],
+  home: ["badge", "heading", "intro", "registerNote", "signInNote"],
   dashboard: ["heading", "subheading"],
 };
 

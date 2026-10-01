@@ -1,23 +1,21 @@
 # Edit values freely, but keep the keys as is (the app looks them up, and the tests fail if one is missing).
 # Bracketed values like `{name}` are dynamically filled in by the app.
-# Functional text (labels, buttons, errors) are directly in the components.
+# Functional text (labels, buttons, errors) is directly in the components.
 
 site:
   # Browser tab title and the description search engines and link previews show.
-  title: Page title placeholder | Soul Tabletop
-  description: Page description placeholder.
+  title: Play and build tabletop RPGs | Soul Tabletop
+  description: An open-source virtual tabletop for playing RPGs with friends, and building them too.
 
 # The page at `/` for visitors who are signed out.
 home:
-  badge: Brand or section label
-  heading: Page heading placeholder
+  badge: Soul Tabletop
+  heading: An open-source virtual tabletop for open gaming
   intro: >-
-    Placeholder for introductory copy. Replace this text with your own
-    page content.
-  formNote: Optional supporting text placeholder.
+    Play tabletop RPGs with friends, online or around the table, using a large library of built-in content. Or make your own with support for custom game systems, content, and character sheets.
   # Under the form while registering and while signing in.
-  registerNote: Placeholder for registration copy.
-  signInNote: Placeholder for sign-in copy.
+  registerNote: Join our community of players.
+  signInNote: Get back to your games.
 
 # The page at `/` once signed in.
 dashboard:
