@@ -10,8 +10,6 @@ Nothing right now.
 
 # Next up
 
-- **Fix being logged out on page refresh** · bug
-  Fix refreshing page while logged in logging the user out for some reason.
 - **Make the list endpoints' access filtering happen in SQL** · chore · do before the database holds real data
   `GET /api/content` (and the other list endpoints' "mine" and no-scope paths) load candidate rows, and the Characters and Content lists also load every content type on the site and build an access context over all of them, then filter in code (`server/utils/resource-list.ts`, `server/utils/resource-list-filter.ts`, `server/api/content/index.get.ts`). The cost grows with the whole site, not with the viewer, and the content type IDs are bound into one `IN (...)` list, which Postgres limits to 65,535 parameters. Replace it with a SQL condition (public and not hidden, or owned, or in one of the viewer's groups, or an edit/read grant via `EXISTS`), keeping `getResourceAccess` as the source of truth and the pure filter tests as the check that the two agree. Do this before the database holds real data.
 - **Fix hydration mismatches** · bug
