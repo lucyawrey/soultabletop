@@ -16,7 +16,6 @@ interface ContentListItem {
   id: string;
   name: string;
   contentTypeId: string;
-  systemId: string;
   source: ResourceSource;
   data: Record<string, unknown>;
 }
@@ -38,12 +37,10 @@ async function load(open: boolean) {
   }
 }
 
-const { systemLabel } = useSystems();
 const items = computed(() =>
   options.value.map((item) =>
     resourceOption(item.id, {
       name: item.name,
-      systemName: systemLabel(item.systemId),
       source: item.source,
     }),
   ),
