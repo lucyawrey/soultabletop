@@ -4,8 +4,8 @@ import { campaignMembership } from "../../../../database/schema";
 import { requireAuthenticatedUser } from "../../../../utils/auth";
 import {
   requireResourceEditor,
-  requireUuid,
 } from "../../../../utils/resource-management";
+import { resolveResourceRouteId } from "../../../../utils/resource-address";
 import { useDatabase } from "../../../../utils/database";
 
 defineRouteMeta({
@@ -22,7 +22,7 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const campaignId = requireUuid(getRouterParam(event, "id"), "campaignId");
+  const campaignId = await resolveResourceRouteId(event, "campaign", user);
   await requireResourceEditor(user, campaignId);
   const userId = getRouterParam(event, "userId");
   if (!userId)

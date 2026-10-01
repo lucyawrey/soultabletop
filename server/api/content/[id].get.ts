@@ -1,4 +1,4 @@
-import { createError, getRouterParam } from "h3";
+import { createError } from "h3";
 import { eq } from "drizzle-orm";
 import { content, contentType, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
@@ -13,6 +13,10 @@ import {
   resolveContentSheet,
 } from "../../utils/sheet-schemas";
 import { canChangeResourceOwner } from "../../utils/resource-management";
+import {
+  loadOwnerReadableId,
+  resolveResourceRouteId,
+} from "../../utils/resource-address";
 
 defineRouteMeta({
   openAPI: {
@@ -28,12 +32,8 @@ defineRouteMeta({
 });
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, "id");
-  if (!id)
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Missing resource ID",
-    });
+  const user = await getAuthenticatedUser(event);
+  const id = await resolveResourceRouteId(event, "content", user);
 
   const database = useDatabase();
   const [record] = await database
@@ -53,7 +53,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: "Content not found" });
   }
 
-  const user = await getAuthenticatedUser(event);
   const context = user
     ? await loadResourceAccessContext(user, [record.resource.id])
     : null;
@@ -66,7 +65,7 @@ export default defineEventHandler(async (event) => {
   if (!schemas) {
     throw createError({ statusCode: 404, statusMessage: "Content type not found" });
   }
-  const [sheet, { refs, links }] = await Promise.all([
+  const [sheet, { refs, links }, ownerReadableId] = await Promise.all([
     resolveContentSheet(
       user,
       record.item.sheetId,
@@ -75,6 +74,7 @@ export default defineEventHandler(async (event) => {
       schemas,
     ),
     loadContentRefs(user, record.item.data, schemas),
+    loadOwnerReadableId(record.resource),
   ]);
 
   return {
@@ -84,6 +84,7 @@ export default defineEventHandler(async (event) => {
     name: record.resource.name,
     ownerUserId: record.resource.ownerUserId,
     ownerGroupId: record.resource.ownerGroupId,
+    ownerReadableId,
     canChangeOwner:
       !!user && !!context && canChangeResourceOwner(record.resource, user, context),
     createdAt: record.resource.createdAt,

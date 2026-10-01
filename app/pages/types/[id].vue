@@ -20,6 +20,7 @@ import {
 interface ContentTypeDetail {
   id: string;
   readableId: string;
+  ownerReadableId: string | null;
   name: string;
   systemId: string;
   contentCategory: ContentCategory;
@@ -49,13 +50,16 @@ const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
 );
 
 const route = useRoute();
-const id = route.params.id as string;
 const toast = useToast();
 
 const { followSystem } = useCurrentSystem();
-const { data: contentType, refresh } = await useFetch<ContentTypeDetail>(
-  `/api/content-type/${id}`,
+const { data: contentType, refresh } = await useResourceFetch<ContentTypeDetail>(
+  "/api/content-type",
 );
+useReadableAddress("types", contentType);
+// The route may address the content type by owner + readable ID; changes go
+// by ID.
+const id = computed(() => contentType.value?.id ?? "");
 followSystem(contentType.value?.systemId);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
@@ -76,7 +80,7 @@ const { data: sheets, status: sheetsStatus } = await useLazyFetch<SheetOption[]>
   default: () => [],
 });
 const typeSheets = computed(() =>
-  sheets.value.filter((item) => item.contentTypeId === id),
+  sheets.value.filter((item) => item.contentTypeId === id.value),
 );
 
 const isFormOpen = ref(false);
@@ -114,7 +118,7 @@ async function submitForm(confirmBrokenSheets = false) {
   brokenSheets.value = undefined;
 
   try {
-    await $fetch(`/api/content-type/${id}`, {
+    await $fetch(`/api/content-type/${id.value}`, {
       method: "PATCH",
       body: {
         readableId: form.readableId,
@@ -227,7 +231,7 @@ async function saveSchema(confirmBrokenSheets = false) {
   schemaError.value = "";
   schemaBroken.value = undefined;
   try {
-    await $fetch(`/api/content-type/${id}`, {
+    await $fetch(`/api/content-type/${id.value}`, {
       method: "PATCH",
       body: {
         schema: draft.schema,
@@ -263,7 +267,7 @@ async function remove() {
   deleteError.value = "";
 
   try {
-    await $fetch(`/api/content-type/${id}`, { method: "DELETE" });
+    await $fetch(`/api/content-type/${id.value}`, { method: "DELETE" });
     await navigateTo("/types");
   } catch (error) {
     deleteError.value = extractApiErrorMessage(

@@ -1,4 +1,4 @@
-import { createError, getRouterParam } from "h3";
+import { createError } from "h3";
 import { eq } from "drizzle-orm";
 import { resource } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
@@ -7,6 +7,7 @@ import {
   getResourceAccess,
   loadResourceAccessContext,
 } from "../../utils/resource-access";
+import { resolveResourceRouteId } from "../../utils/resource-address";
 
 defineRouteMeta({
   openAPI: {
@@ -21,14 +22,8 @@ defineRouteMeta({
 });
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, "id");
-  if (!id)
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Missing resource ID",
-    });
-
   const user = await requireAuthenticatedUser(event);
+  const id = await resolveResourceRouteId(event, "content", user);
   const database = useDatabase();
   const [resourceItem] = await database
     .select()

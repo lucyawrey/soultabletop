@@ -1,4 +1,4 @@
-import { createError, getRouterParam } from "h3";
+import { createError } from "h3";
 import { eq } from "drizzle-orm";
 import { contentType, resource } from "../../database/schema";
 import type { ContentTypeSchema } from "../../database/schema";
@@ -14,6 +14,7 @@ import {
   requireReadableId,
 } from "../../utils/resource-management";
 import { parseBody, contentTypePatchSchema } from "../../utils/api-schemas";
+import { resolveResourceRouteId } from "../../utils/resource-address";
 
 defineRouteMeta({
   openAPI: {
@@ -66,12 +67,7 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const id = getRouterParam(event, "id");
-  if (!id)
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Resource ID is required",
-    });
+  const id = await resolveResourceRouteId(event, "contentType", user);
   const body = await parseBody(event, contentTypePatchSchema);
   const item = await requireResourceEditor(user, id);
   const owner = await resolveOwnerChange(user, item, body.ownerGroupId);

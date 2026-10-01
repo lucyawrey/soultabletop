@@ -4,6 +4,7 @@ import { createError } from "h3";
 import { resource } from "../database/schema";
 import { useDatabase } from "./database";
 import { isUniqueConstraintError } from "./user-profile";
+import { loadOwnerReadableId } from "./resource-address";
 import {
   canCreateForGroup,
   getResourceAccess,
@@ -92,6 +93,8 @@ export async function requireResourceReader(
   }
   return {
     ...item,
+    // With `readableId`, the resource's owner + readable ID address.
+    ownerReadableId: await loadOwnerReadableId(item),
     canEdit: access.canEdit,
     canChangeOwner: !!context && canChangeResourceOwner(item, user!, context),
   };

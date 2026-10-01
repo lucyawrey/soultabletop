@@ -34,6 +34,7 @@ defineRouteMeta({
       201: { description: "Created group" },
       400: { description: "Invalid request" },
       401: { description: "Authentication required" },
+      409: { description: "ID already in use by a user or group" },
     },
   },
 });
@@ -79,7 +80,7 @@ export default defineEventHandler(async (event) => {
     if (isUniqueConstraintError(error))
       throw createError({
         statusCode: 409,
-        statusMessage: "Group ID is already in use",
+        statusMessage: "That ID is already in use by a user or group",
       });
     throw error;
   }

@@ -4,6 +4,7 @@ import { group } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { parseBody, groupPatchSchema } from "../../utils/api-schemas";
+import { isUniqueConstraintError } from "../../utils/user-profile";
 
 defineRouteMeta({
   openAPI: {
@@ -24,6 +25,7 @@ defineRouteMeta({
       200: { description: "Updated group" },
       401: { description: "Authentication required" },
       403: { description: "Group admin access required" },
+      409: { description: "ID already in use by a user or group" },
     },
   },
 });
@@ -47,6 +49,15 @@ export default defineEventHandler(async (event) => {
       updatedAt: new Date(),
     })
     .where(eq(group.id, id))
-    .returning();
+    .returning()
+    .catch((error: unknown) => {
+      // Group readable IDs share a namespace with usernames.
+      if (isUniqueConstraintError(error))
+        throw createError({
+          statusCode: 409,
+          statusMessage: "That ID is already in use by a user or group",
+        });
+      throw error;
+    });
   return updated;
 });

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import type { User } from "better-auth";
-import { userProfile } from "../database/schema";
+import { user, userProfile } from "../database/schema";
 import { useDatabase } from "./database";
 
 function usernameBase(name: string) {
@@ -45,6 +45,24 @@ export async function ensureUserProfile(user: Pick<User, "id" | "name">) {
   }
 
   throw new Error("Could not create a unique default username.");
+}
+
+// Creates the profile of a user registration just created. If that fails (a
+// username taken since it was checked: 23505), deletes the user again, with
+// its session and account (they cascade), so the email isn't left registered
+// to a user without a profile, then rethrows.
+export async function createProfileOrRemoveUser(userId: string, username: string) {
+  const database = useDatabase();
+  try {
+    const [profile] = await database
+      .insert(userProfile)
+      .values({ userId, username })
+      .returning();
+    return profile!;
+  } catch (error) {
+    await database.delete(user).where(eq(user.id, userId));
+    throw error;
+  }
 }
 
 // Postgres error code, looking through Drizzle's DrizzleQueryError, which
