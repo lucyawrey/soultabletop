@@ -1,8 +1,6 @@
 import { MAX_USERNAME_LENGTH } from "../../../shared/display-name";
 import { createError, getQuery } from "h3";
-import { sql } from "drizzle-orm";
-import { userProfile } from "../../database/schema";
-import { useDatabase } from "../../utils/database";
+import { isOwnerReadableIdTaken } from "../../utils/owner-readable-id";
 
 defineRouteMeta({
   openAPI: {
@@ -39,12 +37,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const database = useDatabase();
-  const [existingProfile] = await database
-    .select({ userId: userProfile.userId })
-    .from(userProfile)
-    .where(sql`lower(${userProfile.username}) = ${username}`)
-    .limit(1);
-
-  return { available: !existingProfile };
+  // Usernames share a namespace with group readable IDs.
+  return { available: !(await isOwnerReadableIdTaken(username)) };
 });

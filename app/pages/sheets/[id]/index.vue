@@ -9,6 +9,7 @@ interface SheetDetail {
   systemId: string;
   id: string;
   readableId: string;
+  ownerReadableId: string | null;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -30,12 +31,12 @@ interface ContentTypeOption {
 }
 
 const route = useRoute();
-const id = route.params.id as string;
 
 const { followSystem } = useCurrentSystem();
-const { data: sheet } = await useFetch<SheetDetail>(
-  `/api/sheet/${id}`,
-);
+const { data: sheet } = await useResourceFetch<SheetDetail>("/api/sheet");
+useReadableAddress("sheets", sheet);
+// The route may address the sheet by owner + readable ID; changes go by ID.
+const id = computed(() => sheet.value?.id ?? "");
 followSystem(sheet.value?.systemId);
 
 // Logged-out visitors can view this if it's public; otherwise they're sent to
@@ -91,7 +92,7 @@ async function remove() {
   deleteError.value = "";
 
   try {
-    await $fetch(`/api/sheet/${id}`, { method: "DELETE" });
+    await $fetch(`/api/sheet/${id.value}`, { method: "DELETE" });
     await navigateTo("/sheets");
   } catch (error) {
     deleteError.value = extractApiErrorMessage(

@@ -1,4 +1,4 @@
-import { createError, getRouterParam, readBody } from "h3";
+import { createError, readBody } from "h3";
 import { eq } from "drizzle-orm";
 import { resource } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
@@ -10,6 +10,7 @@ import {
   rethrowReadableIdConflict,
   requireReadableId,
 } from "../../utils/resource-management";
+import { resolveResourceRouteId } from "../../utils/resource-address";
 
 defineRouteMeta({
   openAPI: {
@@ -46,12 +47,7 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const id = getRouterParam(event, "id");
-  if (!id)
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Resource ID is required",
-    });
+  const id = await resolveResourceRouteId(event, "system", user);
   const body = await readBody<{
     name?: unknown;
     readableId?: unknown;

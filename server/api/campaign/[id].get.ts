@@ -1,9 +1,10 @@
-import { createError, getRouterParam } from "h3";
+import { createError } from "h3";
 import { eq } from "drizzle-orm";
 import { campaign } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { requireResourceReader } from "../../utils/resource-management";
+import { resolveResourceRouteId } from "../../utils/resource-address";
 
 defineRouteMeta({
   openAPI: {
@@ -19,12 +20,7 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const id = getRouterParam(event, "id");
-  if (!id)
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Resource ID is required",
-    });
+  const id = await resolveResourceRouteId(event, "campaign", user);
   const item = await requireResourceReader(user, id);
   if (item.kind !== "campaign")
     throw createError({ statusCode: 404, statusMessage: "Campaign not found" });

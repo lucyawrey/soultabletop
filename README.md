@@ -162,6 +162,34 @@ config in `server/utils/auth.ts`). The plugin's own `/api/auth/api-key/*`
 routes are turned off: keys are managed through `/api/profile/api-keys`,
 which sets each key's access level.
 
+### Addressing resources
+
+Every single-resource route for systems, campaigns, content types, sheets, and
+content takes the resource's ID or its owner and readable ID:
+
+```sh
+curl https://<host>/api/sheet/<id>
+curl https://<host>/api/sheet/lucy/fighter     # owner lucy, readable ID fighter
+```
+
+- The owner is a username or a group's readable ID. The two share one
+  namespace (a database table, `owner_readable_id`, kept by triggers), so a
+  name is either a user or a group, never both.
+- Both parts are case-insensitive.
+- Addressed by owner and readable ID, a resource the caller can't read answers
+  exactly like one that doesn't exist (404), for every method. (By ID, PATCH
+  and DELETE answer 403 for any resource the caller can't edit, as before.)
+- `GET /api/resource/lookup?kind=sheet&owner=lucy&readableId=fighter` (or
+  `&id=<id>`) returns just the resource's ID, kind, and system.
+- Single GETs include `ownerReadableId`, the owner part of the address.
+
+Pages work the same way (`/sheets/lucy/fighter`, `/sheets/lucy/fighter/edit`).
+A page opened by ID shows the readable address in the address bar; links in
+the app keep using IDs, which don't change when something is renamed or moved.
+A sheet with the readable ID `edit` and a campaign with `members` keep their ID
+addresses, since those paths belong to the sheet editor and the campaign
+members route.
+
 ## Deployment
 
 Vercel builds every push: `main` deploys to production, and every other branch

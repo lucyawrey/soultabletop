@@ -1,10 +1,6 @@
-<script setup lang="ts">
-const route = useRoute();
-</script>
-
 <template>
   <ContentDetail
-    :id="route.params.id as string"
+    section="characters"
     label="Character"
     list-path="/characters"
     list-label="Characters"

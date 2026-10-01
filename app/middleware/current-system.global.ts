@@ -1,3 +1,5 @@
+import { parseResourcePagePath } from "#shared/resource-address";
+
 // Applies the current-system cookie before the first server render, so the
 // header selector and the filtered lists start out right (the client keeps
 // them in line afterwards, see `SystemSelector` and `followSystem`):
@@ -5,18 +7,10 @@
 //   which `followSystem` does too, but only after the header has rendered;
 // - a system that was deleted or is no longer readable is reset to All Systems.
 // Runs only on the server's first render and only when the cookie is set, so
-// it costs one or two extra requests then and nothing otherwise.
-const RESOURCE_ENDPOINTS: Record<string, string> = {
-  campaigns: "campaign",
-  characters: "content",
-  content: "content",
-  sheets: "sheet",
-  systems: "system",
-  types: "content-type",
-};
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
+// it costs one or two light requests then and nothing otherwise. For a
+// resource page it asks `/api/resource/lookup` (ID and system only, with the
+// same access check as the resource's own GET) rather than the page's full
+// GET, which for content and sheets does heavy work the page then repeats.
 export default defineNuxtRouteMiddleware(async (to) => {
   if (!import.meta.server) return;
   const { systemId, setSystem } = useCurrentSystem();
@@ -25,20 +19,20 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const fetchApi = useRequestFetch();
   let current = original;
-  // Whether `current` was just fetched as a system, so it is known readable.
+  // Whether `current` was just looked up as a system, so it is known readable.
   let verified = false;
 
-  const [section, resourceId] = to.path.split("/").filter(Boolean);
-  const endpoint = section && RESOURCE_ENDPOINTS[section];
-  if (endpoint && resourceId && UUID_PATTERN.test(resourceId)) {
+  // `/<section>/<id>[/...]` or `/<section>/<owner>/<readableId>[/...]`.
+  const page = parseResourcePagePath(to.path);
+  if (page) {
+    const { address, kind } = page;
     try {
-      const item = await fetchApi<{ id: string; systemId?: string | null }>(
-        `/api/${endpoint}/${resourceId}`,
-      );
-      const target = endpoint === "system" ? item.id : item.systemId;
-      if (target) {
-        current = target;
-        verified = endpoint === "system";
+      const item = await fetchApi<{ systemId: string | null }>("/api/resource/lookup", {
+        query: { kind, ...address },
+      });
+      if (item.systemId) {
+        current = item.systemId;
+        verified = kind === "system";
       }
     } catch {
       // The page shows its own not-found state.
