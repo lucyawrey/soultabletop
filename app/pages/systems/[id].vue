@@ -129,11 +129,11 @@ async function remove() {
     <template v-if="system">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-highlighted">
+          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
             {{ system.name }}
+            <ReadableIdBadge :readable-id="system.readableId" />
           </h1>
           <p class="text-sm text-muted">
-            {{ system.readableId }} ·
             {{ visibilityLabel(system.isPubliclyReadable) }}
           </p>
         </div>
