@@ -14,8 +14,6 @@ Nothing right now.
   Fix refreshing page while logged in logging the user out for some reason.
 - **Current-system selector: server-render timing** · bug · small
   Two cosmetic leftovers, both self-correcting on the client with no hydration warning: a deleted system's ID in the `current-system` cookie renders one empty list ("No characters in the current system yet.") on the first server render before the selector resets it, and after `followSystem` switches the cookie on a detail page the server-rendered header selector still shows the old system (the header renders before the page). A server plugin or middleware that validates and applies the cookie before rendering would fix both. Also, `/docs` still logs hydration mismatches, all inside Scalar's own components (`AgentScalarButton`, `OpenMCPButton`, theme toggle); not fixable here short of rendering it client-only.
-- **Smoother loading states** · feature
-  Make cascadig loading look more professional and less janky. Its not to bad right now but there are things like a flash of "content type needs to be created before creating a content" text even when that stuff exists. Tables could also use fake rows befoee content genrates etc.
 
 # Soon
 
