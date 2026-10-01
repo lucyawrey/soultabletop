@@ -118,6 +118,33 @@ push, which catches build errors but not lint, type, or test failures.
 With the server running, the interactive API reference is at `/docs`,
 generated from the server routes.
 
+### Authenticating
+
+Scripts and tools authenticate with a user API key, created in the API Keys
+section of the profile page (the key is shown once). Send it as
+`Authorization: Bearer <key>` or `x-api-key: <key>`:
+
+```sh
+curl -H "Authorization: Bearer st_..." https://<host>/api/profile
+```
+
+- A key acts as the user who made it. **Read Only** keys get 403 on anything
+  but GET, HEAD, and OPTIONS; **Full Access** keys can do anything the user
+  can, except manage API keys, which needs a signed-in session.
+- A request with a session cookie uses the session and ignores any key.
+- On any endpoint that looks up who is calling, public ones included, an
+  invalid, expired, or deleted key gets 401 rather than being treated as
+  logged out.
+- Expired keys are deleted by the plugin (when used, or when any key is
+  created), so they soon drop out of the list.
+- There is no per-key rate limit yet: the plugin's limit is off, since its
+  window only resets after a full window with no requests.
+
+Keys are stored hashed by Better Auth's API key plugin (`apikey` table;
+config in `server/utils/auth.ts`). The plugin's own `/api/auth/api-key/*`
+routes are turned off: keys are managed through `/api/profile/api-keys`,
+which sets each key's access level.
+
 ## Deployment
 
 Vercel builds every push: `main` deploys to production, and every other branch

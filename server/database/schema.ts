@@ -12,6 +12,7 @@ import {
   uuid,
   check,
   index,
+  integer,
   pgEnum,
   primaryKey,
   uniqueIndex,
@@ -90,6 +91,51 @@ export const verification = pgTable("verification", {
     .$onUpdate(() => new Date())
     .notNull(),
 });
+
+// User API keys, managed by Better Auth's API key plugin (`server/utils/auth.ts`),
+// which reads and writes these fields by name. `key` is the hash, never the
+// key itself; `start` is the key's first characters, to tell keys apart.
+// `permissions` (JSON text) holds the key's access level (see
+// `server/utils/api-key-rules.ts`).
+export const apikey = pgTable(
+  "apikey",
+  {
+    id: text("id").primaryKey(),
+    configId: text("config_id").default("default").notNull(),
+    name: text("name"),
+    start: text("start"),
+    prefix: text("prefix"),
+    key: text("key").notNull(),
+    referenceId: text("reference_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    refillInterval: integer("refill_interval"),
+    refillAmount: integer("refill_amount"),
+    lastRefillAt: timestamp("last_refill_at", { withTimezone: true }),
+    enabled: boolean("enabled").default(true),
+    rateLimitEnabled: boolean("rate_limit_enabled").default(true),
+    rateLimitTimeWindow: integer("rate_limit_time_window"),
+    rateLimitMax: integer("rate_limit_max"),
+    requestCount: integer("request_count").default(0),
+    remaining: integer("remaining"),
+    lastRequest: timestamp("last_request", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    permissions: text("permissions"),
+    metadata: text("metadata"),
+  },
+  (table) => [
+    uniqueIndex("apikey_key_unique").on(table.key),
+    index("apikey_reference_id_idx").on(table.referenceId),
+    index("apikey_config_id_idx").on(table.configId),
+  ],
+);
 
 export const siteRole = pgEnum("site_role", ["member", "admin"]);
 export const groupRole = pgEnum("group_role", ["admin", "editor", "member"]);
