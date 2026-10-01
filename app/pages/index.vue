@@ -218,16 +218,14 @@ const {
   refresh: refreshDashboard,
 } = useLazyFetch<Dashboard>("/api/dashboard", {
   default: () => ({ campaigns: [], characters: [], content: [] }),
-  immediate: false,
+  // Already signed in: fetch during the server render, so it and the client's
+  // first render agree. Otherwise the watch below fetches after sign-in.
+  immediate: isLoggedIn.value,
 });
 
-watch(
-  [isLoggedIn, authBusy],
-  ([loggedIn, submittingAuth]) => {
-    if (loggedIn && !submittingAuth) refreshDashboard();
-  },
-  { immediate: true },
-);
+watch([isLoggedIn, authBusy], ([loggedIn, submittingAuth]) => {
+  if (loggedIn && !submittingAuth) refreshDashboard();
+});
 
 const recentSections = computed(() => {
   // "idle" counts too: the fetch only starts once signed in, so on the server
