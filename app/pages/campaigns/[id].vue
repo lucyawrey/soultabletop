@@ -27,7 +27,7 @@ const { followSystem } = useCurrentSystem();
 const { data: campaign, refresh } = await useFetch<CampaignDetail>(`/api/campaign/${id}`);
 followSystem(campaign.value?.systemId);
 
-const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
+const { data: systems, status: systemsStatus } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
 });
 
@@ -124,9 +124,11 @@ async function remove() {
             {{ campaign.readableId }} ·
             {{ visibilityLabel(campaign.isPubliclyReadable) }}
           </p>
-          <p v-if="system" class="mt-1 text-sm">
+          <p v-if="system || isLoading(systemsStatus)" class="mt-1 text-sm">
             System:
+            <LookupSkeleton v-if="!system" />
             <NuxtLink
+              v-else
               :to="`/systems/${system.id}`"
               class="text-primary hover:underline"
             >
