@@ -420,12 +420,22 @@ function formatUpdated(updatedAt: string) {
               </span>
             </li>
           </ul>
-          <p
+          <div
             v-else-if="section.loading"
-            class="py-6 text-center text-sm text-muted"
+            role="status"
+            class="divide-y divide-default"
           >
-            Loading…
-          </p>
+            <span class="sr-only">Loading</span>
+            <div
+              v-for="row in 3"
+              :key="row"
+              aria-hidden="true"
+              class="flex h-10 items-center justify-between gap-2"
+            >
+              <LookupSkeleton size-class="h-4 w-40 max-w-2/3" />
+              <LookupSkeleton size-class="h-3.5 w-16" />
+            </div>
+          </div>
           <p v-else class="py-6 text-center text-sm text-muted">
             {{ section.empty }}
             <NuxtLink
