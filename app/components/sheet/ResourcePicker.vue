@@ -4,8 +4,10 @@ import {
   type ResourceLinkKind,
 } from "#shared/content-schema";
 import { schemaDisplayName } from "#shared/schema-builder";
+import type { ResourceSource } from "#shared/resource-list";
 import type { SheetLink } from "#shared/sheet/runtime";
 import { extractApiErrorMessage } from "~/utils/api-error";
+import type { ResourceOptionItem } from "~/utils/resource-option";
 
 // Searchable choice of a readable resource for a `resourceLink` field, loaded
 // on first open. Fields without a `kind` get a kind choice first. Emits the
@@ -32,7 +34,16 @@ const kindOptions = RESOURCE_LINK_KINDS.map((value) => ({
   value,
 }));
 
-const options = ref<{ id: string; name: string }[]>([]);
+// Systems have no system of their own; every other kind's rows carry the
+// `systemId` of the system they belong to.
+interface ListItem {
+  id: string;
+  name: string;
+  source: ResourceSource;
+  systemId?: string;
+}
+
+const options = ref<ListItem[]>([]);
 const loading = ref(false);
 const loadedKind = ref<ResourceLinkKind>();
 const loadError = ref("");
@@ -47,7 +58,7 @@ async function load(open: boolean) {
   loadError.value = "";
   try {
     const listKind = kind.value;
-    options.value = await $fetch<{ id: string; name: string }[]>(
+    options.value = await $fetch<ListItem[]>(
       LIST_URLS[listKind],
     );
     loadedKind.value = listKind;
@@ -64,8 +75,15 @@ async function load(open: boolean) {
   }
 }
 
+const { systemLabel } = useSystems();
 const items = computed(() =>
-  options.value.map((item) => ({ label: item.name, value: item.id })),
+  options.value.map((item) =>
+    resourceOption(item.id, {
+      name: item.name,
+      systemName: item.systemId ? systemLabel(item.systemId) : undefined,
+      source: item.source,
+    }),
+  ),
 );
 
 function select(id: unknown) {
@@ -94,7 +112,11 @@ function select(id: unknown) {
         class="min-w-0 flex-1"
         @update:open="load"
         @update:model-value="select"
-      />
+      >
+        <template #item-label="{ item }">
+          <ResourceOption :option="item as ResourceOptionItem" />
+        </template>
+      </USelectMenu>
     </div>
     <p v-if="loadError" class="mt-1 text-xs text-error">{{ loadError }}</p>
   </div>
