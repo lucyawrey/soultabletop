@@ -29,7 +29,7 @@ Nuxt 4 app for managing tabletop RPG Systems, Campaigns, Content Types, Sheets, 
 
 ## Docs branch
 
-`docs` is a permanent branch in its own worktree (`../soultabletop-worktrees/docs`) for changes that aren't part of a feature: `TODO.md`, `.claude/HANDOFF.md`, `.claude/` rules and skills, standalone notes. Text that documents code in a feature PR ships in that PR. The main checkout stays on `main`. Only `docs` may be pushed without asking each time, and only after the secrets check; a force-push still needs approval. **Read `.claude/docs-branch.md`** before committing there, merging `main` into it, carrying its commits into a feature PR, or opening a docs-only PR (tell the user when one is ready; don't open it unprompted).
+`docs` is a permanent branch in its own worktree (`../soultabletop-worktrees/docs`) for changes that aren't part of a feature: `TODO.md`, `.claude/HANDOFF.md`, `.claude/` rules and skills, standalone notes. Text that documents code in a feature PR ships in that PR. The main checkout stays on `main`; the user's main VS Code window normally shows the docs worktree, and they switch it to the main checkout for testing and merging, so the user may have uncommitted edits in the docs worktree: check `git status` there first and never overwrite or discard them. Only `docs` may be pushed without asking each time, and only after the secrets check; a force-push still needs approval. **Read `.claude/docs-branch.md`** before committing there, merging `main` into it, carrying its commits into a feature PR, or opening a docs-only PR (tell the user when one is ready; don't open it unprompted).
 
 ## Parallel work
 
