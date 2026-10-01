@@ -45,7 +45,7 @@ if (!sheet.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeOption[]>(
   "/api/content-type",
   { default: () => [] },
 );
@@ -127,8 +127,11 @@ async function remove() {
             {{ sheet.readableId }} ·
             {{ visibilityLabel(sheet.isPubliclyReadable) }} ·
             <SystemLink :system-id="sheet.systemId" /> ·
+            <LookupSkeleton
+              v-if="!contentType && isLoading(contentTypesStatus)"
+            />
             <NuxtLink
-              v-if="contentType"
+              v-else-if="contentType"
               :to="`/types/${contentType.id}`"
               class="hover:underline"
             >

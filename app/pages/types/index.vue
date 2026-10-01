@@ -37,7 +37,7 @@ const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<ContentTypeItem>("/api/content-type", loggedIn, { bySystem: true });
 const { items: contentTypes, status, refresh } = list;
 
-const { systems } = useSystems();
+const { systems, status: systemsStatus } = useSystems();
 
 const systemOptions = computed(() =>
   systems.value.map((item) =>
@@ -228,7 +228,7 @@ async function remove() {
       </UButton>
     </div>
 
-    <p v-if="loggedIn && systems.length === 0" class="text-sm text-muted">
+    <p v-if="loggedIn && systemsStatus === 'success' && systems.length === 0" class="text-sm text-muted">
       Create a system before adding content types.
     </p>
 

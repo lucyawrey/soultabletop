@@ -84,11 +84,11 @@ if (!item.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: contentTypes } = await useLazyFetch<NamedItem[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<NamedItem[]>(
   "/api/content-type",
   { default: () => [] },
 );
-const { data: sheets } = await useLazyFetch<SheetItem[]>("/api/sheet", {
+const { data: sheets, status: sheetsStatus } = await useLazyFetch<SheetItem[]>("/api/sheet", {
   default: () => [],
 });
 
@@ -307,8 +307,11 @@ async function remove() {
             {{ item.readableId }} ·
             {{ visibilityLabel(item.isPubliclyReadable) }} ·
             <SystemLink :system-id="item.systemId" /> ·
+            <LookupSkeleton
+              v-if="!contentType && isLoading(contentTypesStatus)"
+            />
             <NuxtLink
-              v-if="contentType"
+              v-else-if="contentType"
               :to="`/types/${contentType.id}`"
               class="hover:underline"
             >
@@ -348,7 +351,12 @@ async function remove() {
         </div>
         <div class="ms-auto flex items-center gap-2">
           <span class="text-muted">View with</span>
+          <LookupSkeleton
+            v-if="isLoading(sheetsStatus)"
+            size-class="h-8 w-56"
+          />
           <USelect
+            v-else
             :model-value="viewSheetId ?? item.sheet.id ?? GENERATED"
             :items="sheetOptions"
             class="w-56"

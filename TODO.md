@@ -14,8 +14,6 @@ Nothing right now.
   Fix refreshing page while logged in logging the user out for some reason.
 - **`/docs` hydration warnings** · bug · small
   `/docs` still logs hydration mismatches, all inside Scalar's own components (`AgentScalarButton`, `OpenMCPButton`, theme toggle); not fixable here short of rendering it client-only.
-- **Smoother loading states** · feature
-  Make cascadig loading look more professional and less janky. Its not to bad right now but there are things like a flash of "content type needs to be created before creating a content" text even when that stuff exists. Tables could also use fake rows befoee content genrates etc.
 
 # Soon
 
