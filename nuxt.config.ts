@@ -18,6 +18,12 @@ export default defineNuxtConfig({
 
   compatibilityDate: "2026-06-30",
 
+  // Scalar's API reference logs hydration mismatches inside its own
+  // components when server-rendered, so render it in the browser only.
+  routeRules: {
+    "/docs": { ssr: false },
+  },
+
   nitro: {
     experimental: {
       openAPI: true,
