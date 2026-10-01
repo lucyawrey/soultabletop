@@ -13,6 +13,23 @@ export default withNuxt(
     },
   },
   {
+    // Fail on imports of packages missing from package.json (they only resolve
+    // while a transitive dependency happens to be installed). The `import`
+    // plugin comes with @nuxt/eslint; the default only allows `dependencies`.
+    rules: {
+      "import/no-extraneous-dependencies": [
+        "error",
+        {
+          devDependencies: [
+            "*.config.{js,mjs,ts}",
+            "scripts/**",
+            "**/*.test.ts",
+          ],
+        },
+      ],
+    },
+  },
+  {
     settings: {
       "better-tailwindcss": {
         entryPoint: "app/assets/css/main.css",
