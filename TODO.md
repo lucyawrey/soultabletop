@@ -87,9 +87,9 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 
 # Low priority
 
-- **TypeBox-based OpenAPI generation** · chore · needs decision: which approach, if any
-  Generate the OpenAPI request schemas from the TypeBox schemas in `server/utils/api-schemas.ts` instead of writing them by hand in each route's `defineRouteMeta`.
-  Likely hard: an earlier attempt found that Nitro reads `defineRouteMeta` statically at build time (it extracts the object literal from the source, without running the route file), so the meta can't reference an imported TypeBox schema or call a function to build one. Approaches to weigh: a build step or script that writes the schemas into the route files or a generated module the meta doesn't need to import; serving our own spec route that merges TypeBox schemas into Nitro's generated spec (e.g. keyed by route and method); or keeping the hand-written meta and adding a test that checks it matches the TypeBox schemas.
+- **TypeBox-based OpenAPI generation** · chore · needs decision: which approach
+  Generate the OpenAPI request schemas from the TypeBox schemas in `server/utils/api-schemas.ts` instead of writing them by hand in each route's `defineRouteMeta`. Worth doing eventually: today every request body is described twice, and the two drift.
+  Likely hard: an earlier attempt found that Nitro reads `defineRouteMeta` statically at build time (it extracts the object literal from the source, without running the route file), so the meta can't reference an imported TypeBox schema or call a function to build one. Approaches to weigh: a build step or script that writes the schemas into the route files or a generated module the meta doesn't need to import; serving our own spec route that merges TypeBox schemas into Nitro's generated spec (e.g. keyed by route and method). A test that checks the hand-written meta against the TypeBox schemas would catch drift but keeps the duplication, so it's a stopgap, not the fix.
 - **Group invite approval** · feature
   When a non-site-admin adds someone to a Group, create a pending invite the invited user must accept instead of adding them directly. Site admins can still add users directly. Currently `POST /api/group/[id]/members` adds immediately.
 - **Catch undeclared imports with ESLint** · chore
