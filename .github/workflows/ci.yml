@@ -1,0 +1,36 @@
+# Runs the same checks agents run locally (see "Running commands" in
+# .claude/CLAUDE.md). None of them need the database or any secrets, so this
+# workflow has none: the opt-in database tests skip without RUN_DB_TESTS.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The job name is the status check's name; keep it `ci` if it is ever made
+  # a required check in the "Main" ruleset.
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      # pnpm comes from corepack, which reads `packageManager` in package.json.
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # `postinstall` runs `nuxt prepare`, which the typecheck needs.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
