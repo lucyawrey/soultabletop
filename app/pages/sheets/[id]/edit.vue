@@ -101,6 +101,7 @@ const form = reactive({
   cssStyles: "",
 });
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "sheet", () => sheet.value ?? undefined);
 const displayOptions = [
   { label: "Text", value: "text", description: "Plain values, like a stat block." },
   { label: "Box", value: "box", description: "Their input boxes, disabled, as when Edit Fields is on." },
@@ -569,6 +570,7 @@ async function insertPath(path: string) {
                 </UFormField>
                 <ReadableIdField
                   :model-value="form.readableId"
+                  :availability="idAvailability"
                   :error="readableIdError"
                   @update:model-value="onReadableIdInput"
                 />
