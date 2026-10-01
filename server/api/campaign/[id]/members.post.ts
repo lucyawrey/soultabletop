@@ -1,10 +1,10 @@
-import { createError, getRouterParam } from "h3";
+import { createError } from "h3";
 import { campaignMembership } from "../../../database/schema";
 import { requireAuthenticatedUser } from "../../../utils/auth";
 import {
   requireResourceEditor,
-  requireUuid,
 } from "../../../utils/resource-management";
+import { resolveResourceRouteId } from "../../../utils/resource-address";
 import { useDatabase } from "../../../utils/database";
 import { parseBody, campaignMembershipSchema } from "../../../utils/api-schemas";
 
@@ -37,7 +37,7 @@ defineRouteMeta({
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const campaignId = requireUuid(getRouterParam(event, "id"), "campaignId");
+  const campaignId = await resolveResourceRouteId(event, "campaign", user);
   await requireResourceEditor(user, campaignId);
   const body = await parseBody(event, campaignMembershipSchema);
   if (
