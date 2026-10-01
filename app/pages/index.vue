@@ -433,7 +433,10 @@ function formatUpdated(updatedAt: string) {
           </p>
           <p v-else class="py-6 text-center text-sm text-muted">
             {{ section.empty }}
-            <NuxtLink :to="section.path" class="text-primary hover:underline">
+            <NuxtLink
+              :to="{ path: section.path, query: { new: '1' } }"
+              class="text-primary hover:underline"
+            >
               Create one.
             </NuxtLink>
           </p>

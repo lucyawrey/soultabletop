@@ -34,7 +34,7 @@ const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySy
 const { items: contentRecords, status, refresh } = list;
 
 const { systemId: currentSystemId } = useCurrentSystem();
-const { data: contentTypes } = await useLazyFetch<ContentTypeItem[]>(
+const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
     default: () => [],
@@ -103,6 +103,19 @@ function openCreate() {
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
+
+// `?new=1` (the dashboard's "Create one" link) opens the New dialog once the
+// content types have loaded, then drops the query so a refresh doesn't reopen it.
+const route = useRoute();
+watch(
+  contentTypesStatus,
+  (state) => {
+    if (state !== "success" || route.query.new === undefined) return;
+    if (loggedIn.value) openCreate();
+    navigateTo({ query: {} }, { replace: true });
+  },
+  { immediate: true },
+);
 
 // Creates with just the basics; the content page's sheet fills in the rest.
 async function submitForm() {

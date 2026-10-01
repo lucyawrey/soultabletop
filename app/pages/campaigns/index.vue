@@ -29,7 +29,7 @@ const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<CampaignItem>("/api/campaign", loggedIn, { bySystem: true });
 const { items: campaigns, status, refresh } = list;
 
-const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
+const { data: systems, status: systemsStatus } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
 });
 
@@ -84,6 +84,19 @@ function openCreate() {
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
+
+// `?new=1` (the dashboard's "Create one" link) opens the New dialog once the
+// systems have loaded, then drops the query so a refresh doesn't reopen it.
+const route = useRoute();
+watch(
+  systemsStatus,
+  (state) => {
+    if (state !== "success" || route.query.new === undefined) return;
+    if (loggedIn.value) openCreate();
+    navigateTo({ query: {} }, { replace: true });
+  },
+  { immediate: true },
+);
 
 function openEdit(item: CampaignItem) {
   form.ownerGroupId = item.ownerGroupId;
