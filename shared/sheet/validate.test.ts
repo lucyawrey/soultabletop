@@ -27,6 +27,7 @@ const classType: ContentTypeRules = {
 };
 
 const character: ContentTypeRules = {
+  showSheetWarnings: true,
   hasStrictSchema: true,
   schema: {
     hp: { type: "number", label: "Hit Points" },
@@ -218,6 +219,46 @@ describe("bindings", () => {
 
   it("lets Value show anything", () => {
     expect(messages(`<Value field="stats" /><Value field="attacks" /><Value field="class" />`)).toEqual([]);
+  });
+});
+
+describe("showSheetWarnings", () => {
+  const withRoot = (patch: Partial<ContentTypeRules>): SheetSchemas => ({
+    ...schemas,
+    root: { ...character, ...patch },
+  });
+  const markup = `<Number field="mana" /><Callout title="x">{mana}</Callout><Number field="misc.a" />`;
+  const codes = (withSchemas: SheetSchemas) =>
+    compile(markup, withSchemas).diagnostics.map((item) => `${item.severity} ${item.code}`);
+
+  it("hides not-in-schema and free-form warnings when off (or missing)", () => {
+    expect(codes(withRoot({ hasStrictSchema: false, showSheetWarnings: false }))).toEqual([]);
+    expect(codes(withRoot({ hasStrictSchema: false, showSheetWarnings: undefined }))).toEqual([]);
+    expect(codes(withRoot({ hasStrictSchema: true, showSheetWarnings: false })).filter((c) => c.startsWith("warning"))).toEqual([]);
+  });
+
+  it("shows them when on", () => {
+    expect(codes(withRoot({ hasStrictSchema: false, showSheetWarnings: true }))).toEqual([
+      "warning unknown-field",
+      "warning unknown-field",
+      "warning free-form-path",
+    ]);
+  });
+
+  it("never changes errors, whatever the option", () => {
+    const broken = `<Number field="mana" /><Number field="name" /><Frobnicate />`;
+    for (const hasStrictSchema of [true, false]) {
+      const on = errorCodes(broken, withRoot({ hasStrictSchema, showSheetWarnings: true }));
+      expect(on.length).toBeGreaterThan(0);
+      expect(errorCodes(broken, withRoot({ hasStrictSchema, showSheetWarnings: false }))).toEqual(on);
+    }
+    expect(errorCodes(`<Number field="mana" />`, withRoot({ hasStrictSchema: true, showSheetWarnings: false }))).toEqual(["unknown-field"]);
+  });
+
+  it("uses the root content type's flag, not a referenced one's", () => {
+    const loose = { ...itemType, hasStrictSchema: false };
+    const off = { root: { ...character, showSheetWarnings: false }, types: { ...schemas.types, item: { ...loose, showSheetWarnings: true } } };
+    expect(codes(off).filter((c) => c.startsWith("warning"))).toEqual([]);
   });
 });
 
