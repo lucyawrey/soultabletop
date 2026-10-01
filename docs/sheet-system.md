@@ -172,7 +172,7 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 
 `validate()` in `shared/sheet/validate.ts`. Errors block sheet save; warnings are shown in the editor only.
 
-Schema-related warnings (the two "warning" rows marked \* below, plus paths into free-form `object`s) are hidden unless
+Schema-related warnings (the three "warning" rows marked \* below: a path or `{path}` interpolation not in a non-strict schema, and a path into a free-form `object`) are hidden unless
 the Sheet's own content type has `showSheetWarnings` on (`content_type.show_sheet_warnings`, default off; the switch
 is shown only while Strict schema is off). Referenced content types' flags are not consulted. Errors, and other warnings
 (e.g. a content type that could not be loaded), are never affected, and the "break existing sheets" check on content type

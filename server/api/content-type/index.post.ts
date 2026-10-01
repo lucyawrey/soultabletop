@@ -47,7 +47,7 @@ defineRouteMeta({
               showSheetWarnings: {
                 type: "boolean",
                 description:
-                  "Show schema-related warnings (paths not in a non-strict schema, paths into free-form objects) in the Sheet editor. Defaults to false; when an update switches hasStrictSchema from true to false and this is omitted, it is turned on.",
+                  "Show schema-related warnings (paths not in a non-strict schema, paths into free-form objects) in the Sheet editor. Defaults to false.",
               },
               schema: { type: "object", additionalProperties: true },
             },
