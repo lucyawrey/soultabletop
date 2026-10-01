@@ -50,7 +50,7 @@ The full list of attributes and children is in `references/tags.md` (verified ag
 - Layout: `Sheet`, `Section` (card; `title`, `description`, `icon`, `span`, `collapsible`, `collapsed`), `Grid` (`cols` 1-12, `gap`), `Stack` (`direction`, `gap`, `align`, `wrap`), `Tabs` (only `Tab` children) and `Tab` (`label` required), `Divider`, `Heading` (`level` 1-4), `Note`, `Callout`, `Badge`, `Collapsible` (`title` required).
 - Fields (all need `field`; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (`options` required), `Tags`, `Tracker` (`max` required), `Ref`, `Value` (never editable), `Markdown`, `Image`.
 - Repeaters: `List` (repeats its children per array item), `Table` (only `Column` and `RowDetails` children).
-- Every tag also takes `class`, `live`, `locked`, `display`.
+- Every tag also takes `class`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class`.
 
 Rendering notes: `Number variant="stat"` shows a big number with its label small. `format="signed"` (on `Number` and `Value`) shows `+2` for positives; an editable `Number` input shows the sign too, while the saved value stays a plain number. `Tracker style="pips"` shows boxes instead of a bar. `Ref` shows a link to the referenced resource or Content.
 
@@ -69,7 +69,7 @@ Rendering notes: `Number variant="stat"` shows a big number with its label small
 
 ## `live`, `locked`, `display`
 
-Boolean (`live`, `locked`) or enum (`display`) attributes on any tag; on layout tags they apply to every field inside, and a descendant opts out with `live="false"` / `locked="false"` / another `display`.
+Boolean (`live`, `locked`) or enum (`display`) attributes on any tag except `Tab` and `RowDetails` (put them on `Tabs`, `Table`, or a tag inside the panel instead); on layout tags they apply to every field inside, and a descendant opts out with `live="false"` / `locked="false"` / another `display`.
 
 - `live`: the field stays editable with the Edit switch off (for users who can edit the Content). Use it for things changed in play: hit points, spell slots, inspiration.
 - `locked`: read-only even in Edit mode until the user clicks the field's pencil button. Use it for things that rarely change: ability scores, level.

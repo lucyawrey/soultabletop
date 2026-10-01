@@ -8,6 +8,8 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 
 ## Attributes every tag accepts
 
+`Tab` and `RowDetails` are rendered by their parents (`Tabs`, `Table`), so they accept only `class` from this list; `live`, `locked`, and `display` there are an unknown-attribute error.
+
 | Attribute | Values | Meaning |
 |---|---|---|
 | `class` | space-separated names, each `[a-z][a-z0-9-]*` | Class names for the Sheet's CSS |
