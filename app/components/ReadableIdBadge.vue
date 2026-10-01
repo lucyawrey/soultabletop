@@ -8,8 +8,8 @@ defineProps<{ readableId: string }>();
     color="neutral"
     variant="outline"
     size="sm"
-    title="ID"
-    class="font-mono font-normal"
+    :title="`ID: ${readableId}`"
+    class="max-w-full font-mono font-normal break-all whitespace-normal"
   >
     {{ readableId }}
   </UBadge>
