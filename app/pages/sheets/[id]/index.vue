@@ -170,7 +170,7 @@ async function remove() {
               <p class="text-muted">
                 Shown with sample data. Changes made in the preview are never saved.
               </p>
-              <USwitch v-model="previewEditMode" label="Edit" />
+              <USwitch v-model="previewEditMode" label="Edit Fields" />
             </div>
             <SheetRenderer
               :markup="sheet.markup"
