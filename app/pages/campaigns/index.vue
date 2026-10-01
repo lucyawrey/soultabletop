@@ -93,7 +93,7 @@ const router = useRouter();
 let mounted = false;
 function openNewFromQuery() {
   if (!mounted || route.query.new === undefined) return;
-  if (systemsStatus.value === "pending" || systemsStatus.value === "idle") return;
+  if (isLoading(systemsStatus.value)) return;
   if (systemsStatus.value === "success" && loggedIn.value) openCreate();
   const { new: _new, ...rest } = route.query;
   router.replace({ query: rest });
@@ -204,7 +204,7 @@ async function remove() {
         New Campaign
       </UButton>
     </div>
-    <p v-if="systems.length === 0" class="text-sm text-muted">
+    <p v-if="systemsStatus === 'success' && systems.length === 0" class="text-sm text-muted">
       Create a system before adding campaigns.
     </p>
 
@@ -227,6 +227,7 @@ async function remove() {
         >
           {{ systemName(row.original.systemId) }}
         </NuxtLink>
+        <LookupSkeleton v-else-if="isLoading(systemsStatus)" />
         <template v-else>Unknown</template>
       </template>
 

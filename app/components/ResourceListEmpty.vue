@@ -10,7 +10,8 @@ defineProps<{
 </script>
 
 <template>
-  <p class="py-6 text-center text-sm text-muted">
+  <TableSkeleton v-if="isLoading(list.status.value)" />
+  <p v-else class="py-6 text-center text-sm text-muted">
     {{ list.emptyMessage(plural, uncountable) }}
     <UButton
       v-if="list.systemFilter.value"
