@@ -2,7 +2,6 @@ import { and, eq, exists, or, sql, type SQL } from "drizzle-orm";
 import type { User } from "better-auth";
 import { createError, getRouterParam, type H3Event } from "h3";
 import {
-  group,
   ownerReadableId,
   resource,
   userProfile,
@@ -48,6 +47,36 @@ function viewerCanRead(table: ResourceTable, viewer: Pick<User, "id"> | null): S
   return or(isSiteAdmin, readableBy(table, { userId: viewer.id, isSiteAdmin: false }))!;
 }
 
+// The query behind `findReadableResourceId`. The owner is found through
+// `owner_readable_id`'s primary key, then the resource through the unique
+// (owner, kind, lower(readable ID)) indexes. One query either way: a missing
+// owner (the subqueries give NULL), a missing resource, and one the viewer
+// can't read all give no row.
+export function findReadableResourceIdQuery(
+  viewer: Pick<User, "id"> | null,
+  kind: ResourceKind,
+  owner: string,
+  readableId: string,
+) {
+  const ownerColumn = (column: typeof ownerReadableId.userId | typeof ownerReadableId.groupId) =>
+    sql`(select ${column} from ${ownerReadableId} where ${ownerReadableId.readableId} = ${owner.toLowerCase()})`;
+  return useDatabase()
+    .select({ id: resource.id })
+    .from(resource)
+    .where(
+      and(
+        or(
+          eq(resource.ownerUserId, ownerColumn(ownerReadableId.userId)),
+          eq(resource.ownerGroupId, ownerColumn(ownerReadableId.groupId)),
+        ),
+        eq(resource.kind, kind),
+        sql`lower(${resource.readableId}) = ${readableId.toLowerCase()}`,
+        viewerCanRead(resource, viewer),
+      ),
+    )
+    .limit(1);
+}
+
 // The ID of the `kind` resource that `owner` (a username or group readable ID)
 // has under `readableId`, if the viewer can read it. Both are compared
 // lowercase (the unique indexes are on `lower(...)`).
@@ -57,23 +86,7 @@ export async function findReadableResourceId(
   owner: string,
   readableId: string,
 ): Promise<string | undefined> {
-  const [row] = await useDatabase()
-    .select({ id: resource.id })
-    .from(resource)
-    .leftJoin(userProfile, eq(userProfile.userId, resource.ownerUserId))
-    .leftJoin(group, eq(group.id, resource.ownerGroupId))
-    .where(
-      and(
-        eq(resource.kind, kind),
-        sql`lower(${resource.readableId}) = ${readableId.toLowerCase()}`,
-        or(
-          sql`lower(${userProfile.username}) = ${owner.toLowerCase()}`,
-          sql`lower(${group.readableId}) = ${owner.toLowerCase()}`,
-        ),
-        viewerCanRead(resource, viewer),
-      ),
-    )
-    .limit(1);
+  const [row] = await findReadableResourceIdQuery(viewer, kind, owner, readableId);
   return row?.id;
 }
 

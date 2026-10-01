@@ -218,8 +218,9 @@ export const group = pgTable(
 // `0012_owner_readable_id_namespace`) keep it in step on insert and rename, so
 // taking a name the other table has fails with a unique violation (23505),
 // race-free, whatever code writes the row. Rows go away with their user
-// profile or group. Don't write it directly; only availability checks read it
-// (`isOwnerReadableIdTaken`).
+// profile or group. Don't write it directly. Read by availability checks
+// (`isOwnerReadableIdTaken`) and to find a resource's owner by readable ID
+// (`server/utils/resource-address.ts`).
 export const ownerReadableId = pgTable(
   "owner_readable_id",
   {
