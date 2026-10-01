@@ -14,9 +14,17 @@ export function useCurrentSystem() {
   // reach components that were set up earlier or later. This state is shared
   // by all of them and carried to the client with the page.
   // Anything but a UUID (a hand-edited cookie) counts as All Systems.
-  const state = useState<string | null>("current-system", () =>
-    cookie.value && UUID_PATTERN.test(cookie.value) ? cookie.value : null,
-  );
+  const fromCookie = () =>
+    cookie.value && UUID_PATTERN.test(cookie.value) ? cookie.value : null;
+  const state = useState<string | null>("current-system", fromCookie);
+  // On the client the cookie can change under us (another tab picked a
+  // system), so the state follows it. `setSystem` sets both, so this is a
+  // no-op for our own changes.
+  if (import.meta.client) {
+    watch(cookie, () => {
+      if (state.value !== fromCookie()) state.value = fromCookie();
+    });
+  }
   const systemId = computed(() => state.value);
 
   function setSystem(id: string | null) {

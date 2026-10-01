@@ -15,25 +15,31 @@ const RESOURCE_ENDPOINTS: Record<string, string> = {
   types: "content-type",
 };
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default defineNuxtRouteMiddleware(async (to) => {
   if (!import.meta.server) return;
   const { systemId, setSystem } = useCurrentSystem();
-  if (!systemId.value) return;
+  const original = systemId.value;
+  if (!original) return;
 
   const fetchApi = useRequestFetch();
-  let current = systemId.value;
+  let current = original;
+  // Whether `current` was just fetched as a system, so it is known readable.
   let verified = false;
 
   const [section, resourceId] = to.path.split("/").filter(Boolean);
   const endpoint = section && RESOURCE_ENDPOINTS[section];
-  if (endpoint && resourceId) {
+  if (endpoint && resourceId && UUID_PATTERN.test(resourceId)) {
     try {
       const item = await fetchApi<{ id: string; systemId?: string | null }>(
         `/api/${endpoint}/${resourceId}`,
       );
       const target = endpoint === "system" ? item.id : item.systemId;
-      if (target && target !== current) current = target;
-      else if (endpoint === "system") verified = true;
+      if (target) {
+        current = target;
+        verified = endpoint === "system";
+      }
     } catch {
       // The page shows its own not-found state.
     }
@@ -48,5 +54,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
       if (code === 404 || code === 403) current = "";
     }
   }
-  setSystem(current || null);
+  // Setting the cookie sends it again with a fresh expiry, so only on change.
+  if ((current || null) !== original) setSystem(current || null);
 });
