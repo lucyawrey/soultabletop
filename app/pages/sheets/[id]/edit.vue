@@ -104,7 +104,7 @@ const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadab
 const idAvailability = useResourceIdAvailability(form, "sheet", () => sheet.value ?? undefined);
 const displayOptions = [
   { label: "Text", value: "text", description: "Plain values, like a stat block." },
-  { label: "Box", value: "box", description: "Their input boxes, disabled, as in Edit mode." },
+  { label: "Box", value: "box", description: "Their input boxes, disabled, as when Edit Fields is on." },
 ];
 const saved = ref("");
 function load(detail: SheetDetail) {
@@ -590,8 +590,8 @@ async function insertPath(path: string) {
                 </UFormField>
                 <UFormField
                   name="defaultEditMode"
-                  label="Start in Edit mode"
-                  description="Whether content opens with the Edit switch on."
+                  label="Start with Edit Fields on"
+                  description="Whether content opens with the Edit Fields switch on."
                 >
                   <USwitch v-model="form.defaultEditMode" />
                 </UFormField>
@@ -659,7 +659,7 @@ async function insertPath(path: string) {
           <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
             <h2 class="font-semibold text-highlighted">Preview</h2>
             <div class="flex flex-wrap items-center gap-3">
-              <USwitch v-model="previewEditMode" label="Edit" />
+              <USwitch v-model="previewEditMode" label="Edit Fields" />
               <USelect
                 v-model="previewSource"
                 :items="previewOptions"
