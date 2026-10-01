@@ -2,6 +2,24 @@
 
 Written 2026-10-01 by a read-only planning agent for the user to review and edit before any code is written. The user's decisions (section 11) go at the top of this file when made, and the final design is recorded in `docs/sheet-system.md` as it is implemented. Tier and model suggestions are for the coordinator.
 
+## Decisions (user, 2026-10-01) and status
+
+Answers to the nine decisions in section 11 below. The plan itself is unchanged; where an answer differs from the recommendation, the change is noted.
+
+1. **Where formulas live:** sheet markup now, schema-level computed fields later (recommended).
+2. **Reuse:** `<Define>` with parameters and `$name` syntax (recommended).
+3. **Stored or computed:** computed when the sheet is shown, never stored (recommended).
+4. **Override: `field` + `formula` now** (NOT the recommendation, which was "not in v1"). A tag may carry both: the field holds an optional manual value and an empty value means "automatic" (the formula). Plan consequences to design in PR 2: the validator accepts `field` + `formula` together (was an error), the field's value type must match the formula's result type, edit mode edits the field and shows the computed value as its placeholder or default, clearing the field returns to automatic, and `live`/`locked`/`display` apply to the field part as they do today. Sections 1, 4, and 10 must be updated before PR 2 starts.
+5. **Syntax:** spreadsheet-like (recommended).
+6. **Missing values:** the result is empty, aggregates skip them, `coalesce` gives a default (recommended).
+7. **Errors:** sheet editors see a marker and the message, everyone else sees a dash (recommended).
+8. **Functions:** the planner's list **plus dynamic `get(record, key)`** (NOT the recommendation). Constraints: own keys only (`Object.hasOwn`), refuse `__proto__`, `constructor`, and `prototype` keys, treat the result type as unknown (`any`) so it is not statically checked, and require the path-hardening PR 0 first.
+9. **Names:** `<Define>` and `$name` (settled with decision 2); conditional display is included as an optional later PR with the attribute **`show="{= ...}"**.
+
+**Status:** no code started. The user is first reading this plan and wants to weigh an alternative: sandboxed JavaScript (functions defined in `<Define>` tags and in a JS section of the sheet) instead of the self-written formula language. This plan stays as the baseline; any comparison is a separate document next to it.
+
+---
+
 # Formulas for Soul Tabletop Sheets: implementation plan
 
 I read `.claude/CLAUDE.md`, `docs/sheet-system.md`, everything in `shared/sheet/` (parser, registry, validate, runtime, editor), `app/composables/useSheet.ts`, `sheet/Renderer.vue`, `Node.vue`, `Field.vue`, `List.vue`, `Table.vue`, `Scope.vue`, `CodeEditor.client.vue`, the formula-related parts of `sheets/[id]/edit.vue`, `server/utils/sheet-schemas.ts`, `content-refs.ts`, `content-validation.ts`, `api-schemas.ts`, `server/api/content/[id].get.ts`, the Sheets skill, and the two TODO items (plus "hide Sheet warnings"). Nothing was written.
