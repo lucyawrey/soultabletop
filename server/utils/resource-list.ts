@@ -1,22 +1,13 @@
 import { createError, getQuery, type H3Event } from "h3";
-import { and, asc, desc, eq, exists, ilike, inArray, notInArray, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, ilike, or, sql, type SQL } from "drizzle-orm";
 import type { User } from "better-auth";
-import {
-  campaignMembership,
-  group,
-  groupMembership,
-  resource,
-  resourceGrant,
-  type Resource,
-} from "../database/schema";
-import { useDatabase } from "./database";
+import { group, resource, type Resource } from "../database/schema";
 import {
   clampPage,
   escapeLike,
   LIST_PAGE_SIZE,
   LIST_SCOPES,
   MAX_PAGE,
-  paginate,
   parseListQuery,
   type ListQuery,
   type ResourceSource,
@@ -25,12 +16,19 @@ import {
 import { requireUuid } from "./resource-management";
 import { excludesMineFromFind, getResourceSource, isListed } from "./resource-list-filter";
 import {
-  getResourceAccess,
   getResourceAccessOrPublic,
-  loadResourceAccessContext,
+  loadViewerAccessContext,
+  withResourceGrants,
   type ResourceAccess,
   type ResourceAccessContext,
 } from "./resource-access";
+import {
+  inViewerMine,
+  notInViewerMine,
+  publiclyListed,
+  readableBy,
+  type ListViewer,
+} from "./resource-access-sql";
 
 // Official resources (owned by a system group) are labeled as such and sort
 // before Community ones; select `official` and order by `listOrder`.
@@ -63,59 +61,30 @@ export const systemIdParameter = {
   schema: { type: "string" as const, format: "uuid" },
 };
 
-// The SQL part of a list query: search over name and readable ID, and scope.
-// "public" is exact; "mine" selects candidates (owned by the user or their
-// groups, campaigns they belong to, or carrying any edit grant) that
-// `listResources` then checks against the real access rules.
-export function listCondition(query: ListQuery, user: User | null) {
-  const conditions: (SQL | undefined)[] = [];
-  if (query.q) {
-    const pattern = `%${escapeLike(query.q)}%`;
-    conditions.push(
-      or(ilike(resource.name, pattern), ilike(resource.readableId, pattern)),
-    );
+// The search part of a list query: name or readable ID.
+function searchCondition(query: ListQuery) {
+  if (!query.q) return undefined;
+  const pattern = `%${escapeLike(query.q)}%`;
+  return or(ilike(resource.name, pattern), ilike(resource.readableId, pattern));
+}
+
+// The rows a list shows, in SQL: what `isListed` allows for the scope, minus
+// what the viewer's My list shows when Find leaves it out.
+export function listCondition(query: ListQuery, viewer: ListViewer | null) {
+  if (query.scope === "mine") {
+    if (!viewer)
+      throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    return inViewerMine(resource, viewer);
   }
   if (query.scope === "public") {
-    conditions.push(
-      eq(resource.isPubliclyReadable, true),
-      eq(resource.isAdminHidden, false),
-    );
-  } else if (query.scope === "mine") {
-    if (!user)
-      throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
-    const database = useDatabase();
-    conditions.push(
-      or(
-        eq(resource.ownerUserId, user.id),
-        inArray(
-          resource.ownerGroupId,
-          database
-            .select({ id: groupMembership.groupId })
-            .from(groupMembership)
-            .where(eq(groupMembership.userId, user.id)),
-        ),
-        inArray(
-          resource.id,
-          database
-            .select({ id: campaignMembership.campaignId })
-            .from(campaignMembership)
-            .where(eq(campaignMembership.userId, user.id)),
-        ),
-        exists(
-          database
-            .select({ one: sql`1` })
-            .from(resourceGrant)
-            .where(
-              and(
-                eq(resourceGrant.resourceId, resource.id),
-                eq(resourceGrant.permission, "edit"),
-              ),
-            ),
-        ),
-      ),
+    return and(
+      publiclyListed(resource),
+      viewer && excludesMineFromFind(query, true)
+        ? notInViewerMine(resource, viewer)
+        : undefined,
     );
   }
-  return and(...conditions);
+  return readableBy(resource, viewer);
 }
 
 interface ListRow {
@@ -123,36 +92,18 @@ interface ListRow {
   official: boolean;
 }
 
-// The IDs of the user's own list ("mine" scope) for a kind of resource, by the
-// same candidate query and `isListed` rule the My tab uses.
-async function loadMineIds(user: User, kind: Resource["kind"]) {
-  const database = useDatabase();
-  const candidates = await database
-    .select()
-    .from(resource)
-    .where(and(eq(resource.kind, kind), listCondition({ q: "", scope: "mine" }, user)));
-  const context = await loadResourceAccessContext(
-    user,
-    candidates.map((item) => item.id),
-  );
-  return candidates
-    .filter((item) =>
-      isListed(item, getResourceAccess(item, context), context, "mine"),
-    )
-    .map((item) => item.id);
-}
-
 // Runs a list query. `fetchRows` selects rows (with `resource` and `official`)
 // for a where condition, ordered by `listOrder`, with an optional limit and
-// offset; `countRows` counts the rows for a condition. Rows the user can't
-// read are dropped. With `query.page` the result is a page, otherwise the
+// offset; `countRows` counts the rows for a condition. The access rules are
+// applied in SQL (`listCondition`), so totals and pages come from the
+// database; each returned row is checked against `getResourceAccess` as well.
+// `where` may be a function of the viewer, for conditions that check access
+// to related resources. With `query.page` the result is a page, otherwise the
 // plain array.
 export async function listResources<T extends ListRow>(options: {
   query: ListQuery;
   user: User | null;
-  // The kind of resource being listed.
-  kind: Resource["kind"];
-  where?: SQL;
+  where?: SQL | ((viewer: ListViewer | null) => SQL | undefined);
   fetchRows: (args: {
     where: SQL | undefined;
     limit?: number;
@@ -165,20 +116,21 @@ export async function listResources<T extends ListRow>(options: {
   page?: Pick<Paginated<never>, "total" | "page" | "pageSize">;
 }> {
   const { query, user, fetchRows, countRows } = options;
-  const mineIds =
-    user && excludesMineFromFind(query, true)
-      ? await loadMineIds(user, options.kind)
-      : [];
+  const viewerContext = user ? await loadViewerAccessContext(user) : null;
+  const viewer: ListViewer | null = viewerContext && {
+    userId: viewerContext.userId,
+    isSiteAdmin: viewerContext.isSiteAdmin,
+  };
   const where = and(
-    options.where,
-    listCondition(query, user),
-    mineIds.length ? notInArray(resource.id, mineIds) : undefined,
+    typeof options.where === "function" ? options.where(viewer) : options.where,
+    searchCondition(query),
+    listCondition(query, viewer),
   );
 
   async function withAccess(rows: T[]) {
-    const context = user
-      ? await loadResourceAccessContext(
-          user,
+    const context = viewerContext
+      ? await withResourceGrants(
+          viewerContext,
           rows.map((row) => row.resource.id),
         )
       : null;
@@ -190,32 +142,26 @@ export async function listResources<T extends ListRow>(options: {
           access: getResourceAccessOrPublic(row.resource, context),
           source: getResourceSource(row.resource, row.official, context),
         }))
+        // The SQL condition already applies these rules; this keeps
+        // `getResourceAccess` the last word if the two ever disagree.
         .filter(({ access, resource: item }) =>
           isListed(item, access, context, query.scope),
         ),
     };
   }
 
-  // Public results are exact in SQL, so they page in SQL. Everything else is
-  // filtered by the access rules in code, then paged.
-  if (query.page && query.scope === "public") {
-    const total = await countRows(where);
-    const page = clampPage(query.page, total);
-    const rows = await fetchRows({
-      where,
-      limit: LIST_PAGE_SIZE,
-      offset: (page - 1) * LIST_PAGE_SIZE,
-    });
-    return {
-      ...(await withAccess(rows)),
-      page: { total, page, pageSize: LIST_PAGE_SIZE },
-    };
-  }
-
-  const all = await withAccess(await fetchRows({ where }));
-  if (!query.page) return all;
-  const { items, ...page } = paginate(all.rows, query.page);
-  return { ...all, rows: items, page };
+  if (!query.page) return withAccess(await fetchRows({ where }));
+  const total = await countRows(where);
+  const page = clampPage(query.page, total);
+  const rows = await fetchRows({
+    where,
+    limit: LIST_PAGE_SIZE,
+    offset: (page - 1) * LIST_PAGE_SIZE,
+  });
+  return {
+    ...(await withAccess(rows)),
+    page: { total, page, pageSize: LIST_PAGE_SIZE },
+  };
 }
 
 export function respondWithList<T>(
