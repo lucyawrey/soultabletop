@@ -338,11 +338,7 @@ function formatUpdated(updatedAt: string) {
           </template>
           <template #description>
             <p class="text-sm text-muted">
-              {{
-                isRegistering
-                  ? "Placeholder for registration copy."
-                  : "Placeholder for sign-in copy."
-              }}
+              {{ isRegistering ? copy.home.registerNote : copy.home.signInNote }}
             </p>
             <UTabs
               :items="[
