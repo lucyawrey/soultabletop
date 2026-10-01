@@ -88,12 +88,15 @@ function openCreate() {
 // `?new=1` (the dashboard's "Create one" link) opens the New dialog once the
 // systems have loaded, then drops the query so a refresh doesn't reopen it.
 const route = useRoute();
+const router = useRouter();
 watch(
   systemsStatus,
   (state) => {
-    if (state !== "success" || route.query.new === undefined) return;
+    // Client only: the server can't open a dialog or change the address.
+    if (!import.meta.client || state !== "success" || route.query.new === undefined)
+      return;
     if (loggedIn.value) openCreate();
-    navigateTo({ query: {} }, { replace: true });
+    router.replace({ query: {} });
   },
   { immediate: true },
 );
