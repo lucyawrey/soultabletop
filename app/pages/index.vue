@@ -32,7 +32,7 @@ const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadab
 const authBusy = ref(false);
 const errorMessage = ref("");
 
-const sessionState = await authClient.useSession(useFetch);
+const sessionState = await useAuthSession();
 const isLoggedIn = computed(() => !!sessionState.data.value?.user);
 
 // Pages that need an account send visitors here with `?redirect=<path>`; they
