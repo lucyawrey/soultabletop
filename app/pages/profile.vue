@@ -144,7 +144,7 @@ async function save() {
       method: "PATCH",
       body: {
         ...(nameChanged.value ? { name: displayName.value || null } : {}),
-        ...(usernameChanged.value ? { username: username.value } : {}),
+        ...(usernameChanged.value ? { username: form.username.trim() } : {}),
         ...(iconChanged.value ? { iconImageUrl: iconUrl.value || null } : {}),
       },
     });

@@ -18,3 +18,20 @@ export function formatUserLabel(name: string, username?: string | null) {
   if (!username || name.toLowerCase() === username.toLowerCase()) return name;
   return `${name} (@${username})`;
 }
+
+// The display name to store when the username changes: the new username as
+// typed, if the current name is the untouched default (the old username in any
+// capitalization, or empty). Undefined means leave the name alone.
+export function syncedDisplayName(
+  currentName: string,
+  oldUsername: string,
+  newUsernameTyped: string,
+) {
+  const typed = newUsernameTyped.trim();
+  if (!typed || typed.toLowerCase() === oldUsername.toLowerCase()) {
+    return undefined;
+  }
+  const name = currentName.trim();
+  if (name && name.toLowerCase() !== oldUsername.toLowerCase()) return undefined;
+  return typed;
+}

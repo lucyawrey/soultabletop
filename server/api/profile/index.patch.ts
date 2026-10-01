@@ -4,7 +4,7 @@ import { user as userTable, userProfile } from "../../database/schema";
 import { parseBody, profilePatchSchema } from "../../utils/api-schemas";
 import { useDatabase } from "../../utils/database";
 import { requireAuthenticatedUser } from "../../utils/auth";
-import { resolveDisplayName } from "../../../shared/display-name";
+import { resolveDisplayName, syncedDisplayName } from "../../../shared/display-name";
 import {
   ensureUserProfile,
   isUniqueConstraintError,
@@ -21,7 +21,11 @@ defineRouteMeta({
           schema: {
             type: "object",
             properties: {
-              username: { type: "string" },
+              username: {
+                type: "string",
+                description:
+                  "Stored lowercase; a display name that is still the old username follows it, with this capitalization",
+              },
               name: {
                 type: ["string", "null"],
                 description:
@@ -60,10 +64,11 @@ export default defineEventHandler(async (event) => {
 
   try {
     const database = useDatabase();
+    const newUsername = body.username?.toLowerCase();
     const [profile] = await database
       .update(userProfile)
       .set({
-        ...(body.username !== undefined ? { username: body.username } : {}),
+        ...(body.username !== undefined ? { username: newUsername } : {}),
         ...(body.iconImageUrl !== undefined
           ? { iconImageUrl: body.iconImageUrl }
           : {}),
@@ -74,6 +79,18 @@ export default defineEventHandler(async (event) => {
 
     // Better Auth's `user.name` is the display name. It is required, so an
     // empty one is stored as the username.
+    // When the username changes and the name is still the default (the old
+    // username), the name follows it, unless this request sets the name.
+    const followedName =
+      body.name === undefined && body.username !== undefined
+        ? syncedDisplayName(user.name, currentProfile.username, body.username)
+        : undefined;
+    if (followedName !== undefined) {
+      await database
+        .update(userTable)
+        .set({ name: followedName, updatedAt: new Date() })
+        .where(eq(userTable.id, user.id));
+    }
     if (body.name !== undefined) {
       await database
         .update(userTable)
