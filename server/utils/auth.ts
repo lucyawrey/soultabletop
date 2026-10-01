@@ -1,6 +1,7 @@
 import { apiKey } from "@better-auth/api-key";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth, type User } from "better-auth";
+import { APIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
 import { createError, getRequestHeaders, type H3Event } from "h3";
 import { user as userTable } from "../database/schema";
@@ -14,6 +15,7 @@ import {
   isReadOnlyMethod,
   readApiKey,
 } from "./api-key-rules";
+import { getStoredNameError } from "../../shared/display-name";
 import { useDatabase } from "./database";
 
 // Hosts the app may be served from. Better Auth builds its URLs (and checks
@@ -31,6 +33,13 @@ function allowedHosts() {
   return [...vercelHosts, "localhost:*", "127.0.0.1:*"];
 }
 
+function checkedName<T extends { name?: string }>(data: T): T {
+  const name = String(data.name ?? "");
+  const error = getStoredNameError(name);
+  if (error) throw new APIError("BAD_REQUEST", { message: error });
+  return { ...data, name: name.trim() };
+}
+
 function createAuth() {
   const config = useRuntimeConfig();
 
@@ -41,6 +50,18 @@ function createAuth() {
     baseURL: { allowedHosts: allowedHosts() },
     emailAndPassword: {
       enabled: true,
+    },
+    // Display names are validated whichever way they get written (the HTTP
+    // update-user route is also off, see `disabledPaths`).
+    databaseHooks: {
+      user: {
+        create: { before: async (data) => ({ data: checkedName(data) }) },
+        update: {
+          before: async (data) => ({
+            data: data.name === undefined ? data : checkedName(data),
+          }),
+        },
+      },
     },
     plugins: [
       apiKey({
@@ -61,7 +82,12 @@ function createAuth() {
     // `/api/profile/api-keys`, which sets each key's access level (a field
     // the plugin only accepts from the server) and refuses key-authenticated
     // requests. The server-side `auth.api` calls still work.
+    // Users are created by `/api/register` (which also makes the profile, and
+    // calls `auth.api.signUpEmail` directly) and edited through
+    // `/api/profile`, so Better Auth's own routes for that are off.
     disabledPaths: [
+      "/sign-up/email",
+      "/update-user",
       "/api-key/create",
       "/api-key/get",
       "/api-key/list",
