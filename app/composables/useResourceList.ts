@@ -22,6 +22,11 @@ export async function useResourceList<T>(
 ) {
   const hasTabs = options.tabs ?? true;
   const { systemId, setSystem } = useCurrentSystem();
+  // The header selector's systems, for naming the filter in empty states.
+  // Called before the first await, which would lose the Nuxt instance.
+  const { data: selectorSystems } = useNuxtData<{ id: string; name: string }[]>(
+    "system-selector",
+  );
   const route = useRoute();
   const router = useRouter();
 
@@ -98,9 +103,6 @@ export async function useResourceList<T>(
 
   // The name of the current system when this list is filtered by it; "the
   // current system" until the header selector's list has loaded.
-  const { data: selectorSystems } = useNuxtData<{ id: string; name: string }[]>(
-    "system-selector",
-  );
   const systemFilter = computed(() => {
     if (!options.bySystem || !systemId.value) return null;
     return (
