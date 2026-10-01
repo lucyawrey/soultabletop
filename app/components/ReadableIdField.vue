@@ -2,10 +2,16 @@
 // Form field for a Resource's or Group's readable ID, labeled "ID". Pages pass `onReadableIdInput` from
 // `useReadableIdFromName` as the update handler, so it isn't a plain v-model.
 // `label` and `description` are overridable for IDs that aren't a Resource's or Group's (e.g. usernames).
-withDefaults(
+// `availability` (from `useResourceIdAvailability`) adds the live "available" /
+// "in use" hint; `subject` is what it calls the value.
+import type { AvailabilityStatus } from "~/composables/useReadableIdAvailability";
+
+const props = withDefaults(
   defineProps<{
     modelValue: string;
     error?: string;
+    availability?: AvailabilityStatus;
+    subject?: string;
     name?: string;
     label?: string;
     description?: string;
@@ -13,11 +19,27 @@ withDefaults(
   {
     name: "readableId",
     label: "ID",
+    subject: "ID",
     description:
       "Lowercase letters, numbers, and hyphens. Auto-generated from the name — edit it if you need something different or unique.",
   },
 );
 defineEmits<{ "update:modelValue": [value: string] }>();
+
+const shownError = computed(
+  () =>
+    props.error ??
+    (props.availability === "taken"
+      ? `That ${props.subject} is already in use.`
+      : undefined),
+);
+const hint = computed(() => {
+  if (props.availability === "checking") return "Checking availability…";
+  if (props.availability === "available")
+    return `That ${props.subject} is available.`;
+  if (props.availability === "failed") return "Could not check availability.";
+  return undefined;
+});
 </script>
 
 <template>
@@ -25,9 +47,14 @@ defineEmits<{ "update:modelValue": [value: string] }>();
     :name="name"
     :label="label"
     :description="description"
-    :error="error"
+    :error="shownError"
     required
   >
+    <template v-if="hint" #help>
+      <span :class="availability === 'available' ? 'text-success' : 'text-muted'">
+        {{ hint }}
+      </span>
+    </template>
     <UInput
       :model-value="modelValue"
       class="w-full"
