@@ -32,11 +32,33 @@ const mode = ref<AuthMode>("login");
 const registerForm = reactive({ name: "", username: "" });
 // The username as typed is also the default display name, so capitalization is
 // accepted here (the server stores the username lowercase).
-const usernameError = computed(() => {
+const usernameFormatError = computed(() => {
   const typed = registerForm.username.trim();
   if (typed.length > MAX_USERNAME_LENGTH)
     return `Use at most ${MAX_USERNAME_LENGTH} characters.`;
   return getReadableIdError(typed.toLowerCase());
+});
+// Live availability, from the same public check the form runs on submit.
+const usernameAvailability = useReadableIdAvailability(() => {
+  const typed = registerForm.username.trim().toLowerCase();
+  return !typed || usernameFormatError.value
+    ? null
+    : {
+        endpoint: "/api/profile/username-availability",
+        query: { username: typed },
+      };
+});
+const usernameError = computed(() => {
+  if (usernameFormatError.value) return usernameFormatError.value;
+  if (usernameAvailability.value === "taken")
+    return "That username is already in use.";
+  return undefined;
+});
+const usernameHint = computed(() => {
+  if (usernameAvailability.value === "checking") return "Checking availability…";
+  if (usernameAvailability.value === "available") return "That username is available.";
+  if (usernameAvailability.value === "failed") return "Could not check availability.";
+  return undefined;
 });
 const displayNamePlaceholder = computed(
   () => registerForm.username.trim() || "Your display name",
@@ -344,6 +366,13 @@ function formatUpdated(updatedAt: string) {
               placeholder="your-name"
               required
             />
+            <p
+              v-if="usernameHint"
+              class="mt-1 text-sm"
+              :class="usernameAvailability === 'available' ? 'text-success' : 'text-muted'"
+            >
+              {{ usernameHint }}
+            </p>
           </template>
           <template #name-field>
             <UInput

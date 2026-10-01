@@ -67,6 +67,7 @@ const form = reactive({
   hasStrictSchema: false,
 });
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "contentType", () => editingType.value ?? undefined);
 const formBusy = ref(false);
 const formError = ref("");
 const brokenSheets = ref<BrokenSheets>();
@@ -326,6 +327,7 @@ async function remove() {
           </UFormField>
           <ReadableIdField
             :model-value="form.readableId"
+            :availability="idAvailability"
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />

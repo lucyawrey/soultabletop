@@ -84,6 +84,7 @@ const form = reactive({
   isDefault: false,
 });
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const idAvailability = useResourceIdAvailability(form, "sheet");
 
 // Only editors of the ContentType may change its default Sheet (enforced
 // server-side too), so the switch is hidden for everyone else.
@@ -324,6 +325,7 @@ async function remove() {
           </UFormField>
           <ReadableIdField
             :model-value="form.readableId"
+            :availability="idAvailability"
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
