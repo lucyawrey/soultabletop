@@ -17,6 +17,8 @@ defineRouteMeta({
   openAPI: {
     tags: ["Sheet"],
     summary: "List accessible sheets",
+    description:
+      "Each row has the `systemId` of its content type's system.",
     parameters: [...listQueryParameters, systemIdParameter],
     responses: {
       200: { description: "Sheet list. Each row has `source`: you, yourGroups, shared, official, or community" },
@@ -35,7 +37,12 @@ export default defineEventHandler(async (event) => {
     where: systemId ? eq(contentType.systemId, systemId) : undefined,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
-        .select({ sheet, resource, official: officialColumn })
+        .select({
+          sheet,
+          resource,
+          systemId: contentType.systemId,
+          official: officialColumn,
+        })
         .from(sheet)
         .innerJoin(resource, eq(resource.id, sheet.resourceId))
         .innerJoin(contentType, eq(contentType.resourceId, sheet.contentTypeId))
@@ -56,9 +63,10 @@ export default defineEventHandler(async (event) => {
     },
   });
   return respondWithList(
-    rows.map(({ sheet: item, resource: owner, source, access }) => ({
+    rows.map(({ sheet: item, resource: owner, systemId: typeSystemId, source, access }) => ({
       ...owner,
       ...item,
+      systemId: typeSystemId,
       source,
       canEdit: access.canEdit,
     })),

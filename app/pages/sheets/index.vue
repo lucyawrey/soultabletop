@@ -16,6 +16,7 @@ interface SheetItem {
   name: string;
   updatedAt: string;
   contentTypeId: string;
+  systemId: string;
   markup: string;
   cssStyles: string;
   isDefault: boolean;
@@ -27,6 +28,7 @@ interface ContentTypeItem {
   systemId: string;
   id: string;
   name: string;
+  source: ResourceSource;
   canEdit: boolean;
 }
 
@@ -39,8 +41,15 @@ const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<Co
   { default: () => [] },
 );
 
+const { systemLabel } = useSystems();
 const contentTypeOptions = computed(() =>
-  contentTypes.value.map((item) => ({ label: item.name, value: item.id })),
+  contentTypes.value.map((item) =>
+    resourceOption(item.id, {
+      name: item.name,
+      systemName: systemLabel(item.systemId),
+      source: item.source,
+    }),
+  ),
 );
 
 function contentTypeName(contentTypeId: string) {
@@ -55,6 +64,7 @@ const columns: TableColumn<SheetItem>[] = [
   { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
+  { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentTypeId", header: "Content Type" },
   { accessorKey: "isDefault", header: "Default" },
   {
@@ -228,6 +238,10 @@ async function remove() {
         </NuxtLink>
       </template>
 
+      <template #systemId-cell="{ row }">
+        <SystemLink :system-id="row.original.systemId" />
+      </template>
+
       <template #contentTypeId-cell="{ row }">
         <NuxtLink
           v-if="contentTypes.some((item) => item.id === row.original.contentTypeId)"
@@ -244,6 +258,8 @@ async function remove() {
         <UBadge v-if="row.original.isDefault" variant="subtle">
           Default
         </UBadge>
+        <!-- An empty slot makes the table print the raw `false` instead. -->
+        <span v-else />
       </template>
 
       <template #source-cell="{ row }">
@@ -324,7 +340,11 @@ async function remove() {
               v-model="form.contentTypeId"
               :items="contentTypeOptions"
               class="w-full"
-            />
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
           </UFormField>
           <UFormField
             v-if="canSetDefault"
