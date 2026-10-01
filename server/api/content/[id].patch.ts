@@ -1,4 +1,4 @@
-import { createError, getRouterParam, readBody } from "h3";
+import { createError, readBody } from "h3";
 import { eq } from "drizzle-orm";
 import { content, contentType, resource, sheet } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
@@ -15,6 +15,7 @@ import {
   resolveOwnerChange,
   rethrowReadableIdConflict,
 } from "../../utils/resource-management";
+import { resolveResourceRouteId } from "../../utils/resource-address";
 
 interface UpdateContentBody {
   readableId?: unknown;
@@ -64,14 +65,8 @@ defineRouteMeta({
 });
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, "id");
-  if (!id)
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Missing resource ID",
-    });
-
   const user = await requireAuthenticatedUser(event);
+  const id = await resolveResourceRouteId(event, "content", user);
   const body = await readBody<UpdateContentBody>(event);
   const database = useDatabase();
   const [record] = await database

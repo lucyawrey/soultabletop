@@ -1,10 +1,11 @@
-import { createError, getRouterParam } from "h3";
+import { createError } from "h3";
 import { count, eq } from "drizzle-orm";
 import { content, resource, sheet } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import { requireResourceEditor } from "../../utils/resource-management";
 import { isForeignKeyConstraintError } from "../../utils/user-profile";
+import { resolveResourceRouteId } from "../../utils/resource-address";
 
 defineRouteMeta({
   openAPI: {
@@ -24,12 +25,7 @@ const inUseMessage =
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
-  const id = getRouterParam(event, "id");
-  if (!id)
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Resource ID is required",
-    });
+  const id = await resolveResourceRouteId(event, "contentType", user);
   const item = await requireResourceEditor(user, id);
   if (item.kind !== "contentType")
     throw createError({
