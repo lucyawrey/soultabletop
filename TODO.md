@@ -6,8 +6,7 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 
 # In progress
 
-- **User API keys** · feature · PR #31, waiting for review and merge
-  Built as decided: Better Auth's API key plugin, session first then key, Read Only or Full Access, management by session only, API Keys section on the profile page. Remove this item when the PR merges; follow-up limits are in the rate limiting item below.
+Nothing right now.
 
 # Next up
 
