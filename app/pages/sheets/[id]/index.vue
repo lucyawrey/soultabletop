@@ -126,6 +126,7 @@ async function remove() {
           <p class="text-sm text-muted">
             {{ sheet.readableId }} ·
             {{ visibilityLabel(sheet.isPubliclyReadable) }} ·
+            <SystemLink :system-id="sheet.systemId" /> ·
             <NuxtLink
               v-if="contentType"
               :to="`/types/${contentType.id}`"

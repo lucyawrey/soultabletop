@@ -19,6 +19,7 @@ interface ContentItem {
   name: string;
   updatedAt: string;
   contentTypeId: string;
+  systemId: string;
   data: Record<string, unknown>;
   canEdit: boolean;
   isPubliclyReadable: boolean;
@@ -28,6 +29,7 @@ interface ContentTypeItem {
   systemId: string;
   id: string;
   name: string;
+  source: ResourceSource;
   contentCategory: ContentCategory;
 }
 
@@ -55,8 +57,15 @@ const characterTypes = computed(() =>
   contentTypes.value.filter((item) => isCharacterCategory(item.contentCategory)),
 );
 
+const { systemLabel } = useSystems();
 const characterTypeOptions = computed(() =>
-  characterTypes.value.map((item) => ({ label: item.name, value: item.id })),
+  characterTypes.value.map((item) =>
+    resourceOption(item.id, {
+      name: item.name,
+      systemName: systemLabel(item.systemId),
+      source: item.source,
+    }),
+  ),
 );
 
 
@@ -78,6 +87,7 @@ const columns: TableColumn<ContentItem>[] = [
   { accessorKey: "source", header: "Source" },
   { accessorKey: "readableId", header: "ID" },
   { accessorKey: "isPubliclyReadable", header: "Visibility" },
+  { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentTypeId", header: "Character Type" },
   { id: "category", header: "Category" },
   {
@@ -239,6 +249,10 @@ async function remove() {
         </NuxtLink>
       </template>
 
+      <template #systemId-cell="{ row }">
+        <SystemLink :system-id="row.original.systemId" />
+      </template>
+
       <template #contentTypeId-cell="{ row }">
         <NuxtLink
           v-if="characterType(row.original.contentTypeId)"
@@ -327,7 +341,11 @@ async function remove() {
               v-model="form.contentTypeId"
               :items="characterTypeOptions"
               class="w-full"
-            />
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
           </UFormField>
           <UAlert
             v-if="formError"
