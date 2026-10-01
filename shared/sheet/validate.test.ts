@@ -336,6 +336,32 @@ describe("tags and attributes", () => {
     ]);
   });
 
+  it("rejects live, locked, and display on Tab and RowDetails, which their parents render", () => {
+    expect(
+      messages(`<Tabs><Tab label="A" display="text" live locked>x</Tab></Tabs>`),
+    ).toEqual([
+      "error unknown-attribute: <Tab> has no display attribute (it has: label, icon)",
+      "error unknown-attribute: <Tab> has no live attribute (it has: label, icon)",
+      "error unknown-attribute: <Tab> has no locked attribute (it has: label, icon)",
+    ]);
+    expect(
+      messages(
+        `<Table field="attacks"><Column field="name" /><RowDetails locked>x</RowDetails></Table>`,
+      ),
+    ).toEqual(["error unknown-attribute: <RowDetails> has no locked attribute"]);
+  });
+
+  it("still accepts the other attributes on Tab and RowDetails", () => {
+    expect(
+      messages(`<Tabs><Tab label="A" icon="i-lucide-swords" class="main">x</Tab></Tabs>`),
+    ).toEqual([]);
+    expect(
+      messages(
+        `<Table field="attacks"><Column field="name" /><RowDetails class="more">x</RowDetails></Table>`,
+      ),
+    ).toEqual([]);
+  });
+
   it("keeps hideLabel and the resolved label on the validated node", () => {
     const node = first(compile(`<Number field="hp" hideLabel />`).nodes);
     expect(node.attrs.hideLabel).toBe(true);

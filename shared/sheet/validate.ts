@@ -22,7 +22,7 @@ import {
   type TextPart,
 } from "./parser";
 import {
-  commonAttrs,
+  commonAttrsFor,
   findTag,
   humanizeFieldName,
   type AttrSpec,
@@ -466,7 +466,7 @@ class Validator {
   // Returns undefined if a required attribute is missing or unusable.
   private attributes(node: SheetElement, spec: TagSpec, scope: Shape) {
     const specs = new Map<string, [string, AttrSpec]>();
-    for (const [name, attr] of Object.entries({ ...commonAttrs, ...spec.attrs }))
+    for (const [name, attr] of Object.entries({ ...commonAttrsFor(spec), ...spec.attrs }))
       specs.set(name.toLowerCase(), [name, attr]);
 
     const attrs: Record<string, AttrValue> = {};

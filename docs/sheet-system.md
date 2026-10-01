@@ -83,7 +83,7 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list; required; default), allowed children, and which schema field types it may bind to. Numeric/text attrs accept
 `{path}` interpolation (e.g. `max="{hpMax}"`). Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`) and
-`live`, `locked`, and `display` (section 5), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixed hooks inside: `sheet-field-label` on the visible label (for `Number variant="stat"` the small label under the number; not rendered with `hideLabel` or in `Column` cells) and `sheet-field-value` on a wrapper around the value or input. Sheet CSS targets these instead of `:first-child` or component classes.
+`live`, `locked`, and `display` (section 5; `Tab` and `RowDetails` accept only `class`), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixed hooks inside: `sheet-field-label` on the visible label (for `Number variant="stat"` the small label under the number; not rendered with `hideLabel` or in `Column` cells) and `sheet-field-value` on a wrapper around the value or input. Sheet CSS targets these instead of `:first-child` or component classes.
 
 ### Layout
 | Tag | Attrs | Children | Renders |
@@ -271,9 +271,11 @@ Per-field attributes (decided), boolean, allowed on any field tag and on `List`/
 - They compose: a field is editable when `canEdit && (editMode || live)`; if `locked`, it additionally needs its
   unlock click. `live locked` = editable in view mode after unlocking.
 - Also allowed on layout tags, where they are inherited by every field inside; a descendant opts out with
-  `live="false"` / `locked="false"`.
+  `live="false"` / `locked="false"`. Not on `Tab` and `RowDetails` (decided): their parents render them, so the
+  attributes would do nothing and the validator reports them as unknown (`noFlagAttrs` in the registry). Put them on
+  `Tabs`, `Table`, or a tag inside the panel.
 
-Display of non-editable fields (decided): `display="text" | "box"`, allowed on any tag and inherited like `live`/`locked`.
+Display of non-editable fields (decided): `display="text" | "box"`, allowed on any tag except `Tab` and `RowDetails`, and inherited like `live`/`locked`.
 - `text` shows the plain value (good for stat blocks like a spell); `box` shows the field's edit control, disabled, so a
   sheet looks the same with Edit on and off (good for character sheets). It applies wherever a field isn't editable:
   Edit off, `locked` fields before their unlock click, viewers without edit access, and values reached through references.
