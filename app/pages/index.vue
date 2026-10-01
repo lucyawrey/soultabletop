@@ -289,14 +289,13 @@ function formatUpdated(updatedAt: string) {
     >
       <div class="max-w-md space-y-4 text-center lg:text-left">
         <UBadge color="primary" variant="subtle" size="lg">
-          Brand or section label
+          {{ copy.home.badge }}
         </UBadge>
         <h1 class="text-4xl font-bold text-highlighted sm:text-5xl">
-          Page heading placeholder
+          {{ copy.home.heading }}
         </h1>
         <p class="text-lg text-muted">
-          Placeholder for introductory copy. Replace this text with your own
-          page content.
+          {{ copy.home.intro }}
         </p>
       </div>
 
@@ -367,7 +366,7 @@ function formatUpdated(updatedAt: string) {
 
           <template #footer>
             <p class="text-center text-sm text-muted">
-              Optional supporting text placeholder.
+              {{ copy.home.formNote }}
             </p>
           </template>
         </UAuthForm>
@@ -378,9 +377,9 @@ function formatUpdated(updatedAt: string) {
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold text-highlighted">
-            Welcome back, {{ sessionState.data.value?.user.name }}
+            {{ fillCopy(copy.dashboard.heading, { name: sessionState.data.value?.user.name ?? "" }) }}
           </h1>
-          <p class="text-sm text-muted">Pick up where you left off.</p>
+          <p class="text-sm text-muted">{{ copy.dashboard.subheading }}</p>
         </div>
       </div>
 
