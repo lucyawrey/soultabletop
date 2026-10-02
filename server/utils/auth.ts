@@ -22,7 +22,10 @@ import {
 } from "./api-key-rules";
 import { getStoredNameError } from "../../shared/display-name";
 import { useDatabase } from "./database";
-import { SESSION_CACHE_MAX_AGE, sessionCacheSetCookies } from "./session-cache";
+import {
+  SESSION_CACHE_MAX_AGE,
+  sessionSetCookiesToForward,
+} from "./session-cache";
 
 // Hosts the app may be served from. Better Auth builds its URLs (and checks
 // request origins) from each request's host, if it matches one of these, so
@@ -130,6 +133,9 @@ interface RequestAuth {
 declare module "h3" {
   interface H3EventContext {
     requestAuth?: Promise<RequestAuth>;
+    // This response already renews the session token cookie, so it must not
+    // write the cache cookie as well (`lookUpSession`).
+    sessionTokenRenewed?: boolean;
   }
 }
 
@@ -171,9 +177,14 @@ async function authenticateApiKey(
 // Looks up the request's session: from the cookie cache when it has a fresh
 // one, else from the database (`fresh` always reads the database). When Better
 // Auth (re)writes the cache cookie, it is passed on to the response, so the
-// next requests hit the cache again; the session token cookie is not, so a
-// response that was still in flight when the user signed out can't sign them
-// back in (the cache is ignored without a session token).
+// next requests hit the cache again. The session token cookie is passed on
+// only when Better Auth has just extended the session (once a day) and re-set
+// the very token this request sent, so an active user's cookie keeps up with
+// the session. A response that renews the token never also writes the cache,
+// even from a later lookup in the same request (`requireSessionUser` looks
+// twice), so that one response landing after sign-out can't sign the user back
+// in; overlapping responses still can, for up to 5 minutes (see
+// `sessionSetCookiesToForward` for what is and isn't guaranteed).
 async function lookUpSession(event: H3Event, headers: Headers, fresh = false) {
   const auth = useAuth();
   const { headers: responseHeaders, response } = await auth.api.getSession({
@@ -181,10 +192,36 @@ async function lookUpSession(event: H3Event, headers: Headers, fresh = false) {
     query: fresh ? { disableCookieCache: true } : undefined,
     returnHeaders: true,
   });
-  const cacheCookie = (await auth.$context).authCookies.sessionData.name;
-  for (const cookie of sessionCacheSetCookies(responseHeaders.getSetCookie(), cacheCookie))
-    appendResponseHeader(event, "set-cookie", cookie);
+  const { sessionData, sessionToken } = (await auth.$context).authCookies;
+  const { cookies, renewedToken } = sessionSetCookiesToForward(
+    responseHeaders.getSetCookie(),
+    // No session found: nothing to renew, only cache cookies (expiries).
+    response ? headers.get("cookie") : null,
+    {
+      tokenCookieName: sessionToken.name,
+      cacheCookieName: sessionData.name,
+      tokenAlreadyRenewed: event.context.sessionTokenRenewed,
+    },
+  );
+  if (renewedToken) event.context.sessionTokenRenewed = true;
+  for (const cookie of cookies) appendResponseHeader(event, "set-cookie", cookie);
   return response;
+}
+
+// For server-rendered pages: looks the session up on the page request itself,
+// so cookies Better Auth renews reach the browser with the page. The page's own
+// `/api/...` calls during the render are internal requests whose `Set-Cookie`
+// is dropped, so without this the daily extension usually happened where the
+// browser never saw it (the first request after a while is a page load).
+// Anything that goes wrong is left for the render to deal with.
+export async function renewSessionCookies(event: H3Event) {
+  const headers = new Headers(getRequestHeaders(event) as HeadersInit);
+  if (!headers.get("cookie")) return;
+  try {
+    await lookUpSession(event, headers);
+  } catch {
+    // The render looks the session up again and handles it there.
+  }
 }
 
 // Who is making the request: the session cookie first, else an API key
