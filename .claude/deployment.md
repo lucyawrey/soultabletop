@@ -9,6 +9,8 @@ Moved out of `CLAUDE.md` so it is read only when needed. `CLAUDE.md` keeps the s
 - Scalar's API reference uses the relative server URL `"/"` (`nuxt.config.ts`).
 - Manage Vercel env vars with the Vercel CLI (`vercel env ls/add/rm/pull`), not the dashboard. It's installed globally per machine, not as a project dependency: `pnpm add -g vercel` (on the user's fish machine pnpm's `global-bin-dir` is `~/.local/bin` and `global-dir` `~/.local/share/pnpm/global`, set with `pnpm config set`). Each machine then needs `vercel login` and `vercel link` (interactive; the user runs these, e.g. with `! vercel login` at the Claude prompt). `.vercel/` is gitignored.
 - The env vars, what they're for, and local setup (`vercel env pull` writes `.env.local`) are documented in `README.md`. All environments currently share one database. Preview/Production values are sensitive and can't be pulled; never print secret values (compare by hash).
+- `SERVER_TIMING=1` is set for the Preview environment only (2026-10-01), so preview responses carry a `Server-Timing` header with database time (not yet confirmed on a preview response).
+- The Main ruleset requires the `Vercel` status as well as `ci` before a PR can merge.
 
 ## Migrations
 

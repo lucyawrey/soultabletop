@@ -2,6 +2,8 @@
 
 Moved out of `CLAUDE.md` so it is read only when needed. `CLAUDE.md` keeps the summary and the hard rules.
 
+These rules haven't been run as written yet; correct whatever doesn't hold on first use.
+
 ## Parallel work
 
 When the user asks to work on several features at once ("start parallel work on X and Y"), the session they ask becomes the coordinator and each feature gets its own git worktree and branch. The user finds many VS Code windows hard to keep track of, so **subagent mode is the default** and the user doesn't need to say so; asking for parallel work is the request to spawn the agents. There are two modes:
