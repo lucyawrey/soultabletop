@@ -4,13 +4,14 @@ Planned work, most important first within each tier: reorder items to reprioriti
 
 Quick, rough ideas go here, in any form, without a tier. An agent goes through them with the user from time to time: asks what each one means, fills in the details, and moves it into a tier with the usual format.
 
+- Minor sheet UI: section borders should look more like cards, instead of the corner only border effect.
+
 # In progress
 
 - **Redesign the UI to be warmer and more inviting** · feature · large
   Planned with the user (2026-10-02): `.claude/plans/ui-redesign.md` (direction D Folio from `.claude/plans/ui-directions.html`, sidebar shell, list and detail patterns, one light theme, documented Sheet theme tokens; bundles empty-state next steps and Print content). Three PRs: theme (#60), sidebar shell (#61), and lists and details (#64) are merged. Left: polish and QA (an axe pass, phone widths, skeletons).
 
 # Next up
-
 
 # Soon
 
@@ -51,7 +52,7 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
   Idea from the user (2026-10-02): treat each site admin as if they were in every `system` (official) group, without a `group_membership` row. Today admins can see and manage system groups without being members (`getGroupAccess` / `requireGroupViewer` / `requireGroupAdmin` in `server/utils/group.ts`), but official groups' resources don't count as theirs. Wanted:
   - Official groups' resources show up in admins' My tab (the `mine` scope) and the dashboard, as their own groups' resources do.
   - Admins appear in each official group's member list, marked as implicit (e.g. "Site admin"), with no way to edit, remove, or add them there, since nothing is stored. Making someone a site admin or removing it (`pnpm admin:set`) changes it.
-  Change the access rules together, as the conventions require: `getResourceAccess`/`isListed`, the SQL rules in `server/utils/resource-access-sql.ts` (`inViewerMine` and friends), and `resource-list-filter.test.ts`, plus the DB test (`RUN_DB_TESTS=1`). Decide what Source label those resources get for admins (see the Source priority item), and check member counts, the keep-one-admin rule (system groups are already exempt), and anything else that reads group membership.
+    Change the access rules together, as the conventions require: `getResourceAccess`/`isListed`, the SQL rules in `server/utils/resource-access-sql.ts` (`inViewerMine` and friends), and `resource-list-filter.test.ts`, plus the DB test (`RUN_DB_TESTS=1`). Decide what Source label those resources get for admins (see the Source priority item), and check member counts, the keep-one-admin rule (system groups are already exempt), and anything else that reads group membership.
 - **Source badge on detail pages** · feature · small
   Placeholder from the UI redesign: the mockup shows the Official/Community badge in a detail page's header, but single-resource GETs don't return `source` (only list rows do, `getResourceSource`). Return it there too and add `<SourceBadge>` to `DetailHeader`'s meta row on each detail page.
 
