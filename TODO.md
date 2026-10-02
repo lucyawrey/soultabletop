@@ -4,20 +4,25 @@ Planned work, most important first within each tier: reorder items to reprioriti
 
 Quick, rough ideas go here, in any form, without a tier. An agent goes through them with the user from time to time: asks what each one means, fills in the details, and moves it into a tier with the usual format.
 
-- Include source in global system drop down.
-- Evaluate if switching to the edge optimized neon driver or the http interface would improve db speed (our main bottleneck)
-- Bug: Resources not populating in drop downs after being created without a hard refresh.
-- Bug: Resources that do not belong to a user marked as "You" as source in drop down.
-- Feature: Redesign UI to be warmer and more inviting; more apropriate to playing TTRPGs. During this process we will remove light/dark mode and have the site use one unified (mostly light mode) theme. The reason for this is that character sheet designers should have a consistant sitewide theme to make their designs fit within. Authoring sheets will also be easier in general with dark and light.
-
 # In progress
 
 Nothing right now.
 
 # Next up
 
+- **Resources missing from dropdowns until a hard refresh** · bug
+  A newly created resource doesn't show up in dropdowns and pickers (system selector, content type, sheet pickers) until the page is hard-refreshed; the cached list data isn't refreshed after a create. Probably the `useFetch` keys for the picker lists (the Systems pages already call `refreshNuxtData("system-selector")`); find every create path and refresh the matching keys.
+- **Wrong source label ("You") on other people's resources in dropdowns** · bug
+  Resources that belong to someone else show "You" as their source in a dropdown. Find which dropdown (see `getResourceSource` and `ResourceOption.vue`) and fix the source it computes or passes; check Official, shared, and community resources in each picker.
+- **Show the source in the header system selector** · chore
+  `SystemSelector.vue` lists system names only. Show the source (Official/Community, as `ResourceOption.vue` does in the other pickers) on each option.
+- **Evaluate the Neon serverless driver or HTTP interface** · chore · needs decision: which driver, after measuring
+  The database is the main bottleneck. `server/utils/database.ts` uses node-postgres with a `Pool`. Measure request latency and cold starts on Vercel with Neon's serverless driver (WebSocket) and its HTTP interface against the current setup, and check what each supports: HTTP mode can't run interactive transactions, which the registration and move-owner code may need. Pair with the caching item below before building either.
+
 # Soon
 
+- **Redesign the UI to be warmer and more inviting** · feature · large · needs decision: visual direction (palette, type, mood) and whether Sheet CSS authors get documented theme tokens
+  More appropriate to playing tabletop RPGs. Remove light/dark mode and use one unified, mostly light theme. Reason: Sheet designers need a consistent site-wide theme to fit their designs into, and authoring Sheets is easier against one theme. Touches the Sheet editor's dark-mode syntax colors (in the Sheet system follow-ups) and the light-and-dark manual QA item under Before launch: drop those parts if this lands.
 - **Authoring CLI for uploading resources from files** · feature · needs decision: file format, folder layout, download support, where it lives · depends on: readable ID addressing, user API keys
   From files on disk, authenticated with a user API key: systems, content types, sheets, and content defined as files (JSON or TOML, to decide, for resource metadata, schemas, and content data; the existing `.stts` markup and `.css` files for sheets) in a defined folder layout, which the CLI creates or updates through the API. Makes bulk authoring (e.g. the official D&D 2024 system) possible in an editor, under version control, and by agents. Files identify resources by owner + readable ID, not ID, both for themselves and for references to other resources (a content type's system, a sheet's content type, content references), so they can be written before anything exists in the database and never need IDs written back into them; the CLI creates a resource when its owner + readable ID doesn't exist yet and updates it otherwise. This depends on the readable ID addressing item (API lookups by owner + readable ID, and bodies accepting owner/readable ID references). Decide: the file format and folder layout, whether it can also download resources to files, and where the CLI lives (in this repo or a published package).
 - **Sheet system follow-ups (formulas, image uploads, dice buttons, editor dark mode)** · feature
