@@ -372,13 +372,15 @@ function formatUpdated(updatedAt: string) {
   <PageContainer>
     <div
       v-if="!isLoggedIn"
-      class="grid items-start justify-items-center gap-12 pt-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:justify-items-stretch lg:gap-16 lg:pt-6"
+      class="grid items-start justify-items-center gap-12 pt-2 lg:min-h-[calc(100dvh-8rem)] lg:grid-cols-[minmax(0,32rem)_minmax(0,24rem)] lg:content-center lg:items-center lg:justify-center lg:justify-items-stretch lg:gap-16 lg:pt-0 2xl:grid-cols-[minmax(0,36rem)_minmax(0,24rem)] 2xl:gap-20"
     >
-      <div class="max-w-lg space-y-4 text-center lg:text-left">
+      <!-- On large screens the hero and the form stay together, centered in
+           the page, instead of spreading to its edges. -->
+      <div class="max-w-lg space-y-4 text-center lg:max-w-none lg:text-left">
         <UBadge color="primary" variant="soft" class="rounded-full px-2.5 py-1 text-[13px]">
           {{ copy.home.badge }}
         </UBadge>
-        <h1 class="text-[44px] leading-none font-bold text-highlighted sm:text-[56px]">
+        <h1 class="text-[44px] leading-none font-bold text-highlighted sm:text-[56px] 2xl:text-[64px]">
           {{ copy.home.heading }}
         </h1>
         <p class="text-lg text-muted">
@@ -414,7 +416,7 @@ function formatUpdated(updatedAt: string) {
             <UInput
               v-model="registerForm.username"
               class="w-full"
-              size="md"
+              size="lg"
               name="username"
               autocomplete="nickname"
               autocapitalize="none"
@@ -433,7 +435,7 @@ function formatUpdated(updatedAt: string) {
             <UInput
               v-model="registerForm.name"
               class="w-full"
-              size="md"
+              size="lg"
               name="name"
               :placeholder="displayNamePlaceholder"
             />

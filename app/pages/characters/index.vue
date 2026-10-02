@@ -207,7 +207,7 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <PageHeader eyebrow="Play" title="Characters">
+    <PageHeader section="play" title="Characters">
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"

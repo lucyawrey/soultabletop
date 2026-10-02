@@ -182,7 +182,7 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <PageHeader eyebrow="Play" title="Campaigns">
+    <PageHeader section="play" title="Campaigns">
       <UButton
         icon="i-lucide-plus"
         :disabled="systems.length === 0"

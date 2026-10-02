@@ -158,7 +158,7 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <PageHeader eyebrow="Build" title="Systems">
+    <PageHeader section="build" title="Systems">
       <UButton v-if="loggedIn" icon="i-lucide-plus" @click="openCreate">
         New System
       </UButton>

@@ -90,7 +90,7 @@ async function submitForm() {
 
 <template>
   <PageContainer>
-    <PageHeader eyebrow="Build" title="Groups">
+    <PageHeader section="build" title="Groups">
       <UButton icon="i-lucide-plus" @click="openCreate">
         New Group
       </UButton>
