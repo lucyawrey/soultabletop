@@ -4,9 +4,10 @@ Planned work, most important first within each tier: reorder items to reprioriti
 
 Quick, rough ideas go here, in any form, without a tier. An agent goes through them with the user from time to time: asks what each one means, fills in the details, and moves it into a tier with the usual format.
 
+- Make sure sheet designers can use tailwind classes insheets (unless i am wrong and tailwind is not already in scope)
+- Set favicon icon to current dice icon.
 
 # In progress
-
 
 # Next up
 
