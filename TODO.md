@@ -7,20 +7,17 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 # In progress
 
 - **Redesign the UI to be warmer and more inviting** · feature · large
-  Planned with the user (2026-10-02): `.claude/plans/ui-redesign.md` (direction D Folio from `.claude/plans/ui-directions.html`, sidebar shell, list and detail patterns, one light theme, documented Sheet theme tokens; bundles empty-state next steps and Print content). Five PRs, built one at a time by the main agent; none started yet.
+  Planned with the user (2026-10-02): `.claude/plans/ui-redesign.md` (direction D Folio from `.claude/plans/ui-directions.html`, sidebar shell, list and detail patterns, one light theme, documented Sheet theme tokens; bundles empty-state next steps and Print content). Five PRs, built one at a time by the main agent. PR 1 (theme foundation, #60) is merged; landing and dashboard are designed; next is PR 2 (sidebar shell).
 
 # Next up
 
 
 # Soon
 
-- **Session lifetime doesn't extend while a user stays active** · bug · depends on: session cookie cache merged
-  Better Auth extends a session in the database once a day (`updateAge`), but the refreshed token cookie (new 7-day Max-Age) is sent only on the response of the request that did the extension, and `lookUpSession` in `server/utils/auth.ts` deliberately drops the token cookie (forwarding it could restore a session during an in-flight sign-out). So an active user may be signed out 7 days after signing in. Found by the session cookie cache review (2026-10-01); partly true before it (server-side `getSession` already dropped all cookies). Fix by forwarding the refreshed token cookie only when it is safe (the same user and token as the request's), with tests and an independent security review.
-
 - **Authoring CLI for uploading resources from files** · feature · needs decision: file format, folder layout, download support, where it lives · depends on: readable ID addressing, user API keys
   From files on disk, authenticated with a user API key: systems, content types, sheets, and content defined as files (JSON or TOML, to decide, for resource metadata, schemas, and content data; the existing `.stts` markup and `.css` files for sheets) in a defined folder layout, which the CLI creates or updates through the API. Makes bulk authoring (e.g. the official D&D 2024 system) possible in an editor, under version control, and by agents. Files identify resources by owner + readable ID, not ID, both for themselves and for references to other resources (a content type's system, a sheet's content type, content references), so they can be written before anything exists in the database and never need IDs written back into them; the CLI creates a resource when its owner + readable ID doesn't exist yet and updates it otherwise. This depends on the readable ID addressing item (API lookups by owner + readable ID, and bodies accepting owner/readable ID references). Decide: the file format and folder layout, whether it can also download resources to files, and where the CLI lives (in this repo or a published package).
-- **Sheet system follow-ups (formulas, image uploads, dice buttons, editor dark mode)** · feature
-  Design in `docs/sheet-system.md`, phase 9: formulas (a safe expression language for computed values), image uploads, dice-roll buttons, and dark-mode syntax colors in the Sheet editor.
+- **Sheet system follow-ups (formulas, image uploads, dice buttons)** · feature
+  Design in `docs/sheet-system.md`, phase 9: formulas (a safe expression language for computed values), image uploads, and dice-roll buttons.
 - **Sheet features found missing while building the D&D 2024 sheet** · feature · depends on: sheet follow-ups for formulas
   Found while building the D&D 2024 character sheet (2026-09-30; the test sheet's files are local only):
   - **Formulas matter most** (already in the follow-ups above): every ability modifier, skill bonus, saving throw, passive Perception, spell save DC, and spell attack bonus is typed in by hand. Formulas should cover these cases: a modifier from a score, a bonus from modifier + proficiency bonus by training, and values shown with a sign.
@@ -110,7 +107,7 @@ Not soon, but required before any public launch.
 - **Launch review and QA**, in this order, each step fixing what it finds before the next starts:
   1. **Code review of the whole codebase**: correctness, security (access checks on every endpoint, auth, Sheet CSS scoping, input validation), data integrity, and dead or duplicated code. Pairs with the code ownership audit above.
   2. **Automated QA of the running app**: browser tests driving the real app end to end (sign-up and sign-in, creating and editing every resource kind, sharing and visibility, sheets in view and edit mode, group roles), as a suite in the repo that runs against a dev or preview deployment and cleans up after itself. Also an agent exploring the app in a headless browser for issues scripted tests can't catch: broken or odd-looking layouts, confusing states, errors in the console, and flows nobody wrote a test for.
-  3. **Manual QA by a person**: clicking through the app on desktop and phone, light and dark mode, and the main browsers, for the things automated tests miss (layout, wording, confusing flows).
+  3. **Manual QA by a person**: clicking through the app on desktop and phone and in the main browsers, for the things automated tests miss (layout, wording, confusing flows).
 
 # After launch
 
