@@ -35,7 +35,7 @@ const hasHeader = computed(
       >
         <UIcon v-if="icon" :name="icon" class="mt-0.5 size-5 text-primary" />
         <div class="min-w-0 flex-1">
-          <h3 v-if="title" class="font-semibold text-highlighted">{{ title }}</h3>
+          <h2 v-if="title" class="font-semibold text-highlighted">{{ title }}</h2>
           <p v-if="description" class="text-sm text-muted">{{ description }}</p>
         </div>
         <UIcon

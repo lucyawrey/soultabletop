@@ -374,7 +374,6 @@ async function remove() {
           <TableSkeleton
             v-else-if="isLoading(sheetsStatus)"
             :rows="2"
-            class="px-[18px]"
           />
           <p v-else class="px-[18px] py-6 text-center text-sm text-muted">
             No sheets for this content type yet.

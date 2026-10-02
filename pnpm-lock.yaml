@@ -202,6 +202,9 @@ importers:
       '@iconify-json/simple-icons':
         specifier: ^1.2.96
         version: 1.2.96
+      '@lezer/highlight':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@nuxt/ui':
         specifier: ^4.11.1
         version: 4.11.1(42d927500317d397907e67c8e0d1b407)

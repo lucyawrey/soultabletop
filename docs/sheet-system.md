@@ -89,7 +89,7 @@ list; required; default), allowed children, and which schema field types it may 
 | Tag | Attrs | Children | Renders |
 |---|---|---|---|
 | `Sheet` | — | any | root wrapper; optional (implicit if omitted) |
-| `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header |
+| `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
 | `Tabs` / `Tab` | Tab: `label` (req), `icon` | Tabs: only `Tab` | `UTabs` |

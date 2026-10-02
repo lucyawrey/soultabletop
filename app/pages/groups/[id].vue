@@ -53,7 +53,7 @@ const memberColumns = computed<TableColumn<Member>[]>(() => [
   { accessorKey: "name", header: "Display Name" },
   { accessorKey: "username", header: "Username" },
   { accessorKey: "role", header: "Role" },
-  ...(isAdmin.value ? [{ id: "actions" }] : []),
+  ...(isAdmin.value ? [actionsColumn<Member>()] : []),
 ]);
 
 // Member changes surface errors in one alert above the table.
@@ -285,6 +285,7 @@ async function remove() {
                 :model-value="row.original.role"
                 :items="roleOptions"
                 :disabled="memberBusy"
+                :aria-label="`Role for ${row.original.name}`"
                 size="sm"
                 class="w-32"
                 @update:model-value="
