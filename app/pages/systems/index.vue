@@ -29,7 +29,7 @@ const columns: TableColumn<SystemItem>[] = [
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString(undefined, { dateStyle: "medium" }),
+    cell: ({ row }) => formatShortDate(row.original.updatedAt),
   },
   { id: "actions" },
 ];
@@ -148,7 +148,7 @@ async function remove() {
 <template>
   <PageContainer>
     <PageHeader eyebrow="Build" title="Systems">
-      <UButton v-if="loggedIn" icon="i-lucide-plus" size="sm" @click="openCreate">
+      <UButton v-if="loggedIn" icon="i-lucide-plus" @click="openCreate">
         New System
       </UButton>
     </PageHeader>

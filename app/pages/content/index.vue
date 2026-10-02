@@ -76,7 +76,7 @@ const columns: TableColumn<ContentItem>[] = [
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString(undefined, { dateStyle: "medium" }),
+    cell: ({ row }) => formatShortDate(row.original.updatedAt),
   },
   { id: "actions" },
 ];
@@ -196,7 +196,6 @@ async function remove() {
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
-        size="sm"
         :disabled="standardContentTypes.length === 0"
         @click="openCreate"
       >

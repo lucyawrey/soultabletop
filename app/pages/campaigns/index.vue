@@ -40,7 +40,7 @@ const columns: TableColumn<CampaignItem>[] = [
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString(undefined, { dateStyle: "medium" }),
+    cell: ({ row }) => formatShortDate(row.original.updatedAt),
   },
   { id: "actions" },
 ];
@@ -185,7 +185,6 @@ async function remove() {
     <PageHeader eyebrow="Play" title="Campaigns">
       <UButton
         icon="i-lucide-plus"
-        size="sm"
         :disabled="systems.length === 0"
         @click="openCreate"
       >

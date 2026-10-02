@@ -233,7 +233,6 @@ async function remove() {
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
-        size="sm"
         :disabled="systems.length === 0"
         @click="openCreate()"
       >

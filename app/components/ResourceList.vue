@@ -27,7 +27,7 @@ const tabs = computed(() => [
     <!-- The tabs wrap above the search line at narrow widths; the view toggle
          stays at the end of the search line itself. Room for the future filter
          row goes below this. -->
-    <div class="flex flex-wrap items-center gap-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <UTabs
         v-if="list.hasTabs && list.loggedIn.value"
         :model-value="list.tab.value"
@@ -35,15 +35,20 @@ const tabs = computed(() => [
         :content="false"
         variant="link"
         class="w-full sm:w-auto"
+        :ui="{
+          list: 'w-auto gap-[18px] p-0',
+          trigger: 'px-0.5 pt-1.5 pb-[9px] text-[15px] font-semibold',
+          indicator: 'h-0.5',
+        }"
         @update:model-value="list.setTab($event as ResourceListTab)"
       />
 
-      <div class="flex min-w-0 flex-1 basis-64 items-center justify-end gap-2">
+      <div class="flex min-w-0 flex-[0_1_380px] items-center gap-2 max-sm:flex-1">
         <UInput
           :model-value="list.search.value"
           icon="i-lucide-search"
           :placeholder="`Search ${noun.toLowerCase()} by name or ID`"
-          class="min-w-0 flex-1 sm:max-w-80"
+          class="min-w-0 flex-1"
           @update:model-value="list.setSearch(String($event))"
         />
         <ListViewToggle v-model="view" />

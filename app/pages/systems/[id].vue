@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import {
+  CONTENT_CATEGORY_LABELS,
+  type ContentCategory,
+} from "#shared/content-categories";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
 interface SystemDetail {
@@ -18,6 +22,7 @@ interface ContentTypeOption {
   name: string;
   readableId: string;
   systemId: string;
+  contentCategory: ContentCategory;
 }
 
 const route = useRoute();
@@ -126,7 +131,10 @@ async function remove() {
         :title="system.name"
       >
         <template #meta>
-          <ReadableIdBadge :readable-id="system.readableId" />
+          <ReadableIdBadge
+            :readable-id="system.readableId"
+            :owner="system.ownerReadableId"
+          />
           <VisibilityBadge :is-publicly-readable="system.isPubliclyReadable" />
         </template>
         <template v-if="system.canEdit" #actions>
@@ -158,7 +166,6 @@ async function remove() {
             <UButton
               :to="{ path: '/types', query: { systemId: id } }"
               icon="i-lucide-plus"
-              size="sm"
             >
               New Content Type
             </UButton>
@@ -171,15 +178,23 @@ async function remove() {
             <li
               v-for="type in systemContentTypes"
               :key="type.id"
-              class="flex items-center justify-between gap-3 px-[18px] py-3"
+              class="flex flex-wrap items-center justify-between gap-3 px-[18px] py-3"
             >
-              <NuxtLink
-                :to="`/types/${type.id}`"
-                class="font-bold text-highlighted hover:text-primary hover:underline"
-              >
-                {{ type.name }}
-              </NuxtLink>
-              <ReadableIdBadge :readable-id="type.readableId" />
+              <span class="flex items-center gap-2.5">
+                <UIcon
+                  :name="CONTENT_CATEGORY_ICONS[type.contentCategory]"
+                  class="size-[17px] shrink-0 text-secondary"
+                />
+                <NuxtLink
+                  :to="`/types/${type.id}`"
+                  class="font-bold text-highlighted hover:text-primary hover:underline"
+                >
+                  {{ type.name }}
+                </NuxtLink>
+              </span>
+              <UBadge color="neutral" variant="subtle" class="rounded-full font-bold ring-0">
+                {{ CONTENT_CATEGORY_LABELS[type.contentCategory] }}
+              </UBadge>
             </li>
           </ul>
           <TableSkeleton
@@ -194,10 +209,11 @@ async function remove() {
 
         <AboutPanel
           :facts="[
-            { label: 'Owner', value: system.ownerReadableId },
-            { label: 'ID', value: system.readableId },
+            { label: 'Owner', value: ownerLabel(system) },
+            { label: 'ID', value: system.readableId, mono: true },
             { label: 'Visibility', value: visibilityLabel(system.isPubliclyReadable) },
-            { label: 'Updated', value: new Date(system.updatedAt).toLocaleDateString(undefined, { dateStyle: 'medium' }) },
+            { label: 'Content types', value: isLoading(contentTypesStatus) ? null : systemContentTypes.length },
+            { label: 'Updated', value: formatShortDate(system.updatedAt) },
           ]"
         />
       </div>

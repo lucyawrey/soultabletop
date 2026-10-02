@@ -8,7 +8,7 @@ defineProps<{ isPubliclyReadable: boolean }>();
     :color="isPubliclyReadable ? 'secondary' : 'neutral'"
     :variant="isPubliclyReadable ? 'subtle' : 'outline'"
     class="rounded-full font-bold"
-    :class="isPubliclyReadable ? '' : 'border border-dashed ring-0'"
+    :class="isPubliclyReadable ? 'ring-0' : 'border border-dashed border-(--ui-border-accented) bg-transparent ring-0'"
   >
     {{ visibilityLabel(isPubliclyReadable) }}
   </UBadge>

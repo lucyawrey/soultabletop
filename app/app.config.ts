@@ -11,7 +11,8 @@ export default defineAppConfig({
     navigationMenu: {
       slots: {
         // Roomier rows, and small uppercase group labels like the mockup.
-        link: "py-1.5 text-[15px]",
+        link: "px-2.5 py-1.5 text-[15px] gap-2",
+        separator: "hidden",
         linkLeadingIcon: "size-4",
         label: "px-2.5 pb-1 text-[11px] font-bold tracking-widest text-muted uppercase",
       },
@@ -52,17 +53,26 @@ export default defineAppConfig({
         root: "rounded-lg border border-default bg-default",
         // A tinted header row with small uppercase labels, and a hover row.
         thead: "bg-muted",
-        th: "py-2.5 text-xs font-semibold tracking-wide text-highlighted uppercase",
-        tr: "hover:bg-muted/60",
+        th: "px-4 py-2.5 text-xs font-bold tracking-[0.08em] text-muted uppercase",
+        td: "px-4 py-3",
+        tr: "hover:bg-primary/5",
+        separator: "bg-(--ui-border)",
       },
     },
     button: {
+      // The mockup's buttons: semibold 14px, 9px by 14px, 15px icons.
+      slots: { base: "font-semibold" },
+      variants: {
+        size: {
+          md: { base: "px-3.5 py-2 text-sm", leadingIcon: "size-4", trailingIcon: "size-4" },
+        },
+      },
       // Solid buttons darken on hover and press instead of fading to 75%,
       // which would drop their light text below 4.5:1.
       compoundVariants: colors.map((color) => ({
         color,
         variant: "solid" as const,
-        class: `hover:bg-[color-mix(in_oklab,var(--ui-${color})_85%,black)] active:bg-[color-mix(in_oklab,var(--ui-${color})_85%,black)]`,
+        class: `shadow-[inset_0_-2px_0_rgb(0_0_0/0.18)] hover:bg-[color-mix(in_oklab,var(--ui-${color})_85%,black)] active:bg-[color-mix(in_oklab,var(--ui-${color})_85%,black)]`,
       })),
     },
   },

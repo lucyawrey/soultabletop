@@ -14,7 +14,7 @@ defineProps<{ source: ResourceSource }>();
   <UBadge
     :color="source === 'official' ? 'primary' : 'neutral'"
     :variant="source === 'official' ? 'solid' : 'subtle'"
-    class="rounded-full font-bold"
+    class="rounded-full font-bold ring-0"
   >
     {{ RESOURCE_SOURCE_LABELS[source] }}
   </UBadge>

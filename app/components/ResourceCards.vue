@@ -3,7 +3,8 @@ import type { ResourceCardItem } from "~/utils/resource-card";
 
 // The cards view of a resource list: a grid with one card per item showing its
 // name (the card's link), readable ID, Source and Visibility badges, details
-// from the page (`#details`), and the page's actions menu (`#actions`).
+// from the page (`#details`), the page's actions menu (`#actions`), and a
+// footer with the updated date.
 defineProps<{ items: T[]; to: (item: T) => string }>();
 </script>
 
@@ -42,10 +43,17 @@ defineProps<{ items: T[]; to: (item: T) => string }>();
 
       <dl
         v-if="$slots.details"
-        class="relative z-10 mt-auto grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 border-t border-default pt-2.5 text-[13px]"
+        class="relative z-10 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]"
       >
         <slot name="details" :item="item" />
       </dl>
+
+      <p
+        v-if="item.updatedAt"
+        class="mt-auto flex justify-end border-t border-default pt-2.5 text-[13px] text-muted tabular-nums"
+      >
+        {{ formatShortDate(item.updatedAt) }}
+      </p>
     </li>
   </ul>
   <slot v-else name="empty" />

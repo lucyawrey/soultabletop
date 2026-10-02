@@ -9,11 +9,11 @@ defineProps<{ title: string; eyebrow?: string }>();
     <div class="min-w-0">
       <p
         v-if="eyebrow"
-        class="mb-1 text-xs font-bold tracking-widest text-muted uppercase"
+        class="mb-1 text-xs font-bold tracking-[0.1em] text-muted uppercase"
       >
         {{ eyebrow }}
       </p>
-      <h1 class="text-[32px] leading-none font-bold text-highlighted sm:text-[40px]">
+      <h1 class="text-[34px] leading-[1.05] font-bold text-highlighted">
         {{ title }}
       </h1>
     </div>

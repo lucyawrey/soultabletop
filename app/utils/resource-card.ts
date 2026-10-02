@@ -7,4 +7,5 @@ export interface ResourceCardItem {
   readableId?: string;
   source?: ResourceSource;
   isPubliclyReadable?: boolean;
+  updatedAt?: string;
 }

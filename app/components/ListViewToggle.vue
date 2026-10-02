@@ -2,27 +2,34 @@
 import type { ListView } from "~/composables/useListView";
 
 // The table / cards switch at the end of a list's search line (see
-// `useListView`). Pressed buttons use the same solid fill as the current page.
+// `useListView`): one bordered box with two icon buttons, the pressed one in
+// the same solid fill as the current page.
 const view = defineModel<ListView>({ required: true });
 
 const options = [
-  { value: "table", label: "Table view", icon: "i-lucide-table" },
+  { value: "table", label: "Table view", icon: "i-lucide-list" },
   { value: "cards", label: "Cards view", icon: "i-lucide-layout-grid" },
 ] as const;
 </script>
 
 <template>
-  <UFieldGroup class="shrink-0" role="group" aria-label="View">
-    <UButton
+  <div
+    role="group"
+    aria-label="View"
+    class="inline-flex shrink-0 rounded-md border border-accented bg-default p-0.5"
+  >
+    <button
       v-for="option in options"
       :key="option.value"
-      :icon="option.icon"
+      type="button"
       :aria-label="option.label"
       :aria-pressed="view === option.value"
       :title="option.label"
-      :color="view === option.value ? 'primary' : 'neutral'"
-      :variant="view === option.value ? 'solid' : 'outline'"
+      class="grid size-[34px] place-items-center rounded-[6px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      :class="view === option.value ? 'bg-primary text-inverted' : 'text-muted hover:bg-muted hover:text-default'"
       @click="view = option.value"
-    />
-  </UFieldGroup>
+    >
+      <UIcon :name="option.icon" class="size-4" />
+    </button>
+  </div>
 </template>

@@ -81,7 +81,12 @@ watch(
         :default-size="18"
         :max-size="22"
         class="print:hidden"
-        :ui="{ root: 'bg-default border-e border-default', footer: 'border-t border-default' }"
+        :ui="{
+          root: 'bg-default border-e border-default',
+          header: 'h-auto px-3.5 pt-[18px] pb-0',
+          body: 'gap-[18px] px-3.5 pt-[18px]',
+          footer: 'mx-3.5 border-t border-default px-0 py-2.5',
+        }"
       >
         <template #header="{ collapsed: isCollapsed }">
           <div
