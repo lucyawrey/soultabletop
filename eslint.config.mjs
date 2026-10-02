@@ -5,6 +5,8 @@ import { getDefaultAttributes } from "eslint-plugin-better-tailwindcss/api/defau
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default withNuxt(
+  // Third-party skills (installed with the `skills` CLI) carry their own code.
+  { ignores: [".claude/skills/**"] },
   betterTailwindcss.configs["correctness-error"],
   {
     rules: {
