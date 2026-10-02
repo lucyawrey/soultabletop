@@ -55,6 +55,8 @@ Fonts: load Cormorant Garamond (600, 700) and Nunito Sans (400, 600, 700) throug
 
 ## PRs
 
+**Split changed (user, 2026-10-02):** PR 3 and PR 4 below ship as one PR (`ui-lists-and-details`), built in that order as separate commits (list pattern, then detail pattern) so review can go commit by commit. PR 5 stays separate. Three PRs in total: shell (#61), lists and details, polish.
+
 ### PR 1 · Theme foundation (`ui-theme-foundation`)
 
 - The palette, semantic, and Sheet tokens; fonts; `app.config.ts` colors and any component defaults (focus ring, `--line-strong` on outline buttons, solid primary fill for the active state of `UNavigationMenu` and `UTabs`).
