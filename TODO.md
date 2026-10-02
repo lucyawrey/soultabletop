@@ -15,10 +15,6 @@ Nothing right now.
 
 - **Session lifetime doesn't extend while a user stays active** · bug · depends on: session cookie cache merged
   Better Auth extends a session in the database once a day (`updateAge`), but the refreshed token cookie (new 7-day Max-Age) is sent only on the response of the request that did the extension, and `lookUpSession` in `server/utils/auth.ts` deliberately drops the token cookie (forwarding it could restore a session during an in-flight sign-out). So an active user may be signed out 7 days after signing in. Found by the session cookie cache review (2026-10-01); partly true before it (server-side `getSession` already dropped all cookies). Fix by forwarding the refreshed token cookie only when it is safe (the same user and token as the request's), with tests and an independent security review.
-- **Cache sessions in a short-lived cookie** · chore · needs decision: how long a revoked session may keep working (5 minutes suggested)
-  Better Auth's `session.cookieCache` is off, so every logged-in request looks up the session in the database before anything else. Turning it on removes that round trip; the cost is that a revoked session stays valid until the cache expires.
-- **Leave heavy columns out of list queries** · chore
-  List endpoints select the full `markup`, `css_styles`, `data`, and schema columns for every row (about 20 KB per sheet page, and Neon's HTTP responses aren't compressed). Select only what the list shows; detail routes keep the full row.
 
 - **Redesign the UI to be warmer and more inviting** · feature · large · needs decision: visual direction (palette, type, mood) and whether Sheet CSS authors get documented theme tokens
   More appropriate to playing tabletop RPGs. Remove light/dark mode and use one unified, mostly light theme. Reason: Sheet designers need a consistent site-wide theme to fit their designs into, and authoring Sheets is easier against one theme. Touches the Sheet editor's dark-mode syntax colors (in the Sheet system follow-ups) and the light-and-dark manual QA item under Before launch: drop those parts if this lands.
