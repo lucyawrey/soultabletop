@@ -3,7 +3,12 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth, type User } from "better-auth";
 import { APIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
-import { createError, getRequestHeaders, type H3Event } from "h3";
+import {
+  appendResponseHeader,
+  createError,
+  getRequestHeaders,
+  type H3Event,
+} from "h3";
 import { user as userTable } from "../database/schema";
 import {
   MAX_API_KEY_NAME_LENGTH,
@@ -17,6 +22,7 @@ import {
 } from "./api-key-rules";
 import { getStoredNameError } from "../../shared/display-name";
 import { useDatabase } from "./database";
+import { SESSION_CACHE_MAX_AGE, sessionCacheSetCookies } from "./session-cache";
 
 // Hosts the app may be served from. Better Auth builds its URLs (and checks
 // request origins) from each request's host, if it matches one of these, so
@@ -50,6 +56,18 @@ function createAuth() {
     baseURL: { allowedHosts: allowedHosts() },
     emailAndPassword: {
       enabled: true,
+    },
+    // Keeps the session and its user in a signed cookie for 5 minutes, so most
+    // requests don't look the session up in the database. The cost: a revoked
+    // session (signed out elsewhere, other sessions revoked on a password
+    // change) keeps working for up to 5 minutes where its cookie was cached,
+    // and the cached `user` (display name, email) can be that old. Nothing
+    // that decides access is cached: the site role and group and campaign
+    // roles are read from the database on every request. Better Auth's own
+    // sensitive routes (change password, revoke sessions) skip the cache, as
+    // do `requireSessionUser` and pages that just changed the user.
+    session: {
+      cookieCache: { enabled: true, maxAge: SESSION_CACHE_MAX_AGE, strategy: "compact" },
     },
     // Display names are validated whichever way they get written (the HTTP
     // update-user route is also off, see `disabledPaths`).
@@ -150,13 +168,32 @@ async function authenticateApiKey(
   return { user: owner, apiKeyAccess: apiKeyAccess(result.key.permissions) };
 }
 
+// Looks up the request's session: from the cookie cache when it has a fresh
+// one, else from the database (`fresh` always reads the database). When Better
+// Auth (re)writes the cache cookie, it is passed on to the response, so the
+// next requests hit the cache again; the session token cookie is not, so a
+// response that was still in flight when the user signed out can't sign them
+// back in (the cache is ignored without a session token).
+async function lookUpSession(event: H3Event, headers: Headers, fresh = false) {
+  const auth = useAuth();
+  const { headers: responseHeaders, response } = await auth.api.getSession({
+    headers,
+    query: fresh ? { disableCookieCache: true } : undefined,
+    returnHeaders: true,
+  });
+  const cacheCookie = (await auth.$context).authCookies.sessionData.name;
+  for (const cookie of sessionCacheSetCookies(responseHeaders.getSetCookie(), cacheCookie))
+    appendResponseHeader(event, "set-cookie", cookie);
+  return response;
+}
+
 // Who is making the request: the session cookie first, else an API key
 // (`x-api-key` or `Authorization: Bearer`). Worked out once per request, since
 // verifying a key counts against its rate limit.
 function resolveRequestAuth(event: H3Event) {
   return (event.context.requestAuth ??= (async () => {
     const headers = new Headers(getRequestHeaders(event) as HeadersInit);
-    const session = await useAuth().api.getSession({ headers });
+    const session = await lookUpSession(event, headers);
     if (session) return { user: session.user };
     const key = readApiKey(headers);
     return key ? await authenticateApiKey(key, headers) : { user: null };
@@ -186,7 +223,8 @@ export async function requireAuthenticatedUser(event: H3Event) {
 }
 
 // For routes a key must never reach (managing API keys): a signed-in
-// session only.
+// session only, checked in the database rather than the cookie cache, so a
+// session revoked in the last few minutes can't create a key that outlives it.
 export async function requireSessionUser(event: H3Event) {
   const auth = await resolveRequestAuth(event);
   if (auth.apiKeyAccess)
@@ -196,5 +234,9 @@ export async function requireSessionUser(event: H3Event) {
     });
   if (!auth.user)
     throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
-  return auth.user;
+  const headers = new Headers(getRequestHeaders(event) as HeadersInit);
+  const session = await lookUpSession(event, headers, true);
+  if (session?.user.id !== auth.user.id)
+    throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+  return session.user;
 }
