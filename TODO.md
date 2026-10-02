@@ -4,12 +4,14 @@ Planned work, most important first within each tier: reorder items to reprioriti
 
 Quick, rough ideas go here, in any form, without a tier. An agent goes through them with the user from time to time: asks what each one means, fills in the details, and moves it into a tier with the usual format.
 
-- Minor sheet UI: section borders should look more like cards, instead of the corner only border effect.
 
 # In progress
 
 
 # Next up
+
+- **Sheet Sections show only their corners as a border** · bug · small
+  From the user (2026-10-02): a Sheet `Section`'s outline should look like the app's cards (the About panel, list cards), not just the corners. Cause: `Section.vue` is a `UCard`, whose outline is an outer `ring` (a box-shadow); the sheet's container clips what's outside it, and the card sits flush with its edges, so the straight sides are cut off and only the rounded corners show. Fix (user's choice: the border only): draw it inside the box, e.g. `border border-default` (or an inset ring) instead of the outer ring; header, title, and spacing stay as they are. Check other sheet tags drawn with an outer ring (e.g. `Callout`'s `UAlert`) for the same clipping, and look at a rendered sheet at desktop and phone widths.
 
 # Soon
 
