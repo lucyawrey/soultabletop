@@ -411,7 +411,7 @@ Each phase ends with `pnpm test && pnpm typecheck && pnpm lint`, template compil
    Sheet" from generated.
 9. **Later** — formulas (safe expression parser), image uploads, dice rolls.
 
-Also update `CLAUDE.md` (sheet system section, `shared/` code, `pnpm test`) and remove the TODO.md item once done.
+Also update `.claude/data-model.md` (Sheet system bullets, `shared/` code) and `CLAUDE.md` (`pnpm test`) and remove the TODO.md item once done.
 
 ## Verification
 - `pnpm test` (vitest) for `shared/sheet/*`; `pnpm typecheck && pnpm lint`; compile changed templates with

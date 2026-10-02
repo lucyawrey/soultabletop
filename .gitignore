@@ -28,3 +28,4 @@ logs
 
 # Vercel CLI project link (created by `vercel link`)
 .vercel
+.env*
