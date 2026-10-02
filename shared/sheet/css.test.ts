@@ -20,8 +20,9 @@ describe("scopeSheetSelector", () => {
     ["html", scope],
     ["body .x", `${scope} .x`],
     ["body.x", `${scope}.x`],
-    [".dark .x", `.dark ${scope} .x`],
-    [".dark", `.dark ${scope}`],
+    // `.dark` is an ordinary class (the site has no dark mode).
+    [".dark .x", `${scope} .dark .x`],
+    [".dark", `${scope} .dark`],
     [".dark-mode .x", `${scope} .dark-mode .x`],
     [".dark.x", `${scope} .dark.x`],
     ["*", `${scope} *`],
@@ -55,7 +56,6 @@ describe("selectors that would reach outside the Sheet", () => {
     ":root { ~ * { display: none } }",
     ":root { &:hover + * { color: red } }",
     ":root { &:hover { & ~ * { color: red } } }",
-    ".dark { & ~ * { color: red } }",
     ":root { @media (min-width: 1px) { & ~ * { color: red } } }",
   ])("rejects %s", (css) => {
     const result = scoped(css);
@@ -76,7 +76,9 @@ describe("selectors that would reach outside the Sheet", () => {
     [".x { .y + .z { color: red } }", `${scope} .x { .y + .z { color: red } }`],
     [":root { .a ~ .b { color: red } }", `${scope} { .a ~ .b { color: red } }`],
     [":root { & > .x { color: red } }", `${scope} { & > .x { color: red } }`],
-    [".dark .x { color: red }", `.dark ${scope} .x { color: red }`],
+    [".dark .x { color: red }", `${scope} .dark .x { color: red }`],
+    [".dark { & ~ * { color: red } }", `${scope} .dark { & ~ * { color: red } }`],
+    ["@media print { .x { display: none } }", `@media print { ${scope} .x { display: none } }`],
     [".a:not(.b) { color: red }", `${scope} .a:not(.b) { color: red }`],
   ])("still allows %s", (css, expected) => {
     const result = scoped(css);

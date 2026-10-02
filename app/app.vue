@@ -84,8 +84,6 @@ const navItems = computed(() =>
         >
           Sign in
         </UButton>
-        <!-- Logged in, the theme choice is in the user menu instead. -->
-        <UColorModeButton v-if="!loggedIn" />
         <UserMenu v-else />
       </template>
     </UHeader>

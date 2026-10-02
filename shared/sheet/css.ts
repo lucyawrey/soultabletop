@@ -108,8 +108,7 @@ function compounds(item: SelectorItem) {
 // Limits a selector list to the Sheet, so every selector's subject (the
 // element it styles) is inside the Sheet: `.x` -> `[data-sheet="id"] .x`;
 // `:root`, `html`, and `body` become the Sheet root itself, but only when they
-// start the selector; a leading `.dark` (Nuxt UI's color mode class) stays
-// outside. Anything that could reach outside (root selectors inside :not()
+// start the selector. Anything that could reach outside (root selectors inside :not()
 // and friends, sibling combinators off the root, a leading ~ or +) throws a
 // SheetSelectorError.
 export function scopeSheetSelector(selector: string, scopeId: string) {
@@ -144,38 +143,24 @@ export function scopeSheetSelector(selector: string, scopeId: string) {
         return;
       }
 
-      const [first, second] = item.nodes;
-      const leadingDark =
-        first?.type === "class" &&
-        first.value === "dark" &&
-        (!second || second.type === "combinator");
+      const first = item.first;
       const scope = [
         scopeAttribute(scopeId),
         selectorParser.combinator({ value: " " }),
       ];
-      if (leadingDark && second) {
-        // `.dark .x` -> `.dark [data-sheet] .x`
-        item.insertAfter(second, scope[0]!);
-        item.insertAfter(scope[0]!, scope[1]!);
-      } else if (leadingDark) {
-        // `.dark` alone -> `.dark [data-sheet]`
-        item.insertAfter(first, selectorParser.combinator({ value: " " }));
-        item.append(scopeAttribute(scopeId));
-      } else {
-        // Keep the space after a comma in front of the new attribute.
-        if (first) {
-          scope[0]!.spaces.before = first.spaces.before;
-          first.spaces.before = "";
-        }
-        item.prepend(scope[1]!);
-        item.prepend(scope[0]!);
+      // Keep the space after a comma in front of the new attribute.
+      if (first) {
+        scope[0]!.spaces.before = first.spaces.before;
+        first.spaces.before = "";
       }
+      item.prepend(scope[1]!);
+      item.prepend(scope[0]!);
     });
   }).processSync(selector);
 }
 
 // Whether a scoped selector list styles the Sheet root itself (its last
-// compound holds the scope attribute), e.g. `:root` or `.dark`.
+// compound holds the scope attribute), e.g. `:root`.
 function selectorTargetsScope(selector: string) {
   let targets = false;
   selectorParser((selectors) => {
@@ -351,8 +336,7 @@ export function processSheetCss(source: string, scopeId?: string): SheetCssResul
     }
   });
 
-  // Rules whose subject is the Sheet root itself (`:root { … }`,
-  // `.dark { … }`): rules nested in them could reach the root's siblings.
+  // Rules whose subject is the Sheet root itself (`:root { … }`): rules nested in them could reach the root's siblings.
   const targetsRoot = new Set<Rule>();
   // Without a scope ID (checking on save), scope with a placeholder so the
   // same rules are enforced.

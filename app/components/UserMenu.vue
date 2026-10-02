@@ -82,33 +82,10 @@ async function signOut() {
   }
 }
 
-// The header shows no color mode button while this menu is there.
-const colorMode = useColorMode();
-const themes = [
-  { label: "Light", icon: "i-lucide-sun", value: "light" },
-  { label: "Dark", icon: "i-lucide-moon", value: "dark" },
-  { label: "System", icon: "i-lucide-monitor", value: "system" },
-];
-
 const items = computed<DropdownMenuItem[][]>(() => [
   [{ type: "label", slot: "account" as const }],
   [
     { label: "Profile", icon: "i-lucide-user", to: "/profile" },
-    {
-      label: "Theme",
-      icon: "i-lucide-sun-moon",
-      children: themes.map((theme) => ({
-        label: theme.label,
-        icon: theme.icon,
-        type: "checkbox" as const,
-        checked: colorMode.preference === theme.value,
-        onSelect(event: Event) {
-          // Keep the menu open to show the new choice checked.
-          event.preventDefault();
-          colorMode.preference = theme.value;
-        },
-      })),
-    },
   ],
   [
     {

@@ -1,0 +1,95 @@
+# Site theme
+
+Soul Tabletop has one light theme, called "Folio": a lightly warm page with near-white panels, plum as the primary color, gilt as the accent, Nunito Sans for text, and Cormorant Garamond for large headings. There is no dark mode. Sheet designers get one consistent theme to design against.
+
+The look was chosen from four mockups. They live in `.claude/plans/ui-directions.html`, an interactive page with a live contrast table; open it in a browser. Folio is direction D there. Use the page as the reference when changing the theme.
+
+## Where things live
+
+| What | Where |
+|---|---|
+| Colors, fonts, radius, Sheet tokens | `app/assets/css/main.css` (the only place colors are defined) |
+| Which palette is primary, secondary, neutral; component overrides | `app/app.config.ts` |
+| Font loading (weights) | `fonts` in `nuxt.config.ts` |
+| Dark mode off | `ui.colorMode: false` in `nuxt.config.ts`; Scalar's `forceDarkModeState: "light"` |
+| Sheet token names and descriptions | `shared/sheet/theme-tokens.ts` (shown in the sheet editor's reference panel) |
+| Contrast and token checks | `shared/theme.test.ts` (runs with `pnpm test` and `pnpm check`) |
+
+## Three layers
+
+`main.css` defines the theme in three layers. Each layer refers only to the one above it.
+
+1. **Palettes** (`@theme static`): three Tailwind color scales, 50 to 950. `plum` is primary, `gilt` is secondary (the accent), and `folio` is the warm neutral. `app.config.ts` assigns them by name (`colors: { primary: "plum", secondary: "gilt", neutral: "folio" }`). Nuxt UI then builds `--ui-color-primary-50…950` and the `primary-*` utilities from them. The scales also give Tailwind classes such as `bg-plum-100`, but prefer the semantic classes below.
+2. **Semantic tokens** (`:root`): Nuxt UI's own variables, set to the theme's roles. They are unlayered, so they win over Nuxt UI's defaults, which sit in `@layer theme`. Components and pages use them through Nuxt UI's semantic classes (`text-muted`, `bg-elevated`, `border-accented`, `text-primary`), never raw hex values.
+3. **Sheet tokens** (`--st-*`, also in `:root`): aliases of layer 2 that Sheet CSS may use. Their names are a public contract (see below).
+
+### Semantic tokens
+
+| Variable | Role | Value |
+|---|---|---|
+| `--st-page` | page background (`body`) | folio-100 `#f6f1e7` |
+| `--ui-bg` | panels: cards, inputs, menus, modals, the header | folio-50 `#fffdf8` |
+| `--ui-bg-muted` | faint fill (same as the page) | folio-100 |
+| `--ui-bg-elevated` | shaded panel: table headers, gutters, hover | folio-200 `#efe7d8` |
+| `--ui-bg-accented` | stronger hover or selected fill | `#e6dccb` |
+| `--ui-bg-inverted` | dark fill (tooltips, neutral solid buttons) | folio-900 |
+| `--ui-text-highlighted` | headings and main text | folio-900 `#251f2a` |
+| `--ui-text` | body text | folio-800 |
+| `--ui-text-toned` | slightly softer text | folio-700 |
+| `--ui-text-muted` | secondary text, hints, labels | folio-600 `#625869` |
+| `--ui-text-dimmed` | least prominent text (placeholders, gutters); still 4.5:1 | `#6b6170` |
+| `--ui-text-inverted` | text on solid colors | folio-50 |
+| `--ui-border`, `--ui-border-muted` | **dividers only** | folio-300, folio-200 |
+| `--ui-border-accented` | **outlines of controls** (inputs, outline buttons, toggles); 3:1 | folio-500 `#8a7f72` |
+| `--ui-primary` | primary actions, links, current nav item, focus rings | plum-700 `#6b2d4e` |
+| `--ui-secondary` | accent | gilt-700 `#765a14` |
+| `--ui-success`, `--ui-info`, `--ui-warning`, `--ui-error` | status | `#166534`, `#1d4ed8`, `#92400e`, `#b91c1c` |
+| `--ui-radius` | base radius; `rounded-md` (buttons, inputs) is 1.5×, `rounded-lg` (cards) 2× | `0.3125rem` |
+
+Nuxt UI normally picks `--ui-primary` and the others from shade 500 of the scale. Here they are set explicitly, so the values are exact and contrast is under our control.
+
+### Fonts
+
+- `--font-sans` is Nunito Sans (400, 600, 700) for everything by default.
+- `--font-display` is Cormorant Garamond (600, 700); use it with the `font-display` utility. It has thin strokes and a small x-height, so use it only for headings at 22px and up, never for labels, table text, or small headings. `h1` uses it by default; page titles are `text-2xl` (24px).
+- Fonts are self-hosted through `@nuxt/fonts` (the `fonts` block in `nuxt.config.ts`). Add a weight there before using it, or the browser fakes it.
+
+## Accessibility rules
+
+These are the rules `shared/theme.test.ts` checks against `main.css`:
+
+- **Text is at least 4.5:1** (WCAG AA) on every surface it can sit on: every text token on the panel, the page, and the shaded surfaces; colored text (`text-primary`, `text-error`, …) on the panel and the page; light text on every solid color; and colored text on its own 10% tint (Nuxt UI's soft and subtle variants).
+- **Control outlines, focus rings, and selected states are at least 3:1** against what's behind them (WCAG 1.4.11). That's why `--ui-border` (dividers, about 1.4:1) and `--ui-border-accented` (controls) are separate.
+
+The test can't see these, so keep them by hand:
+
+- **State never depends on color alone.** The current nav item and pressed toggles are a solid primary fill with bold text, not just a tint.
+- **Focus is always visible.** `main.css` makes every `:focus-visible` outline full primary with a 2px gap (Nuxt UI draws them at 25% opacity). Inputs use a primary ring instead.
+- **Solid buttons darken on hover** (`app.config.ts`, 15% black) instead of fading to 75% opacity, which would drop their text below 4.5:1.
+- **Targets:** icon-only buttons are at least 32px.
+- **Primary vs. error:** some colorblind viewers see plum and red as close. Destructive actions always keep their label or icon.
+
+## Sheet tokens (stable contract)
+
+Sheet CSS (`docs/sheet-system.md`, section 6) can match the site with these tokens, for example `color: var(--st-ink)`:
+
+| Token | Use |
+|---|---|
+| `--st-page` | page background behind panels |
+| `--st-panel`, `--st-panel-muted` | panel background, shaded panel |
+| `--st-ink`, `--st-ink-muted` | main text, secondary text |
+| `--st-primary`, `--st-on-primary` | primary color, text on it |
+| `--st-accent` | accent color |
+| `--st-border`, `--st-border-strong` | dividers, outlines that must stand out |
+| `--st-radius` | corner radius of buttons and inputs |
+| `--st-font-body`, `--st-font-display` | body font, display font |
+
+Published sheets refer to these names, so **never rename or remove one**; when the theme changes, change what they point at. To add a token, define it in `main.css` and add it to `shared/sheet/theme-tokens.ts` (the test checks that every listed token is defined). Nuxt UI's `--ui-*` variables also work in Sheet CSS, but they aren't part of the contract and can change with Nuxt UI upgrades.
+
+## Changing the theme
+
+1. Adjust the palettes and semantic tokens in `app/assets/css/main.css`. Keep colors as `#rrggbb` hex values or `var()` aliases of them, since the test reads only those. To use another palette name, rename it in `app.config.ts` too.
+2. Run `scripts/agent-run.sh pnpm vitest run shared/theme.test.ts`. Each failure names the pair and its ratio.
+3. Check the app in a browser: a list page, a detail page, a form in a modal, the sheet editor (its colors come from `--ui-*` tokens, in `CodeEditor.client.vue`), and a rendered sheet that uses `--st-*` tokens.
+4. If the direction itself changed, update the mockup page in `.claude/plans/ui-directions.html` so the reference matches.
+5. Fonts: change `--font-sans` / `--font-display` in `main.css` and the matching entries (with weights) in `nuxt.config.ts`.
