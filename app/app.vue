@@ -37,7 +37,7 @@ const navGroups = computed(() => {
   const systems = link("/systems", "Systems", "i-lucide-globe");
   if (!loggedIn.value)
     return [
-      { label: "Browse", items: [characters, content, sheets, types, systems] },
+      { label: "Browse", items: [content, characters, sheets, types, systems] },
     ];
   return [
     {
