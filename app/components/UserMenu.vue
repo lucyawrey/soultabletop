@@ -2,6 +2,9 @@
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { authClient } from "~/utils/auth-client";
 
+// `collapsed`: the sidebar is an icon rail, so show only the avatar.
+defineProps<{ collapsed?: boolean }>();
+
 // The signed-in user's icon and name in the sidebar footer, opening a menu with who is signed
 // in, Profile, and Sign out. The sidebar shows it only when logged in.
 const session = await useAuthSession();
@@ -109,8 +112,9 @@ const items = computed<DropdownMenuItem[][]>(() => [
     <UButton
       color="neutral"
       variant="ghost"
-      block
-      class="justify-start gap-2 p-1.5"
+      :block="!collapsed"
+      class="gap-2 p-1.5"
+      :class="collapsed ? 'justify-center' : 'justify-start'"
       aria-label="User menu"
     >
       <UIcon
@@ -119,7 +123,10 @@ const items = computed<DropdownMenuItem[][]>(() => [
         class="size-8 animate-spin p-1.5"
       />
       <UAvatar v-else ref="triggerAvatar" v-bind="avatar" size="md" />
-      <span class="min-w-0 flex-1 truncate text-start">{{ displayName }}</span>
+      <span
+        v-if="!collapsed"
+        class="min-w-0 flex-1 truncate text-start"
+      >{{ displayName }}</span>
     </UButton>
 
     <template #account>

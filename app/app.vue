@@ -77,52 +77,61 @@ watch(
       <UDashboardSidebar
         v-model:collapsed="collapsed"
         collapsible
-        :collapsed-size="0"
-        :min-size="14"
+                :min-size="14"
         :default-size="16"
         :max-size="22"
         class="print:hidden"
         :ui="{ footer: 'border-t border-default' }"
       >
-        <template #header="{ collapse }">
-          <div class="flex w-full items-center justify-between gap-2">
+        <template #header="{ collapsed: isCollapsed }">
+          <div
+            class="flex w-full items-center gap-2"
+            :class="isCollapsed ? 'justify-center' : 'justify-between'"
+          >
             <NuxtLink
+              v-if="!isCollapsed"
               to="/"
               class="-ms-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
             >
               <UIcon name="i-lucide-dices" class="size-5 text-primary" />
               <span>Soul Tabletop</span>
             </NuxtLink>
+            <!-- One toggle for both states; phones use the drawer instead. -->
             <UButton
               class="hidden lg:inline-flex"
               color="neutral"
               variant="ghost"
               size="sm"
-              icon="i-lucide-panel-left-close"
-              aria-label="Collapse sidebar"
-              @click="collapse(true)"
+              :icon="isCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
+              :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+              :aria-expanded="!isCollapsed"
+              @click="collapsed = !collapsed"
             />
           </div>
         </template>
 
-        <SystemSelector class="w-full" />
-        <UNavigationMenu
-          :items="menuItems"
-          orientation="vertical"
-          aria-label="Main"
-        />
+        <template #default="{ collapsed: isCollapsed }">
+          <SystemSelector v-if="!isCollapsed" class="w-full" />
+          <UNavigationMenu
+            :items="menuItems"
+            orientation="vertical"
+            :collapsed="isCollapsed"
+            tooltip
+            aria-label="Main"
+          />
+        </template>
 
-        <template #footer>
+        <template #footer="{ collapsed: isCollapsed }">
           <UButton
             v-if="!loggedIn"
             to="/"
             color="primary"
-            block
+            :block="!isCollapsed"
             icon="i-lucide-log-in"
-          >
-            Sign in
-          </UButton>
-          <UserMenu v-else />
+            :aria-label="isCollapsed ? 'Sign in' : undefined"
+            :label="isCollapsed ? undefined : 'Sign in'"
+          />
+          <UserMenu v-else :collapsed="isCollapsed" />
         </template>
       </UDashboardSidebar>
 
@@ -140,16 +149,6 @@ watch(
             <span>Soul Tabletop</span>
           </NuxtLink>
         </div>
-        <UButton
-          v-if="collapsed"
-          class="absolute start-2 top-2 z-10 hidden lg:inline-flex print:hidden"
-          color="neutral"
-          variant="outline"
-          size="sm"
-          icon="i-lucide-panel-left-open"
-          aria-label="Expand sidebar"
-          @click="collapsed = false"
-        />
         <NuxtPage />
       </main>
     </UDashboardGroup>
