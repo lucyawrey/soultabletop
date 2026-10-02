@@ -200,7 +200,6 @@ async function remove() {
           <TableSkeleton
             v-else-if="isLoading(contentTypesStatus)"
             :rows="2"
-            class="px-[18px]"
           />
           <p v-else class="px-[18px] py-6 text-center text-sm text-muted">
             No content types for this system yet.

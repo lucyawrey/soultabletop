@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ListView } from "~/composables/useListView";
+import { listViewKey, type ListView } from "~/composables/useListView";
 import type { ResourceListTab } from "~/composables/useResourceList";
 
 // Tabs (My / Find), search box, and pagination around a resource table; the
@@ -19,6 +19,7 @@ const props = defineProps<{
 }>();
 
 const view = useListView(props.viewKey, props.defaultView);
+provide(listViewKey, view);
 const isEmpty = computed(
   () => !isLoading(props.list.status.value) && props.list.items.value.length === 0,
 );
