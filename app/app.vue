@@ -86,7 +86,7 @@ watch(
         class="print:hidden"
         :ui="{
           root: 'bg-default border-e border-default',
-          header: 'h-auto px-3.5 pt-[18px] pb-0',
+          header: 'h-auto flex-col items-stretch gap-[18px] px-3.5 pt-[18px] pb-0',
           body: 'gap-[18px] px-3.5 pt-[18px]',
           // Empty on the signed-out landing page, so hidden there.
           footer: loggedIn || showSignIn ? 'mx-3.5 border-t border-default px-0 py-2.5' : 'hidden',
@@ -117,10 +117,16 @@ watch(
               @click="collapsed = !collapsed"
             />
           </div>
+          <!-- In the header, not the scrolling body, which would clip it: on
+               desktop it pokes past the sidebar's edge into the page, like a
+               bookmark (the mockup). The drawer on phones keeps it inside. -->
+          <SystemSelector
+            v-if="!isCollapsed"
+            class="relative z-10 w-full lg:w-[calc(100%+1.375rem)]"
+          />
         </template>
 
         <template #default="{ collapsed: isCollapsed }">
-          <SystemSelector v-if="!isCollapsed" class="w-full" />
           <UNavigationMenu
             :items="menuItems"
             orientation="vertical"

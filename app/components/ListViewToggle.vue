@@ -2,8 +2,9 @@
 import type { ListView } from "~/composables/useListView";
 
 // The table / cards switch at the end of a list's search line (see
-// `useListView`): one bordered box with two icon buttons, the pressed one in
-// the same solid fill as the current page.
+// `useListView`): one outlined box with two icon buttons, the pressed one in
+// the same solid fill as the current page. The outline is an inset ring, as
+// on the search box beside it, so the two lines match.
 const view = defineModel<ListView>({ required: true });
 
 const options = [
@@ -16,7 +17,7 @@ const options = [
   <div
     role="group"
     aria-label="View"
-    class="inline-flex shrink-0 rounded-md border border-accented bg-default p-0.5"
+    class="inline-flex shrink-0 rounded-md bg-default p-[3px] ring ring-inset ring-accented"
   >
     <button
       v-for="option in options"
