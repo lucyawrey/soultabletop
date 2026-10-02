@@ -110,7 +110,7 @@ click on its pencil button first.
 
 ```css
 :root {
-  --sheet-accent: var(--ui-primary);
+  --sheet-accent: var(--st-primary);
 }
 
 .sheet-heading {
@@ -126,8 +126,10 @@ click on its pencil button first.
   font-variant-numeric: tabular-nums;
 }
 
-.dark .sheet-section {
-  border-left-color: var(--ui-text-muted);
+@media print {
+  .sheet-section {
+    border-left-color: var(--st-ink-muted);
+  }
 }
 
 @media (max-width: 640px) {
@@ -224,15 +226,15 @@ Read-mostly (`Markdown` fields use `hideLabel` so the schema label, here "Text",
 
 ```css
 .statblock {
-  background: color-mix(in oklab, var(--ui-primary) 6%, var(--ui-bg));
-  border: 2px solid var(--ui-primary);
+  background: color-mix(in oklab, var(--st-primary) 6%, var(--st-panel));
+  border: 2px solid var(--st-primary);
   padding: 1rem;
   font-family: "Crimson Pro", serif;
 }
 
 .statblock .sheet-heading {
   font-family: "IM Fell English", serif;
-  color: var(--ui-primary);
+  color: var(--st-primary);
 }
 
 .statblock .sheet-divider {
@@ -288,7 +290,9 @@ A compact card. Shows a `Callout` filled from a field with `{path}`, and `List f
   font-size: 0.875rem;
 }
 
-.dark .spell-card {
-  box-shadow: 0 0 0 1px var(--ui-border);
+@media print {
+  .spell-card {
+    box-shadow: 0 0 0 1px var(--st-border-strong);
+  }
 }
 ```
