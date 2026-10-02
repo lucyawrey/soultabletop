@@ -1,6 +1,6 @@
 # Sheet CSS reference
 
-Source of truth: `shared/sheet/css.ts` (`processSheetCss`), `shared/sheet/fonts.ts`, `shared/sheet/css.test.ts`.
+Source of truth: `shared/sheet/css.ts` (`processSheetCss`), `shared/fonts.ts`, `shared/sheet/css.test.ts`.
 
 ## How scoping works
 
@@ -55,9 +55,11 @@ class (there is no dark mode).
 
 ## Fonts
 
-Self-hosted and usable by name in `font-family`: Cinzel (classical capitals, titles), Uncial Antiqua (medieval
-uncial), IM Fell English (old printed book), Crimson Pro (readable book serif), Special Elite (typewriter),
-Orbitron (futuristic). Generic families (`serif`, `sans-serif`, `monospace`, `system-ui`, ...), `var(...)`, and the keywords `inherit`, `initial`, `unset`, `revert`, `revert-layer` are fine. Any other family gives a warning (`css-font`), not an error. `@font-face` is rejected.
+Self-hosted and usable by name in `font-family`: the site's own Nunito Sans (body text; 400, 600, 700), Cormorant
+Garamond (headings; 400, 600, 700), and JetBrains Mono (code; 400, 500, 700), plus Cinzel (classical capitals, titles;
+400, 700), Uncial Antiqua (medieval uncial; 400), IM Fell English (old printed book; 400), Crimson Pro (readable book
+serif; 400, 700), Special Elite (typewriter; 400), and Orbitron (futuristic; 400, 700). Other weights are faked by the
+browser. `var(--st-font-body)` and `var(--st-font-display)` follow the site's fonts if the theme changes. Generic families (`serif`, `sans-serif`, `monospace`, `system-ui`, ...), `var(...)`, and the keywords `inherit`, `initial`, `unset`, `revert`, `revert-layer` are fine. Any other family gives a warning (`css-font`), not an error. `@font-face` is rejected.
 
 ## Rejected (error; the rule or declaration is dropped)
 
