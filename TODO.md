@@ -6,7 +6,8 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 
 # In progress
 
-Nothing right now.
+- **Redesign the UI to be warmer and more inviting** · feature · large
+  Planned with the user (2026-10-02): `.claude/plans/ui-redesign.md` (direction D Folio from `.claude/plans/ui-directions.html`, sidebar shell, list and detail patterns, one light theme, documented Sheet theme tokens; bundles empty-state next steps and Print content). Five PRs, built one at a time by the main agent; none started yet.
 
 # Next up
 
@@ -16,8 +17,6 @@ Nothing right now.
 - **Session lifetime doesn't extend while a user stays active** · bug · depends on: session cookie cache merged
   Better Auth extends a session in the database once a day (`updateAge`), but the refreshed token cookie (new 7-day Max-Age) is sent only on the response of the request that did the extension, and `lookUpSession` in `server/utils/auth.ts` deliberately drops the token cookie (forwarding it could restore a session during an in-flight sign-out). So an active user may be signed out 7 days after signing in. Found by the session cookie cache review (2026-10-01); partly true before it (server-side `getSession` already dropped all cookies). Fix by forwarding the refreshed token cookie only when it is safe (the same user and token as the request's), with tests and an independent security review.
 
-- **Redesign the UI to be warmer and more inviting** · feature · large · needs decision: visual direction (palette, type, mood) and whether Sheet CSS authors get documented theme tokens
-  More appropriate to playing tabletop RPGs. Remove light/dark mode and use one unified, mostly light theme. Reason: Sheet designers need a consistent site-wide theme to fit their designs into, and authoring Sheets is easier against one theme. Touches the Sheet editor's dark-mode syntax colors (in the Sheet system follow-ups) and the light-and-dark manual QA item under Before launch: drop those parts if this lands.
 - **Authoring CLI for uploading resources from files** · feature · needs decision: file format, folder layout, download support, where it lives · depends on: readable ID addressing, user API keys
   From files on disk, authenticated with a user API key: systems, content types, sheets, and content defined as files (JSON or TOML, to decide, for resource metadata, schemas, and content data; the existing `.stts` markup and `.css` files for sheets) in a defined folder layout, which the CLI creates or updates through the API. Makes bulk authoring (e.g. the official D&D 2024 system) possible in an editor, under version control, and by agents. Files identify resources by owner + readable ID, not ID, both for themselves and for references to other resources (a content type's system, a sheet's content type, content references), so they can be written before anything exists in the database and never need IDs written back into them; the CLI creates a resource when its owner + readable ID doesn't exist yet and updates it otherwise. This depends on the readable ID addressing item (API lookups by owner + readable ID, and bodies accepting owner/readable ID references). Decide: the file format and folder layout, whether it can also download resources to files, and where the CLI lives (in this repo or a published package).
 - **Sheet system follow-ups (formulas, image uploads, dice buttons, editor dark mode)** · feature

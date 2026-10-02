@@ -151,7 +151,10 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 .tabs { display: inline-flex; border-bottom: 1px solid var(--line); gap: 18px; }
 .tab { padding: 6px 2px 9px; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .tab[aria-selected="true"] { color: var(--primary); border-color: var(--primary); }
-.toolbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+/* Search and the view toggle share one line; the search box shrinks, the toggle never wraps. */
+.toolbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; flex: 0 1 380px; min-width: 0; }
+.toolbar-right .search { flex: 1 1 auto; width: auto; }
+.viewtoggle { flex: none; }
 .viewtoggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); padding: 2px; }
 .viewtoggle button { border: 0; background: transparent; color: var(--muted); padding: 8px; min-width: 34px; min-height: 34px; border-radius: calc(var(--radius) - 2px); cursor: pointer; display: grid; place-items: center; }
 .viewtoggle button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
