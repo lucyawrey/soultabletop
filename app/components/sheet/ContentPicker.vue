@@ -22,16 +22,15 @@ interface ContentListItem {
 
 const options = ref<ContentListItem[]>([]);
 const loading = ref(false);
-const loaded = ref(false);
 
 async function load(open: boolean) {
-  if (!open || loaded.value || loading.value) return;
+  // Loads on every open, so content created since the last open shows up.
+  if (!open || loading.value) return;
   loading.value = true;
   try {
     options.value = await $fetch<ContentListItem[]>("/api/content", {
       query: { contentTypeId: props.contentTypeId },
     });
-    loaded.value = true;
   } finally {
     loading.value = false;
   }

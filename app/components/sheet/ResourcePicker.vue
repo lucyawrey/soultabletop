@@ -45,15 +45,17 @@ interface ListItem {
 
 const options = ref<ListItem[]>([]);
 const loading = ref(false);
-const loadedKind = ref<ResourceLinkKind>();
 const loadError = ref("");
-// The message is about the previous kind's list.
+// The message and options are about the previous kind's list.
 watch(kind, () => {
   loadError.value = "";
+  options.value = [];
 });
 
 async function load(open: boolean) {
-  if (!open || loadedKind.value === kind.value || loading.value) return;
+  // Loads on every open, so a resource created or changed since the last open
+  // shows up; the earlier options stay in the list meanwhile.
+  if (!open || loading.value) return;
   loading.value = true;
   loadError.value = "";
   try {
@@ -61,7 +63,6 @@ async function load(open: boolean) {
     options.value = await $fetch<ListItem[]>(
       LIST_URLS[listKind],
     );
-    loadedKind.value = listKind;
   } catch (error) {
     options.value = [];
     // Some lists (campaigns) need an account, and logged-out visitors can
