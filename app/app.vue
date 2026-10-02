@@ -24,10 +24,13 @@ const route = useRoute();
 const navGroups = computed(() => {
   // A section stays current on its detail and edit pages (`/systems/<id>`),
   // which are sibling routes, not children, of its list page.
+  // `aria-label` names the link when the collapsed rail shows only its icon
+  // (the tooltip appears on hover alone).
   const link = (to: string, label: string, icon: string) => ({
     to,
     label,
     icon,
+    "aria-label": label,
     active: route.path === to || route.path.startsWith(`${to}/`),
   });
   const characters = link("/characters", "Characters", "i-lucide-user");
@@ -86,6 +89,8 @@ watch(
         :default-size="232"
         :max-size="232"
         class="print:hidden"
+        role="navigation"
+        aria-label="Sidebar"
         :ui="{
           root: 'bg-default border-e border-default',
           // A wrapping row: the brand line (with the drawer's close button on
@@ -94,6 +99,9 @@ watch(
           body: 'gap-[18px] px-3.5 pt-[18px]',
           // Empty on the signed-out landing page, so hidden there.
           footer: loggedIn || showSignIn ? 'mx-3.5 border-t border-default px-0 py-2.5' : 'hidden',
+          // The phone drawer is a modal, whose content divides its children
+          // with lines; the desktop sidebar has none under the system picker.
+          content: 'divide-y-0',
         }"
       >
         <template #header="{ collapsed: isCollapsed }">

@@ -35,7 +35,7 @@ const columns: TableColumn<SystemItem>[] = [
     header: "Updated",
     cell: ({ row }) => formatShortDate(row.original.updatedAt),
   },
-  { id: "actions" },
+  actionsColumn(),
 ];
 
 const isFormOpen = ref(false);

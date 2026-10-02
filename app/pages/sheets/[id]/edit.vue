@@ -409,7 +409,7 @@ async function insertPath(path: string) {
             <NuxtLink
               v-if="contentType"
               :to="`/types/${contentType.id}`"
-              class="hover:underline"
+              class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
             >
               {{ contentType.name }}
             </NuxtLink>

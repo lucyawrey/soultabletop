@@ -1,4 +1,10 @@
+import type { InjectionKey, Ref } from "vue";
+
 export type ListView = "table" | "cards";
+
+// `ResourceList` provides its view, so its empty state can show placeholders
+// in the same shape (`ResourceListEmpty`).
+export const listViewKey: InjectionKey<Ref<ListView>> = Symbol("list-view");
 
 // Which view a list page shows. Kept in a cookie (one per page), not
 // `localStorage`, so the server renders the chosen view and there is no

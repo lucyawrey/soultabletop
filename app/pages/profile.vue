@@ -402,7 +402,7 @@ const groupColumns = [
         <template #name-cell="{ row }">
           <NuxtLink
             :to="`/groups/${row.original.id}`"
-            class="font-medium text-primary hover:underline"
+            class="font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
           >
             {{ row.original.name }}
           </NuxtLink>

@@ -226,7 +226,7 @@ const imageSize = computed(
       <NuxtLink
         v-if="refInfo?.to"
         :to="refInfo.to"
-        class="text-primary hover:underline"
+        class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
       >
         {{ refInfo.name }}
       </NuxtLink>
