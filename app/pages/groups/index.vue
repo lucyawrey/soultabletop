@@ -22,6 +22,8 @@ const {
   refresh,
 } = await useLazyFetch<GroupItem[]>("/api/group", { default: () => [] });
 
+const view = useListView("groups", "table");
+
 const columns: TableColumn<GroupItem>[] = [
   { accessorKey: "name", header: "Name" },
   { accessorKey: "role", header: "Your Role" },
@@ -88,50 +90,81 @@ async function submitForm() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Groups</h1>
-      <UButton icon="i-lucide-plus" size="sm" @click="openCreate">
+    <PageHeader section="build" title="Groups">
+      <UButton icon="i-lucide-plus" @click="openCreate">
         New Group
       </UButton>
+    </PageHeader>
+
+    <div class="flex items-center gap-2">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+          :ui="{ base: 'h-10' }"
+        placeholder="Search groups by name or ID"
+        class="min-w-0 flex-1"
+      />
+      <ListViewToggle v-model="view" />
     </div>
 
-    <UInput
-      v-model="search"
-      icon="i-lucide-search"
-      placeholder="Search groups by name or ID"
-      class="w-full max-w-md"
-    />
+    <ResourceCards
+      v-if="view === 'cards'"
+      :items="visibleGroups"
+      :to="(item) => `/groups/${item.id}`"
+    >
+      <template #badges="{ item }">
+        <LabelChip v-if="item.kind === 'system'" tone="primary">Official</LabelChip>
+      </template>
+      <template #details="{ item }">
+        <dt class="text-muted">Your Role</dt>
+        <dd>
+          <span v-if="!item.role">Site admin</span>
+          <LabelChip
+            v-else
+            :tone="item.role === 'admin' ? 'primarySoft' : 'neutral'"
+            class="capitalize"
+          >
+            {{ item.role }}
+          </LabelChip>
+        </dd>
+        <dt class="text-muted">Members</dt>
+        <dd>{{ item.memberCount }}</dd>
+      </template>
+      <template #empty>
+        <TableSkeleton v-if="isLoading(status)" />
+        <p v-else class="py-6 text-center text-sm text-muted">
+          {{ search.trim() ? "No groups match your search." : "You aren't in any groups yet." }}
+        </p>
+      </template>
+    </ResourceCards>
 
-    <UTable :data="visibleGroups" :columns="columns" :loading="status === 'pending'">
+    <UTable v-else :data="visibleGroups" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/groups/${row.original.id}`"
-          class="font-medium text-highlighted hover:underline"
+          class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>
-        <UBadge
-          v-if="row.original.kind === 'system'"
-          variant="subtle"
-          size="sm"
-          class="ms-2"
-        >
+        <span class="mt-0.5 block font-mono text-xs text-muted">
+          {{ row.original.readableId }}
+        </span>
+        <LabelChip v-if="row.original.kind === 'system'" tone="primary" class="ms-2">
           Official
-        </UBadge>
+        </LabelChip>
       </template>
 
       <template #role-cell="{ row }">
         <span v-if="!row.original.role" class="text-sm text-muted">
           Site admin
         </span>
-        <UBadge
+        <LabelChip
           v-else
-          :color="row.original.role === 'admin' ? 'primary' : 'neutral'"
-          variant="subtle"
+          :tone="row.original.role === 'admin' ? 'primarySoft' : 'neutral'"
           class="capitalize"
         >
           {{ row.original.role }}
-        </UBadge>
+        </LabelChip>
       </template>
 
       <template #empty>

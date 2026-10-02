@@ -28,7 +28,7 @@ useReadableAddress("campaigns", campaign);
 const id = computed(() => campaign.value?.id ?? "");
 followSystem(campaign.value?.systemId);
 
-const { data: systems, status: systemsStatus } = await useLazyFetch<SystemOption[]>("/api/system", {
+const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
 });
 
@@ -108,39 +108,21 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <UButton
-      to="/campaigns"
-      icon="i-lucide-arrow-left"
-      color="neutral"
-      variant="link"
-      size="sm"
-    >
-      Back to Campaigns
-    </UButton>
-
     <template v-if="campaign">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
-            {{ campaign.name }}
-            <ReadableIdBadge :readable-id="campaign.readableId" />
-          </h1>
-          <p class="text-sm text-muted">
-            {{ visibilityLabel(campaign.isPubliclyReadable) }}
-          </p>
-          <p v-if="system || isLoading(systemsStatus)" class="mt-1 text-sm">
-            System:
-            <LookupSkeleton v-if="!system" />
-            <NuxtLink
-              v-else
-              :to="`/systems/${system.id}`"
-              class="text-primary hover:underline"
-            >
-              {{ system.name }}
-            </NuxtLink>
-          </p>
-        </div>
-        <div v-if="campaign?.canEdit" class="flex gap-2">
+      <DetailHeader
+        back-to="/campaigns"
+        back-label="Back to Campaigns"
+        eyebrow="Campaign"
+        :title="campaign.name"
+      >
+        <template #meta>
+          <ReadableIdBadge
+            :readable-id="campaign.readableId"
+            :owner="campaign.ownerReadableId"
+          />
+          <VisibilityBadge :is-publicly-readable="campaign.isPubliclyReadable" />
+        </template>
+        <template v-if="campaign.canEdit" #actions>
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
@@ -160,7 +142,27 @@ async function remove() {
           >
             Delete
           </UButton>
-        </div>
+        </template>
+      </DetailHeader>
+
+      <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <!-- Placeholder until campaigns hold characters and content (the
+             "Make Campaigns places to play" item in TODO.md). -->
+        <DetailPanel title="In Play">
+          <p class="px-[18px] py-6 text-center text-sm text-muted">
+            Characters and content can't be added to campaigns yet.
+          </p>
+        </DetailPanel>
+
+        <AboutPanel
+          :facts="[
+            { label: 'Owner', value: ownerLabel(campaign) },
+            { label: 'ID', value: campaign.readableId, mono: true },
+            { label: 'Visibility', value: visibilityLabel(campaign.isPubliclyReadable) },
+            { label: 'System', value: system?.name },
+            { label: 'Updated', value: formatShortDate(campaign.updatedAt) },
+          ]"
+        />
       </div>
     </template>
 

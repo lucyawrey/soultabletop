@@ -8,6 +8,7 @@ import {
   listQueryParameters,
   listResources,
   officialColumn,
+  ownerReadableIdColumn,
   requireListQuery,
   requireSystemFilter,
   respondWithList,
@@ -22,7 +23,7 @@ defineRouteMeta({
       "Each row has the `systemId` of its content type's system. Rows leave out `markup` and `cssStyles`; get a sheet by ID for them.",
     parameters: [...listQueryParameters, systemIdParameter],
     responses: {
-      200: { description: "Sheet list. Each row has `source`: you, yourGroups, shared, official, or community" },
+      200: { description: "Sheet list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
     },
   },
 });
@@ -43,6 +44,7 @@ export default defineEventHandler(async (event) => {
           resource,
           systemId: contentType.systemId,
           official: officialColumn,
+          ownerReadableId: ownerReadableIdColumn,
         })
         .from(sheet)
         .innerJoin(resource, eq(resource.id, sheet.resourceId))
@@ -64,9 +66,10 @@ export default defineEventHandler(async (event) => {
     },
   });
   return respondWithList(
-    rows.map(({ sheet: item, resource: owner, systemId: typeSystemId, source, access }) => ({
+    rows.map(({ sheet: item, resource: owner, ownerReadableId, systemId: typeSystemId, source, access }) => ({
       ...owner,
       ...item,
+      ownerReadableId,
       systemId: typeSystemId,
       source,
       canEdit: access.canEdit,

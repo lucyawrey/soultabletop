@@ -21,7 +21,7 @@ defineRouteMeta({
     tags: ["Dashboard"],
     summary: "Recently updated items for the current user",
     description:
-      "Campaigns the user or their groups own or that the user is a member of, and characters/content owned by the user or their groups. Public or merely shared resources are excluded.",
+      "Campaigns the user or their groups own or that the user is a member of, and characters/content owned by the user or their groups. Public or merely shared resources are excluded. Items carry IDs, not names, for their system and content type (the client names the ones the viewer can read), and campaigns carry the user's role in them, or null if they aren't a member.",
     responses: {
       200: { description: "Recent campaigns, characters, and content" },
       401: { description: "Authentication required" },
@@ -60,7 +60,11 @@ export default defineEventHandler(async (event) => {
 
   const recentContent = (isCharacter: boolean) =>
     database
-      .select(summary)
+      .select({
+        ...summary,
+        contentTypeId: content.contentTypeId,
+        systemId: contentType.systemId,
+      })
       .from(content)
       .innerJoin(resource, eq(resource.id, content.resourceId))
       .innerJoin(contentType, eq(contentType.resourceId, content.contentTypeId))
@@ -78,9 +82,20 @@ export default defineEventHandler(async (event) => {
 
   const [recentCampaigns, characters, otherContent] = await Promise.all([
     database
-      .select(summary)
+      .select({
+        ...summary,
+        systemId: campaign.systemId,
+        role: campaignMembership.role,
+      })
       .from(campaign)
       .innerJoin(resource, eq(resource.id, campaign.resourceId))
+      .leftJoin(
+        campaignMembership,
+        and(
+          eq(campaignMembership.campaignId, campaign.resourceId),
+          eq(campaignMembership.userId, user.id),
+        ),
+      )
       .where(
         campaignIds.length
           ? or(isOwned, inArray(campaign.resourceId, campaignIds))

@@ -2,6 +2,9 @@
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { authClient } from "~/utils/auth-client";
 
+// `collapsed`: the sidebar is an icon rail, so show only the avatar.
+defineProps<{ collapsed?: boolean }>();
+
 // The signed-in user's icon and name in the sidebar footer, opening a menu with who is signed
 // in, Profile, and Sign out. The sidebar shows it only when logged in.
 const session = await useAuthSession();
@@ -49,6 +52,9 @@ const avatar = computed(() => ({
   // UAvatar prefers an icon over text, so only when there are no initials.
   icon: initials.value ? undefined : "i-lucide-user",
 }));
+
+// A gilt disc with the initials, like the mockup.
+const avatarUi = { root: "bg-secondary", fallback: "font-bold text-inverted" };
 
 const toast = useToast();
 const router = useRouter();
@@ -109,8 +115,9 @@ const items = computed<DropdownMenuItem[][]>(() => [
     <UButton
       color="neutral"
       variant="ghost"
-      block
-      class="justify-start gap-2 p-1.5"
+      :block="!collapsed"
+      class="gap-2 p-1.5"
+      :class="collapsed ? 'justify-center' : 'justify-start'"
       aria-label="User menu"
     >
       <UIcon
@@ -118,8 +125,21 @@ const items = computed<DropdownMenuItem[][]>(() => [
         name="i-lucide-loader-circle"
         class="size-8 animate-spin p-1.5"
       />
-      <UAvatar v-else ref="triggerAvatar" v-bind="avatar" size="md" />
-      <span class="min-w-0 flex-1 truncate text-start">{{ displayName }}</span>
+      <UAvatar
+        v-else
+        ref="triggerAvatar"
+        v-bind="avatar"
+        size="md"
+        :ui="avatarUi"
+      />
+      <span v-if="!collapsed" class="min-w-0 flex-1 text-start">
+        <span class="block truncate text-sm font-semibold text-highlighted">
+          {{ displayName }}
+        </span>
+        <span v-if="showUsername" class="block truncate text-xs font-normal text-muted">
+          @{{ username }}
+        </span>
+      </span>
     </UButton>
 
     <template #account>
