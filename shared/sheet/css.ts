@@ -13,7 +13,7 @@ import postcss, {
   type Rule,
 } from "postcss";
 import selectorParser from "postcss-selector-parser";
-import { genericFontFamilies, sheetFonts } from "./fonts";
+import { genericFontFamilies, siteFonts } from "../fonts";
 import { MAX_SHEET_CSS_LENGTH } from "./files";
 import type { Loc, SheetDiagnostic } from "./parser";
 
@@ -32,7 +32,7 @@ const blockedProperties = new Set(["behavior", "-moz-binding"]);
 const blockedFunctions =
   /(?:^|[^\w-])(?:url|image-set|-webkit-image-set|image|cross-fade|element|paint|expression)\s*\(/i;
 const animationProperty = /(?:^|-)animation(?:-name)?$/;
-const sheetFontNames = new Set(sheetFonts.map((font) => font.name.toLowerCase()));
+const siteFontNames = new Set(siteFonts.map((font) => font.name.toLowerCase()));
 
 // Decodes CSS escapes (`\75 rl(`) so they can't hide blocked functions.
 function decodeEscapes(value: string) {
@@ -318,12 +318,12 @@ export function processSheetCss(source: string, scopeId?: string): SheetCssResul
       for (const family of declaration.value.split(",")) {
         const name = family.trim().replace(/^["']|["']$/g, "");
         const lower = name.toLowerCase();
-        if (!name || lower.startsWith("var(") || genericFontFamilies.has(lower) || sheetFontNames.has(lower))
+        if (!name || lower.startsWith("var(") || genericFontFamilies.has(lower) || siteFontNames.has(lower))
           continue;
         report(
           declaration,
           "css-font",
-          `"${name}" isn't one of the sheet fonts, so it only shows if the viewer has it installed`,
+          `"${name}" isn't one of the site's fonts, so it only shows if the viewer has it installed`,
           "warning",
         );
       }

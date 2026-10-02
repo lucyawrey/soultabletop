@@ -144,8 +144,10 @@ describe("processSheetCss", () => {
     expect(codes(".a { background: linear-gradient(red, blue); width: calc(100% - var(--x)); color: rgb(0 0 0) }")).toEqual([]);
   });
 
-  it("warns about fonts that aren't in the Sheet font list", () => {
+  it("warns about fonts that aren't in the site's font list", () => {
     expect(codes(".a { font-family: \"Cinzel\", serif } .b { font-family: var(--f), 'IM Fell English' }")).toEqual([]);
+    // The app's own fonts too.
+    expect(codes(".a { font-family: 'Cormorant Garamond', serif } .b { font-family: Nunito Sans, \"JetBrains Mono\" }")).toEqual([]);
     expect(scoped(".a { font-family: Papyrus, serif }").diagnostics).toMatchObject([
       { severity: "warning", code: "css-font", message: expect.stringContaining("\"Papyrus\"") },
     ]);

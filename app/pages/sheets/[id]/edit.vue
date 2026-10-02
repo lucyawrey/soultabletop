@@ -7,7 +7,7 @@ import {
   sheetFileTypes,
   type SheetFileKind,
 } from "#shared/sheet/files";
-import { sheetFonts } from "#shared/sheet/fonts";
+import { siteFonts } from "#shared/fonts";
 import { sheetThemeTokens } from "#shared/sheet/theme-tokens";
 import { generateSheetMarkup, type ContentCategory } from "#shared/sheet/generate";
 import type { SheetDiagnostic } from "#shared/sheet/parser";
@@ -762,7 +762,7 @@ async function insertPath(path: string) {
             </p>
             <h4 class="font-medium text-highlighted">Fonts</h4>
             <ul class="space-y-1">
-              <li v-for="font in sheetFonts" :key="font.name">
+              <li v-for="font in siteFonts" :key="font.name">
                 <span :style="{ fontFamily: `'${font.name}'` }" class="text-base">{{ font.name }}</span>
                 <span class="text-xs text-muted"> — {{ font.description }}</span>
               </li>
