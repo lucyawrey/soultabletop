@@ -319,7 +319,7 @@ async function remove() {
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-(--ui-container) space-y-6 p-4 py-8">
+  <PageContainer>
     <UButton
       :to="listPath"
       icon="i-lucide-arrow-left"
@@ -571,5 +571,5 @@ async function remove() {
         />
       </template>
     </UModal>
-  </div>
+  </PageContainer>
 </template>
