@@ -251,6 +251,9 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
 .app[data-signed="out"] [data-out-only] { display: flex !important; }
 .app[data-signed="out"] [data-account] { display: none !important; }
 .side-foot-out .btn { width: 100%; justify-content: center; }
+.app[data-signed="out"] .side-browse { display: grid !important; }
+/* The landing page has the sign-in form, so no Sign in button there. */
+.app[data-page="landing"] [data-out-only].side-foot-out, .app[data-page="landing"] .right [data-out-only] { display: none !important; }
 .app[data-signed="out"] .navlink[aria-current="page"] { background: transparent; color: var(--muted); font-weight: 500; }
 
 /* Landing */
@@ -291,6 +294,7 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
 .dash-head { display: flex; justify-content: space-between; align-items: end; gap: 14px; flex-wrap: wrap; }
 .dash-head h1 { font-size: 38px; margin: 0; line-height: 1.05; }
 .dash-head p { margin: 4px 0 0; color: var(--muted); }
+.copy-note { font: 12px var(--mono) !important; }
 .dash-head .acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
@@ -308,6 +312,10 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
 .char .init { width: 42px; height: 42px; flex: none; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font: 700 20px var(--display); }
 .char b { display: block; }
 .char span { color: var(--muted); font-size: 13px; }
+.shelf { display: grid; gap: 10px; }
+.shelf-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.shelf-head .all { color: var(--primary); font-weight: 600; font-size: 14px; text-decoration: none; }
+.shelf-head .all:hover { text-decoration: underline; }
 .start { display: grid; gap: 16px; }
 .placeholder { border: 2px dashed var(--line-strong); border-radius: var(--radius); padding: 16px; color: var(--muted); display: grid; gap: 2px; }
 .placeholder small { font: 12px var(--mono); }
@@ -409,13 +417,6 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
       </div>
     </div>
     <div class="ctl">
-      <span class="ctl-label">Signed-out navigation</span>
-      <div class="seg" data-ctl="outnav">
-        <button type="button" data-v="top" aria-pressed="true">Top bar</button>
-        <button type="button" data-v="sidebar" aria-pressed="false">Sidebar</button>
-      </div>
-    </div>
-    <div class="ctl">
       <span class="ctl-label">Dashboard user</span>
       <div class="seg" data-ctl="dash">
         <button type="button" data-v="returning" aria-pressed="true">Returning</button>
@@ -472,13 +473,21 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
       <aside class="sidebar">
         <a class="brand" href="#app"><svg width="22" height="22"><use href="#i-dice"/></svg><span class="brand-name">Soul Tabletop</span></a>
         <div class="sys-select">Ashen Realms <svg width="14" height="14"><use href="#i-chev"/></svg></div>
-        <nav class="side-group" aria-label="Play">
+        <nav class="side-group side-browse" aria-label="Browse" data-out-only>
+          <div class="side-label">Browse</div>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-user"/></svg>Characters</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-book"/></svg>Content</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-layout"/></svg>Sheets</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-shapes"/></svg>Types</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-globe"/></svg>Systems</a>
+        </nav>
+        <nav class="side-group" aria-label="Play" data-account>
           <div class="side-label">Play</div>
           <a class="navlink" href="#app" data-account><svg width="17" height="17"><use href="#i-flag"/></svg>Campaigns</a>
           <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-user"/></svg>Characters</a>
           <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-book"/></svg>Content</a>
         </nav>
-        <nav class="side-group" aria-label="Build">
+        <nav class="side-group" aria-label="Build" data-account>
           <div class="side-label">Build</div>
           <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-layout"/></svg>Sheets</a>
           <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-shapes"/></svg>Types</a>
@@ -653,7 +662,8 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
         <section class="view" data-view="dashboard" hidden>
           <div class="dash">
             <div class="dash-head">
-              <div><h1>Welcome back, Rowan</h1><p>Pick up where you left off.</p></div>
+              <div data-dash="returning"><h1>Welcome back, Rowan</h1><p>Pick up where you left off.</p></div>
+              <div data-dash="new" hidden><h1>First-visit heading goes here</h1><p class="copy-note">Copy: written by the team (dashboard heading for someone with nothing yet)</p></div>
               <div class="acts"><a class="btn btn-primary" href="#app"><svg width="15" height="15"><use href="#i-plus"/></svg>New Character</a><a class="btn btn-outline" href="#app"><svg width="15" height="15"><use href="#i-plus"/></svg>New Campaign</a></div>
             </div>
 
@@ -684,25 +694,17 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
                   <div><div class="eyebrow">Continue · Character</div><h2>Rowan the Grey</h2><div class="meta">Wanderer · Ashen Realms · edited 2 hours ago</div></div>
                   <a class="btn btn-primary" href="#app">Open</a>
                 </div>
-                <h2 class="section-title">Characters</h2>
-                <div class="chars">
-                  <a class="char" href="#app"><span class="init">R</span><div><b>Rowan the Grey</b><span>Wanderer · Ashen Realms</span></div></a>
-                  <a class="char" href="#app"><span class="init">A</span><div><b>Ash-Tongue Marrow</b><span>Ashborn Beast · Ashen Realms</span></div></a>
-                  <a class="char" href="#app"><span class="init">V</span><div><b>Lieutenant Vey</b><span>Pilot · Starfall Frontier</span></div></a>
+                <div class="shelf">
+                  <div class="shelf-head"><h2 class="section-title">Campaigns</h2><a class="all" href="#app">View all</a></div>
+                  <div class="chars"><a class="char" href="#app"><span class="init">T</span><div><b>The Cinder Road</b><span>GM · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">S</span><div><b>Starfall: Act II</b><span>Player · Starfall Frontier</span></div></a><a class="char" href="#app"><span class="init">M</span><div><b>Moonlit Court</b><span>GM · Ashen Realms</span></div></a></div>
                 </div>
-                <div class="cols2">
-                  <div class="panel"><div class="panel-head"><h2>Campaigns</h2><a class="all" href="#app">View all</a></div>
-                    <ul class="list">
-                      <li><span class="lname">The Cinder Road</span><span class="badge b-official">GM</span></li>
-                      <li><span class="lname">Starfall: Act II</span><span class="badge b-community">Player</span></li>
-                      <li><span class="lname">Moonlit Court</span><span class="badge b-official">GM</span></li>
-                    </ul></div>
-                  <div class="panel"><div class="panel-head"><h2>Content</h2><a class="all" href="#app">View all</a></div>
-                    <ul class="list">
-                      <li><span class="lname">Ember Rite<span class="sub2">Ritual · Ashen Realms</span></span><span class="when">Sep 30</span></li>
-                      <li><span class="lname">Relics of the Cinder Road<span class="sub2">Page · Ashen Realms</span></span><span class="when">Sep 26</span></li>
-                      <li><span class="lname">The Ashen Wastes<span class="sub2">Page · Ashen Realms</span></span><span class="when">Sep 19</span></li>
-                    </ul></div>
+                <div class="shelf">
+                  <div class="shelf-head"><h2 class="section-title">Characters</h2><a class="all" href="#app">View all</a></div>
+                  <div class="chars"><a class="char" href="#app"><span class="init">R</span><div><b>Rowan the Grey</b><span>Wanderer · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">A</span><div><b>Ash-Tongue Marrow</b><span>Ashborn Beast · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">L</span><div><b>Lieutenant Vey</b><span>Pilot · Starfall Frontier</span></div></a></div>
+                </div>
+                <div class="shelf">
+                  <div class="shelf-head"><h2 class="section-title">Content</h2><a class="all" href="#app">View all</a></div>
+                  <div class="chars"><a class="char" href="#app"><span class="init">E</span><div><b>Ember Rite</b><span>Ritual · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">R</span><div><b>Relics of the Cinder Road</b><span>Page · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">T</span><div><b>The Ashen Wastes</b><span>Page · Ashen Realms</span></div></a></div>
                 </div>
               </div>
             </div>
@@ -747,12 +749,13 @@ document.getElementById("cards").innerHTML = systems.map((s) =>
 ).join("");
 
 const app = document.getElementById("app");
-const state = { page: "list", layout: "sidebar", variant: "1", outnav: "top", dash: "returning" };
+const state = { page: "list", layout: "sidebar", variant: "1", dash: "returning" };
 const currentNav = [...document.querySelectorAll('.navlink[aria-current="page"]')];
 function render() {
   const out = state.page === "landing";
   app.dataset.signed = out ? "out" : "in";
-  app.dataset.layout = out ? (state.outnav === "top" ? "header" : "sidebar") : state.layout;
+  app.dataset.layout = out ? "sidebar" : state.layout;
+  app.dataset.page = state.page;
   document.querySelectorAll("[data-view]").forEach((el) => (el.hidden = el.dataset.view !== state.page));
   document.querySelectorAll("[data-variant]").forEach((el) => (el.hidden = el.dataset.variant !== state.variant));
   document.querySelectorAll("[data-dash]").forEach((el) => (el.hidden = el.dataset.dash !== state.dash));
@@ -805,8 +808,6 @@ document.querySelectorAll(".seg").forEach((seg) => {
       state.page = v;
     } else if (ctl === "variant") {
       state.variant = v;
-    } else if (ctl === "outnav") {
-      state.outnav = v;
     } else if (ctl === "dash") {
       state.dash = v;
     }
