@@ -243,8 +243,10 @@ async function remove() {
                 class="w-32"
               />
             </UFormField>
+            <!-- As tall as the 40px fields beside it. -->
             <UButton
               icon="i-lucide-user-plus"
+              class="h-10"
               :loading="memberBusy"
               :disabled="!addForm.username.trim()"
               @click="addMember"

@@ -221,6 +221,7 @@ async function remove() {
             <UInput
               :model-value="createdKey"
               readonly
+              size="lg"
               class="w-full font-mono"
               aria-label="API key"
               @focus="($event.target as HTMLInputElement).select()"
@@ -230,6 +231,7 @@ async function remove() {
               :label="copied ? 'Copied' : 'Copy'"
               color="neutral"
               variant="outline"
+              class="h-10"
               @click="copyKey"
             />
           </div>
