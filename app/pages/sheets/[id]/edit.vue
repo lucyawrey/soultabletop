@@ -387,7 +387,7 @@ async function insertPath(path: string) {
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-(--ui-container) space-y-4 p-4 py-8">
+  <PageContainer compact>
     <UButton
       :to="`/sheets/${id}`"
       icon="i-lucide-arrow-left"
@@ -778,5 +778,5 @@ async function insertPath(path: string) {
         </div>
       </template>
     </USlideover>
-  </div>
+  </PageContainer>
 </template>

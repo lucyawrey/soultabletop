@@ -130,3 +130,15 @@
     -webkit-text-fill-color: var(--ui-text-highlighted);
   }
 }
+
+/* Print shows the page content only: the sidebar and drawer hide themselves
+   with `print:hidden`, and page actions can opt out with `no-print`. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+}

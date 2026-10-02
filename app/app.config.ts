@@ -8,6 +8,28 @@ export default defineAppConfig({
       secondary: "gilt",
       neutral: "folio",
     },
+    navigationMenu: {
+      // The current page is a solid primary pill, not Nuxt UI's tinted one.
+      compoundVariants: [
+        {
+          orientation: "vertical" as const,
+          variant: "pill" as const,
+          active: true,
+          class: {
+            link: "font-bold text-inverted",
+            linkLeadingIcon: "text-inverted",
+            linkLabel: "font-bold",
+          },
+        },
+        ...(["primary", "neutral"] as const).map((color) => ({
+          color,
+          orientation: "vertical" as const,
+          variant: "pill" as const,
+          active: true,
+          class: { link: "before:bg-primary" },
+        })),
+      ],
+    },
     button: {
       // Solid buttons darken on hover and press instead of fading to 75%,
       // which would drop their light text below 4.5:1.

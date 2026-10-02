@@ -230,7 +230,7 @@ const groupColumns = [
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-(--ui-container) space-y-6 p-4 py-8">
+  <PageContainer>
     <h1 class="text-2xl font-bold text-highlighted">Profile</h1>
 
     <UPageCard>
@@ -425,5 +425,5 @@ const groupColumns = [
         </template>
       </UTable>
     </UPageCard>
-  </div>
+  </PageContainer>
 </template>
