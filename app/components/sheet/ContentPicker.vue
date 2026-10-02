@@ -3,8 +3,8 @@ import type { ResourceSource } from "#shared/resource-list";
 import type { SheetRef } from "#shared/sheet/runtime";
 import type { ResourceOptionItem } from "~/utils/resource-option";
 
-// Searchable choice of existing Content of one ContentType, loaded on first
-// open. Emits the picked Content so it can be shown before saving.
+// Searchable choice of existing Content of one ContentType, loaded each
+// time it opens. Emits the picked Content so it can be shown before saving.
 const props = defineProps<{
   contentTypeId: string;
   modelValue?: string;
@@ -22,16 +22,15 @@ interface ContentListItem {
 
 const options = ref<ContentListItem[]>([]);
 const loading = ref(false);
-const loaded = ref(false);
 
 async function load(open: boolean) {
-  if (!open || loaded.value || loading.value) return;
+  // Loads on every open, so content created since the last open shows up.
+  if (!open || loading.value) return;
   loading.value = true;
   try {
     options.value = await $fetch<ContentListItem[]>("/api/content", {
       query: { contentTypeId: props.contentTypeId },
     });
-    loaded.value = true;
   } finally {
     loading.value = false;
   }

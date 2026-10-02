@@ -69,7 +69,7 @@ async function saveMember(body: {
   memberError.value = "";
   try {
     await $fetch(`/api/group/${id}/members`, { method: "POST", body });
-    await refreshMembers();
+    await Promise.all([refreshMembers(), refreshSystems()]);
     return true;
   } catch (error) {
     memberError.value = extractApiErrorMessage(
@@ -110,7 +110,7 @@ async function removeMember(member: Member) {
     await $fetch(`/api/group/${id}/members/${member.userId}`, {
       method: "DELETE",
     });
-    await refreshMembers();
+    await Promise.all([refreshMembers(), refreshSystems()]);
   } catch (error) {
     memberError.value = extractApiErrorMessage(
       error,
@@ -165,6 +165,7 @@ async function remove() {
 
   try {
     await $fetch(`/api/group/${id}`, { method: "DELETE" });
+    await refreshSystems();
     await navigateTo("/groups");
   } catch (error) {
     deleteError.value = extractApiErrorMessage(

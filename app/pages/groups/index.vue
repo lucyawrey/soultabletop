@@ -77,7 +77,7 @@ async function submitForm() {
       },
     });
     isFormOpen.value = false;
-    await refresh();
+    await Promise.all([refresh(), refreshSystems()]);
   } catch (error) {
     formError.value = extractApiErrorMessage(error, "Could not create group.");
   } finally {
