@@ -35,6 +35,16 @@ export default defineAppConfig({
         })),
       ],
     },
+    modal: {
+      slots: {
+        // A display-font title over a divider, and a footer on the page tone.
+        content: "rounded-xl",
+        header: "min-h-0 border-b border-default px-5 py-4",
+        title: "font-display text-2xl leading-tight font-bold text-highlighted",
+        body: "p-5",
+        footer: "justify-end border-t border-default bg-(--st-page) px-5 py-3.5",
+      },
+    },
     table: {
       slots: {
         // The table sits in a bordered panel.

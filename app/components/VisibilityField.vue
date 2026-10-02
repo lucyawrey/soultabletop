@@ -26,6 +26,13 @@ const selected = computed({
 
 <template>
   <UFormField name="isPubliclyReadable" label="Visibility">
-    <URadioGroup v-model="selected" :items="items" />
+    <URadioGroup
+      v-model="selected"
+      :items="items"
+      variant="card"
+      orientation="horizontal"
+      indicator="start"
+      :ui="{ fieldset: 'grid w-full gap-2 sm:grid-cols-2' }"
+    />
   </UFormField>
 </template>
