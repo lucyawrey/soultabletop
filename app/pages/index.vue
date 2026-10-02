@@ -372,10 +372,10 @@ function formatUpdated(updatedAt: string) {
   <PageContainer>
     <div
       v-if="!isLoggedIn"
-      class="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center gap-12 lg:flex-row lg:gap-24"
+      class="grid items-start justify-items-center gap-12 pt-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:justify-items-stretch lg:gap-16 lg:pt-6"
     >
-      <div class="max-w-md space-y-4 text-center lg:text-left">
-        <UBadge color="primary" variant="subtle" size="lg">
+      <div class="max-w-lg space-y-4 text-center lg:text-left">
+        <UBadge color="primary" variant="soft" class="rounded-full px-2.5 py-1 text-[13px]">
           {{ copy.home.badge }}
         </UBadge>
         <h1 class="text-[44px] leading-none font-bold text-highlighted sm:text-[56px]">

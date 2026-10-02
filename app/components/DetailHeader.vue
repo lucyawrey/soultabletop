@@ -19,8 +19,7 @@ defineProps<{
       icon="i-lucide-arrow-left"
       color="neutral"
       variant="link"
-      size="sm"
-      class="-ms-2.5 print:hidden"
+      class="px-0 text-[15px] font-medium print:hidden"
     >
       {{ backLabel }}
     </UButton>

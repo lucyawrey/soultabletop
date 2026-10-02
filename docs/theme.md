@@ -52,13 +52,15 @@ Nuxt UI normally picks `--ui-primary` and the others from shade 500 of the scale
 
 - `--font-sans` is Nunito Sans (400, 600, 700) for everything by default.
 - `--font-display` is Cormorant Garamond (600, 700); use it with the `font-display` utility. It has thin strokes and a small x-height, so use it only for headings at 22px and up, never for labels, table text, or small headings. `h1` uses it by default: list page titles are 34px, detail titles 40px (32px on phones), and panel titles 22px.
+- `--font-mono` is JetBrains Mono (400, 500), for readable IDs and code (the `font-mono` utility).
 - Fonts are self-hosted through `@nuxt/fonts` (the `fonts` block in `nuxt.config.ts`). Add a weight there before using it, or the browser fakes it.
 
 ### Component defaults and shared pieces
 
 The visual reference is `.claude/plans/ui-directions.html` (direction D, Folio). `app/app.config.ts` sets Nuxt UI's defaults to match it, so pages don't repeat the classes:
 
-- **Buttons:** semibold; `md` is 14px with 9px by 14px padding and 16px icons; solid buttons have a 2px inset shadow at the bottom.
+- **Buttons:** semibold; `md` is 14px with 9px by 14px padding and 16px icons; solid buttons have a 2px inset shadow at the bottom. Outline buttons in a color (Delete) sit on the panel with a border of that color mixed 60% into `--ui-border-accented`, since Nuxt UI's 50% tint is under 3:1 on the page.
+- **Form fields:** semibold labels and size `lg` by default, which makes inputs, selects, and textareas 40px tall with 15px text. Dense places (Sheet fields, the schema builder) set `size="md"` on their `UFormField`. `VisibilityField` styles its own cards: the chosen one a panel outlined in primary, the other on the page tone.
 - **Navigation menu:** 15px rows, small uppercase group labels, no separators between groups; the current item is the solid primary pill.
 - **Tabs, `variant="link"`:** the underline tabs used for My / Find and the sheet page. The underline is drawn from the active tab (`::before`), not Nuxt UI's sliding indicator, which only exists after hydration and jumped on load.
 - **Tables:** a bordered panel with a tinted header row of small uppercase labels and a light hover.

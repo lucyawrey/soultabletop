@@ -223,20 +223,23 @@ async function remove() {
       category before adding characters.
     </p>
 
-    <USelect
-      v-if="characterTypes.length > 0"
-      v-model="categoryFilter"
-      :items="categoryFilterOptions"
-      aria-label="Filter by category"
-      class="w-56"
-    />
-
     <ResourceList
       :list="list"
       noun="Characters"
+      singular="character"
       view-key="characters"
       default-view="cards"
     >
+      <template #filters>
+        <USelect
+          v-if="characterTypes.length > 0"
+          v-model="categoryFilter"
+          :items="categoryFilterOptions"
+          aria-label="Filter by category"
+          :ui="{ base: 'h-10' }"
+          class="w-56"
+        />
+      </template>
 <UTable
       :data="characters"
       :columns="columns"
@@ -245,7 +248,7 @@ async function remove() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/characters/${row.original.id}`"
-          class="font-bold text-highlighted hover:text-primary hover:underline"
+          class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>

@@ -167,6 +167,7 @@ async function remove() {
     <ResourceList
       :list="list"
       noun="Systems"
+      singular="system"
       view-key="systems"
       default-view="table"
     >
@@ -178,7 +179,7 @@ async function remove() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/systems/${row.original.id}`"
-          class="font-bold text-highlighted hover:text-primary hover:underline"
+          class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>

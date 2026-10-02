@@ -78,6 +78,24 @@ export default defineAppConfig({
         separator: "bg-(--ui-border)",
       },
     },
+    formField: {
+      // Semibold labels, and `lg` fields: the mockup's 40px inputs. Dense
+      // places (Sheets, the schema builder) set `size="md"` on their fields.
+      slots: { label: "font-semibold" },
+      defaultVariants: { size: "lg" as const },
+    },
+    input: {
+      variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
+    },
+    textarea: {
+      variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
+    },
+    select: {
+      variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
+    },
+    selectMenu: {
+      variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
+    },
     button: {
       // The mockup's buttons: semibold 14px, 9px by 14px, 15px icons.
       slots: { base: "font-semibold" },
@@ -86,13 +104,22 @@ export default defineAppConfig({
           md: { base: "px-3.5 py-2 text-sm", leadingIcon: "size-4", trailingIcon: "size-4" },
         },
       },
-      // Solid buttons darken on hover and press instead of fading to 75%,
-      // which would drop their light text below 4.5:1.
-      compoundVariants: colors.map((color) => ({
-        color,
-        variant: "solid" as const,
-        class: `shadow-[inset_0_-2px_0_rgb(0_0_0/0.18)] hover:bg-[color-mix(in_oklab,var(--ui-${color})_85%,black)] active:bg-[color-mix(in_oklab,var(--ui-${color})_85%,black)]`,
-      })),
+      compoundVariants: [
+        // Solid buttons darken on hover and press instead of fading to 75%,
+        // which would drop their light text below 4.5:1.
+        ...colors.map((color) => ({
+          color,
+          variant: "solid" as const,
+          class: `shadow-[inset_0_-2px_0_rgb(0_0_0/0.18)] hover:bg-[color-mix(in_oklab,var(--ui-${color})_85%,black)] active:bg-[color-mix(in_oklab,var(--ui-${color})_85%,black)]`,
+        })),
+        // Outline buttons (Delete) get the mockup's border, the color mixed
+        // with the strong border: Nuxt UI's 50% tint is under 3:1 on the page.
+        ...colors.map((color) => ({
+          color,
+          variant: "outline" as const,
+          class: `bg-default ring-[color-mix(in_srgb,var(--ui-${color})_60%,var(--ui-border-accented))]`,
+        })),
+      ],
     },
   },
 });

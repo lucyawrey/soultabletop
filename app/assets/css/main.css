@@ -12,6 +12,7 @@
 @theme static {
   --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Cormorant Garamond", Georgia, ui-serif, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --color-plum-50: #fbf4f7;
   --color-plum-100: #f1dfe7;

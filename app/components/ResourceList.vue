@@ -3,11 +3,15 @@ import type { ListView } from "~/composables/useListView";
 import type { ResourceListTab } from "~/composables/useResourceList";
 
 // Tabs (My / Find), search box, and pagination around a resource table; the
-// table goes in the default slot. `list` is the result of `useResourceList`.
+// table goes in the default slot, the cards in `#cards`, and filter controls
+// in `#filters`, beside the search box. `list` is the result of
+// `useResourceList`.
 const props = defineProps<{
   list: Awaited<ReturnType<typeof useResourceList>>;
   // Plural, Title Case: "Sheets".
   noun: string;
+  // Singular, lowercase, for the count: "sheet".
+  singular: string;
   // Names this page's saved view (`useListView`), and what it shows until the
   // user picks one.
   viewKey: string;
@@ -18,15 +22,15 @@ const view = useListView(props.viewKey, props.defaultView);
 
 const tabs = computed(() => [
   { label: `My ${props.noun}`, value: "mine" },
-  { label: `Find ${props.noun}`, value: "find" },
+  { label: "Find", value: "find" },
 ]);
 </script>
 
 <template>
   <div class="space-y-4">
     <!-- The tabs wrap above the search line at narrow widths; the view toggle
-         stays at the end of the search line itself. Room for the future filter
-         row goes below this. -->
+         stays at the end of the search line itself, with any filters before
+         the search box. -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <UTabs
         v-if="list.hasTabs && list.loggedIn.value"
@@ -38,16 +42,19 @@ const tabs = computed(() => [
         @update:model-value="list.setTab($event as ResourceListTab)"
       />
 
-      <div class="flex min-w-0 flex-[0_1_380px] items-center gap-2 max-sm:flex-1">
-        <UInput
-          :model-value="list.search.value"
-          icon="i-lucide-search"
-          :ui="{ base: 'h-10' }"
-          :placeholder="`Search ${noun.toLowerCase()} by name or ID`"
-          class="min-w-0 flex-1"
-          @update:model-value="list.setSearch(String($event))"
-        />
-        <ListViewToggle v-model="view" />
+      <div class="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 max-sm:w-full">
+        <slot name="filters" />
+        <div class="flex min-w-0 flex-[0_1_380px] items-center gap-2 max-sm:flex-1">
+          <UInput
+            :model-value="list.search.value"
+            icon="i-lucide-search"
+            :ui="{ base: 'h-10' }"
+            :placeholder="`Search ${noun.toLowerCase()} by name or ID`"
+            class="min-w-0 flex-1"
+            @update:model-value="list.setSearch(String($event))"
+          />
+          <ListViewToggle v-model="view" />
+        </div>
       </div>
     </div>
 
@@ -59,7 +66,8 @@ const tabs = computed(() => [
       class="flex flex-wrap items-center justify-between gap-2 text-sm text-muted"
     >
       <span>
-        {{ list.total.value }} {{ list.total.value === 1 ? "result" : "results" }}
+        {{ list.total.value }}
+        {{ list.total.value === 1 ? singular : noun.toLowerCase() }}
       </span>
       <UPagination
         v-if="list.total.value > list.pageSize.value || list.page.value > 1"

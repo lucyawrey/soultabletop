@@ -22,10 +22,13 @@ useSeoMeta({
 const loggedIn = await useLoggedIn();
 const route = useRoute();
 const navGroups = computed(() => {
+  // A section stays current on its detail and edit pages (`/systems/<id>`),
+  // which are sibling routes, not children, of its list page.
   const link = (to: string, label: string, icon: string) => ({
     to,
     label,
     icon,
+    active: route.path === to || route.path.startsWith(`${to}/`),
   });
   const characters = link("/characters", "Characters", "i-lucide-user");
   const content = link("/content", "Content", "i-lucide-message-square");
@@ -58,9 +61,9 @@ const menuItems = computed(() =>
   ]),
 );
 
-// The signed-out landing page already has the sign-in form, so it has no
-// sidebar at all.
-const showSidebar = computed(() => loggedIn.value || route.path !== "/");
+// The signed-out landing page already has the sign-in form, so its sidebar has
+// no Sign in button.
+const showSignIn = computed(() => !loggedIn.value && route.path !== "/");
 
 // The sheet editor needs the width, so the sidebar starts collapsed there.
 const isEditor = (path: string) => /^\/sheets\/[^/]+\/edit\/?$/.test(path);
@@ -73,7 +76,7 @@ watch(
 
 <template>
   <UApp>
-    <UDashboardGroup v-if="showSidebar" class="print:block print:h-auto">
+    <UDashboardGroup class="print:block print:h-auto">
       <UDashboardSidebar
         v-model:collapsed="collapsed"
         collapsible
@@ -85,7 +88,8 @@ watch(
           root: 'bg-default border-e border-default',
           header: 'h-auto px-3.5 pt-[18px] pb-0',
           body: 'gap-[18px] px-3.5 pt-[18px]',
-          footer: 'mx-3.5 border-t border-default px-0 py-2.5',
+          // Empty on the signed-out landing page, so hidden there.
+          footer: loggedIn || showSignIn ? 'mx-3.5 border-t border-default px-0 py-2.5' : 'hidden',
         }"
       >
         <template #header="{ collapsed: isCollapsed }">
@@ -128,7 +132,7 @@ watch(
 
         <template #footer="{ collapsed: isCollapsed }">
           <UButton
-            v-if="!loggedIn"
+            v-if="showSignIn"
             to="/"
             color="primary"
             :block="!isCollapsed"
@@ -136,7 +140,7 @@ watch(
             :aria-label="isCollapsed ? 'Sign in' : undefined"
             :label="isCollapsed ? undefined : 'Sign in'"
           />
-          <UserMenu v-else :collapsed="isCollapsed" />
+          <UserMenu v-else-if="loggedIn" :collapsed="isCollapsed" />
         </template>
       </UDashboardSidebar>
 
@@ -157,8 +161,5 @@ watch(
         <NuxtPage />
       </main>
     </UDashboardGroup>
-    <UMain v-else>
-      <NuxtPage />
-    </UMain>
   </UApp>
 </template>
