@@ -16,10 +16,17 @@ Nothing right now.
   Resources that belong to someone else show "You" as their source in a dropdown. Find which dropdown (see `getResourceSource` and `ResourceOption.vue`) and fix the source it computes or passes; check Official, shared, and community resources in each picker.
 - **Show the source in the header system selector** · chore
   `SystemSelector.vue` lists system names only. Show the source (Official/Community, as `ResourceOption.vue` does in the other pickers) on each option.
-- **Evaluate the Neon serverless driver or HTTP interface** · chore · needs decision: which driver, after measuring
-  The database is the main bottleneck. `server/utils/database.ts` uses node-postgres with a `Pool`. Measure request latency and cold starts on Vercel with Neon's serverless driver (WebSocket) and its HTTP interface against the current setup, and check what each supports: HTTP mode can't run interactive transactions, which the registration and move-owner code may need. Pair with the caching item below before building either.
+- **Move Vercel functions closer to the database (or the reverse)** · chore · needs decision: move functions to cle1 (next to AWS us-east-2), or move the Neon database to us-east-1 (iad1); check the plan allows cle1
+  Neon driver evaluation (2026-10-01): keep node-postgres, since no driver is meaningfully faster warm (one query costs about one network round trip with each; Postgres runs the list query in under 1 ms) and switching to Neon's HTTP driver would mean rewriting the 9 interactive-transaction routes. The cost is distance: functions run in iad1 (us-east-1) and the database is in us-east-2 (Ohio), and a logged-in list request makes 6 or more database round trips in a row, so the region change probably saves 50-80 ms per request, more than any driver change. Neon's WebSocket driver would only save about 40-60 ms per new connection, which warm Fluid instances rarely pay. Measured from a VPN, so absolute numbers were inflated; the structure holds. Unverified: the real iad1 to us-east-2 round trip and per-request database time in production (see the Server-Timing item), Neon's autosuspend setting, and whether cle1 is available on this plan.
 
 # Soon
+
+- **Cache sessions in a short-lived cookie** · chore · needs decision: how long a revoked session may keep working (5 minutes suggested)
+  Better Auth's `session.cookieCache` is off, so every logged-in request looks up the session in the database before anything else. Turning it on removes that round trip; the cost is that a revoked session stays valid until the cache expires.
+- **Leave heavy columns out of list queries** · chore
+  List endpoints select the full `markup`, `css_styles`, `data`, and schema columns for every row (about 20 KB per sheet page, and Neon's HTTP responses aren't compressed). Select only what the list shows; detail routes keep the full row.
+- **Add database timing and `attachDatabasePool`** · chore
+  Add per-request database time (for example a `Server-Timing` header) so production latency can be measured instead of guessed, and call `attachDatabasePool(pool)` from `@vercel/functions` in `server/utils/database.ts` (Neon's guidance for Vercel with Fluid compute: it closes idle connections before an instance suspends).
 
 - **Redesign the UI to be warmer and more inviting** · feature · large · needs decision: visual direction (palette, type, mood) and whether Sheet CSS authors get documented theme tokens
   More appropriate to playing tabletop RPGs. Remove light/dark mode and use one unified, mostly light theme. Reason: Sheet designers need a consistent site-wide theme to fit their designs into, and authoring Sheets is easier against one theme. Touches the Sheet editor's dark-mode syntax colors (in the Sheet system follow-ups) and the light-and-dark manual QA item under Before launch: drop those parts if this lands.
