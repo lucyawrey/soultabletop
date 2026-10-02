@@ -24,10 +24,13 @@ const route = useRoute();
 const navGroups = computed(() => {
   // A section stays current on its detail and edit pages (`/systems/<id>`),
   // which are sibling routes, not children, of its list page.
+  // `aria-label` names the link when the collapsed rail shows only its icon
+  // (the tooltip appears on hover alone).
   const link = (to: string, label: string, icon: string) => ({
     to,
     label,
     icon,
+    "aria-label": label,
     active: route.path === to || route.path.startsWith(`${to}/`),
   });
   const characters = link("/characters", "Characters", "i-lucide-user");
@@ -86,6 +89,8 @@ watch(
         :default-size="232"
         :max-size="232"
         class="print:hidden"
+        role="navigation"
+        aria-label="Sidebar"
         :ui="{
           root: 'bg-default border-e border-default',
           // A wrapping row: the brand line (with the drawer's close button on

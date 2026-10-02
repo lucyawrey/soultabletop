@@ -555,7 +555,7 @@ function formatUpdated(updatedAt: string) {
             No {{ section.title.toLowerCase() }} yet.
             <NuxtLink
               :to="{ path: section.path, query: { new: '1' } }"
-              class="text-primary hover:underline"
+              class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
             >
               Create one.
             </NuxtLink>

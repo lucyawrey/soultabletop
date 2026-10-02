@@ -3,6 +3,7 @@ import { autocompletion, type CompletionContext } from "@codemirror/autocomplete
 import { css as cssLanguage } from "@codemirror/lang-css";
 import { json, jsonParseLinter } from "@codemirror/lang-json";
 import { xml, xmlLanguage } from "@codemirror/lang-xml";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import {
   linter,
   lintGutter,
@@ -11,6 +12,7 @@ import {
 } from "@codemirror/lint";
 import { EditorState, type Text } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
 import type { Position, SheetDiagnostic } from "#shared/sheet/parser";
 import { commonAttrsFor, sheetTags } from "#shared/sheet/registry";
@@ -131,6 +133,25 @@ const theme = EditorView.theme({
   },
 });
 
+// Syntax colors from the theme's text-safe roles (each at least 4.5:1 on the
+// page and on the active line), replacing CodeMirror's default colors, some of
+// which fall under that.
+const highlightStyle = HighlightStyle.define([
+  { tag: [tags.tagName, tags.angleBracket], color: "var(--ui-primary)" },
+  { tag: [tags.attributeName, tags.propertyName], color: "var(--ui-info)" },
+  { tag: [tags.string, tags.attributeValue], color: "var(--ui-success)" },
+  {
+    tag: [tags.number, tags.bool, tags.null, tags.unit, tags.color],
+    color: "var(--ui-warning)",
+  },
+  {
+    tag: [tags.keyword, tags.className, tags.labelName, tags.definitionKeyword],
+    color: "var(--ui-secondary)",
+  },
+  { tag: tags.comment, color: "var(--ui-text-dimmed)", fontStyle: "italic" },
+  { tag: tags.invalid, color: "var(--ui-error)" },
+]);
+
 // A .client component mounted during hydration runs onMounted before its
 // template renders, so wait for `host` to exist.
 onMounted(async () => {
@@ -143,6 +164,7 @@ onMounted(async () => {
       extensions: [
         basicSetup,
         theme,
+        syntaxHighlighting(highlightStyle),
         lintGutter(),
         EditorView.lineWrapping,
         EditorView.contentAttributes.of({ "aria-label": props.label }),

@@ -19,6 +19,9 @@ const props = defineProps<{
 }>();
 
 const view = useListView(props.viewKey, props.defaultView);
+const isEmpty = computed(
+  () => !isLoading(props.list.status.value) && props.list.items.value.length === 0,
+);
 
 const tabs = computed(() => [
   { label: `My ${props.noun}`, value: "mine" },
@@ -59,7 +62,11 @@ const tabs = computed(() => [
     </div>
 
     <slot v-if="view === 'cards'" name="cards" />
-    <slot v-else />
+    <!-- An empty table drops its header row, which would otherwise make it
+         wider than a phone and push the empty message off center. -->
+    <div v-else :class="{ '[&_thead]:hidden': isEmpty }">
+      <slot />
+    </div>
 
     <div
       v-if="list.total.value > 0"

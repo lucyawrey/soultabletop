@@ -38,22 +38,23 @@ const widths: Record<string, string> = {
 };
 
 const columns = computed<TableColumn<SheetScope>[]>(() => [
-  ...(details.value ? [{ id: "expand", header: "" }] : []),
-  ...columnNodes.value.map((column, index) => ({
-    id: `c${index}`,
-    header:
-      column.attrs.hideLabel === true
-        ? ""
-        : attrText(column.attrs.label) || column.binding?.label || "",
-    meta: {
-      class: {
-        th: widths[column.attrs.width as string],
-        td: widths[column.attrs.width as string],
+  ...(details.value ? [{ id: "expand", header: srOnlyHeader("Details") }] : []),
+  ...columnNodes.value.map((column, index) => {
+    const text = attrText(column.attrs.label) || column.binding?.label || "";
+    return {
+      id: `c${index}`,
+      // A hidden label is still read out, so the column keeps its name.
+      header: column.attrs.hideLabel === true ? srOnlyHeader(text) : text,
+      meta: {
+        class: {
+          th: widths[column.attrs.width as string],
+          td: widths[column.attrs.width as string],
+        },
       },
-    },
-  })),
+    };
+  }),
   ...(editable.value
-    ? [{ id: "actions", header: "", meta: { class: { td: "w-28 text-right" } } }]
+    ? [actionsColumn<SheetScope>({ meta: { class: { td: "w-28 text-right" } } })]
     : []),
 ]);
 </script>
@@ -75,7 +76,14 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
         @click="unlock"
       />
     </div>
-    <UTable :data="rows" :columns="columns" class="w-full">
+    <!-- Focusable, so the keyboard can scroll it sideways on phones. -->
+    <UTable
+      :data="rows"
+      :columns="columns"
+      class="w-full"
+      tabindex="0"
+      :aria-label="label || undefined"
+    >
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
           <UButton

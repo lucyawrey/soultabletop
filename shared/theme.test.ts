@@ -71,6 +71,10 @@ const textPairs: [string, string][] = [
   // Chips: primary and accent text on their soft fills.
   ["ui-primary", "ui-primary-soft"],
   ["ui-secondary", "ui-secondary-soft"],
+  // Code editor syntax colors (CodeEditor.client.vue) on its active line.
+  ...[...statusColors, "ui-text", "ui-text-dimmed"].map(
+    (c): [string, string] => [c, "ui-primary/8@ui-bg"],
+  ),
 ];
 
 // Control outlines, focus rings, and selected states need 3:1 (WCAG 1.4.11).
