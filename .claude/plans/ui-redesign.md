@@ -115,6 +115,7 @@ These go into PR 2 (signed-out sidebar, landing page) and PR 4 (dashboard and it
 - An automated accessibility pass: run axe-core through Playwright on the main pages, logged in and out, and fix what it finds.
 - Skeletons and loading states in the new layouts; modal and dropdown styling; toasts.
 - Screenshots of every page at desktop and phone widths for the user's review.
+- To compare with the mockup, screenshot `.claude/plans/ui-directions.html` with Playwright (`file://` URL; click `[data-v="list"|"detail"|"form"|"landing"|"dashboard"]`, `button[data-v="2"]` for option 2, `[data-v="new"]` for the new-user dashboard) at 1238×641.
 
 ## TODO.md changes as PRs land
 
