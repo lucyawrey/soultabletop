@@ -35,6 +35,7 @@
     "@nuxt/ui": "^4.11.1",
     "@scalar/nuxt": "0.6.74",
     "@sinclair/typebox": "^0.34.52",
+    "@vercel/functions": "^3.9.9",
     "@vueuse/integrations": "^14.4.0",
     "better-auth": "^1.7.6",
     "codemirror": "^6.0.2",
