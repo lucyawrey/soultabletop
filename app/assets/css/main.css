@@ -1,24 +1,132 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-@theme static {
-  --font-sans: "Public Sans", sans-serif;
+/*
+ * The site theme: one light theme, direction "Folio". How it fits together and
+ * how to change it: docs/theme.md. Colors are defined only in this file;
+ * shared/theme.test.ts reads it and checks contrast.
+ */
 
-  --color-green-50: #effdf5;
-  --color-green-100: #d9fbe8;
-  --color-green-200: #b3f5d1;
-  --color-green-300: #75edae;
-  --color-green-400: #00dc82;
-  --color-green-500: #00c16a;
-  --color-green-600: #00a155;
-  --color-green-700: #007f45;
-  --color-green-800: #016538;
-  --color-green-900: #0a5331;
-  --color-green-950: #052e16;
+/* Layer 1: palettes. `plum` is primary, `gilt` secondary (the accent), and
+   `folio` the warm neutral (app.config.ts picks them by name). */
+@theme static {
+  --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, ui-serif, serif;
+
+  --color-plum-50: #fbf4f7;
+  --color-plum-100: #f1dfe7;
+  --color-plum-200: #e4c0d0;
+  --color-plum-300: #d096b0;
+  --color-plum-400: #b56a8c;
+  --color-plum-500: #964a6d;
+  --color-plum-600: #7f3a5b;
+  --color-plum-700: #6b2d4e;
+  --color-plum-800: #57233f;
+  --color-plum-900: #431b31;
+  --color-plum-950: #2a0f1e;
+
+  --color-gilt-50: #fbf6e8;
+  --color-gilt-100: #f2e7c9;
+  --color-gilt-200: #e6d29a;
+  --color-gilt-300: #d6b765;
+  --color-gilt-400: #c09a3a;
+  --color-gilt-500: #a07e24;
+  --color-gilt-600: #8a6a1c;
+  --color-gilt-700: #765a14;
+  --color-gilt-800: #5f4810;
+  --color-gilt-900: #4a380d;
+  --color-gilt-950: #2c2107;
+
+  --color-folio-50: #fffdf8;
+  --color-folio-100: #f6f1e7;
+  --color-folio-200: #efe7d8;
+  --color-folio-300: #ddd2bf;
+  --color-folio-400: #b5aa9a;
+  --color-folio-500: #8a7f72;
+  --color-folio-600: #625869;
+  --color-folio-700: #4a4150;
+  --color-folio-800: #342d3a;
+  --color-folio-900: #251f2a;
+  --color-folio-950: #17121b;
 }
 
-.dark input:-webkit-autofill,
-.dark textarea:-webkit-autofill,
-.dark select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 1000px #1a1a1a inset !important;
+/* Layer 2: semantic tokens, Nuxt UI's own variables set to the theme's roles.
+   Unlayered, so they win over Nuxt UI's defaults in `@layer theme`.
+   `--ui-bg` is the panel color (cards, inputs, menus, modals); the page
+   behind them is `--st-page`. */
+:root {
+  --ui-primary: var(--color-plum-700);
+  --ui-secondary: var(--color-gilt-700);
+  --ui-success: #166534;
+  --ui-info: #1d4ed8;
+  --ui-warning: #92400e;
+  --ui-error: #b91c1c;
+
+  --ui-text-dimmed: #6b6170;
+  --ui-text-muted: var(--color-folio-600);
+  --ui-text-toned: var(--color-folio-700);
+  --ui-text: var(--color-folio-800);
+  --ui-text-highlighted: var(--color-folio-900);
+  --ui-text-inverted: var(--color-folio-50);
+
+  --ui-bg: var(--color-folio-50);
+  --ui-bg-muted: var(--color-folio-100);
+  --ui-bg-elevated: var(--color-folio-200);
+  --ui-bg-accented: #e6dccb;
+  --ui-bg-inverted: var(--color-folio-900);
+
+  /* Dividers only. Anything that outlines a control uses `-accented`,
+     which keeps 3:1 against the panel and the page (WCAG 1.4.11). */
+  --ui-border: var(--color-folio-300);
+  --ui-border-muted: var(--color-folio-200);
+  --ui-border-accented: var(--color-folio-500);
+  --ui-border-inverted: var(--color-folio-900);
+
+  /* rounded-md (buttons, inputs) is 1.5x this, rounded-lg (cards) 2x. */
+  --ui-radius: 0.3125rem;
+
+  /* Layer 3: the stable tokens Sheet CSS may use (docs/theme.md). Never
+     rename or remove one; add new ones instead. */
+  --st-page: var(--color-folio-100);
+  --st-panel: var(--ui-bg);
+  --st-panel-muted: var(--ui-bg-elevated);
+  --st-ink: var(--ui-text-highlighted);
+  --st-ink-muted: var(--ui-text-muted);
+  --st-primary: var(--ui-primary);
+  --st-on-primary: var(--ui-text-inverted);
+  --st-accent: var(--ui-secondary);
+  --st-border: var(--ui-border);
+  --st-border-strong: var(--ui-border-accented);
+  --st-radius: calc(var(--ui-radius) * 1.5);
+  --st-font-body: var(--font-sans);
+  --st-font-display: var(--font-display);
+}
+
+/* Focus rings at full strength with a gap, so they keep 3:1 and still show
+   around solid primary buttons (Nuxt UI draws them at 25% opacity).
+   Unlayered to win over Nuxt UI's outline colors; elements that use a ring
+   instead (inputs) keep `outline: none`. */
+:focus-visible {
+  outline-color: var(--ui-primary);
+  outline-offset: 2px;
+}
+
+@layer base {
+  body {
+    background-color: var(--st-page);
+    color-scheme: light;
+  }
+
+  /* The display face reads well only large; page titles are text-2xl. */
+  h1 {
+    font-family: var(--font-display);
+  }
+
+  /* Keep autofilled inputs on the panel color instead of the browser's tint. */
+  input:-webkit-autofill,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px var(--ui-bg) inset !important;
+    -webkit-text-fill-color: var(--ui-text-highlighted);
+  }
 }

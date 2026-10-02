@@ -312,12 +312,14 @@ runs the exact same code in the browser, lazy-loaded there).
 - On serve (content GET / editor preview): every selector is prefixed with `[data-sheet="<sheetId>"]`; the sheet root
   element gets `data-sheet`, `isolation: isolate` and `contain: paint`. `contain: paint` also makes the root the
   containing block for `position: fixed`, so no position rules are needed — nothing can draw outside the sheet.
-- `.dark` at the start of a selector stays outside the prefix (`.dark .x` → `.dark [data-sheet] .x`) so sheets can
-  follow Nuxt UI's color mode.
+- The site has one light theme, so there is no color mode to follow: `.dark` is an ordinary class inside the sheet.
+- `@media print { … }` is allowed and scoped like everything else, so sheets can adjust their printed page.
 - Keyframe names are prefixed per sheet so they can't clash with the app's or other sheets'.
 - Rejected: `@import`, `@font-face`, `@namespace`, `url()`, `image-set()`, `expression()`, `-moz-binding`,
   `behavior`. Allowed: `@media`, `@supports`, `@container`, `@layer`, `@keyframes`, CSS variables, `!important`.
-- Authors can use Nuxt UI tokens (`var(--ui-primary)`, `var(--ui-text-muted)`, …) to match the app theme.
+- Authors match the site with its theme tokens (`var(--st-ink)`, `var(--st-primary)`, `var(--st-panel)`, …), listed in
+  `shared/sheet/theme-tokens.ts` and documented in `docs/theme.md`. Their names are a stable contract: they're never
+  renamed or removed when the theme changes. Nuxt UI's `--ui-*` variables also work but aren't part of that contract.
 - Also rejected: other file-loading functions (`image()`, `cross-fade()`, `element()`, `paint()`), CSS escapes are
   decoded before checking, and `<` in the output is escaped (`\3c `) so CSS can't close its `<style>` element in SSR.
   Nested rules (CSS nesting) are left relative to their parent.
@@ -329,7 +331,7 @@ runs the exact same code in the browser, lazy-loaded there).
 - Selector rule (security boundary): every selector's subject must be inside the sheet. So `:root`/`html`/`body` may
   only start a selector (not inside `:not()`/`:is()`/`:has()`/…), nothing may follow them with `~`/`+`, top-level
   selectors can't start with `~`/`+`, nested rules can't use `&` inside pseudo-class functions, and rules nested in a
-  root-targeting rule (`:root { … }`, `.dark { … }`) can't use `& ~`/`& +` or a leading `~`/`+`. Violations are errors
+  root-targeting rule (`:root { … }`) can't use `& ~`/`& +` or a leading `~`/`+`. Violations are errors
   (the rule is dropped). The same checks run on save (no scope ID) and when scoping. Don't loosen these without
   re-checking that nothing can style the app outside the sheet; tests in `shared/sheet/css.test.ts`.
 - Fonts (decided): curated, self-hosted list. `@nuxt/fonts` (already installed by `@nuxt/ui`) only scans the app's
@@ -403,7 +405,7 @@ Each phase ends with `pnpm test && pnpm typecheck && pnpm lint`, template compil
    `ContentDetail.vue` renders it; viewer sheet switcher.
 6. **Edit mode** — draft model, Edit Fields/Autosave switches, Save/Discard bar, autosave, `live`/`locked`, 409 handling,
    Markdown (`UEditor`) and Image fields, content-field picker / Custom / "Make custom copy"; content Edit modal keeps readable ID/visibility/sheet/raw JSON.
-7. **Scoped CSS + fonts** — `shared/sheet/css.ts` + tests (every rejected construct, prefixing, `.dark`, `:root`,
+7. **Scoped CSS + fonts** — `shared/sheet/css.ts` + tests (every rejected construct, prefixing, `:root`,
    keyframes); sheet save validation; curated fonts in `nuxt.config.ts`.
 8. **Sheet editor page** — `app/pages/sheets/[id]/edit.vue`, CodeMirror, preview, reference slide-over, "Copy to new
    Sheet" from generated.
