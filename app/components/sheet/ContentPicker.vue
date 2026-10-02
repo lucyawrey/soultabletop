@@ -3,8 +3,8 @@ import type { ResourceSource } from "#shared/resource-list";
 import type { SheetRef } from "#shared/sheet/runtime";
 import type { ResourceOptionItem } from "~/utils/resource-option";
 
-// Searchable choice of existing Content of one ContentType, loaded on first
-// open. Emits the picked Content so it can be shown before saving.
+// Searchable choice of existing Content of one ContentType, loaded each
+// time it opens. Emits the picked Content so it can be shown before saving.
 const props = defineProps<{
   contentTypeId: string;
   modelValue?: string;

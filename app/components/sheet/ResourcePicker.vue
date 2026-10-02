@@ -10,7 +10,7 @@ import { extractApiErrorMessage } from "~/utils/api-error";
 import type { ResourceOptionItem } from "~/utils/resource-option";
 
 // Searchable choice of a readable resource for a `resourceLink` field, loaded
-// on first open. Fields without a `kind` get a kind choice first. Emits the
+// each time it opens. Fields without a `kind` get a kind choice first. Emits the
 // picked resource so it can be shown before saving.
 const props = defineProps<{
   kind?: ResourceLinkKind;
@@ -45,25 +45,33 @@ interface ListItem {
 
 const options = ref<ListItem[]>([]);
 const loading = ref(false);
+// The kind whose list is being fetched, so a result for a kind that is no
+// longer chosen is dropped.
+let loadingKind: ResourceLinkKind | undefined;
 const loadError = ref("");
 // The message and options are about the previous kind's list.
 watch(kind, () => {
   loadError.value = "";
   options.value = [];
+  // Whatever is still loading belongs to the previous kind.
+  loadingKind = undefined;
+  loading.value = false;
 });
 
 async function load(open: boolean) {
   // Loads on every open, so a resource created or changed since the last open
   // shows up; the earlier options stay in the list meanwhile.
-  if (!open || loading.value) return;
+  const listKind = kind.value;
+  if (!open || (loading.value && loadingKind === listKind)) return;
   loading.value = true;
+  loadingKind = listKind;
   loadError.value = "";
   try {
-    const listKind = kind.value;
-    options.value = await $fetch<ListItem[]>(
-      LIST_URLS[listKind],
-    );
+    const result = await $fetch<ListItem[]>(LIST_URLS[listKind]);
+    if (loadingKind !== listKind) return;
+    options.value = result;
   } catch (error) {
+    if (loadingKind !== listKind) return;
     options.value = [];
     // Some lists (campaigns) need an account, and logged-out visitors can
     // reach a picker in a sheet preview.
@@ -72,7 +80,7 @@ async function load(open: boolean) {
         ? "Sign in to choose from this list."
         : extractApiErrorMessage(error, "Could not load the list.");
   } finally {
-    loading.value = false;
+    if (loadingKind === listKind) loading.value = false;
   }
 }
 
