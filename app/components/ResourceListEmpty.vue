@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { listViewKey } from "~/composables/useListView";
+
 // The empty state of a resource list: what's missing, and when the header's
 // system filter is on, a way to look past it. `list` is from `useResourceList`.
 //
@@ -16,6 +18,8 @@ const props = defineProps<{
 }>();
 defineEmits<{ create: [] }>();
 
+const view = inject(listViewKey, undefined);
+
 const canCreate = computed(
   () =>
     !!props.createLabel &&
@@ -26,7 +30,10 @@ const canCreate = computed(
 </script>
 
 <template>
-  <TableSkeleton v-if="isLoading(list.status.value)" />
+  <template v-if="isLoading(list.status.value)">
+    <CardSkeleton v-if="view === 'cards'" />
+    <TableSkeleton v-else />
+  </template>
   <p v-else class="py-6 text-center text-sm text-muted">
     {{ list.emptyMessage(plural, uncountable) }}
     <UButton

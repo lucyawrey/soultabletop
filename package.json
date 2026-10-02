@@ -32,6 +32,7 @@
     "@codemirror/view": "^6.43.13",
     "@iconify-json/lucide": "^1.2.134",
     "@iconify-json/simple-icons": "^1.2.96",
+    "@lezer/highlight": "^1.2.4",
     "@nuxt/ui": "^4.11.1",
     "@scalar/nuxt": "0.6.74",
     "@sinclair/typebox": "^0.34.52",
