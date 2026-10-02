@@ -64,8 +64,15 @@ interface SheetItem {
   name: string;
   source: ResourceSource;
   contentTypeId: string;
+}
+
+// `GET /api/sheet/[id]`, loaded when a Sheet is picked to view with (the list
+// leaves out the markup and CSS).
+interface SheetDetail {
+  id: string;
+  name: string;
   markup: string;
-  cssStyles: string;
+  css: string;
   defaultEditMode: boolean;
   defaultAutosave: boolean;
   defaultDisplay: SheetDisplay;
@@ -110,6 +117,25 @@ const sheetOptions = computed(() => [
     resourceOption(entry.id, { name: entry.name, source: entry.source }),
   ),
 ]);
+// The Sheet picked above, loaded in full (null while loading, or when the
+// choice is the server's own or the generated one).
+const pickedSheet = ref<SheetDetail | null>(null);
+const toast = useToast();
+watch(viewSheetId, async (chosen) => {
+  pickedSheet.value = null;
+  if (!chosen || chosen === GENERATED || chosen === item.value?.sheet.id) return;
+  try {
+    const detail = await $fetch<SheetDetail>(`/api/sheet/${chosen}`);
+    if (viewSheetId.value === chosen) pickedSheet.value = detail;
+  } catch (error) {
+    if (viewSheetId.value !== chosen) return;
+    viewSheetId.value = null;
+    toast.add({
+      title: extractApiErrorMessage(error, "Could not load sheet."),
+      color: "error",
+    });
+  }
+});
 const viewSheet = computed(() => {
   const content = item.value;
   if (!content) return undefined;
@@ -124,29 +150,16 @@ const viewSheet = computed(() => {
       ...generatedSheetDefaults(content.contentCategory),
     };
   }
-  return typeSheets.value.find((sheetItem) => sheetItem.id === chosen);
+  // While the picked Sheet loads, the current one stays.
+  return pickedSheet.value ?? content.sheet;
 });
 
-// Scoped CSS of the viewed Sheet. The server's choice arrives scoped; a Sheet
-// picked here is scoped in the browser (postcss loads only when needed).
-const viewCss = ref("");
-watch(
-  viewSheet,
-  async (current) => {
-    if (!current || current.id === item.value?.sheet.id) {
-      viewCss.value = item.value?.sheet.css ?? "";
-      return;
-    }
-    const raw = "cssStyles" in current ? current.cssStyles : "";
-    if (!raw || !current.id) {
-      viewCss.value = "";
-      return;
-    }
-    const { processSheetCss } = await import("#shared/sheet/css");
-    viewCss.value = processSheetCss(raw, current.id).css;
-  },
-  { immediate: true },
-);
+// Scoped CSS of the viewed Sheet (the server scopes it).
+const viewCss = computed(() => {
+  const current = viewSheet.value;
+  if (!current || current === item.value?.sheet) return item.value?.sheet.css ?? "";
+  return "css" in current ? current.css : "";
+});
 
 // Edit and Autosave switches start as the viewed Sheet says.
 const editMode = ref(false);

@@ -17,8 +17,6 @@ interface SheetItem {
   updatedAt: string;
   contentTypeId: string;
   systemId: string;
-  markup: string;
-  cssStyles: string;
   isDefault: boolean;
   canEdit: boolean;
   isPubliclyReadable: boolean;
