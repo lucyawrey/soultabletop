@@ -2,6 +2,7 @@ import { count, eq } from "drizzle-orm";
 import { contentType, group, resource, sheet } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
+import { sheetListColumns } from "../../utils/list-columns";
 import {
   listOrder,
   listQueryParameters,
@@ -18,7 +19,7 @@ defineRouteMeta({
     tags: ["Sheet"],
     summary: "List accessible sheets",
     description:
-      "Each row has the `systemId` of its content type's system.",
+      "Each row has the `systemId` of its content type's system. Rows leave out `markup` and `cssStyles`; get a sheet by ID for them.",
     parameters: [...listQueryParameters, systemIdParameter],
     responses: {
       200: { description: "Sheet list. Each row has `source`: you, yourGroups, shared, official, or community" },
@@ -38,7 +39,7 @@ export default defineEventHandler(async (event) => {
     fetchRows: ({ where, limit, offset }) => {
       const select = database
         .select({
-          sheet,
+          sheet: sheetListColumns,
           resource,
           systemId: contentType.systemId,
           official: officialColumn,

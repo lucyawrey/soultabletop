@@ -322,7 +322,7 @@ runs the exact same code in the browser, lazy-loaded there).
   decoded before checking, and `<` in the output is escaped (`\3c `) so CSS can't close its `<style>` element in SSR.
   Nested rules (CSS nesting) are left relative to their parent.
 - Implementation: `shared/sheet/css.ts` (`processSheetCss`); the content GET returns the chosen sheet's CSS scoped;
-  a sheet picked in "View with" is scoped in the browser (the module is imported on demand). The renderer injects it
+  a sheet picked in "View with" is loaded with `GET /api/sheet/[id]`, whose `css` is scoped by the server too (the sheet list leaves out `markup` and `cssStyles`). The renderer injects it
   with `useHead` and marks its root with `data-sheet`, `isolate`, and `contain: paint`.
 
 - `:root`, `html`, `body` are rewritten to the sheet root itself (decided), so `:root { --accent: red }` works.

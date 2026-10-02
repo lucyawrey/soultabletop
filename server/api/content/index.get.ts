@@ -3,6 +3,7 @@ import { and, count, eq, exists, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { content, contentType, group, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
+import { contentListColumns } from "../../utils/list-columns";
 import { useDatabase } from "../../utils/database";
 import { readableBy, type ListViewer } from "../../utils/resource-access-sql";
 import { requiresReadableType } from "../../utils/resource-list-filter";
@@ -24,7 +25,7 @@ defineRouteMeta({
     tags: ["Content"],
     summary: "List accessible content records",
     description:
-      "Without signing in, lists public content only. Each row has the `systemId` of its content type's system.",
+      "Without signing in, lists public content only. Each row has the `systemId` of its content type's system. Rows leave out `data`; get content by ID for it.",
     parameters: [
       ...listQueryParameters,
       systemIdParameter,
@@ -103,7 +104,7 @@ export default defineEventHandler(async (event) => {
     fetchRows: ({ where, limit, offset }) => {
       const select = database
         .select({
-          item: content,
+          item: contentListColumns,
           resource,
           systemId: contentType.systemId,
           official: officialColumn,
@@ -140,7 +141,6 @@ export default defineEventHandler(async (event) => {
       contentTypeId: item.contentTypeId,
       systemId: typeSystemId,
       sheetId: item.sheetId,
-      data: item.data,
       canEdit: access.canEdit,
     })),
     page,

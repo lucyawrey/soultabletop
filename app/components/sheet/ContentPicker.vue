@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ResourceSource } from "#shared/resource-list";
 import type { SheetRef } from "#shared/sheet/runtime";
+import { extractApiErrorMessage } from "~/utils/api-error";
 import type { ResourceOptionItem } from "~/utils/resource-option";
 
 // Searchable choice of existing Content of one ContentType, loaded each
@@ -17,7 +18,6 @@ interface ContentListItem {
   name: string;
   contentTypeId: string;
   source: ResourceSource;
-  data: Record<string, unknown>;
 }
 
 const options = ref<ContentListItem[]>([]);
@@ -45,14 +45,32 @@ const items = computed(() =>
   ),
 );
 
-function select(id: unknown) {
+// The list leaves out each content's data, so the picked one's is loaded here.
+const toast = useToast();
+// The picker is disabled while that request runs, so picks can't overlap or
+// arrive out of order.
+const picking = ref(false);
+async function select(id: unknown) {
   const item = options.value.find((option) => option.id === id);
-  if (item)
+  if (!item || picking.value) return;
+  picking.value = true;
+  try {
+    const { data } = await $fetch<{ data: Record<string, unknown> }>(
+      `/api/content/${item.id}`,
+    );
     emit("pick", item.id, {
       name: item.name,
       contentTypeId: item.contentTypeId,
-      data: item.data,
+      data,
     });
+  } catch (error) {
+    toast.add({
+      title: extractApiErrorMessage(error, "Could not load content."),
+      color: "error",
+    });
+  } finally {
+    picking.value = false;
+  }
 }
 </script>
 
@@ -61,7 +79,8 @@ function select(id: unknown) {
     :model-value="modelValue"
     :items="items"
     value-key="value"
-    :loading="loading"
+    :loading="loading || picking"
+    :disabled="picking"
     :placeholder="placeholder ?? 'Choose…'"
     class="w-full"
     @update:open="load"
