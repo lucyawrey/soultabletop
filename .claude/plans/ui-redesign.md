@@ -65,6 +65,17 @@ Fonts: load Cormorant Garamond (600, 700) and Nunito Sans (400, 600, 700) throug
 - The docs listed above, plus the contrast test.
 - Verification: `pnpm check`, `pnpm check:templates`, and a browser pass (screenshots of `/`, a list page, a detail page, the sheet editor, and a rendered sheet, before and after).
 
+PR 1 is #60 (opened 2026-10-02).
+
+### Before PR 2 · Landing and dashboard design (mockups, no code)
+
+The user asked for these to be designed before the shell is built (2026-10-02). The directions page now has **Landing** and **Dashboard** views in Folio, each with two options:
+
+- **Landing (signed-out `/`)**, built from the team's copy in `content/copy.yml`. Option 1: the current split, heading and intro beside the sign-in / create-account card, restyled. Option 2: heading and intro with Create account / Sign in buttons beside an example character sheet; the buttons swap the example for the same form. Both have a "Browse public systems and sheets" link. Signed-out navigation: a **top bar** (logo, public sections, system picker, Sign in) or the sidebar without Campaigns and Groups and with Sign in at the bottom.
+- **Dashboard (signed-in `/`).** Option 1: three panels (Campaigns, Characters, Content) of recent items, like today. Option 2: a "Continue" card for the most recently edited item, character cards, then Campaigns (with the user's GM/Player role) and Content (with type and system). Option 2 needs more from `GET /api/dashboard` (system and content type names, campaign role). Both have New Character / New Campaign buttons in the header. **New user** state: a team copy placeholder plus start cards (Make a character, Start a campaign, Find a system, Build your own). That's the bundled empty-state item; the explanations are team copy.
+
+Waiting on the user: which option for each, which signed-out navigation, and whether "Welcome back, {name}" (team copy) also fits a brand-new user, or the team wants a separate first-visit heading. Record the choices here, then fold them into PR 2 (signed-out shell, landing) and PR 4 (dashboard).
+
 ### PR 2 · Sidebar shell (`ui-sidebar-shell`)
 
 - `app/app.vue`: Nuxt UI's `UDashboardGroup` + `UDashboardSidebar` (collapsible, a drawer on mobile) with a vertical `UNavigationMenu` in two groups, Play and Build, with icons; `SystemSelector` at the top; `UserMenu` (or "Sign in" when logged out) in the footer. Logged-out visitors see only the public items, as today. Remove `UHeader`/`UFooter`; move the copyright line into the sidebar footer or drop it (ask).

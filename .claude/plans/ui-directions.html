@@ -91,7 +91,7 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 /* ---------- The mockup ---------- */
 .frame { border: 1px solid var(--chrome-line); border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px rgb(40 30 20 / 0.12); }
 .app { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; min-height: 640px; display: grid; grid-template-rows: auto 1fr; }
-.app[data-layout="sidebar"] { grid-template-rows: none; grid-template-columns: 232px 1fr; }
+.app[data-layout="sidebar"] { grid-template-rows: 1fr; grid-template-columns: 232px 1fr; }
 .app h1, .app h2, .app .brand-name { font-family: var(--display); font-weight: var(--display-weight); letter-spacing: var(--display-track); text-wrap: balance; }
 
 /* Header layout */
@@ -245,9 +245,83 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
 .audit .chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 13px; border: 1px solid rgb(0 0 0 / .08); }
 .pass { color: #1f6b3a; font-weight: 700; }
 .fail { color: #a3271f; font-weight: 700; }
+[hidden] { display: none !important; }
+/* Signed-out state (Landing). */
+.app [data-out-only] { display: none !important; }
+.app[data-signed="out"] [data-out-only] { display: flex !important; }
+.app[data-signed="out"] [data-account] { display: none !important; }
+.side-foot-out .btn { width: 100%; justify-content: center; }
+.app[data-signed="out"] .navlink[aria-current="page"] { background: transparent; color: var(--muted); font-weight: 500; }
+
+/* Landing */
+.landing { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 400px); gap: 48px; align-items: center; width: 100%; max-width: 1020px; margin: 0 auto; padding-block: 28px; }
+.hero { display: grid; gap: 14px; justify-items: start; }
+.hero h1 { font-size: clamp(36px, 5vw, 54px); line-height: 1.02; margin: 0; }
+.hero .intro { font-size: 18px; line-height: 1.55; color: var(--muted); max-width: 46ch; margin: 0; }
+.hero .ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.hero .ctas .btn { padding: 11px 18px; font-size: 15px; }
+.hero .browse { color: var(--primary); font-weight: 600; text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+.hero .browse:hover { text-decoration: underline; }
+.badge-lg { font-size: 13px; padding: 4px 10px; background: var(--primary-soft); color: var(--primary); }
+.auth { background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px); padding: 24px; display: grid; gap: 14px; box-shadow: 0 14px 40px rgb(60 30 45 / 0.08); }
+.auth h2 { font-size: 30px; margin: 0; text-align: center; line-height: 1.1; }
+.auth .note-c { text-align: center; color: var(--muted); font-size: 14px; margin: -6px 0 0; }
+.tabs2 { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-2); border-radius: var(--radius); padding: 3px; gap: 3px; }
+.tabs2 button { font: 600 14px/1 var(--body); border: 0; background: transparent; color: var(--muted); padding: 9px; border-radius: calc(var(--radius) - 2px); cursor: pointer; }
+.tabs2 button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.auth .btn-primary { width: 100%; justify-content: center; padding: 11px; font-size: 15px; }
+.auth .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sample { background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px); padding: 20px; display: grid; gap: 14px; box-shadow: 0 14px 40px rgb(60 30 45 / 0.08); position: relative; }
+.sample .example { position: absolute; top: -10px; right: 16px; }
+.sample .head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.sample h3 { margin: 2px 0 0; font: 700 28px/1.05 var(--display); }
+.stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.stat { border: 1px solid var(--line-strong); border-radius: var(--radius); text-align: center; padding: 6px 2px; background: var(--bg); }
+.stat small { display: block; font-size: 10px; letter-spacing: 0.1em; font-weight: 700; color: var(--muted); }
+.stat b { display: block; font: 700 22px/1.1 var(--display); }
+.stat span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hp { display: grid; gap: 6px; font-size: 14px; }
+.hp .bar { height: 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line-strong); overflow: hidden; }
+.hp .bar i { display: block; height: 100%; width: 75%; background: var(--primary); }
+.hp .lbl { display: flex; justify-content: space-between; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sample .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Dashboard */
+.dash { display: grid; gap: 22px; }
+.dash-head { display: flex; justify-content: space-between; align-items: end; gap: 14px; flex-wrap: wrap; }
+.dash-head h1 { font-size: 38px; margin: 0; line-height: 1.05; }
+.dash-head p { margin: 4px 0 0; color: var(--muted); }
+.dash-head .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.panel-head .all { color: var(--primary); font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
+.panel-head .all:hover { text-decoration: underline; }
+.list .when { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.list .sub2 { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.continue { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 20px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px); }
+.continue h2 { font: 700 32px/1.05 var(--display); margin: 2px 0 4px; }
+.continue .meta { color: var(--muted); font-size: 14px; }
+.section-title { font: 700 24px/1.1 var(--display); margin: 0; }
+.chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.char { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit; }
+.char:hover { border-color: var(--line-strong); }
+.char .init { width: 42px; height: 42px; flex: none; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font: 700 20px var(--display); }
+.char b { display: block; }
+.char span { color: var(--muted); font-size: 13px; }
+.start { display: grid; gap: 16px; }
+.placeholder { border: 2px dashed var(--line-strong); border-radius: var(--radius); padding: 16px; color: var(--muted); display: grid; gap: 2px; }
+.placeholder small { font: 12px var(--mono); }
+.start-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.start-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 12px; align-content: space-between; }
+.start-card b { display: flex; gap: 8px; align-items: center; font-size: 16px; }
+.start-card b svg { color: var(--accent); }
+.start-card .btn { justify-self: start; }
+.empty-line { padding: 18px; color: var(--muted); font-size: 14px; }
 .view[hidden] { display: none !important; }
 
 @media (max-width: 860px) {
+  .landing, .cols3, .cols2 { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .app[data-layout="sidebar"] { grid-template-columns: 1fr; }
   .app[data-layout="sidebar"] .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
   .app[data-layout="sidebar"] .side-group { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
@@ -323,6 +397,29 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
         <button type="button" data-v="list" aria-pressed="true">List</button>
         <button type="button" data-v="detail" aria-pressed="false">Detail</button>
         <button type="button" data-v="form" aria-pressed="false">Edit dialog</button>
+        <button type="button" data-v="landing" aria-pressed="false">Landing</button>
+        <button type="button" data-v="dashboard" aria-pressed="false">Dashboard</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="ctl-label">Landing / dashboard layout</span>
+      <div class="seg" data-ctl="variant">
+        <button type="button" data-v="1" aria-pressed="true">Option 1</button>
+        <button type="button" data-v="2" aria-pressed="false">Option 2</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="ctl-label">Signed-out navigation</span>
+      <div class="seg" data-ctl="outnav">
+        <button type="button" data-v="top" aria-pressed="true">Top bar</button>
+        <button type="button" data-v="sidebar" aria-pressed="false">Sidebar</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="ctl-label">Dashboard user</span>
+      <div class="seg" data-ctl="dash">
+        <button type="button" data-v="returning" aria-pressed="true">Returning</button>
+        <button type="button" data-v="new" aria-pressed="false">New</button>
       </div>
     </div>
   </div>
@@ -356,17 +453,18 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
       <header class="topbar">
         <a class="brand" href="#app"><svg width="22" height="22"><use href="#i-dice"/></svg><span class="brand-name">Soul Tabletop</span></a>
         <nav class="topnav" aria-label="Main">
-          <a class="navlink" href="#app">Campaigns</a>
+          <a class="navlink" href="#app" data-account>Campaigns</a>
           <a class="navlink" href="#app">Characters</a>
           <a class="navlink" href="#app">Content</a>
           <a class="navlink" href="#app">Sheets</a>
           <a class="navlink" href="#app">Types</a>
           <a class="navlink" href="#app" aria-current="page">Systems</a>
-          <a class="navlink" href="#app">Groups</a>
+          <a class="navlink" href="#app" data-account>Groups</a>
         </nav>
         <div class="right">
           <div class="sys-select">Ashen Realms <small>system</small><svg width="14" height="14"><use href="#i-chev"/></svg></div>
-          <div class="avatar">RW</div>
+          <div class="avatar" data-account>RW</div>
+          <a class="btn btn-outline" href="#app" data-out-only>Sign in</a>
         </div>
       </header>
 
@@ -376,7 +474,7 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
         <div class="sys-select">Ashen Realms <svg width="14" height="14"><use href="#i-chev"/></svg></div>
         <nav class="side-group" aria-label="Play">
           <div class="side-label">Play</div>
-          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-flag"/></svg>Campaigns</a>
+          <a class="navlink" href="#app" data-account><svg width="17" height="17"><use href="#i-flag"/></svg>Campaigns</a>
           <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-user"/></svg>Characters</a>
           <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-book"/></svg>Content</a>
         </nav>
@@ -385,9 +483,10 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
           <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-layout"/></svg>Sheets</a>
           <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-shapes"/></svg>Types</a>
           <a class="navlink" href="#app" aria-current="page"><svg width="17" height="17"><use href="#i-globe"/></svg>Systems</a>
-          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-users"/></svg>Groups</a>
+          <a class="navlink" href="#app" data-account><svg width="17" height="17"><use href="#i-users"/></svg>Groups</a>
         </nav>
-        <div class="side-foot"><div class="avatar">RW</div><div>Rowan Wilde<small>@rowan</small></div></div>
+        <div class="side-foot" data-account><div class="avatar">RW</div><div>Rowan Wilde<small>@rowan</small></div></div>
+        <div class="side-foot side-foot-out" data-out-only><a class="btn btn-primary" href="#app">Sign in</a></div>
       </aside>
 
       <main class="main">
@@ -490,6 +589,135 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
             </div>
           </div>
         </section>
+
+        <!-- LANDING (signed out). Heading, intro, and notes are the team's copy from content/copy.yml. -->
+        <section class="view" data-view="landing" hidden>
+          <div class="landing" data-variant="1">
+            <div class="hero">
+              <span class="badge badge-lg">Soul Tabletop</span>
+              <h1>An open-source virtual tabletop for open gaming</h1>
+              <p class="intro">Play tabletop RPGs with friends, online or around the table, using a large library of built-in content. Or make your own with support for custom game systems, content, and character sheets.</p>
+              <a class="browse" href="#app">Browse public systems and sheets <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="auth-slot"></div>
+          </div>
+          <div class="landing" data-variant="2" hidden>
+            <div class="hero">
+              <span class="badge badge-lg">Soul Tabletop</span>
+              <h1>An open-source virtual tabletop for open gaming</h1>
+              <p class="intro">Play tabletop RPGs with friends, online or around the table, using a large library of built-in content. Or make your own with support for custom game systems, content, and character sheets.</p>
+              <div class="ctas">
+                <button type="button" class="btn btn-primary" data-auth-open="register">Create account</button>
+                <button type="button" class="btn btn-outline" data-auth-open="login">Sign in</button>
+              </div>
+              <a class="browse" href="#app">Browse public systems and sheets <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="showcase-slot">
+              <div class="sample" aria-label="Example character sheet">
+                <span class="badge b-community example">Example</span>
+                <div class="head">
+                  <div><div class="eyebrow">Wanderer · Ashen Realms</div><h3>Rowan the Grey</h3></div>
+                  <span class="badge b-official">Level 3</span>
+                </div>
+                <div class="stats">
+                  <div class="stat"><small>STR</small><b>14</b><span>+2</span></div>
+                  <div class="stat"><small>DEX</small><b>12</b><span>+1</span></div>
+                  <div class="stat"><small>CON</small><b>13</b><span>+1</span></div>
+                  <div class="stat"><small>INT</small><b>16</b><span>+3</span></div>
+                  <div class="stat"><small>WIS</small><b>10</b><span>+0</span></div>
+                  <div class="stat"><small>CHA</small><b>8</b><span>−1</span></div>
+                </div>
+                <div class="hp"><div class="lbl"><span>Hit points</span><span>18 / 24</span></div><div class="bar"><i></i></div></div>
+                <div class="tags"><span class="badge b-public">Ember-touched</span><span class="badge b-public">Cartographer</span></div>
+              </div>
+            </div>
+          </div>
+          <template id="auth-tpl">
+            <div class="auth">
+              <h2 data-auth-title>Sign in</h2>
+              <p class="note-c" data-auth-note>Get back to your games.</p>
+              <div class="tabs2" role="group" aria-label="Sign in or create account">
+                <button type="button" data-mode="login" aria-pressed="true">Sign in</button>
+                <button type="button" data-mode="register" aria-pressed="false">Create account</button>
+              </div>
+              <div class="field" data-reg hidden><label>Username <i>*</i></label><input class="input mono" placeholder="your-name" value="rowan"><span class="ok">Available</span></div>
+              <div class="field" data-reg hidden><label>Display name</label><input class="input" placeholder="rowan"><span class="hint">Shown with your username. Defaults to it.</span></div>
+              <div class="field"><label>Email <i>*</i></label><input class="input" placeholder="you@example.com"></div>
+              <div class="field"><label>Password <i>*</i></label><input class="input" type="password" placeholder="At least 8 characters"></div>
+              <button type="button" class="btn btn-primary" data-auth-submit>Sign in</button>
+            </div>
+          </template>
+        </section>
+
+        <!-- DASHBOARD (signed in). Heading and subheading are the team's copy. -->
+        <section class="view" data-view="dashboard" hidden>
+          <div class="dash">
+            <div class="dash-head">
+              <div><h1>Welcome back, Rowan</h1><p>Pick up where you left off.</p></div>
+              <div class="acts"><a class="btn btn-primary" href="#app"><svg width="15" height="15"><use href="#i-plus"/></svg>New Character</a><a class="btn btn-outline" href="#app"><svg width="15" height="15"><use href="#i-plus"/></svg>New Campaign</a></div>
+            </div>
+
+            <div data-dash="returning">
+              <div class="cols3" data-variant="1">
+                <div class="panel"><div class="panel-head"><h2>Campaigns</h2><a class="all" href="#app">View all</a></div>
+                  <ul class="list">
+                    <li><span class="lname">The Cinder Road</span><span class="when">2 hours ago</span></li>
+                    <li><span class="lname">Starfall: Act II</span><span class="when">Yesterday</span></li>
+                    <li><span class="lname">Moonlit Court</span><span class="when">Sep 14</span></li>
+                  </ul></div>
+                <div class="panel"><div class="panel-head"><h2>Characters</h2><a class="all" href="#app">View all</a></div>
+                  <ul class="list">
+                    <li><span class="lname">Rowan the Grey</span><span class="when">2 hours ago</span></li>
+                    <li><span class="lname">Ash-Tongue Marrow</span><span class="when">Sep 28</span></li>
+                    <li><span class="lname">Lieutenant Vey</span><span class="when">Sep 21</span></li>
+                  </ul></div>
+                <div class="panel"><div class="panel-head"><h2>Content</h2><a class="all" href="#app">View all</a></div>
+                  <ul class="list">
+                    <li><span class="lname">Ember Rite</span><span class="when">Sep 30</span></li>
+                    <li><span class="lname">Relics of the Cinder Road</span><span class="when">Sep 26</span></li>
+                    <li><span class="lname">The Ashen Wastes</span><span class="when">Sep 19</span></li>
+                  </ul></div>
+              </div>
+
+              <div class="dash" data-variant="2" hidden>
+                <div class="continue">
+                  <div><div class="eyebrow">Continue · Character</div><h2>Rowan the Grey</h2><div class="meta">Wanderer · Ashen Realms · edited 2 hours ago</div></div>
+                  <a class="btn btn-primary" href="#app">Open</a>
+                </div>
+                <h2 class="section-title">Characters</h2>
+                <div class="chars">
+                  <a class="char" href="#app"><span class="init">R</span><div><b>Rowan the Grey</b><span>Wanderer · Ashen Realms</span></div></a>
+                  <a class="char" href="#app"><span class="init">A</span><div><b>Ash-Tongue Marrow</b><span>Ashborn Beast · Ashen Realms</span></div></a>
+                  <a class="char" href="#app"><span class="init">V</span><div><b>Lieutenant Vey</b><span>Pilot · Starfall Frontier</span></div></a>
+                </div>
+                <div class="cols2">
+                  <div class="panel"><div class="panel-head"><h2>Campaigns</h2><a class="all" href="#app">View all</a></div>
+                    <ul class="list">
+                      <li><span class="lname">The Cinder Road</span><span class="badge b-official">GM</span></li>
+                      <li><span class="lname">Starfall: Act II</span><span class="badge b-community">Player</span></li>
+                      <li><span class="lname">Moonlit Court</span><span class="badge b-official">GM</span></li>
+                    </ul></div>
+                  <div class="panel"><div class="panel-head"><h2>Content</h2><a class="all" href="#app">View all</a></div>
+                    <ul class="list">
+                      <li><span class="lname">Ember Rite<span class="sub2">Ritual · Ashen Realms</span></span><span class="when">Sep 30</span></li>
+                      <li><span class="lname">Relics of the Cinder Road<span class="sub2">Page · Ashen Realms</span></span><span class="when">Sep 26</span></li>
+                      <li><span class="lname">The Ashen Wastes<span class="sub2">Page · Ashen Realms</span></span><span class="when">Sep 19</span></li>
+                    </ul></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="start" data-dash="new" hidden>
+              <div class="placeholder"><b>Welcome text goes here</b><small>Copy: written by the team (what Soul Tabletop is, the main concepts)</small></div>
+              <div class="start-grid">
+                <div class="start-card"><b><svg width="18" height="18"><use href="#i-user"/></svg>Make a character</b><a class="btn btn-primary" href="#app">New Character</a></div>
+                <div class="start-card"><b><svg width="18" height="18"><use href="#i-flag"/></svg>Start a campaign</b><a class="btn btn-outline" href="#app">New Campaign</a></div>
+                <div class="start-card"><b><svg width="18" height="18"><use href="#i-globe"/></svg>Find a system</b><a class="btn btn-outline" href="#app">Browse Systems</a></div>
+                <div class="start-card"><b><svg width="18" height="18"><use href="#i-shapes"/></svg>Build your own</b><a class="btn btn-outline" href="#app">New System</a></div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   </div>
@@ -519,6 +747,41 @@ document.getElementById("cards").innerHTML = systems.map((s) =>
 ).join("");
 
 const app = document.getElementById("app");
+const state = { page: "list", layout: "sidebar", variant: "1", outnav: "top", dash: "returning" };
+const currentNav = [...document.querySelectorAll('.navlink[aria-current="page"]')];
+function render() {
+  const out = state.page === "landing";
+  app.dataset.signed = out ? "out" : "in";
+  app.dataset.layout = out ? (state.outnav === "top" ? "header" : "sidebar") : state.layout;
+  document.querySelectorAll("[data-view]").forEach((el) => (el.hidden = el.dataset.view !== state.page));
+  document.querySelectorAll("[data-variant]").forEach((el) => (el.hidden = el.dataset.variant !== state.variant));
+  document.querySelectorAll("[data-dash]").forEach((el) => (el.hidden = el.dataset.dash !== state.dash));
+  // Nothing in the nav is current on the home page.
+  const home = state.page === "landing" || state.page === "dashboard";
+  currentNav.forEach((a) => (home ? a.removeAttribute("aria-current") : a.setAttribute("aria-current", "page")));
+}
+
+// One sign-in / create-account form, placed in whichever landing option shows it.
+const authTpl = document.getElementById("auth-tpl");
+function makeAuth(mode) {
+  const node = authTpl.content.firstElementChild.cloneNode(true);
+  const set = (m) => {
+    const reg = m === "register";
+    node.querySelector("[data-auth-title]").textContent = reg ? "Create an account" : "Sign in";
+    node.querySelector("[data-auth-note]").textContent = reg ? "Join our community of players." : "Get back to your games.";
+    node.querySelector("[data-auth-submit]").textContent = reg ? "Create account" : "Sign in";
+    node.querySelectorAll("[data-reg]").forEach((f) => (f.hidden = !reg));
+    node.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+  };
+  node.querySelector(".tabs2").addEventListener("click", (e) => { const b = e.target.closest("[data-mode]"); if (b) set(b.dataset.mode); });
+  set(mode);
+  return node;
+}
+document.querySelector(".auth-slot").appendChild(makeAuth("login"));
+document.querySelectorAll("[data-auth-open]").forEach((b) => b.addEventListener("click", () => {
+  const slot = document.querySelector(".showcase-slot");
+  slot.replaceChildren(makeAuth(b.dataset.authOpen));
+}));
 const ornaments = { vellum: "❦", maproom: "✦", grimoire: "✧", folio: "❦" };
 function setOrn() { document.querySelectorAll(".orn").forEach((el) => (el.textContent = ornaments[app.dataset.dir])); }
 setOrn();
@@ -537,10 +800,17 @@ document.querySelectorAll(".seg").forEach((seg) => {
     } else if (ctl === "ind") {
       app.dataset.ind = v;
     } else if (ctl === "layout") {
-      app.dataset.layout = v;
+      state.layout = v;
     } else if (ctl === "page") {
-      document.querySelectorAll("[data-view]").forEach((el) => (el.hidden = el.dataset.view !== v));
+      state.page = v;
+    } else if (ctl === "variant") {
+      state.variant = v;
+    } else if (ctl === "outnav") {
+      state.outnav = v;
+    } else if (ctl === "dash") {
+      state.dash = v;
     }
+    render();
   });
 });
 document.querySelector(".viewtoggle").addEventListener("click", (e) => {
