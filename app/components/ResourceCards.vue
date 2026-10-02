@@ -4,7 +4,8 @@ import type { ResourceCardItem } from "~/utils/resource-card";
 // The cards view of a resource list: a grid with one card per item showing its
 // name (the card's link), address (`owner/id`), Source and Visibility badges, details
 // from the page (`#details`), the page's actions menu (`#actions`), and a
-// footer with the updated date.
+// footer with a summary from the page (`#summary`, e.g. a count) and the
+// updated date.
 defineProps<{ items: T[]; to: (item: T) => string }>();
 </script>
 
@@ -55,9 +56,10 @@ defineProps<{ items: T[]; to: (item: T) => string }>();
 
       <p
         v-if="item.updatedAt"
-        class="mt-auto flex justify-end border-t border-default pt-2.5 text-[13px] text-muted tabular-nums"
+        class="mt-auto flex flex-wrap justify-between gap-x-3 border-t border-default pt-2.5 text-[13px] text-muted tabular-nums"
       >
-        {{ formatShortDate(item.updatedAt) }}
+        <span><slot name="summary" :item="item" /></span>
+        <span>{{ formatShortDate(item.updatedAt) }}</span>
       </p>
     </li>
   </ul>

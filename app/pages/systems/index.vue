@@ -16,6 +16,8 @@ interface SystemItem {
   isPubliclyReadable: boolean;
   createdAt: string;
   updatedAt: string;
+  // Content types its owner made for it that the viewer can read.
+  contentTypeCount: number;
   canEdit: boolean;
   ownerGroupId: string | null;
   canChangeOwner: boolean;
@@ -215,6 +217,10 @@ async function remove() {
     </UTable>
           <template #cards>
         <ResourceCards :items="systems" :to="(item) => `/systems/${item.id}`">
+          <template #summary="{ item }">
+            {{ item.contentTypeCount }}
+            {{ item.contentTypeCount === 1 ? "content type" : "content types" }}
+          </template>
           <template #actions="{ item }">
             <ResourceActionsMenu
               :can-edit="item.canEdit"

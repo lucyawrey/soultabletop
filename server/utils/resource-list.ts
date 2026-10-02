@@ -98,7 +98,7 @@ interface ListRow {
 
 // Runs a list query. `fetchRows` selects rows (with `resource` and `official`)
 // for a where condition, ordered by `listOrder`, with an optional limit and
-// offset; `countRows` counts the rows for a condition. The access rules are
+// offset (and the viewer, for columns that count what they can read); `countRows` counts the rows for a condition. The access rules are
 // applied in SQL (`listCondition`), so totals and pages come from the
 // database; each returned row is checked against `getResourceAccess` as well.
 // `where` may be a function of the viewer, for conditions that check access
@@ -110,6 +110,7 @@ export async function listResources<T extends ListRow>(options: {
   where?: SQL | ((viewer: ListViewer | null) => SQL | undefined);
   fetchRows: (args: {
     where: SQL | undefined;
+    viewer: ListViewer | null;
     limit?: number;
     offset?: number;
   }) => Promise<T[]>;
@@ -165,11 +166,12 @@ export async function listResources<T extends ListRow>(options: {
     };
   }
 
-  if (!query.page) return withAccess(await fetchRows({ where }));
+  if (!query.page) return withAccess(await fetchRows({ where, viewer }));
   const total = await countRows(where);
   const page = clampPage(query.page, total);
   const rows = await fetchRows({
     where,
+    viewer,
     limit: LIST_PAGE_SIZE,
     offset: (page - 1) * LIST_PAGE_SIZE,
   });
