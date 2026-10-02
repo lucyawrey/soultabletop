@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ResourceOptionItem } from "~/utils/resource-option";
+
 // Header dropdown for the current system (see `useCurrentSystem`).
 const ALL = "all";
 
@@ -7,7 +9,7 @@ const loggedIn = await useLoggedIn();
 const { systems, loaded, refresh } = useSystems();
 
 // The list changes on sign-in and sign-out, and after system changes (the
-// Systems pages call `refreshNuxtData("system-selector")`).
+// Systems and Groups pages call `refreshSystems()`).
 watch(loggedIn, () => refresh());
 
 // A saved system that was deleted or is no longer readable goes back to all.
@@ -20,7 +22,9 @@ watch([systems, loaded], dropMissingSystem);
 
 const items = computed(() => [
   { label: "All Systems", value: ALL },
-  ...systems.value.map((item) => ({ label: item.name, value: item.id })),
+  ...systems.value.map((item) =>
+    resourceOption(item.id, { name: item.name, source: item.source }),
+  ),
 ]);
 const selected = computed({
   get: () => systemId.value ?? ALL,
@@ -35,5 +39,10 @@ const selected = computed({
     size="sm"
     aria-label="Current system"
     class="w-44"
-  />
+    :ui="{ content: 'min-w-fit' }"
+  >
+    <template #item-label="{ item }">
+      <ResourceOption :option="item as ResourceOptionItem" />
+    </template>
+  </USelect>
 </template>
