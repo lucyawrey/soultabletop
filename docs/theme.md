@@ -51,8 +51,20 @@ Nuxt UI normally picks `--ui-primary` and the others from shade 500 of the scale
 ### Fonts
 
 - `--font-sans` is Nunito Sans (400, 600, 700) for everything by default.
-- `--font-display` is Cormorant Garamond (600, 700); use it with the `font-display` utility. It has thin strokes and a small x-height, so use it only for headings at 22px and up, never for labels, table text, or small headings. `h1` uses it by default; page titles are `text-2xl` (24px).
+- `--font-display` is Cormorant Garamond (600, 700); use it with the `font-display` utility. It has thin strokes and a small x-height, so use it only for headings at 22px and up, never for labels, table text, or small headings. `h1` uses it by default: list page titles are 34px, detail titles 40px (32px on phones), and panel titles 22px.
 - Fonts are self-hosted through `@nuxt/fonts` (the `fonts` block in `nuxt.config.ts`). Add a weight there before using it, or the browser fakes it.
+
+### Component defaults and shared pieces
+
+The visual reference is `.claude/plans/ui-directions.html` (direction D, Folio). `app/app.config.ts` sets Nuxt UI's defaults to match it, so pages don't repeat the classes:
+
+- **Buttons:** semibold; `md` is 14px with 9px by 14px padding and 16px icons; solid buttons have a 2px inset shadow at the bottom.
+- **Navigation menu:** 15px rows, small uppercase group labels, no separators between groups; the current item is the solid primary pill.
+- **Tabs, `variant="link"`:** the underline tabs used for My / Find and the sheet page. The underline is drawn from the active tab (`::before`), not Nuxt UI's sliding indicator, which only exists after hydration and jumped on load.
+- **Tables:** a bordered panel with a tinted header row of small uppercase labels and a light hover.
+- **Modals:** a display-font title over a divider, and a footer on the page tone.
+
+Shared components carry the rest: `PageContainer` (page width and padding), `PageHeader` (eyebrow, title, line, actions), `DetailHeader` (back link, eyebrow, 40px title, badges, actions, ornament rule), `DetailPanel` (a bordered panel with a 22px title and actions), `AboutPanel` (facts with dashed separators), `ResourceList` (tabs, search, view toggle, count, pages), `ResourceCards`, `ResourceActionsMenu`, `ListViewToggle`, `RecentCard`, and the `ReadableIdBadge`, `SourceBadge`, and `VisibilityBadge` chips (Official solid, Public gilt, Limited a dashed outline). Where Nuxt UI's theme can't produce the look, write the classes in the component (as `ListViewToggle` does).
 
 ## Accessibility rules
 
