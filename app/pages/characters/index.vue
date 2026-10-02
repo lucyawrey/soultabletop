@@ -20,7 +20,6 @@ interface ContentItem {
   updatedAt: string;
   contentTypeId: string;
   systemId: string;
-  data: Record<string, unknown>;
   canEdit: boolean;
   isPubliclyReadable: boolean;
 }

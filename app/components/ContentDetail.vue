@@ -64,8 +64,15 @@ interface SheetItem {
   name: string;
   source: ResourceSource;
   contentTypeId: string;
+}
+
+// `GET /api/sheet/[id]`, loaded when a Sheet is picked to view with (the list
+// leaves out the markup and CSS).
+interface SheetDetail {
+  id: string;
+  name: string;
   markup: string;
-  cssStyles: string;
+  css: string;
   defaultEditMode: boolean;
   defaultAutosave: boolean;
   defaultDisplay: SheetDisplay;
@@ -110,12 +117,48 @@ const sheetOptions = computed(() => [
     resourceOption(entry.id, { name: entry.name, source: entry.source }),
   ),
 ]);
+// What is rendered follows `shownId`, which trails `viewSheetId` (what the
+// select shows) while a picked Sheet loads, so the current Sheet stays on
+// screen until the new one is ready and the Edit and Autosave switches change
+// only once.
+const shownId = ref<string | null>(null);
+const loadedSheet = ref<SheetDetail | null>(null);
+const toast = useToast();
+async function chooseSheet(chosen: string) {
+  viewSheetId.value = chosen;
+  if (chosen === GENERATED || chosen === item.value?.sheet.id) {
+    shownId.value = chosen;
+    return;
+  }
+  try {
+    const detail = await $fetch<SheetDetail>(`/api/sheet/${chosen}`);
+    // A newer choice (or a reset) supersedes this response.
+    if (viewSheetId.value !== chosen) return;
+    loadedSheet.value = detail;
+    shownId.value = chosen;
+  } catch (error) {
+    if (viewSheetId.value !== chosen) return;
+    viewSheetId.value = shownId.value;
+    toast.add({
+      title: extractApiErrorMessage(error, "Could not load sheet."),
+      color: "error",
+    });
+  }
+}
+function resetViewSheet() {
+  viewSheetId.value = null;
+  shownId.value = null;
+  loadedSheet.value = null;
+}
+// A reload that changes the content's own Sheet drops the page-view choice,
+// so the select and the rendered Sheet agree.
+watch(() => item.value?.sheet.id, resetViewSheet);
 const viewSheet = computed(() => {
   const content = item.value;
   if (!content) return undefined;
-  const chosen = viewSheetId.value;
-  if (!chosen || chosen === (content.sheet.id ?? GENERATED)) return content.sheet;
-  if (chosen === GENERATED) {
+  const shown = shownId.value;
+  if (!shown || shown === (content.sheet.id ?? GENERATED)) return content.sheet;
+  if (shown === GENERATED) {
     return {
       id: null,
       name: GENERATED_SHEET_NAME,
@@ -124,29 +167,15 @@ const viewSheet = computed(() => {
       ...generatedSheetDefaults(content.contentCategory),
     };
   }
-  return typeSheets.value.find((sheetItem) => sheetItem.id === chosen);
+  return loadedSheet.value?.id === shown ? loadedSheet.value : content.sheet;
 });
 
-// Scoped CSS of the viewed Sheet. The server's choice arrives scoped; a Sheet
-// picked here is scoped in the browser (postcss loads only when needed).
-const viewCss = ref("");
-watch(
-  viewSheet,
-  async (current) => {
-    if (!current || current.id === item.value?.sheet.id) {
-      viewCss.value = item.value?.sheet.css ?? "";
-      return;
-    }
-    const raw = "cssStyles" in current ? current.cssStyles : "";
-    if (!raw || !current.id) {
-      viewCss.value = "";
-      return;
-    }
-    const { processSheetCss } = await import("#shared/sheet/css");
-    viewCss.value = processSheetCss(raw, current.id).css;
-  },
-  { immediate: true },
-);
+// Scoped CSS of the viewed Sheet (the server scopes it).
+const viewCss = computed(() => {
+  const current = viewSheet.value;
+  if (!current || current === item.value?.sheet) return item.value?.sheet.css ?? "";
+  return "css" in current ? current.css : "";
+});
 
 // Edit and Autosave switches start as the viewed Sheet says.
 const editMode = ref(false);
@@ -255,7 +284,7 @@ async function submitForm() {
       },
     });
     isFormOpen.value = false;
-    viewSheetId.value = null;
+    resetViewSheet();
     await reload();
   } catch (error) {
     formError.value = extractApiErrorMessage(
@@ -365,7 +394,7 @@ async function remove() {
             :items="sheetOptions"
             class="w-56"
             aria-label="Sheet to view with"
-            @update:model-value="viewSheetId = $event as string"
+            @update:model-value="chooseSheet($event as string)"
           >
             <template #item-label="{ item: option }">
               <ResourceOption :option="option as ResourceOptionItem" />

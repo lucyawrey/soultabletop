@@ -1,6 +1,7 @@
 import { count, eq } from "drizzle-orm";
 import { contentType, group, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
+import { contentTypeListColumns } from "../../utils/list-columns";
 import { useDatabase } from "../../utils/database";
 import {
   listOrder,
@@ -18,6 +19,8 @@ defineRouteMeta({
   openAPI: {
     tags: ["ContentType"],
     summary: "List accessible content types",
+    description:
+      "Rows leave out the `schema`; get a content type by ID for it.",
     parameters: [...listQueryParameters, systemIdParameter],
     responses: {
       200: { description: "Content type list. Each row has `source`: you, yourGroups, shared, official, or community" },
@@ -36,7 +39,11 @@ export default defineEventHandler(async (event) => {
     where: systemId ? eq(contentType.systemId, systemId) : undefined,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
-        .select({ type: contentType, resource, official: officialColumn })
+        .select({
+          type: contentTypeListColumns,
+          resource,
+          official: officialColumn,
+        })
         .from(contentType)
         .innerJoin(resource, eq(resource.id, contentType.resourceId))
         .leftJoin(group, eq(group.id, resource.ownerGroupId))
@@ -66,7 +73,6 @@ export default defineEventHandler(async (event) => {
       contentCategory: type.contentCategory,
       hasStrictSchema: type.hasStrictSchema,
       showSheetWarnings: type.showSheetWarnings,
-      schema: type.schema,
       ownerUserId: item.ownerUserId,
       ownerGroupId: item.ownerGroupId,
       canEdit: access.canEdit,

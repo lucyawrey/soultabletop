@@ -23,7 +23,6 @@ interface ContentTypeItem {
   contentCategory: ContentCategory;
   hasStrictSchema: boolean;
   showSheetWarnings: boolean;
-  schema: Record<string, unknown>;
   canEdit: boolean;
   ownerGroupId: string | null;
   canChangeOwner: boolean;
