@@ -102,8 +102,14 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 .topnav { display: flex; gap: 2px; flex-wrap: wrap; flex: 1; min-width: 0; }
 .navlink { color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: var(--radius); font-weight: 500; display: flex; align-items: center; gap: 8px; }
 .navlink:hover { color: var(--fg); background: var(--surface-2); }
-.navlink[aria-current="page"] { color: var(--primary); background: var(--primary-soft); font-weight: 700; box-shadow: inset 0 -2px 0 var(--primary); }
-.app[data-layout="sidebar"] .navlink[aria-current="page"] { box-shadow: inset 3px 0 0 var(--primary); }
+/* Current nav item: three options, each marked by more than color. */
+.navlink[aria-current="page"] { font-weight: 700; }
+.app[data-ind="solid"] .navlink[aria-current="page"] { background: var(--primary); color: var(--on-primary); }
+.app[data-ind="solid"] .navlink[aria-current="page"]:hover { background: var(--primary-hover); }
+.app[data-ind="outline"] .navlink[aria-current="page"] { background: var(--primary-soft); color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.app[data-ind="dot"] .navlink[aria-current="page"] { background: var(--primary-soft); color: var(--primary); }
+.app[data-ind="dot"] .navlink[aria-current="page"]::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); margin-left: auto; flex: none; }
+.app[data-ind="dot"] .topnav .navlink[aria-current="page"]::after { margin-left: 2px; }
 .topnav .navlink svg { display: none; }
 .right { display: flex; align-items: center; gap: 10px; }
 .sys-select { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: var(--bg); border-radius: var(--radius); padding: 6px 10px; font-size: 14px; color: var(--fg); }
@@ -301,6 +307,14 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
       </div>
     </div>
     <div class="ctl">
+      <span class="ctl-label">Current item</span>
+      <div class="seg" data-ctl="ind">
+        <button type="button" data-v="solid" aria-pressed="true">Solid</button>
+        <button type="button" data-v="outline" aria-pressed="false">Outlined</button>
+        <button type="button" data-v="dot" aria-pressed="false">Dot</button>
+      </div>
+    </div>
+    <div class="ctl">
       <span class="ctl-label">Page</span>
       <div class="seg" data-ctl="page">
         <button type="button" data-v="list" aria-pressed="true">List</button>
@@ -334,7 +348,7 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
   </div>
 
   <div class="frame">
-    <div class="app" id="app" data-dir="folio" data-layout="sidebar">
+    <div class="app" id="app" data-dir="folio" data-layout="sidebar" data-ind="solid">
       <!-- Header layout -->
       <header class="topbar">
         <a class="brand" href="#app"><svg width="22" height="22"><use href="#i-dice"/></svg><span class="brand-name">Soul Tabletop</span></a>
@@ -479,7 +493,7 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
 
   <section class="audit" aria-labelledby="audit-h">
     <h2 id="audit-h">Contrast check: <span id="audit-dir"></span></h2>
-    <p>Calculated live from the selected direction's colors. Text needs 4.5:1 (AA) and control outlines and state markers need 3:1 (WCAG 1.4.11). Dividers aren't listed because they're decorative. The current nav item and pressed toggles are also marked by weight, a bar, or a solid fill, so their state never depends on color alone.</p>
+    <p>Calculated live from the selected direction's colors. Text needs 4.5:1 (AA) and control outlines and state markers need 3:1 (WCAG 1.4.11). Dividers aren't listed because they're decorative. The current nav item (bold, plus a solid fill, an outline, or a dot) and pressed toggles (solid fill) are marked by more than color, so their state never depends on color alone.</p>
     <div class="audit-scroll"><table><thead><tr><th>Sample</th><th>Used for</th><th>Ratio</th><th>Needs</th><th>Result</th></tr></thead><tbody id="audit-rows"></tbody></table></div>
   </section>
 </div>
@@ -517,6 +531,8 @@ document.querySelectorAll(".seg").forEach((seg) => {
       app.dataset.dir = v;
       document.querySelectorAll(".note").forEach((n) => (n.dataset.active = String(n.dataset.note === v)));
       setOrn();
+    } else if (ctl === "ind") {
+      app.dataset.ind = v;
     } else if (ctl === "layout") {
       app.dataset.layout = v;
     } else if (ctl === "page") {
@@ -536,7 +552,8 @@ const pairs = [
   ["muted", "surface", "Secondary text, hints", 4.5],
   ["muted", "surface-2", "Table headers, Community badge", 4.5],
   ["primary", "surface", "Links, active tab", 4.5],
-  ["primary", "primary-soft", "Current nav item", 4.5],
+  ["primary", "primary-soft", "Current nav item (Outlined, Dot)", 4.5],
+  ["on-primary", "primary", "Current nav item (Solid)", 4.5],
   ["on-primary", "primary", "Solid buttons, Official badge", 4.5],
   ["on-primary", "primary-hover", "Solid buttons on hover", 4.5],
   ["accent", "accent-soft", "Public badge", 4.5],
