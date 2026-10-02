@@ -10,7 +10,7 @@ The look was chosen from four mockups. They live in `.claude/plans/ui-directions
 |---|---|
 | Colors, fonts, radius, Sheet tokens | `app/assets/css/main.css` (the only place colors are defined) |
 | Which palette is primary, secondary, neutral; component overrides | `app/app.config.ts` |
-| Font loading (weights) | `fonts` in `nuxt.config.ts` |
+| Fonts and their weights | `shared/fonts.ts` (loaded by `fonts` in `nuxt.config.ts`; the table under Fonts) |
 | Dark mode off | `ui.colorMode: false` in `nuxt.config.ts`; Scalar's `forceDarkModeState: "light"` |
 | Sheet token names and descriptions | `shared/sheet/theme-tokens.ts` (shown in the sheet editor's reference panel) |
 | Contrast and token checks | `shared/theme.test.ts` (runs with `pnpm test` and `pnpm check`) |
@@ -51,10 +51,23 @@ Nuxt UI normally picks `--ui-primary` and the others from shade 500 of the scale
 
 ### Fonts
 
-- `--font-sans` is Nunito Sans (400, 600, 700) for everything by default.
-- `--font-display` is Cormorant Garamond (600, 700); use it with the `font-display` utility. It has thin strokes and a small x-height, so use it only for headings at 22px and up, never for labels, table text, or small headings. `h1` uses it by default: list page titles are 34px, detail titles 40px (32px on phones), and panel titles 22px.
-- `--font-mono` is JetBrains Mono (400, 500), for readable IDs and code (the `font-mono` utility).
-- Fonts are self-hosted through `@nuxt/fonts` (the `fonts` block in `nuxt.config.ts`). Add a weight there before using it, or the browser fakes it.
+- `--font-sans` is Nunito Sans for everything by default.
+- `--font-display` is Cormorant Garamond; use it with the `font-display` utility. It has thin strokes and a small x-height, so use it only for headings at 22px and up, never for labels, table text, or small headings. `h1` uses it by default: list page titles are 34px, detail titles 40px (32px on phones), and panel titles 22px.
+- `--font-mono` is JetBrains Mono, for readable IDs and code (the `font-mono` utility).
+
+Every font on the site, the app's three and the extra ones for sheets, is listed with its weights in `shared/fonts.ts`. `nuxt.config.ts` registers that list with `@nuxt/fonts`, which downloads the files from Google Fonts at build time and serves them from this app, so visitors' browsers never contact Google; a weight is downloaded only when a page uses it. Sheet CSS may use any of these fonts by name in `font-family`, and the sheet editor's Reference panel lists them. Add a weight to the list before using it, or the browser fakes it. A new font needs a row below (`shared/fonts.test.ts` checks), with its license confirmed in the [google/fonts](https://github.com/google/fonts) repository.
+
+| Font | Used for | Weights | Designer | License |
+|---|---|---|---|---|
+| Nunito Sans | App body text (`--font-sans`) | 400, 600, 700 | Vernon Adams, Jacques Le Bailly, Manvel Shmavonyan, Alexei Vanyashin | SIL Open Font License 1.1 |
+| Cormorant Garamond | App headings (`--font-display`) | 400, 600, 700 | Christian Thalmann | SIL Open Font License 1.1 |
+| JetBrains Mono | App IDs and code (`--font-mono`) | 400, 500, 700 | JetBrains, Philipp Nurullin, Konstantin Bulenkov | SIL Open Font License 1.1 |
+| Cinzel | Sheets: classical capitals, for titles | 400, 700 | Natanael Gama | SIL Open Font License 1.1 |
+| Uncial Antiqua | Sheets: medieval uncial script | 400 | Astigmatic | SIL Open Font License 1.1 |
+| IM Fell English | Sheets: old printed book | 400 | Igino Marini | SIL Open Font License 1.1 |
+| Crimson Pro | Sheets: readable book serif | 400, 700 | Jacques Le Bailly | SIL Open Font License 1.1 |
+| Special Elite | Sheets: typewriter | 400 | Astigmatic | Apache License 2.0 |
+| Orbitron | Sheets: futuristic, for sci-fi | 400, 700 | Matt McInerney | SIL Open Font License 1.1 |
 
 ### Component defaults and shared pieces
 
@@ -108,4 +121,4 @@ Published sheets refer to these names, so **never rename or remove one**; when t
 2. Run `scripts/agent-run.sh pnpm vitest run shared/theme.test.ts`. Each failure names the pair and its ratio.
 3. Check the app in a browser: a list page, a detail page, a form in a modal, the sheet editor (its colors come from `--ui-*` tokens, in `CodeEditor.client.vue`), and a rendered sheet that uses `--st-*` tokens.
 4. If the direction itself changed, update the mockup page in `.claude/plans/ui-directions.html` so the reference matches.
-5. Fonts: change `--font-sans` / `--font-display` in `main.css` and the matching entries (with weights) in `nuxt.config.ts`.
+5. Fonts: change `--font-sans` / `--font-display` in `main.css` and the font list in `shared/fonts.ts` (with weights), plus its row in the font table above. Keep the old fonts in the list if published sheets may use them.

@@ -1,6 +1,6 @@
 import yaml from "@rollup/plugin-yaml";
 import type { NuxtPage } from "nuxt/schema";
-import { sheetFonts } from "./shared/sheet/fonts";
+import { siteFonts } from "./shared/fonts";
 import { RESOURCE_PAGE_SECTIONS } from "./shared/resource-address";
 
 // Every resource detail page also answers at its owner + readable ID address
@@ -87,20 +87,16 @@ export default defineNuxtConfig({
     },
   },
 
-  // The app's own fonts (main.css, docs/theme.md) at the weights it uses,
-  // then the fonts Sheet CSS can use (see shared/sheet/fonts.ts). `global`
-  // loads those even though no app CSS mentions them.
+  // Every font on the site, the app's and the extra ones for sheets (see
+  // shared/fonts.ts). `global` loads them even when no app CSS mentions them,
+  // since Sheet CSS may use any of them.
   fonts: {
-    families: [
-      { name: "Nunito Sans", provider: "google", weights: [400, 600, 700] },
-      { name: "Cormorant Garamond", provider: "google", weights: [600, 700] },
-      { name: "JetBrains Mono", provider: "google", weights: [400, 500] },
-      ...sheetFonts.map(({ name }) => ({
-        name,
-        provider: "google",
-        global: true,
-      })),
-    ],
+    families: siteFonts.map(({ name, weights }) => ({
+      name,
+      provider: "google",
+      weights,
+      global: true,
+    })),
   },
 
   scalar: {

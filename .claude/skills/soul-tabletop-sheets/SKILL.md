@@ -19,7 +19,7 @@ So produce files, tell the user which is which, and check them before handing th
 Read these when in doubt; this skill is a summary and the code wins if they disagree.
 
 - `shared/sheet/registry.ts`: every tag, attribute, enum value, allowed children and parents, and what each tag can bind to.
-- `shared/sheet/parser.ts` (syntax), `shared/sheet/validate.ts` (tags, attributes, field paths), `shared/sheet/css.ts` and `shared/sheet/fonts.ts` (CSS).
+- `shared/sheet/parser.ts` (syntax), `shared/sheet/validate.ts` (tags, attributes, field paths), `shared/sheet/css.ts` and `shared/fonts.ts` (CSS).
 - `docs/sheet-system.md` (design; parts can be stale, see "Known doc drift" below), `shared/sheet/*.test.ts` (exact behavior), `app/components/sheet/` (rendering).
 
 ## Workflow
@@ -84,7 +84,7 @@ Details and tables are in `references/css.md`. Essentials:
 - Hook classes: every tag's root element has `sheet-<tag>` in lowercase (`sheet-section`, `sheet-grid`, `sheet-number`, `sheet-text`, `sheet-tabs`, `sheet-tab`, ...); List items also have `sheet-list-item`; plain text paragraphs have `sheet-text`; inside field tags, `sheet-field-label` is the visible label and `sheet-field-value` the value or input (see references/css.md); broken tags `sheet-invalid`. Add your own with the `class` attribute (names: lowercase letters, digits, hyphens, starting with a letter).
 - `:root`, `html`, and `body` mean the Sheet's own root element (only at the start of a selector), so `:root { --accent: teal }` defines variables for the Sheet. `@media print { ... }` styles the printed page. The site has one light theme (no dark mode).
 - Use the site's theme tokens so the Sheet matches the site: `var(--st-ink)`, `--st-ink-muted`, `--st-primary`, `--st-on-primary`, `--st-accent`, `--st-panel`, `--st-panel-muted`, `--st-page`, `--st-border`, `--st-border-strong`, `--st-radius`, `--st-font-body`, `--st-font-display` (list in `shared/sheet/theme-tokens.ts`). Their names are stable; prefer them to Nuxt UI's `--ui-*` variables.
-- Fonts: only these load, by name in `font-family`: Cinzel, Uncial Antiqua, IM Fell English, Crimson Pro, Special Elite, Orbitron (plus generic families). Another name is a warning: it shows only if the viewer has it installed. There is no `@font-face`.
+- Fonts: only the site's fonts load, by name in `font-family`: the app's Nunito Sans, Cormorant Garamond, and JetBrains Mono, and Cinzel, Uncial Antiqua, IM Fell English, Crimson Pro, Special Elite, Orbitron (plus generic families; weights in `shared/fonts.ts`). Another name is a warning: it shows only if the viewer has it installed. There is no `@font-face`.
 - Rejected (errors, the rule or declaration is dropped): `url()`, `image-set()`, `image()`, `cross-fade()`, `element()`, `paint()`, `expression()`, `@import`, `@font-face`, `@namespace`, `@page`, any at-rule other than `@media`, `@supports`, `@container`, `@layer`, `@keyframes`; `behavior`, `-moz-binding`; selectors that could reach outside the Sheet (`:root`/`html`/`body` inside `:not()`/`:is()`/`:has()` or after other selectors, `~`/`+` next to the root, a leading `~`/`+`, `&` inside pseudo-class functions).
 - Allowed: CSS variables, `!important`, nesting, media/container/supports/layer queries, keyframes (names get a per-Sheet suffix automatically), `position: fixed` (it stays inside the Sheet).
 - No images by URL: use gradients, borders, shadows, or emoji.
