@@ -12,8 +12,7 @@ stays inside the Sheet). You write ordinary selectors:
 |---|---|
 | `.sheet-section { }` | `[data-sheet="id"] .sheet-section { }` |
 | `:root { --accent: teal }` (also `html`, `body`) | `[data-sheet="id"] { --accent: teal }` |
-| `.dark .sheet-section { }` | `.dark [data-sheet="id"] .sheet-section { }` |
-| `.dark { }` | `.dark [data-sheet="id"] { }` |
+| `@media print { .x { } }` | `@media print { [data-sheet="id"] .x { } }` |
 | `@keyframes spin { }` and `animation: spin 1s` | both renamed `spin-<id>` |
 | nested `.x { .y { } &:hover { } }` | nesting stays relative to its parent |
 
@@ -33,13 +32,26 @@ Each `Column` cell has `sheet-column`. The `class` attribute adds your own class
 Inside every field tag (`Text`, `Number`, `Value`, `Column` cells, ...) two more hooks are fixed: `sheet-field-label` (the visible label above the value, or under it for `Number variant="stat"`; absent with `hideLabel` and in `Column` cells) and `sheet-field-value` (a wrapper around the value or input). Use them instead of `div:first-child` or Nuxt UI/Tailwind classes, e.g. `.sheet-number .sheet-field-label { text-transform: uppercase; }`. Hint text has no hook.
 
 Inner parts of Nuxt UI components have no stable hooks: style what the hooks and `class` attributes reach, use
-variables (`--ui-*`), and avoid selectors that depend on Nuxt UI's internal markup.
+variables (the `--st-*` theme tokens), and avoid selectors that depend on Nuxt UI's internal markup.
 
-## Nuxt UI tokens
+## Theme tokens
 
-`--ui-primary`, `--ui-text`, `--ui-text-muted`, `--ui-text-highlighted`, `--ui-bg`, `--ui-bg-elevated`,
-`--ui-border`, `--ui-radius` (the editor's reference panel lists these; Nuxt UI defines more, such as `--ui-text-dimmed`).
-Tokens change with color mode by themselves; add `.dark` rules only for things they don't cover.
+The site has one light theme. These tokens follow it, and their names are stable (the editor's reference panel lists
+them, from `shared/sheet/theme-tokens.ts`; the values and rules are in `docs/theme.md`):
+
+| Token | Use |
+|---|---|
+| `--st-page` | page background behind panels |
+| `--st-panel`, `--st-panel-muted` | panel background, shaded panel (table headers) |
+| `--st-ink`, `--st-ink-muted` | main text, secondary text |
+| `--st-primary`, `--st-on-primary` | primary color, text on it |
+| `--st-accent` | accent color |
+| `--st-border`, `--st-border-strong` | dividers, outlines that must stand out |
+| `--st-radius` | corner radius of buttons and inputs |
+| `--st-font-body`, `--st-font-display` | body font, display font (large headings only) |
+
+Nuxt UI's `--ui-*` variables still work, but their names can change with Nuxt UI upgrades. `.dark` is an ordinary
+class (there is no dark mode).
 
 ## Fonts
 
@@ -54,7 +66,7 @@ Orbitron (futuristic). Generic families (`serif`, `sans-serif`, `monospace`, `sy
 | `@import`, `@font-face`, `@namespace`, `@page`, and any at-rule other than `@media`, `@supports`, `@container`, `@layer`, `@keyframes` (or `@-webkit-keyframes`) | `css-at-rule` |
 | `behavior`, `-moz-binding` properties | `css-property` |
 | `url()`, `image-set()`, `-webkit-image-set()`, `image()`, `cross-fade()`, `element()`, `paint()`, `expression()` in any value (CSS escapes are decoded first) | `css-function` |
-| A selector that could style anything outside the Sheet: `:root`/`html`/`body` anywhere but the start of a selector (including inside `:not()`, `:is()`, `:has()`), `~` or `+` after the root, a selector starting with `~` or `+`, `&` inside a pseudo-class function, `& ~` / `& +` or a leading `~` / `+` in a rule nested in a `:root`/`.dark` rule | `css-selector` |
+| A selector that could style anything outside the Sheet: `:root`/`html`/`body` anywhere but the start of a selector (including inside `:not()`, `:is()`, `:has()`), `~` or `+` after the root, a selector starting with `~` or `+`, `&` inside a pseudo-class function, `& ~` / `& +` or a leading `~` / `+` in a rule nested in a `:root` rule | `css-selector` |
 | Syntax errors | `css-syntax` |
 | More than 50,000 characters | `css-too-long` |
 

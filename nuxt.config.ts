@@ -31,6 +31,11 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css"],
 
+  // One light theme, no dark mode (see docs/theme.md).
+  ui: {
+    colorMode: false,
+  },
+
   runtimeConfig: {
     databaseUrl: process.env.DATABASE_URL ?? "",
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? "",
@@ -82,18 +87,26 @@ export default defineNuxtConfig({
     },
   },
 
-  // Fonts Sheet CSS can use (see shared/sheet/fonts.ts). `global` loads them
-  // even though no app CSS mentions them.
+  // The app's own fonts (main.css, docs/theme.md) at the weights it uses,
+  // then the fonts Sheet CSS can use (see shared/sheet/fonts.ts). `global`
+  // loads those even though no app CSS mentions them.
   fonts: {
-    families: sheetFonts.map(({ name }) => ({
-      name,
-      provider: "google",
-      global: true,
-    })),
+    families: [
+      { name: "Nunito Sans", provider: "google", weights: [400, 600, 700] },
+      { name: "Cormorant Garamond", provider: "google", weights: [600, 700] },
+      ...sheetFonts.map(({ name }) => ({
+        name,
+        provider: "google",
+        global: true,
+      })),
+    ],
   },
 
   scalar: {
-    darkMode: true,
+    // Light like the rest of the site.
+    darkMode: false,
+    forceDarkModeState: "light",
+    hideDarkModeToggle: true,
     metaData: {
       title: "Soul Tabletop API Documentation",
     },
