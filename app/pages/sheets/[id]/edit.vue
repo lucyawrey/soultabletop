@@ -8,6 +8,7 @@ import {
   type SheetFileKind,
 } from "#shared/sheet/files";
 import { sheetFonts } from "#shared/sheet/fonts";
+import { sheetThemeTokens } from "#shared/sheet/theme-tokens";
 import { generateSheetMarkup, type ContentCategory } from "#shared/sheet/generate";
 import type { SheetDiagnostic } from "#shared/sheet/parser";
 import {
@@ -377,16 +378,6 @@ function attrType(spec: TagSpec["attrs"][string]) {
     return `number ${type.min}–${type.max}`;
   return type.kind;
 }
-const cssTokens = [
-  "--ui-primary",
-  "--ui-text",
-  "--ui-text-muted",
-  "--ui-text-highlighted",
-  "--ui-bg",
-  "--ui-bg-elevated",
-  "--ui-border",
-  "--ui-radius",
-];
 async function insertPath(path: string) {
   isReferenceOpen.value = false;
   tab.value = "markup";
@@ -765,8 +756,8 @@ async function insertPath(path: string) {
               Rules only apply inside this sheet. Target tags with their
               <code>sheet-&lt;tag&gt;</code> class (e.g. <code>.sheet-section</code>)
               or your own <code>class="…"</code>. <code>:root</code> means the
-              Sheet itself; start a selector with <code>.dark</code> for dark
-              mode. Files can't be loaded (no <code>url()</code> or
+              Sheet itself, and <code>@media print</code> styles the printed
+              page. Files can't be loaded (no <code>url()</code> or
               <code>@import</code>).
             </p>
             <h4 class="font-medium text-highlighted">Fonts</h4>
@@ -776,10 +767,11 @@ async function insertPath(path: string) {
                 <span class="text-xs text-muted"> — {{ font.description }}</span>
               </li>
             </ul>
-            <h4 class="font-medium text-highlighted">Theme colors</h4>
-            <ul class="flex flex-wrap gap-1">
-              <li v-for="token in cssTokens" :key="token">
-                <code class="text-xs">var({{ token }})</code>
+            <h4 class="font-medium text-highlighted">Theme tokens</h4>
+            <ul class="space-y-1">
+              <li v-for="token in sheetThemeTokens" :key="token.name">
+                <code class="text-xs">var({{ token.name }})</code>
+                <span class="text-xs text-muted"> — {{ token.description }}</span>
               </li>
             </ul>
           </section>
