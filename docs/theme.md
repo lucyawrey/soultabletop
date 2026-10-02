@@ -28,7 +28,7 @@ The look was chosen from four mockups. They live in `.claude/plans/ui-directions
 | Variable | Role | Value |
 |---|---|---|
 | `--st-page` | page background (`body`) | folio-100 `#f6f1e7` |
-| `--ui-bg` | panels: cards, inputs, menus, modals, the header | folio-50 `#fffdf8` |
+| `--ui-bg` | panels: cards, inputs, menus, modals, the sidebar | folio-50 `#fffdf8` |
 | `--ui-bg-muted` | faint fill (same as the page) | folio-100 |
 | `--ui-bg-elevated` | shaded panel: table headers, gutters, hover | folio-200 `#efe7d8` |
 | `--ui-bg-accented` | stronger hover or selected fill | `#e6dccb` |
