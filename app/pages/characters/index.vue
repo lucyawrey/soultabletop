@@ -16,6 +16,8 @@ interface ContentItem {
   id: string;
   source: ResourceSource;
   readableId: string;
+  // The owner's username or group ID, for the `owner/id` address.
+  ownerReadableId: string | null;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -91,7 +93,7 @@ const columns: TableColumn<ContentItem>[] = [
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString(),
+    cell: ({ row }) => formatShortDate(row.original.updatedAt),
   },
   { id: "actions" },
 ];
@@ -207,33 +209,39 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Characters</h1>
+    <PageHeader section="play" title="Characters">
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
-        size="sm"
         :disabled="characterTypes.length === 0"
         @click="openCreate"
       >
         New Character
       </UButton>
-    </div>
+    </PageHeader>
 
     <p v-if="loggedIn && contentTypesStatus === 'success' && characterTypes.length === 0" class="text-sm text-muted">
       Create a content type with the Player Character or Non-Player Character
       category before adding characters.
     </p>
 
-    <USelect
-      v-if="characterTypes.length > 0"
-      v-model="categoryFilter"
-      :items="categoryFilterOptions"
-      aria-label="Filter by category"
-      class="w-56"
-    />
-
-    <ResourceList :list="list" noun="Characters">
+    <ResourceList
+      :list="list"
+      noun="Characters"
+      singular="character"
+      view-key="characters"
+      default-view="cards"
+    >
+      <template #filters>
+        <USelect
+          v-if="characterTypes.length > 0"
+          v-model="categoryFilter"
+          :items="categoryFilterOptions"
+          aria-label="Filter by category"
+          :ui="{ base: 'h-10' }"
+          class="w-56"
+        />
+      </template>
 <UTable
       :data="characters"
       :columns="columns"
@@ -242,10 +250,13 @@ async function remove() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/characters/${row.original.id}`"
-          class="font-medium text-highlighted hover:underline"
+          class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>
+        <span class="mt-0.5 block font-mono text-xs text-muted">
+          {{ resourceAddress(row.original.ownerReadableId, row.original.readableId) }}
+        </span>
       </template>
 
       <template #systemId-cell="{ row }">
@@ -279,39 +290,51 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
-        <UDropdownMenu
-          v-if="row.original.canEdit"
-          :items="[
-            [
-              {
-                label: 'Edit',
-                icon: 'i-lucide-pencil',
-                to: `/characters/${row.original.id}`,
-              },
-            ],
-            [
-              {
-                label: 'Delete',
-                icon: 'i-lucide-trash',
-                color: 'error',
-                onSelect: () => confirmDelete(row.original),
-              },
-            ],
-          ]"
-        >
-          <UButton
-            icon="i-lucide-ellipsis"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-          />
-        </UDropdownMenu>
+        <ResourceActionsMenu
+          :can-edit="row.original.canEdit"
+          :view-to="`/characters/${row.original.id}`"
+          :name="row.original.name" :edit-to="`/characters/${row.original.id}`"
+          @delete="confirmDelete(row.original)"
+        />
       </template>
 
       <template #empty>
-        <ResourceListEmpty :list="list" plural="characters" />
+        <ResourceListEmpty :list="list" plural="characters" create-label="New Character" :create-disabled="characterTypes.length === 0" @create="openCreate()" />
       </template>
     </UTable>
+          <template #cards>
+        <ResourceCards :items="characters" :to="(item) => `/characters/${item.id}`">
+          <template #actions="{ item }">
+            <ResourceActionsMenu
+              :can-edit="item.canEdit"
+              :view-to="`/characters/${item.id}`"
+              :name="item.name" :edit-to="`/characters/${item.id}`"
+              @delete="confirmDelete(item)"
+            />
+          </template>
+      <template #details="{ item }">
+          <dt class="text-muted">System</dt>
+          <dd><SystemLink :system-id="item.systemId" /></dd>
+          <dt class="text-muted">Character Type</dt>
+          <dd>
+            <NuxtLink
+              v-if="characterType(item.contentTypeId)"
+              :to="`/types/${item.contentTypeId}`"
+              class="text-primary hover:underline"
+            >
+              {{ contentTypeName(item.contentTypeId) }}
+            </NuxtLink>
+            <LookupSkeleton v-else-if="isLoading(contentTypesStatus)" />
+            <template v-else>Unknown</template>
+          </dd>
+          <dt class="text-muted">Category</dt>
+          <dd>{{ categoryLabel(item.contentTypeId) }}</dd>
+      </template>
+          <template #empty>
+            <ResourceListEmpty :list="list" plural="characters" create-label="New Character" :create-disabled="characterTypes.length === 0" @create="openCreate()" />
+          </template>
+        </ResourceCards>
+      </template>
     </ResourceList>
 
     <UModal

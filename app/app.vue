@@ -22,32 +22,35 @@ useSeoMeta({
 const loggedIn = await useLoggedIn();
 const route = useRoute();
 const navGroups = computed(() => {
+  // A section stays current on its detail and edit pages (`/systems/<id>`),
+  // which are sibling routes, not children, of its list page.
   const link = (to: string, label: string, icon: string) => ({
     to,
     label,
     icon,
+    active: route.path === to || route.path.startsWith(`${to}/`),
   });
-  const characters = link("/characters", "Characters", "i-lucide-users");
-  const content = link("/content", "Content", "i-lucide-book-open");
-  const sheets = link("/sheets", "Sheets", "i-lucide-scroll-text");
+  const characters = link("/characters", "Characters", "i-lucide-user");
+  const content = link("/content", "Content", "i-lucide-message-square");
+  const sheets = link("/sheets", "Sheets", "i-lucide-table-2");
   const types = link("/types", "Types", "i-lucide-shapes");
-  const systems = link("/systems", "Systems", "i-lucide-library");
+  const systems = link("/systems", "Systems", "i-lucide-globe");
   if (!loggedIn.value)
     return [
-      { label: "Browse", items: [characters, content, sheets, types, systems] },
+      { label: "Browse", items: [content, characters, sheets, types, systems] },
     ];
   return [
     {
       label: "Play",
       items: [
-        link("/campaigns", "Campaigns", "i-lucide-swords"),
+        link("/campaigns", "Campaigns", "i-lucide-flag"),
         characters,
         content,
       ],
     },
     {
       label: "Build",
-      items: [sheets, types, systems, link("/groups", "Groups", "i-lucide-users-round")],
+      items: [sheets, types, systems, link("/groups", "Groups", "i-lucide-users")],
     },
   ];
 });
@@ -58,9 +61,9 @@ const menuItems = computed(() =>
   ]),
 );
 
-// The signed-out landing page already has the sign-in form, so it has no
-// sidebar at all.
-const showSidebar = computed(() => loggedIn.value || route.path !== "/");
+// The signed-out landing page already has the sign-in form, so its sidebar has
+// no Sign in button.
+const showSignIn = computed(() => !loggedIn.value && route.path !== "/");
 
 // The sheet editor needs the width, so the sidebar starts collapsed there.
 const isEditor = (path: string) => /^\/sheets\/[^/]+\/edit\/?$/.test(path);
@@ -73,56 +76,83 @@ watch(
 
 <template>
   <UApp>
-    <UDashboardGroup v-if="showSidebar" class="print:block print:h-auto">
+    <!-- A fixed 232px sidebar, as in the mockup. The storage key is new so a
+         size saved under the old percent widths isn't read as pixels. -->
+    <UDashboardGroup unit="px" storage-key="sidebar" class="print:block print:h-auto">
       <UDashboardSidebar
         v-model:collapsed="collapsed"
         collapsible
-        :collapsed-size="0"
-        :min-size="14"
-        :default-size="16"
-        :max-size="22"
+        :min-size="232"
+        :default-size="232"
+        :max-size="232"
         class="print:hidden"
-        :ui="{ footer: 'border-t border-default' }"
+        :ui="{
+          root: 'bg-default border-e border-default',
+          // A wrapping row: the brand line (with the drawer's close button on
+          // phones), then the system picker on a line of its own.
+          header: 'h-auto flex-wrap items-center gap-x-1.5 gap-y-[18px] px-3.5 pt-[18px] pb-0',
+          body: 'gap-[18px] px-3.5 pt-[18px]',
+          // Empty on the signed-out landing page, so hidden there.
+          footer: loggedIn || showSignIn ? 'mx-3.5 border-t border-default px-0 py-2.5' : 'hidden',
+        }"
       >
-        <template #header="{ collapse }">
-          <div class="flex w-full items-center justify-between gap-2">
+        <template #header="{ collapsed: isCollapsed }">
+          <div
+            class="flex min-w-0 flex-1 items-center gap-2"
+            :class="isCollapsed ? 'justify-center' : 'justify-between'"
+          >
             <NuxtLink
+              v-if="!isCollapsed"
               to="/"
-              class="-ms-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
+              class="-m-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
             >
-              <UIcon name="i-lucide-dices" class="size-5 text-primary" />
-              <span>Soul Tabletop</span>
+              <UIcon name="i-lucide-dices" class="size-[22px] text-primary" />
+              <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
             </NuxtLink>
+            <!-- One toggle for both states; phones use the drawer instead.
+                 Negative margins keep the row the brand's 22px, as in the
+                 mockup. -->
             <UButton
-              class="hidden lg:inline-flex"
+              class="-my-1.5 hidden lg:inline-flex"
               color="neutral"
               variant="ghost"
               size="sm"
-              icon="i-lucide-panel-left-close"
-              aria-label="Collapse sidebar"
-              @click="collapse(true)"
+              :icon="isCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
+              :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+              :aria-expanded="!isCollapsed"
+              @click="collapsed = !collapsed"
             />
           </div>
+          <!-- In the header, not the scrolling body, which would clip it: on
+               desktop it pokes past the sidebar's edge into the page, like a
+               bookmark (the mockup). The drawer on phones keeps it inside. -->
+          <SystemSelector
+            v-if="!isCollapsed"
+            class="relative z-10 shrink-0 basis-full lg:basis-[calc(100%+1.375rem)]"
+          />
         </template>
 
-        <SystemSelector class="w-full" />
-        <UNavigationMenu
-          :items="menuItems"
-          orientation="vertical"
-          aria-label="Main"
-        />
+        <template #default="{ collapsed: isCollapsed }">
+          <UNavigationMenu
+            :items="menuItems"
+            orientation="vertical"
+            :collapsed="isCollapsed"
+            tooltip
+            aria-label="Main"
+          />
+        </template>
 
-        <template #footer>
+        <template #footer="{ collapsed: isCollapsed }">
           <UButton
-            v-if="!loggedIn"
+            v-if="showSignIn"
             to="/"
             color="primary"
-            block
+            :block="!isCollapsed"
             icon="i-lucide-log-in"
-          >
-            Sign in
-          </UButton>
-          <UserMenu v-else />
+            :aria-label="isCollapsed ? 'Sign in' : undefined"
+            :label="isCollapsed ? undefined : 'Sign in'"
+          />
+          <UserMenu v-else-if="loggedIn" :collapsed="isCollapsed" />
         </template>
       </UDashboardSidebar>
 
@@ -137,24 +167,11 @@ watch(
             class="flex items-center gap-2 rounded-md p-1 font-semibold text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
           >
             <UIcon name="i-lucide-dices" class="size-5 text-primary" />
-            <span>Soul Tabletop</span>
+            <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
           </NuxtLink>
         </div>
-        <UButton
-          v-if="collapsed"
-          class="absolute start-2 top-2 z-10 hidden lg:inline-flex print:hidden"
-          color="neutral"
-          variant="outline"
-          size="sm"
-          icon="i-lucide-panel-left-open"
-          aria-label="Expand sidebar"
-          @click="collapsed = false"
-        />
         <NuxtPage />
       </main>
     </UDashboardGroup>
-    <UMain v-else>
-      <NuxtPage />
-    </UMain>
   </UApp>
 </template>
