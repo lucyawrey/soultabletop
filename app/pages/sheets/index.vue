@@ -208,8 +208,7 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Sheets</h1>
+    <PageHeader title="Sheets">
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
@@ -219,13 +218,18 @@ async function remove() {
       >
         New Sheet
       </UButton>
-    </div>
+    </PageHeader>
 
     <p v-if="loggedIn && contentTypesStatus === 'success' && contentTypes.length === 0" class="text-sm text-muted">
       Create a content type before adding sheets.
     </p>
 
-    <ResourceList :list="list" noun="Sheets">
+    <ResourceList
+      :list="list"
+      noun="Sheets"
+      view-key="sheets"
+      default-view="table"
+    >
 <UTable :data="sheets" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
         <NuxtLink
@@ -271,39 +275,50 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
-        <UDropdownMenu
-          v-if="row.original.canEdit"
-          :items="[
-            [
-              {
-                label: 'Edit',
-                icon: 'i-lucide-pencil',
-                to: `/sheets/${row.original.id}/edit`,
-              },
-            ],
-            [
-              {
-                label: 'Delete',
-                icon: 'i-lucide-trash',
-                color: 'error',
-                onSelect: () => confirmDelete(row.original),
-              },
-            ],
-          ]"
-        >
-          <UButton
-            icon="i-lucide-ellipsis"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-          />
-        </UDropdownMenu>
+        <ResourceActionsMenu
+          :can-edit="row.original.canEdit"
+          :name="row.original.name" :edit-to="`/sheets/${row.original.id}/edit`"
+          @delete="confirmDelete(row.original)"
+        />
       </template>
 
       <template #empty>
-        <ResourceListEmpty :list="list" plural="sheets" />
+        <ResourceListEmpty :list="list" plural="sheets" create-label="New Sheet" :create-disabled="contentTypes.length === 0" @create="openCreate()" />
       </template>
     </UTable>
+          <template #cards>
+        <ResourceCards :items="sheets" :to="(item) => `/sheets/${item.id}`">
+          <template #actions="{ item }">
+            <ResourceActionsMenu
+              :can-edit="item.canEdit"
+              :name="item.name" :edit-to="`/sheets/${item.id}/edit`"
+              @delete="confirmDelete(item)"
+            />
+          </template>
+      <template #badges="{ item }">
+        <UBadge v-if="item.isDefault" variant="subtle">Default</UBadge>
+      </template>
+      <template #details="{ item }">
+          <dt class="text-muted">System</dt>
+          <dd><SystemLink :system-id="item.systemId" /></dd>
+          <dt class="text-muted">Content Type</dt>
+          <dd>
+            <NuxtLink
+              v-if="contentTypes.some((type) => type.id === item.contentTypeId)"
+              :to="`/types/${item.contentTypeId}`"
+              class="text-primary hover:underline"
+            >
+              {{ contentTypeName(item.contentTypeId) }}
+            </NuxtLink>
+            <LookupSkeleton v-else-if="isLoading(contentTypesStatus)" />
+            <template v-else>Unknown</template>
+          </dd>
+      </template>
+          <template #empty>
+            <ResourceListEmpty :list="list" plural="sheets" create-label="New Sheet" :create-disabled="contentTypes.length === 0" @create="openCreate()" />
+          </template>
+        </ResourceCards>
+      </template>
     </ResourceList>
 
     <UModal

@@ -147,14 +147,18 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Systems</h1>
+    <PageHeader title="Systems">
       <UButton v-if="loggedIn" icon="i-lucide-plus" size="sm" @click="openCreate">
         New System
       </UButton>
-    </div>
+    </PageHeader>
 
-    <ResourceList :list="list" noun="Systems">
+    <ResourceList
+      :list="list"
+      noun="Systems"
+      view-key="systems"
+      default-view="table"
+    >
 <UTable
       :data="systems"
       :columns="columns"
@@ -180,39 +184,31 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
-        <UDropdownMenu
-          v-if="row.original.canEdit"
-          :items="[
-            [
-              {
-                label: 'Edit',
-                icon: 'i-lucide-pencil',
-                onSelect: () => openEdit(row.original),
-              },
-            ],
-            [
-              {
-                label: 'Delete',
-                icon: 'i-lucide-trash',
-                color: 'error',
-                onSelect: () => confirmDelete(row.original),
-              },
-            ],
-          ]"
-        >
-          <UButton
-            icon="i-lucide-ellipsis"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-          />
-        </UDropdownMenu>
+        <ResourceActionsMenu
+          :can-edit="row.original.canEdit"
+          :name="row.original.name" @edit="openEdit(row.original)"
+          @delete="confirmDelete(row.original)"
+        />
       </template>
 
       <template #empty>
-        <ResourceListEmpty :list="list" plural="systems" />
+        <ResourceListEmpty :list="list" plural="systems" create-label="New System" @create="openCreate()" />
       </template>
     </UTable>
+          <template #cards>
+        <ResourceCards :items="systems" :to="(item) => `/systems/${item.id}`">
+          <template #actions="{ item }">
+            <ResourceActionsMenu
+              :can-edit="item.canEdit"
+              :name="item.name" @edit="openEdit(item)"
+              @delete="confirmDelete(item)"
+            />
+          </template>
+          <template #empty>
+            <ResourceListEmpty :list="list" plural="systems" create-label="New System" @create="openCreate()" />
+          </template>
+        </ResourceCards>
+      </template>
     </ResourceList>
 
     <UModal

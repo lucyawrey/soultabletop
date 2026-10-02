@@ -1,0 +1,52 @@
+<script setup lang="ts" generic="T extends ResourceCardItem">
+import type { ResourceCardItem } from "~/utils/resource-card";
+
+// The cards view of a resource list: a grid with one card per item showing its
+// name (the card's link), readable ID, Source and Visibility badges, details
+// from the page (`#details`), and the page's actions menu (`#actions`).
+defineProps<{ items: T[]; to: (item: T) => string }>();
+</script>
+
+<template>
+  <ul v-if="items.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <li
+      v-for="item in items"
+      :key="item.id"
+      class="relative flex flex-col gap-3 rounded-lg border border-default bg-default p-4 transition-colors focus-within:ring-2 focus-within:ring-primary hover:border-accented"
+    >
+      <div class="flex items-start justify-between gap-2">
+        <h2 class="min-w-0 text-base font-semibold text-highlighted">
+          <!-- The link covers the whole card; the menu sits above it. -->
+          <NuxtLink
+            :to="to(item)"
+            class="break-words after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+          >
+            {{ item.name }}
+          </NuxtLink>
+        </h2>
+        <div class="relative z-10 -me-2 -mt-1 shrink-0">
+          <slot name="actions" :item="item" />
+        </div>
+      </div>
+
+      <ReadableIdBadge v-if="item.readableId" :readable-id="item.readableId" class="self-start" />
+
+      <div class="flex flex-wrap items-center gap-2">
+        <SourceBadge v-if="item.source" :source="item.source" />
+        <VisibilityBadge
+          v-if="item.isPubliclyReadable !== undefined"
+          :is-publicly-readable="item.isPubliclyReadable"
+        />
+        <slot name="badges" :item="item" />
+      </div>
+
+      <dl
+        v-if="$slots.details"
+        class="relative z-10 mt-auto grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm"
+      >
+        <slot name="details" :item="item" />
+      </dl>
+    </li>
+  </ul>
+  <slot v-else name="empty" />
+</template>

@@ -207,8 +207,7 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Characters</h1>
+    <PageHeader title="Characters">
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
@@ -218,7 +217,7 @@ async function remove() {
       >
         New Character
       </UButton>
-    </div>
+    </PageHeader>
 
     <p v-if="loggedIn && contentTypesStatus === 'success' && characterTypes.length === 0" class="text-sm text-muted">
       Create a content type with the Player Character or Non-Player Character
@@ -233,7 +232,12 @@ async function remove() {
       class="w-56"
     />
 
-    <ResourceList :list="list" noun="Characters">
+    <ResourceList
+      :list="list"
+      noun="Characters"
+      view-key="characters"
+      default-view="cards"
+    >
 <UTable
       :data="characters"
       :columns="columns"
@@ -279,39 +283,49 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
-        <UDropdownMenu
-          v-if="row.original.canEdit"
-          :items="[
-            [
-              {
-                label: 'Edit',
-                icon: 'i-lucide-pencil',
-                to: `/characters/${row.original.id}`,
-              },
-            ],
-            [
-              {
-                label: 'Delete',
-                icon: 'i-lucide-trash',
-                color: 'error',
-                onSelect: () => confirmDelete(row.original),
-              },
-            ],
-          ]"
-        >
-          <UButton
-            icon="i-lucide-ellipsis"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-          />
-        </UDropdownMenu>
+        <ResourceActionsMenu
+          :can-edit="row.original.canEdit"
+          :name="row.original.name" :edit-to="`/characters/${row.original.id}`"
+          @delete="confirmDelete(row.original)"
+        />
       </template>
 
       <template #empty>
-        <ResourceListEmpty :list="list" plural="characters" />
+        <ResourceListEmpty :list="list" plural="characters" create-label="New Character" :create-disabled="characterTypes.length === 0" @create="openCreate()" />
       </template>
     </UTable>
+          <template #cards>
+        <ResourceCards :items="characters" :to="(item) => `/characters/${item.id}`">
+          <template #actions="{ item }">
+            <ResourceActionsMenu
+              :can-edit="item.canEdit"
+              :name="item.name" :edit-to="`/characters/${item.id}`"
+              @delete="confirmDelete(item)"
+            />
+          </template>
+      <template #details="{ item }">
+          <dt class="text-muted">System</dt>
+          <dd><SystemLink :system-id="item.systemId" /></dd>
+          <dt class="text-muted">Character Type</dt>
+          <dd>
+            <NuxtLink
+              v-if="characterType(item.contentTypeId)"
+              :to="`/types/${item.contentTypeId}`"
+              class="text-primary hover:underline"
+            >
+              {{ contentTypeName(item.contentTypeId) }}
+            </NuxtLink>
+            <LookupSkeleton v-else-if="isLoading(contentTypesStatus)" />
+            <template v-else>Unknown</template>
+          </dd>
+          <dt class="text-muted">Category</dt>
+          <dd>{{ categoryLabel(item.contentTypeId) }}</dd>
+      </template>
+          <template #empty>
+            <ResourceListEmpty :list="list" plural="characters" create-label="New Character" :create-disabled="characterTypes.length === 0" @create="openCreate()" />
+          </template>
+        </ResourceCards>
+      </template>
     </ResourceList>
 
     <UModal

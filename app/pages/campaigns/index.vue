@@ -182,8 +182,7 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Campaigns</h1>
+    <PageHeader title="Campaigns">
       <UButton
         icon="i-lucide-plus"
         size="sm"
@@ -192,12 +191,17 @@ async function remove() {
       >
         New Campaign
       </UButton>
-    </div>
+    </PageHeader>
     <p v-if="systemsStatus === 'success' && systems.length === 0" class="text-sm text-muted">
       Create a system before adding campaigns.
     </p>
 
-    <ResourceList :list="list" noun="Campaigns">
+    <ResourceList
+      :list="list"
+      noun="Campaigns"
+      view-key="campaigns"
+      default-view="cards"
+    >
 <UTable :data="campaigns" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
         <NuxtLink
@@ -223,39 +227,35 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
-        <UDropdownMenu
-          v-if="row.original.canEdit"
-          :items="[
-            [
-              {
-                label: 'Edit',
-                icon: 'i-lucide-pencil',
-                onSelect: () => openEdit(row.original),
-              },
-            ],
-            [
-              {
-                label: 'Delete',
-                icon: 'i-lucide-trash',
-                color: 'error',
-                onSelect: () => confirmDelete(row.original),
-              },
-            ],
-          ]"
-        >
-          <UButton
-            icon="i-lucide-ellipsis"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-          />
-        </UDropdownMenu>
+        <ResourceActionsMenu
+          :can-edit="row.original.canEdit"
+          :name="row.original.name" @edit="openEdit(row.original)"
+          @delete="confirmDelete(row.original)"
+        />
       </template>
 
       <template #empty>
-        <ResourceListEmpty :list="list" plural="campaigns" />
+        <ResourceListEmpty :list="list" plural="campaigns" create-label="New Campaign" :create-disabled="systems.length === 0" @create="openCreate()" />
       </template>
     </UTable>
+          <template #cards>
+        <ResourceCards :items="campaigns" :to="(item) => `/campaigns/${item.id}`">
+          <template #actions="{ item }">
+            <ResourceActionsMenu
+              :can-edit="item.canEdit"
+              :name="item.name" @edit="openEdit(item)"
+              @delete="confirmDelete(item)"
+            />
+          </template>
+      <template #details="{ item }">
+          <dt class="text-muted">System</dt>
+          <dd><SystemLink :system-id="item.systemId" /></dd>
+      </template>
+          <template #empty>
+            <ResourceListEmpty :list="list" plural="campaigns" create-label="New Campaign" :create-disabled="systems.length === 0" @create="openCreate()" />
+          </template>
+        </ResourceCards>
+      </template>
     </ResourceList>
 
     <UModal

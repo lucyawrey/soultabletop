@@ -30,6 +30,14 @@ export default defineAppConfig({
         })),
       ],
     },
+    table: {
+      slots: {
+        // A tinted header row with small uppercase labels, and a hover row.
+        thead: "bg-muted",
+        th: "py-2.5 text-xs font-semibold tracking-wide text-highlighted uppercase",
+        tr: "hover:bg-muted/60",
+      },
+    },
     button: {
       // Solid buttons darken on hover and press instead of fading to 75%,
       // which would drop their light text below 4.5:1.
