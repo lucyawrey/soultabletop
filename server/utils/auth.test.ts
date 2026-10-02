@@ -221,8 +221,16 @@ describe("session cookie cache", () => {
     makeRefreshDue(jar);
     const event = requestEvent(jar, "POST");
     expect((await authModule.requireSessionUser(event)).id).toBe(userId);
-    const tokens = responseSetCookies(event).filter((c) => cookieName(c) === TOKEN);
-    expect(tokens.map(maxAge)).toEqual([SESSION_EXPIRES_IN]);
+    // Its second, database lookup writes a cache, which this response must
+    // not carry next to the renewed token.
+    const forwarded = responseSetCookies(event);
+    expect(forwarded.map(cookieName)).toEqual([TOKEN]);
+    expect(maxAge(forwarded[0]!)).toBe(SESSION_EXPIRES_IN);
+
+    // On other days it passes the cache on as before.
+    const next = requestEvent(applySetCookies(new Map(jar), forwarded), "POST");
+    expect((await authModule.requireSessionUser(next)).id).toBe(userId);
+    expect(responseSetCookies(next).map(cookieName)).toEqual([CACHE, CACHE]);
   });
 
   it("renews the cookies on a page load", async () => {
@@ -280,6 +288,55 @@ describe("session cookie cache", () => {
     await expect(authModule.requireSessionUser(requestEvent(browser))).rejects.toMatchObject({
       statusCode: 401,
     });
+  });
+
+  it("two overlapping responses landing after sign-out can sign the user back in (known gap)", async () => {
+    const { jar, userId } = await signUp();
+    makeRefreshDue(jar);
+    // A client navigation fires two calls with the same cookies: the first
+    // extends the session (token only), the second, handled after it, finds
+    // no refresh due and writes the cache (cache only).
+    const first = requestEvent(jar);
+    const second = requestEvent(jar);
+    expect((await authModule.getAuthenticatedUser(first))?.id).toBe(userId);
+    expect((await authModule.getAuthenticatedUser(second))?.id).toBe(userId);
+    expect(responseSetCookies(first).map(cookieName)).toEqual([TOKEN]);
+    expect(responseSetCookies(second).map(cookieName)).toEqual([CACHE]);
+
+    const signOut = await authModule.useAuth().api.signOut({
+      headers: new Headers({ host: "localhost:3000", cookie: cookieHeader(jar) }),
+      returnHeaders: true,
+    });
+    const browser = applySetCookies(new Map(jar), signOut.headers.getSetCookie());
+    applySetCookies(browser, responseSetCookies(first));
+    applySetCookies(browser, responseSetCookies(second));
+    // Trusted from the cache, without the database, for up to 5 minutes...
+    expect((await authModule.getAuthenticatedUser(requestEvent(browser)))?.id).toBe(userId);
+    // ...but never by the routes that check the database.
+    await expect(authModule.requireSessionUser(requestEvent(browser))).rejects.toMatchObject({
+      statusCode: 401,
+    });
+  });
+
+  it("a renewal landing after sign-out and a new sign-in replaces the new token (signs out)", async () => {
+    const { jar, userId } = await signUp();
+    makeRefreshDue(jar);
+    const late = requestEvent(jar);
+    expect((await authModule.getAuthenticatedUser(late))?.id).toBe(userId);
+    await authModule.useAuth().api.signOut({
+      headers: new Headers({ host: "localhost:3000", cookie: cookieHeader(jar) }),
+    });
+    const signIn = await authModule.useAuth().api.signInEmail({
+      body: { email: memory.user![0]!.email as string, password: "a-long-enough-password" },
+      headers: new Headers({ host: "localhost:3000" }),
+      returnHeaders: true,
+    });
+    const browser = applySetCookies(new Map(), signIn.headers.getSetCookie());
+    expect((await authModule.getAuthenticatedUser(requestEvent(browser)))?.id).toBe(userId);
+    applySetCookies(browser, responseSetCookies(late));
+    // The old, deleted token is back: signed out, never someone else.
+    expect(browser.get(TOKEN)).toBe(jar.get(TOKEN));
+    expect(await authModule.getAuthenticatedUser(requestEvent(browser))).toBeNull();
   });
 
   it("would sign the user back in if the cache came with the late token (why it is held back)", async () => {

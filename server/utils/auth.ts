@@ -24,7 +24,6 @@ import { getStoredNameError } from "../../shared/display-name";
 import { useDatabase } from "./database";
 import {
   SESSION_CACHE_MAX_AGE,
-  sessionCacheSetCookies,
   sessionSetCookiesToForward,
 } from "./session-cache";
 
@@ -134,6 +133,9 @@ interface RequestAuth {
 declare module "h3" {
   interface H3EventContext {
     requestAuth?: Promise<RequestAuth>;
+    // This response already renews the session token cookie, so it must not
+    // write the cache cookie as well (`lookUpSession`).
+    sessionTokenRenewed?: boolean;
   }
 }
 
@@ -178,9 +180,11 @@ async function authenticateApiKey(
 // next requests hit the cache again. The session token cookie is passed on
 // only when Better Auth has just extended the session (once a day) and re-set
 // the very token this request sent, so an active user's cookie keeps up with
-// the session; that response holds back the new cache, so a response still in
-// flight when the user signs out can't sign them back in (see
-// `sessionSetCookiesToForward`).
+// the session. A response that renews the token never also writes the cache,
+// even from a later lookup in the same request (`requireSessionUser` looks
+// twice), so that one response landing after sign-out can't sign the user back
+// in; overlapping responses still can, for up to 5 minutes (see
+// `sessionSetCookiesToForward` for what is and isn't guaranteed).
 async function lookUpSession(event: H3Event, headers: Headers, fresh = false) {
   const auth = useAuth();
   const { headers: responseHeaders, response } = await auth.api.getSession({
@@ -189,14 +193,18 @@ async function lookUpSession(event: H3Event, headers: Headers, fresh = false) {
     returnHeaders: true,
   });
   const { sessionData, sessionToken } = (await auth.$context).authCookies;
-  const setCookies = responseHeaders.getSetCookie();
-  const forwarded = response
-    ? sessionSetCookiesToForward(setCookies, headers.get("cookie"), {
-        tokenCookieName: sessionToken.name,
-        cacheCookieName: sessionData.name,
-      })
-    : sessionCacheSetCookies(setCookies, sessionData.name);
-  for (const cookie of forwarded) appendResponseHeader(event, "set-cookie", cookie);
+  const { cookies, renewedToken } = sessionSetCookiesToForward(
+    responseHeaders.getSetCookie(),
+    // No session found: nothing to renew, only cache cookies (expiries).
+    response ? headers.get("cookie") : null,
+    {
+      tokenCookieName: sessionToken.name,
+      cacheCookieName: sessionData.name,
+      tokenAlreadyRenewed: event.context.sessionTokenRenewed,
+    },
+  );
+  if (renewedToken) event.context.sessionTokenRenewed = true;
+  for (const cookie of cookies) appendResponseHeader(event, "set-cookie", cookie);
   return response;
 }
 

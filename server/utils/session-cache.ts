@@ -18,23 +18,39 @@ interface SessionCookieNames {
   cacheCookieName: string;
 }
 
+interface ForwardOptions extends SessionCookieNames {
+  // The response already carries a token renewal (from an earlier lookup in
+  // the same request), so no new cache cookie may join it.
+  tokenAlreadyRenewed?: boolean;
+}
+
 // The `Set-Cookie` values from a session lookup that the app passes on to the
-// browser. Normally that is only the cache cookie (`sessionCacheSetCookies`).
-// When Better Auth has just extended the session in the database (its daily
+// browser, and whether one of them renews the session token cookie.
+// Normally that is only the cache cookie (`sessionCacheSetCookies`). When
+// Better Auth has just extended the session in the database (its daily
 // refresh), it also sets the session token cookie again with a new Max-Age.
 // That one is passed on only if it re-sets exactly the token the request sent
 // (`requestCookieHeader`) with a positive Max-Age, so a response can only
 // extend the cookie the browser already has, never hand it another session.
-// On that response the new cache cookie is held back (cache expiries still go
-// through): a response still in flight when the user signs out then carries
-// the token alone, which the server rejects because sign-out deleted the
-// session, rather than a token plus a cache that would be trusted without the
-// database for 5 minutes. The next request reads the database and writes the
-// cache again.
+//
+// A response that renews the token never also writes the cache (cache
+// expiries still go through; the next request writes the cache again). What
+// that guarantees: one response that lands after the user signed out can't
+// sign them back in, since it brings back only the token, which the server
+// rejects because sign-out deleted the session (a token plus a cache would be
+// trusted without the database for up to 5 minutes). What it doesn't: two
+// overlapping responses that both land after sign-out, one renewing the token
+// and one writing the cache, can together sign the user back in for up to 5
+// minutes (wherever the cache is trusted; `requireSessionUser` still checks
+// the database). Better Auth's own `/api/auth/get-session` sends both in one
+// response on the day it extends the session, so this is no complete fix.
+// Also, a renewal that lands after the user signed out and straight back in
+// replaces the new token cookie with the old, deleted one, which signs them
+// out again (it can only ever re-set the token that request sent).
 export function sessionSetCookiesToForward(
   setCookies: string[],
   requestCookieHeader: string | null | undefined,
-  { tokenCookieName, cacheCookieName }: SessionCookieNames,
+  { tokenCookieName, cacheCookieName, tokenAlreadyRenewed = false }: ForwardOptions,
 ) {
   const sentTokens = requestCookieValues(requestCookieHeader ?? "", tokenCookieName);
   const tokenRenewal = setCookies.find(
@@ -46,8 +62,12 @@ export function sessionSetCookiesToForward(
       (maxAgeOf(cookie) ?? 0) > 0,
   );
   const cache = sessionCacheSetCookies(setCookies, cacheCookieName);
-  if (!tokenRenewal) return cache;
-  return [tokenRenewal, ...cache.filter((cookie) => maxAgeOf(cookie) === 0)];
+  if (!tokenRenewal && !tokenAlreadyRenewed) return { cookies: cache, renewedToken: false };
+  const cacheExpiries = cache.filter((cookie) => maxAgeOf(cookie) === 0);
+  return {
+    cookies: tokenRenewal ? [tokenRenewal, ...cacheExpiries] : cacheExpiries,
+    renewedToken: !!tokenRenewal,
+  };
 }
 
 function isCacheCookie(name: string, cacheCookieName: string) {

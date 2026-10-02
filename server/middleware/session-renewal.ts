@@ -1,15 +1,12 @@
 import { defineEventHandler, getRequestHeader } from "h3";
 import { renewSessionCookies } from "../utils/auth";
+import { isPageLoad } from "../utils/page-load";
 
-// Page loads (a browser asking for HTML, not `/api/...` or build assets) look
-// the session up on the page request itself, so the cookies Better Auth renews
-// reach the browser with the page (`renewSessionCookies`). API routes already
-// pass them on when they look the session up.
+// Page loads look the session up on the page request itself, so the cookies
+// Better Auth renews reach the browser with the page (`renewSessionCookies`).
+// API routes already pass them on when they look the session up.
 export default defineEventHandler(async (event) => {
-  if (event.method !== "GET") return;
-  const path = event.path;
-  if (path.startsWith("/api/") || path.startsWith("/_nuxt/") || path.startsWith("/__"))
+  if (!isPageLoad(event.method, event.path, (name) => getRequestHeader(event, name)))
     return;
-  if (!getRequestHeader(event, "accept")?.includes("text/html")) return;
   await renewSessionCookies(event);
 });
