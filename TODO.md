@@ -6,6 +6,9 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 
 - Include source in global system drop down.
 - Evaluate if switching to the edge optimized neon driver or the http interface would improve db speed (our main bottleneck)
+- Bug: Resources not populating in drop downs after being created without a hard refresh.
+- Bug: Resources that do not belong to a user marked as "You" as source in drop down.
+- Feature: Redesign UI to be warmer and more inviting; more apropriate to playing TTRPGs. During this process we will remove light/dark mode and have the site use one unified (mostly light mode) theme. The reason for this is that character sheet designers should have a consistant sitewide theme to make their designs fit within. Authoring sheets will also be easier in general with dark and light.
 
 # In progress
 
