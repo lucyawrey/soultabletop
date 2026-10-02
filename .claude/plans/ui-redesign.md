@@ -79,7 +79,8 @@ The user asked for these to be designed before the shell is built (2026-10-02). 
 **Decided with the user (2026-10-02):**
 
 - **Landing: option 1** (the split: heading and intro beside the sign-in / create-account card), using the team copy.
-- **Signed-out navigation: the sidebar**, with one **Browse** group (Content, Characters, Sheets, Types, Systems) instead of Play and Build, which appear only when signed in. Sign in sits at the bottom of the sidebar, except on the landing page, which already has the form.
+  - **Changed from the mockup (user, 2026-10-02):** on large screens the hero and the card stay together as one block, centered horizontally and vertically, instead of sitting at the top and spreading to the page's edges.
+- **Signed-out navigation: the sidebar**, with one **Browse** group (Content, Characters, Sheets, Types, Systems) instead of Play and Build, which appear only when signed in. Sign in sits at the bottom of the sidebar, except on the landing page, which already has the form. List page eyebrows name the sidebar group, so they read Browse when signed out.
 - **Dashboard: option 2, refined.** The Continue card for the most recently edited item, then **Campaigns, Characters, and Content as matching card rows** (one shared card design: initial or image, name, a detail line; GM/Player and system for campaigns, content type and system for characters and content), each with View all. Needs `GET /api/dashboard` to return the system and content type names and the campaign role.
 - **New users get a first-visit heading:** a new copy key (e.g. `dashboard.newHeading`, in `content/copy.yml`, `shared/yaml.d.ts`, and `shared/copy.test.ts`) with a team placeholder, shown while the user has nothing yet, plus the welcome text placeholder and the start cards.
 
