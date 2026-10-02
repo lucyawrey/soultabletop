@@ -19,7 +19,7 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 
 /* Direction A: Vellum. Warm parchment, iron-gall ink, oxblood. */
 .app[data-dir="vellum"] {
-  --bg: #f3ead8; --surface: #fbf6ec; --surface-2: #ece0c8; --line: #d9c9a8;
+  --bg: #f3ead8; --surface: #fbf6ec; --surface-2: #ece0c8; --line: #d9c9a8; --line-strong: #8c7a62;
   --fg: #2a1f16; --muted: #6e5a45;
   --primary: #8a2a26; --primary-hover: #74211e; --on-primary: #fdf5ea; --primary-soft: #f0d9cf;
   --accent: #3f5b4b; --accent-soft: #dbe3d6;
@@ -31,7 +31,7 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 }
 /* Direction B: Map Room. Cool sage paper, deep teal, brass, inscriptional caps. */
 .app[data-dir="maproom"] {
-  --bg: #e9ebe2; --surface: #f6f7f1; --surface-2: #dde1d3; --line: #c5cbb8;
+  --bg: #e9ebe2; --surface: #f6f7f1; --surface-2: #dde1d3; --line: #c5cbb8; --line-strong: #768074;
   --fg: #1e2622; --muted: #56625a;
   --primary: #1f5547; --primary-hover: #17443a; --on-primary: #f2f6ef; --primary-soft: #d3e3dc;
   --accent: #7a5a14; --accent-soft: #efe3c4;
@@ -43,7 +43,7 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 }
 /* Direction C: Grimoire. Bright page, deep indigo ink, gilt accents. */
 .app[data-dir="grimoire"] {
-  --bg: #f8f6f1; --surface: #ffffff; --surface-2: #efebe1; --line: #ddd6c6;
+  --bg: #f8f6f1; --surface: #ffffff; --surface-2: #efebe1; --line: #ddd6c6; --line-strong: #858092;
   --fg: #1f1d2b; --muted: #5d5a6e;
   --primary: #33357a; --primary-hover: #282a63; --on-primary: #f7f5ff; --primary-soft: #e0e0f2;
   --accent: #765a14; --accent-soft: #f3e8c8;
@@ -57,7 +57,7 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 /* Direction D: Folio. Between Vellum and Grimoire: a lightly warm page on white panels,
    plum ink (oxblood meeting indigo), gilt accents, Cormorant headings, medium corners. */
 .app[data-dir="folio"] {
-  --bg: #f6f1e7; --surface: #fffdf8; --surface-2: #efe7d8; --line: #ddd2bf;
+  --bg: #f6f1e7; --surface: #fffdf8; --surface-2: #efe7d8; --line: #ddd2bf; --line-strong: #8a7f72;
   --fg: #251f2a; --muted: #625869;
   --primary: #6b2d4e; --primary-hover: #57233f; --on-primary: #fdf6f9; --primary-soft: #f1dfe7;
   --accent: #765a14; --accent-soft: #f2e7c9;
@@ -102,10 +102,11 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 .topnav { display: flex; gap: 2px; flex-wrap: wrap; flex: 1; min-width: 0; }
 .navlink { color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: var(--radius); font-weight: 500; display: flex; align-items: center; gap: 8px; }
 .navlink:hover { color: var(--fg); background: var(--surface-2); }
-.navlink[aria-current="page"] { color: var(--primary); background: var(--primary-soft); }
+.navlink[aria-current="page"] { color: var(--primary); background: var(--primary-soft); font-weight: 700; box-shadow: inset 0 -2px 0 var(--primary); }
+.app[data-layout="sidebar"] .navlink[aria-current="page"] { box-shadow: inset 3px 0 0 var(--primary); }
 .topnav .navlink svg { display: none; }
 .right { display: flex; align-items: center; gap: 10px; }
-.sys-select { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--bg); border-radius: var(--radius); padding: 6px 10px; font-size: 14px; color: var(--fg); }
+.sys-select { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: var(--bg); border-radius: var(--radius); padding: 6px 10px; font-size: 14px; color: var(--fg); }
 .sys-select small { color: var(--muted); font-size: 12px; }
 .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
 
@@ -130,13 +131,13 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 .ornament-rule span { color: var(--accent); }
 
 .btn { font: 600 14px/1 var(--body); display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; text-decoration: none; }
-.btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.app :is(a, button, input, select, [tabindex]):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .btn-primary { background: var(--primary); color: var(--on-primary); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18); }
 .btn-primary:hover { background: var(--primary-hover); }
-.btn-outline { background: var(--surface); color: var(--fg); border-color: var(--line); }
+.btn-outline { background: var(--surface); color: var(--fg); border-color: var(--line-strong); }
 .btn-outline:hover { background: var(--surface-2); }
-.btn-danger { background: var(--surface); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
-.btn-ghost { background: transparent; color: var(--muted); padding: 6px 8px; }
+.btn-danger { background: var(--surface); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 60%, var(--line-strong)); }
+.btn-ghost { background: transparent; color: var(--muted); padding: 8px; min-width: 32px; min-height: 32px; justify-content: center; }
 .btn-ghost:hover { background: var(--surface-2); color: var(--fg); }
 .btn-link { background: none; color: var(--muted); padding: 0; font-weight: 500; }
 
@@ -145,11 +146,11 @@ body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "So
 .tab { padding: 6px 2px 9px; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .tab[aria-selected="true"] { color: var(--primary); border-color: var(--primary); }
 .toolbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.viewtoggle { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 2px; }
-.viewtoggle button { border: 0; background: transparent; color: var(--muted); padding: 6px 8px; border-radius: calc(var(--radius) - 2px); cursor: pointer; display: grid; place-items: center; }
-.viewtoggle button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); }
+.viewtoggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); padding: 2px; }
+.viewtoggle button { border: 0; background: transparent; color: var(--muted); padding: 8px; min-width: 34px; min-height: 34px; border-radius: calc(var(--radius) - 2px); cursor: pointer; display: grid; place-items: center; }
+.viewtoggle button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
 .viewtoggle button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
-.search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 8px 10px; min-width: 0; width: min(320px, 100%); color: var(--muted); font-size: 14px; }
+.search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--radius); padding: 8px 10px; min-width: 0; width: min(320px, 100%); color: var(--muted); font-size: 14px; }
 
 .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; line-height: 1.2; white-space: nowrap; }
 .b-official { background: var(--primary); color: var(--on-primary); }
@@ -174,7 +175,7 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; align-content: start; position: relative; }
 .card:hover { border-color: color-mix(in srgb, var(--primary) 40%, var(--line)); }
-.card h3 { margin: 0; font: var(--display-weight) 21px/1.15 var(--display); letter-spacing: var(--display-track); }
+.card h3 { margin: 0; font: var(--display-weight) 22px/1.15 var(--display); letter-spacing: var(--display-track); }
 .card .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .card .foot { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; font-variant-numeric: tabular-nums; }
 .card .more { position: absolute; top: 10px; right: 8px; }
@@ -213,17 +214,28 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
 .field label i { color: var(--danger); font-style: normal; }
 .field .hint { font-size: 13px; color: var(--muted); }
 .field .ok { font-size: 13px; color: var(--accent); font-weight: 600; }
-.input { font: 15px var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 9px 11px; width: 100%; box-sizing: border-box; }
+.input { font: 15px var(--body); color: var(--fg); background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 9px 11px; width: 100%; box-sizing: border-box; }
 .input:focus { outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent); border-color: var(--primary); }
 .input.mono { font-family: var(--mono); font-size: 14px; }
 .radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.radio { flex: 1; min-width: 150px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 2px; font-size: 14px; background: var(--bg); }
+.radio { flex: 1; min-width: 150px; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 2px; font-size: 14px; background: var(--bg); }
 .radio b { display: flex; align-items: center; gap: 6px; }
 .radio span { color: var(--muted); font-size: 13px; }
 .radio[data-on="true"] { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); background: var(--surface); }
-.radio .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); display: inline-block; box-sizing: border-box; }
+.radio .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-strong); display: inline-block; box-sizing: border-box; }
 .radio[data-on="true"] .dot { border: 4px solid var(--primary); }
 
+.audit { background: var(--chrome-card); border: 1px solid var(--chrome-line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 10px; }
+.audit h2 { margin: 0; font: 600 17px/1.2 "Source Sans 3", sans-serif; }
+.audit p { margin: 0; color: var(--chrome-muted); font-size: 14px; max-width: 75ch; }
+.audit-scroll { overflow-x: auto; }
+.audit table { min-width: 560px; font-size: 14px; }
+.audit th { background: transparent; color: var(--chrome-muted); padding: 6px 10px; border-color: var(--chrome-line); }
+.audit td { padding: 6px 10px; border-color: var(--chrome-line); }
+.audit td.ratio { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; }
+.audit .chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 13px; border: 1px solid rgb(0 0 0 / .08); }
+.pass { color: #1f6b3a; font-weight: 700; }
+.fail { color: #a3271f; font-weight: 700; }
 .view[hidden] { display: none !important; }
 
 @media (max-width: 860px) {
@@ -464,6 +476,12 @@ td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14p
       </main>
     </div>
   </div>
+
+  <section class="audit" aria-labelledby="audit-h">
+    <h2 id="audit-h">Contrast check: <span id="audit-dir"></span></h2>
+    <p>Calculated live from the selected direction's colors. Text needs 4.5:1 (AA) and control outlines and state markers need 3:1 (WCAG 1.4.11). Dividers aren't listed because they're decorative. The current nav item and pressed toggles are also marked by weight, a bar, or a solid fill, so their state never depends on color alone.</p>
+    <div class="audit-scroll"><table><thead><tr><th>Sample</th><th>Used for</th><th>Ratio</th><th>Needs</th><th>Result</th></tr></thead><tbody id="audit-rows"></tbody></table></div>
+  </section>
 </div>
 
 <script>
@@ -512,4 +530,50 @@ document.querySelector(".viewtoggle").addEventListener("click", (e) => {
   btn.parentElement.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
   document.querySelectorAll("[data-list]").forEach((el) => (el.hidden = el.dataset.list !== btn.dataset.v));
 });
+const pairs = [
+  ["fg", "bg", "Body text on the page", 4.5],
+  ["fg", "surface", "Body text on panels", 4.5],
+  ["muted", "surface", "Secondary text, hints", 4.5],
+  ["muted", "surface-2", "Table headers, Community badge", 4.5],
+  ["primary", "surface", "Links, active tab", 4.5],
+  ["primary", "primary-soft", "Current nav item", 4.5],
+  ["on-primary", "primary", "Solid buttons, Official badge", 4.5],
+  ["on-primary", "primary-hover", "Solid buttons on hover", 4.5],
+  ["accent", "accent-soft", "Public badge", 4.5],
+  ["accent", "surface", "Available hint, icons", 4.5],
+  ["danger", "surface", "Delete button, errors", 4.5],
+  ["line-strong", "surface", "Input and control outlines", 3],
+  ["line-strong", "bg", "Control outlines on the page", 3],
+  ["primary", "surface", "Focus ring, selected radio", 3],
+];
+function lum(rgb) {
+  const c = rgb.match(/\d+(\.\d+)?/g).slice(0, 3).map((x) => {
+    x = Number(x) / 255;
+    return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+const probe = document.createElement("span");
+probe.style.transition = "none"; // read final colors, not mid-transition
+app.appendChild(probe);
+function colorOf(token) {
+  probe.style.color = `var(--${token})`;
+  return getComputedStyle(probe).color;
+}
+const names = { vellum: "A · Vellum", maproom: "B · Map Room", grimoire: "C · Grimoire", folio: "D · Folio" };
+function audit() {
+  document.getElementById("audit-dir").textContent = names[app.dataset.dir];
+  document.getElementById("audit-rows").innerHTML = pairs.map(([f, b, use, need]) => {
+    const fc = colorOf(f), bc = colorOf(b);
+    const [hi, lo] = [lum(fc), lum(bc)].sort((x, y) => y - x);
+    const ratio = (hi + 0.05) / (lo + 0.05);
+    const ok = ratio >= need;
+    const sample = need === 3
+      ? `<span class="chip" style="background:${bc};color:${fc};border:2px solid ${fc}">Outline</span>`
+      : `<span class="chip" style="background:${bc};color:${fc}">Aa text</span>`;
+    return `<tr><td>${sample}</td><td>${use}</td><td class="ratio">${ratio.toFixed(2)}:1</td><td class="ratio">${need}:1</td><td class="${ok ? "pass" : "fail"}">${ok ? (need === 4.5 && ratio >= 7 ? "AAA" : "Pass") : "Fail"}</td></tr>`;
+  }).join("");
+}
+audit();
+document.querySelector('[data-ctl="dir"]').addEventListener("click", () => requestAnimationFrame(audit));
 </script>
