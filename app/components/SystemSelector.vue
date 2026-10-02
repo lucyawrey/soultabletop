@@ -38,7 +38,7 @@ const selected = computed({
     :items="items"
     size="md"
     aria-label="Current system"
-    :ui="{ base: 'h-[35px] bg-(--st-page) text-sm text-default', trailingIcon: 'size-3.5 text-default' }"
+    :ui="{ base: 'h-[35px] bg-(--st-page) text-sm text-highlighted', trailingIcon: 'size-3.5 text-default' }"
   >
     <template #item-label="{ item }">
       <ResourceOption :option="item as ResourceOptionItem" />

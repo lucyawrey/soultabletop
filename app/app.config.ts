@@ -13,11 +13,21 @@ export default defineAppConfig({
         // Roomier rows, and small uppercase group labels like the mockup.
         link: "px-2.5 py-1.5 text-[15px] gap-2",
         separator: "hidden",
-        linkLeadingIcon: "size-4",
-        label: "px-2.5 pb-1 text-[11px] font-bold tracking-widest text-muted uppercase",
+        // Groups (Play, Build) are separate lists; rows and groups are spaced
+        // like the mockup.
+        list: "flex flex-col gap-0.5 not-first:mt-[18px]",
+        linkLeadingIcon: "size-[17px]",
+        label: "px-2.5 pt-0 pb-1 text-[11px]/[16.5px] font-bold tracking-widest text-muted uppercase",
       },
       // The current page is a solid primary pill, not Nuxt UI's tinted one.
       compoundVariants: [
+        // Other items' icons take the label's color, as in the mockup, not
+        // Nuxt UI's lighter `text-dimmed`.
+        {
+          orientation: "vertical" as const,
+          active: false,
+          class: { linkLeadingIcon: "text-muted group-hover:text-default" },
+        },
         {
           orientation: "vertical" as const,
           variant: "pill" as const,

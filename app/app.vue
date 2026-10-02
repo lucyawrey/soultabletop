@@ -76,17 +76,21 @@ watch(
 
 <template>
   <UApp>
-    <UDashboardGroup class="print:block print:h-auto">
+    <!-- A fixed 232px sidebar, as in the mockup. The storage key is new so a
+         size saved under the old percent widths isn't read as pixels. -->
+    <UDashboardGroup unit="px" storage-key="sidebar" class="print:block print:h-auto">
       <UDashboardSidebar
         v-model:collapsed="collapsed"
         collapsible
-                :min-size="14"
-        :default-size="18"
-        :max-size="22"
+        :min-size="232"
+        :default-size="232"
+        :max-size="232"
         class="print:hidden"
         :ui="{
           root: 'bg-default border-e border-default',
-          header: 'h-auto flex-col items-stretch gap-[18px] px-3.5 pt-[18px] pb-0',
+          // A wrapping row: the brand line (with the drawer's close button on
+          // phones), then the system picker on a line of its own.
+          header: 'h-auto flex-wrap items-center gap-x-1.5 gap-y-[18px] px-3.5 pt-[18px] pb-0',
           body: 'gap-[18px] px-3.5 pt-[18px]',
           // Empty on the signed-out landing page, so hidden there.
           footer: loggedIn || showSignIn ? 'mx-3.5 border-t border-default px-0 py-2.5' : 'hidden',
@@ -94,20 +98,22 @@ watch(
       >
         <template #header="{ collapsed: isCollapsed }">
           <div
-            class="flex w-full items-center gap-2"
+            class="flex min-w-0 flex-1 items-center gap-2"
             :class="isCollapsed ? 'justify-center' : 'justify-between'"
           >
             <NuxtLink
               v-if="!isCollapsed"
               to="/"
-              class="-ms-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
+              class="-m-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
             >
-              <UIcon name="i-lucide-dices" class="size-5 text-primary" />
+              <UIcon name="i-lucide-dices" class="size-[22px] text-primary" />
               <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
             </NuxtLink>
-            <!-- One toggle for both states; phones use the drawer instead. -->
+            <!-- One toggle for both states; phones use the drawer instead.
+                 Negative margins keep the row the brand's 22px, as in the
+                 mockup. -->
             <UButton
-              class="hidden lg:inline-flex"
+              class="-my-1.5 hidden lg:inline-flex"
               color="neutral"
               variant="ghost"
               size="sm"
@@ -122,7 +128,7 @@ watch(
                bookmark (the mockup). The drawer on phones keeps it inside. -->
           <SystemSelector
             v-if="!isCollapsed"
-            class="relative z-10 w-full lg:w-[calc(100%+1.375rem)]"
+            class="relative z-10 shrink-0 basis-full lg:basis-[calc(100%+1.375rem)]"
           />
         </template>
 
