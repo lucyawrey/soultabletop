@@ -125,8 +125,12 @@ async function save() {
       },
     });
     // The display name is Better Auth's `user.name`, read from the session, so
-    // refresh the session too: the header menu shows both.
-    const [, fresh] = await Promise.all([refresh(), authClient.getSession()]);
+    // refresh the session too: the header menu shows both. Past the cookie
+    // cache, which still has the old name, and that also rewrites the cache.
+    const [, fresh] = await Promise.all([
+      refresh(),
+      authClient.getSession({ query: { disableCookieCache: true } }),
+    ]);
     if (fresh.data) {
       authClient.hydrateSession(fresh.data);
       // `useAuthSession` reads through its own fetch, so set its data too.
