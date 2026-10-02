@@ -489,7 +489,13 @@ function formatUpdated(updatedAt: string) {
         :description="errorMessage"
       />
 
-      <TableSkeleton v-if="dashboardLoading" :rows="3" />
+      <!-- Placeholder card rows, as in the sections below. -->
+      <div v-if="dashboardLoading" class="space-y-5">
+        <section v-for="section in 2" :key="section" class="space-y-2.5">
+          <div aria-hidden="true" class="h-7 w-40 animate-pulse rounded-md bg-elevated" />
+          <CardSkeleton variant="recent" :cards="4" />
+        </section>
+      </div>
 
       <template v-else-if="isNewUser">
         <div class="rounded-lg border-2 border-dashed border-accented px-[18px] py-4">
@@ -555,7 +561,7 @@ function formatUpdated(updatedAt: string) {
             No {{ section.title.toLowerCase() }} yet.
             <NuxtLink
               :to="{ path: section.path, query: { new: '1' } }"
-              class="text-primary hover:underline"
+              class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
             >
               Create one.
             </NuxtLink>

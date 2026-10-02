@@ -54,7 +54,7 @@ const columns: TableColumn<ContentTypeItem>[] = [
   { accessorKey: "systemId", header: "System" },
   { accessorKey: "contentCategory", header: "Category" },
   { accessorKey: "hasStrictSchema", header: "Strict Schema" },
-  { id: "actions" },
+  actionsColumn(),
 ];
 
 const isFormOpen = ref(false);

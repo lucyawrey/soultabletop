@@ -14,30 +14,27 @@ const props = defineProps<{
 const emit = defineEmits<{ edit: []; delete: [] }>();
 
 const items = computed(() => {
-  const groups: DropdownMenuItem[][] = [
-    [{ label: "View", icon: "i-lucide-eye", to: props.viewTo }],
+  // View and Edit in one group; Delete set apart below a divider.
+  const actions: DropdownMenuItem[] = [
+    { label: "View", icon: "i-lucide-eye", to: props.viewTo },
   ];
-  if (props.canEdit)
-    groups.push(
-      [
-        props.editTo
-          ? { label: "Edit", icon: "i-lucide-pencil", to: props.editTo }
-          : {
-              label: "Edit",
-              icon: "i-lucide-pencil",
-              onSelect: () => emit("edit"),
-            },
-      ],
-      [
-        {
-          label: "Delete",
-          icon: "i-lucide-trash",
-          color: "error" as const,
-          onSelect: () => emit("delete"),
-        },
-      ],
-    );
-  return groups;
+  if (!props.canEdit) return [actions];
+  actions.push(
+    props.editTo
+      ? { label: "Edit", icon: "i-lucide-pencil", to: props.editTo }
+      : { label: "Edit", icon: "i-lucide-pencil", onSelect: () => emit("edit") },
+  );
+  return [
+    actions,
+    [
+      {
+        label: "Delete",
+        icon: "i-lucide-trash",
+        color: "error" as const,
+        onSelect: () => emit("delete"),
+      },
+    ],
+  ];
 });
 </script>
 

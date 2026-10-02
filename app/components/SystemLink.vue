@@ -11,7 +11,7 @@ const system = computed(() => findSystem(props.systemId));
   <NuxtLink
     v-if="system"
     :to="`/systems/${system.id}`"
-    class="text-primary hover:underline"
+    class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
   >
     {{ system.name }}
   </NuxtLink>

@@ -50,7 +50,7 @@ const columns: TableColumn<ApiKeyItem>[] = [
     header: "Last Used",
     cell: ({ row }) => formatDate(row.original.lastUsedAt) || "Never",
   },
-  { id: "actions" },
+  actionsColumn(),
 ];
 
 const accessOptions = API_KEY_ACCESS.map((value) => ({
@@ -176,7 +176,8 @@ async function remove() {
       :description="extractApiErrorMessage(listError, 'Could not load API keys.')"
     />
 
-    <UTable :data="keys" :columns="columns">
+    <!-- Focusable, so the keyboard can scroll it sideways on phones. -->
+    <UTable :data="keys" :columns="columns" tabindex="0" aria-label="API keys">
       <template #start-cell="{ row }">
         <code class="text-xs">{{ row.original.start }}…</code>
       </template>

@@ -80,7 +80,7 @@ const columns: TableColumn<ContentItem>[] = [
     header: "Updated",
     cell: ({ row }) => formatShortDate(row.original.updatedAt),
   },
-  { id: "actions" },
+  actionsColumn(),
 ];
 
 const isFormOpen = ref(false);
@@ -242,7 +242,7 @@ async function remove() {
         <NuxtLink
           v-if="standardContentTypes.some((item) => item.id === row.original.contentTypeId)"
           :to="`/types/${row.original.contentTypeId}`"
-          class="text-primary hover:underline"
+          class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
         >
           {{ contentTypeName(row.original.contentTypeId) }}
         </NuxtLink>
@@ -291,7 +291,7 @@ async function remove() {
             <NuxtLink
               v-if="standardContentTypes.some((type) => type.id === item.contentTypeId)"
               :to="`/types/${item.contentTypeId}`"
-              class="text-primary hover:underline"
+              class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
             >
               {{ contentTypeName(item.contentTypeId) }}
             </NuxtLink>
