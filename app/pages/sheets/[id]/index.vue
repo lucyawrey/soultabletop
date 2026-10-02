@@ -10,6 +10,7 @@ interface SheetDetail {
   id: string;
   readableId: string;
   ownerReadableId: string | null;
+  ownerGroupId: string | null;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -46,10 +47,12 @@ if (!sheet.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeOption[]>(
+const { data: contentTypes } = await useLazyFetch<ContentTypeOption[]>(
   "/api/content-type",
   { default: () => [] },
 );
+// For the About panel.
+const { findSystem } = useSystems();
 const contentType = computed(() =>
   contentTypes.value.find((item) => item.id === sheet.value?.contentTypeId),
 );
@@ -107,41 +110,28 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <UButton
-      to="/sheets"
-      icon="i-lucide-arrow-left"
-      color="neutral"
-      variant="link"
-      size="sm"
-    >
-      Back to Sheets
-    </UButton>
-
     <template v-if="sheet">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
-            {{ sheet.name }}
-            <ReadableIdBadge :readable-id="sheet.readableId" />
-            <UBadge v-if="sheet.isDefault" variant="subtle">Default</UBadge>
-          </h1>
-          <p class="text-sm text-muted">
-            {{ visibilityLabel(sheet.isPubliclyReadable) }} ·
-            <SystemLink :system-id="sheet.systemId" /> ·
-            <LookupSkeleton
-              v-if="!contentType && isLoading(contentTypesStatus)"
-            />
-            <NuxtLink
-              v-else-if="contentType"
-              :to="`/types/${contentType.id}`"
-              class="hover:underline"
-            >
-              {{ contentType.name }}
-            </NuxtLink>
-            · Updated {{ new Date(sheet.updatedAt).toLocaleString() }}
-          </p>
-        </div>
-        <div v-if="sheet.canEdit" class="flex gap-2">
+      <DetailHeader
+        back-to="/sheets"
+        back-label="Back to Sheets"
+        eyebrow="Sheet"
+        :title="sheet.name"
+      >
+        <template #meta>
+          <ReadableIdBadge
+            :readable-id="sheet.readableId"
+            :owner="sheet.ownerReadableId"
+          />
+          <VisibilityBadge :is-publicly-readable="sheet.isPubliclyReadable" />
+          <UBadge
+            v-if="sheet.isDefault"
+            variant="subtle"
+            class="rounded-full font-bold ring-0"
+          >
+            Default
+          </UBadge>
+        </template>
+        <template v-if="sheet.canEdit" #actions>
           <UButton
             :to="`/sheets/${id}/edit`"
             icon="i-lucide-pencil"
@@ -161,10 +151,17 @@ async function remove() {
           >
             Delete
           </UButton>
-        </div>
-      </div>
+        </template>
+      </DetailHeader>
 
-      <UTabs v-model="tab" :items="tabs" :unmount-on-hide="false">
+      <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <UTabs
+          v-model="tab"
+          :items="tabs"
+          variant="link"
+          :unmount-on-hide="false"
+          class="min-w-0"
+        >
         <template #preview>
           <div class="space-y-4 pt-2">
             <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -226,7 +223,20 @@ async function remove() {
             <p class="py-6 text-center text-sm text-muted">No CSS yet.</p>
           </UCard>
         </template>
-      </UTabs>
+        </UTabs>
+
+        <AboutPanel
+          :facts="[
+            { label: 'Owner', value: ownerLabel(sheet) },
+            { label: 'ID', value: sheet.readableId, mono: true },
+            { label: 'Visibility', value: visibilityLabel(sheet.isPubliclyReadable) },
+            { label: 'System', value: findSystem(sheet.systemId)?.name },
+            { label: 'Content type', value: contentType?.name },
+            { label: 'Default', value: sheet.isDefault ? 'Yes' : 'No' },
+            { label: 'Updated', value: formatShortDate(sheet.updatedAt) },
+          ]"
+        />
+      </div>
     </template>
 
     <UModal

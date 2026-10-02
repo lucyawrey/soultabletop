@@ -8,12 +8,12 @@ defineProps<{ title: string }>();
 <template>
   <section class="rounded-lg border border-default bg-default">
     <header
-      class="flex items-center justify-between gap-3 border-b border-default px-[18px] py-3.5"
+      class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-[18px] py-3.5"
     >
       <h2 class="font-display text-[22px] leading-tight font-bold text-highlighted">
         {{ title }}
       </h2>
-      <div v-if="$slots.actions" class="flex shrink-0 items-center gap-2">
+      <div v-if="$slots.actions" class="flex flex-wrap items-center gap-2">
         <slot name="actions" />
       </div>
     </header>

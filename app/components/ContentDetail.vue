@@ -92,7 +92,7 @@ if (!item.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<NamedItem[]>(
+const { data: contentTypes } = await useLazyFetch<NamedItem[]>(
   "/api/content-type",
   { default: () => [] },
 );
@@ -316,67 +316,75 @@ async function remove() {
     deleteBusy.value = false;
   }
 }
+
+function printPage() {
+  window.print();
+}
 </script>
 
 <template>
   <PageContainer>
-    <UButton
-      :to="listPath"
-      icon="i-lucide-arrow-left"
-      color="neutral"
-      variant="link"
-      size="sm"
-    >
-      Back to {{ listLabel }}
-    </UButton>
-
     <template v-if="item">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
-            {{ item.name }}
-            <ReadableIdBadge :readable-id="item.readableId" />
-          </h1>
-          <p class="text-sm text-muted">
-            {{ visibilityLabel(item.isPubliclyReadable) }} ·
-            <SystemLink :system-id="item.systemId" /> ·
-            <LookupSkeleton
-              v-if="!contentType && isLoading(contentTypesStatus)"
-            />
-            <NuxtLink
-              v-else-if="contentType"
-              :to="`/types/${contentType.id}`"
-              class="hover:underline"
-            >
-              {{ contentType.name }}
-            </NuxtLink>
-            · Updated {{ new Date(item.updatedAt).toLocaleString() }}
-          </p>
-        </div>
-        <div v-if="item.canEdit" class="flex gap-2">
+      <DetailHeader
+        :back-to="listPath"
+        :back-label="`Back to ${listLabel}`"
+        :eyebrow="label"
+        :title="item.name"
+      >
+        <template #meta>
+          <ReadableIdBadge
+            :readable-id="item.readableId"
+            :owner="item.ownerReadableId"
+          />
+          <VisibilityBadge :is-publicly-readable="item.isPubliclyReadable" />
+          <UBadge
+            v-if="contentType"
+            color="neutral"
+            variant="subtle"
+            class="rounded-full font-bold ring-0"
+          >
+            {{ contentType.name }}
+          </UBadge>
+          <span class="text-sm text-muted">
+            <SystemLink :system-id="item.systemId" />
+            · Updated {{ formatShortDate(item.updatedAt) }}
+          </span>
+        </template>
+        <template #actions>
+          <!-- Print shows just the sheet (the app chrome hides itself). -->
           <UButton
-            icon="i-lucide-settings"
+            icon="i-lucide-printer"
             color="neutral"
             variant="outline"
-            @click="openEdit"
+            @click="printPage"
           >
-            Settings
+            Print
           </UButton>
-          <UButton
-            icon="i-lucide-trash"
-            color="error"
-            variant="outline"
-            @click="
-              deleteError = '';
-              isDeleteOpen = true;
-            "
-          >
-            Delete
-          </UButton>
-        </div>
-      </div>
+          <template v-if="item.canEdit">
+            <UButton
+              icon="i-lucide-settings"
+              color="neutral"
+              variant="outline"
+              @click="openEdit"
+            >
+              Settings
+            </UButton>
+            <UButton
+              icon="i-lucide-trash"
+              color="error"
+              variant="outline"
+              @click="
+                deleteError = '';
+                isDeleteOpen = true;
+              "
+            >
+              Delete
+            </UButton>
+          </template>
+        </template>
+      </DetailHeader>
 
-      <div class="flex flex-wrap items-center justify-between gap-4 text-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4 text-sm print:hidden">
         <div v-if="item.canEdit" class="flex flex-wrap items-center gap-4">
           <USwitch v-model="editMode" label="Edit Fields" />
           <USwitch v-model="autosave" label="Autosave" />
@@ -437,7 +445,7 @@ async function remove() {
             saveStatus === 'error' ||
             saveStatus === 'conflict')
         "
-        class="sticky bottom-[env(safe-area-inset-bottom,0px)] z-10"
+        class="sticky bottom-[env(safe-area-inset-bottom,0px)] z-10 print:hidden"
       >
         <UAlert
           v-if="saveStatus === 'conflict'"

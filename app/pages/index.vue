@@ -353,8 +353,8 @@ function formatUpdated(updatedAt: string) {
       <UPageCard class="w-full max-w-sm shadow-lg shadow-black/5">
         <UAuthForm
           ref="authForm"
-          :ui="{ title: 'font-display text-[32px] leading-tight font-bold' }"
           :key="mode"
+          :ui="{ title: 'font-display text-[32px] leading-tight font-bold' }"
           :fields="fields"
           :title="isRegistering ? 'Create an account' : 'Sign in'"
           :submit="{

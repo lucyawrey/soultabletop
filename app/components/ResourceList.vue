@@ -35,11 +35,6 @@ const tabs = computed(() => [
         :content="false"
         variant="link"
         class="w-full sm:w-auto"
-        :ui="{
-          list: 'w-auto gap-[18px] p-0',
-          trigger: 'px-0.5 pt-1.5 pb-[9px] text-[15px] font-semibold',
-          indicator: 'h-0.5',
-        }"
         @update:model-value="list.setTab($event as ResourceListTab)"
       />
 

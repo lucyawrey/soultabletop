@@ -37,6 +37,19 @@ export default defineAppConfig({
         })),
       ],
     },
+    tabs: {
+      // Link tabs are the mockup's underline tabs: 18px apart, semibold, with
+      // a 2px indicator.
+      variants: {
+        variant: {
+          link: {
+            list: "w-auto gap-[18px] p-0",
+            trigger: "px-0.5 pt-1.5 pb-[9px] text-[15px] font-semibold",
+            indicator: "h-0.5",
+          },
+        },
+      },
+    },
     modal: {
       slots: {
         // A display-font title over a divider, and a footer on the page tone.
