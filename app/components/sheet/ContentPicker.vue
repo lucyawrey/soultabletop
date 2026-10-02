@@ -47,9 +47,13 @@ const items = computed(() =>
 
 // The list leaves out each content's data, so the picked one's is loaded here.
 const toast = useToast();
+// The picker is disabled while that request runs, so picks can't overlap or
+// arrive out of order.
+const picking = ref(false);
 async function select(id: unknown) {
   const item = options.value.find((option) => option.id === id);
-  if (!item) return;
+  if (!item || picking.value) return;
+  picking.value = true;
   try {
     const { data } = await $fetch<{ data: Record<string, unknown> }>(
       `/api/content/${item.id}`,
@@ -64,6 +68,8 @@ async function select(id: unknown) {
       title: extractApiErrorMessage(error, "Could not load content."),
       color: "error",
     });
+  } finally {
+    picking.value = false;
   }
 }
 </script>
@@ -73,7 +79,8 @@ async function select(id: unknown) {
     :model-value="modelValue"
     :items="items"
     value-key="value"
-    :loading="loading"
+    :loading="loading || picking"
+    :disabled="picking"
     :placeholder="placeholder ?? 'Choose…'"
     class="w-full"
     @update:open="load"

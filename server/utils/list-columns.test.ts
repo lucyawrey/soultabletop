@@ -1,44 +1,40 @@
 import { getTableColumns } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { describe, expect, it } from "vitest";
 import { content, contentType, sheet } from "../database/schema";
 import {
-  CONTENT_LIST_OMITTED,
-  CONTENT_TYPE_LIST_OMITTED,
-  SHEET_LIST_OMITTED,
   contentListColumns,
   contentTypeListColumns,
   sheetListColumns,
 } from "./list-columns";
 
-function check(
-  table: Parameters<typeof getTableColumns>[0],
-  kept: Record<string, unknown>,
-  omitted: readonly string[],
-) {
-  const all = Object.keys(getTableColumns(table));
-  expect(Object.keys(kept).sort()).toEqual(
-    all.filter((name) => !omitted.includes(name)).sort(),
-  );
-  for (const name of omitted) expect(kept).not.toHaveProperty(name);
-}
+// A query builder with no connection: only builds SQL.
+const db = drizzle.mock();
+
+// The heavy columns each list leaves out; every other column must stay.
+const cases = [
+  { name: "sheet", table: sheet, kept: sheetListColumns, heavy: ["markup", "cssStyles"] },
+  { name: "content type", table: contentType, kept: contentTypeListColumns, heavy: ["schema"] },
+  { name: "content", table: content, kept: contentListColumns, heavy: ["data"] },
+];
 
 describe("list columns", () => {
-  it("sheet lists leave out markup and cssStyles only", () => {
-    expect(SHEET_LIST_OMITTED).toEqual(["markup", "cssStyles"]);
-    check(sheet, sheetListColumns, SHEET_LIST_OMITTED);
-    expect(sheetListColumns).toHaveProperty("isDefault");
-    expect(sheetListColumns).toHaveProperty("contentTypeId");
-  });
+  for (const { name, table, kept, heavy } of cases) {
+    it(`${name} lists keep every column but ${heavy.join(" and ")}`, () => {
+      const all = Object.keys(getTableColumns(table));
+      for (const column of heavy) expect(all).toContain(column);
+      expect(Object.keys(kept).sort()).toEqual(
+        all.filter((column) => !heavy.includes(column)).sort(),
+      );
+    });
 
-  it("content type lists leave out the schema only", () => {
-    expect(CONTENT_TYPE_LIST_OMITTED).toEqual(["schema"]);
-    check(contentType, contentTypeListColumns, CONTENT_TYPE_LIST_OMITTED);
-    expect(contentTypeListColumns).toHaveProperty("hasStrictSchema");
-  });
-
-  it("content lists leave out the data only", () => {
-    expect(CONTENT_LIST_OMITTED).toEqual(["data"]);
-    check(content, contentListColumns, CONTENT_LIST_OMITTED);
-    expect(contentListColumns).toHaveProperty("sheetId");
-  });
+    it(`${name} lists select no heavy column in SQL`, () => {
+      const { sql } = db.select(kept).from(table).toSQL();
+      for (const column of heavy) {
+        const dbName = (getTableColumns(table) as Record<string, { name: string }>)[column]!.name;
+        expect(sql).not.toContain(`"${dbName}"`);
+      }
+      expect(sql).toContain("resource_id");
+    });
+  }
 });
