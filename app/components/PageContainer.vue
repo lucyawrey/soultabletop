@@ -6,8 +6,8 @@ defineProps<{ compact?: boolean }>();
 
 <template>
   <div
-    class="mx-auto w-full max-w-(--ui-container) p-4 py-8"
-    :class="compact ? 'space-y-4' : 'space-y-6'"
+    class="mx-auto w-full max-w-(--ui-container) px-4 pt-6 pb-10 sm:px-7 sm:pt-7"
+    :class="compact ? 'space-y-4' : 'space-y-5'"
   >
     <slot />
   </div>

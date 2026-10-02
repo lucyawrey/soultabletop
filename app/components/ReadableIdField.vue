@@ -58,6 +58,7 @@ const hint = computed(() => {
     <UInput
       :model-value="modelValue"
       class="w-full"
+      :ui="{ base: 'font-mono' }"
       required
       autocomplete="off"
       autocapitalize="none"

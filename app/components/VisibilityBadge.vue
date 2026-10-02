@@ -3,10 +3,8 @@ defineProps<{ isPubliclyReadable: boolean }>();
 </script>
 
 <template>
-  <UBadge
-    :color="isPubliclyReadable ? 'primary' : 'neutral'"
-    variant="subtle"
-  >
+  <!-- Public is a gilt chip, Limited a dashed outline: not color alone. -->
+  <LabelChip :tone="isPubliclyReadable ? 'accent' : 'outline'">
     {{ visibilityLabel(isPubliclyReadable) }}
-  </UBadge>
+  </LabelChip>
 </template>

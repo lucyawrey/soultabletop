@@ -8,6 +8,7 @@ import {
   listQueryParameters,
   listResources,
   officialColumn,
+  ownerReadableIdColumn,
   requireListQuery,
   requireSystemFilter,
   respondWithList,
@@ -23,7 +24,7 @@ defineRouteMeta({
       "Rows leave out the `schema`; get a content type by ID for it.",
     parameters: [...listQueryParameters, systemIdParameter],
     responses: {
-      200: { description: "Content type list. Each row has `source`: you, yourGroups, shared, official, or community" },
+      200: { description: "Content type list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
     },
   },
 });
@@ -43,6 +44,7 @@ export default defineEventHandler(async (event) => {
           type: contentTypeListColumns,
           resource,
           official: officialColumn,
+          ownerReadableId: ownerReadableIdColumn,
         })
         .from(contentType)
         .innerJoin(resource, eq(resource.id, contentType.resourceId))
@@ -63,9 +65,10 @@ export default defineEventHandler(async (event) => {
   });
 
   return respondWithList(
-    rows.map(({ type, resource: item, source, access }) => ({
+    rows.map(({ type, resource: item, ownerReadableId, source, access }) => ({
       id: item.id,
       readableId: item.readableId,
+      ownerReadableId,
       isPubliclyReadable: item.isPubliclyReadable,
       source,
       name: item.name,

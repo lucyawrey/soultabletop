@@ -231,26 +231,21 @@ const groupColumns = [
 
 <template>
   <PageContainer>
-    <h1 class="text-2xl font-bold text-highlighted">Profile</h1>
+    <PageHeader eyebrow="Account" title="Profile" />
 
-    <UPageCard>
-      <template #header>
-        <h2 class="text-lg font-semibold text-highlighted">Account</h2>
-      </template>
-
+    <DetailPanel title="Account">
+      <div class="space-y-4 p-[18px]">
       <dl class="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[max-content_1fr]">
         <dt class="text-muted">Email</dt>
         <dd>{{ user?.email }}</dd>
         <dt class="text-muted">Site Role</dt>
         <dd>{{ profile?.role === "admin" ? "Admin" : "Member" }}</dd>
       </dl>
-    </UPageCard>
+      </div>
+    </DetailPanel>
 
-    <UPageCard>
-      <template #header>
-        <h2 class="text-lg font-semibold text-highlighted">Edit Profile</h2>
-      </template>
-
+    <DetailPanel title="Edit Profile">
+      <div class="space-y-4 p-[18px]">
       <!-- Deliberately not a <form>: Firefox treats a username-like field in a
            form as a login form and autofills saved credentials, ignoring
            autocomplete="off". -->
@@ -324,13 +319,11 @@ const groupColumns = [
           Save
         </UButton>
       </div>
-    </UPageCard>
+      </div>
+    </DetailPanel>
 
-    <UPageCard>
-      <template #header>
-        <h2 class="text-lg font-semibold text-highlighted">Change Password</h2>
-      </template>
-
+    <DetailPanel title="Change Password">
+      <div class="space-y-4 p-[18px]">
       <!-- Its own <form>, with no username field (see the note above). -->
       <form class="space-y-4" @submit.prevent="changePassword">
         <UAlert
@@ -395,16 +388,17 @@ const groupColumns = [
           Change Password
         </UButton>
       </form>
-    </UPageCard>
+      </div>
+    </DetailPanel>
 
     <ApiKeysCard />
 
-    <UPageCard>
-      <template #header>
-        <h2 class="text-lg font-semibold text-highlighted">Groups</h2>
-      </template>
-
-      <UTable :data="groups" :columns="groupColumns">
+    <DetailPanel title="Groups">
+      <UTable
+        :data="groups"
+        :columns="groupColumns"
+        :ui="{ root: 'rounded-none border-0' }"
+      >
         <template #name-cell="{ row }">
           <NuxtLink
             :to="`/groups/${row.original.id}`"
@@ -424,6 +418,6 @@ const groupColumns = [
           <template v-else>No groups yet.</template>
         </template>
       </UTable>
-    </UPageCard>
+    </DetailPanel>
   </PageContainer>
 </template>

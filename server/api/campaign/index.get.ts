@@ -7,6 +7,7 @@ import {
   listQueryParameters,
   listResources,
   officialColumn,
+  ownerReadableIdColumn,
   requireListQuery,
   requireSystemFilter,
   respondWithList,
@@ -20,7 +21,7 @@ defineRouteMeta({
     summary: "List accessible campaigns",
     parameters: [...listQueryParameters, systemIdParameter],
     responses: {
-      200: { description: "Campaign list. Each row has `source`: you, yourGroups, shared, official, or community" },
+      200: { description: "Campaign list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
       401: { description: "Authentication required" },
     },
   },
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event) => {
     where: systemId ? eq(campaign.systemId, systemId) : undefined,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
-        .select({ campaign, resource, official: officialColumn })
+        .select({ campaign, resource, official: officialColumn, ownerReadableId: ownerReadableIdColumn })
         .from(campaign)
         .innerJoin(resource, eq(resource.id, campaign.resourceId))
         .leftJoin(group, eq(group.id, resource.ownerGroupId))
@@ -56,9 +57,10 @@ export default defineEventHandler(async (event) => {
     },
   });
   return respondWithList(
-    rows.map(({ campaign: item, resource: owner, source, access }) => ({
+    rows.map(({ campaign: item, resource: owner, ownerReadableId, source, access }) => ({
       ...owner,
       ...item,
+      ownerReadableId,
       source,
       canEdit: access.canEdit,
       canChangeOwner: !!context && canChangeResourceOwner(owner, user, context),

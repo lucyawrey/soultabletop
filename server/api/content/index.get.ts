@@ -14,6 +14,7 @@ import {
   listQueryParameters,
   listResources,
   officialColumn,
+  ownerReadableIdColumn,
   requireListQuery,
   requireSystemFilter,
   respondWithList,
@@ -46,7 +47,7 @@ defineRouteMeta({
       },
     ],
     responses: {
-      200: { description: "Content list. Each row has `source`: you, yourGroups, shared, official, or community" },
+      200: { description: "Content list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
     },
   },
 });
@@ -108,6 +109,7 @@ export default defineEventHandler(async (event) => {
           resource,
           systemId: contentType.systemId,
           official: officialColumn,
+          ownerReadableId: ownerReadableIdColumn,
         })
         .from(content)
         .innerJoin(resource, eq(resource.id, content.resourceId))
@@ -130,9 +132,10 @@ export default defineEventHandler(async (event) => {
   });
 
   return respondWithList(
-    rows.map(({ item, resource: resourceItem, systemId: typeSystemId, source, access }) => ({
+    rows.map(({ item, resource: resourceItem, ownerReadableId, systemId: typeSystemId, source, access }) => ({
       id: resourceItem.id,
       readableId: resourceItem.readableId,
+      ownerReadableId,
       isPubliclyReadable: resourceItem.isPubliclyReadable,
       source,
       name: resourceItem.name,

@@ -43,6 +43,7 @@ The look was chosen from four mockups. They live in `.claude/plans/ui-directions
 | `--ui-border-accented` | **outlines of controls** (inputs, outline buttons, toggles); 3:1 | folio-500 `#8a7f72` |
 | `--ui-primary` | primary actions, links, current nav item, focus rings | plum-700 `#6b2d4e` |
 | `--ui-secondary` | accent | gilt-700 `#765a14` |
+| `--ui-primary-soft`, `--ui-secondary-soft` | soft chip fills behind primary and accent text (ours, not Nuxt UI's) | plum-100 `#f1dfe7`, gilt-100 `#f2e7c9` |
 | `--ui-success`, `--ui-info`, `--ui-warning`, `--ui-error` | status | `#166534`, `#1d4ed8`, `#92400e`, `#b91c1c` |
 | `--ui-radius` | base radius; `rounded-md` (buttons, inputs) is 1.5×, `rounded-lg` (cards) 2× | `0.3125rem` |
 
@@ -51,8 +52,22 @@ Nuxt UI normally picks `--ui-primary` and the others from shade 500 of the scale
 ### Fonts
 
 - `--font-sans` is Nunito Sans (400, 600, 700) for everything by default.
-- `--font-display` is Cormorant Garamond (600, 700); use it with the `font-display` utility. It has thin strokes and a small x-height, so use it only for headings at 22px and up, never for labels, table text, or small headings. `h1` uses it by default; page titles are `text-2xl` (24px).
+- `--font-display` is Cormorant Garamond (600, 700); use it with the `font-display` utility. It has thin strokes and a small x-height, so use it only for headings at 22px and up, never for labels, table text, or small headings. `h1` uses it by default: list page titles are 34px, detail titles 40px (32px on phones), and panel titles 22px.
+- `--font-mono` is JetBrains Mono (400, 500), for readable IDs and code (the `font-mono` utility).
 - Fonts are self-hosted through `@nuxt/fonts` (the `fonts` block in `nuxt.config.ts`). Add a weight there before using it, or the browser fakes it.
+
+### Component defaults and shared pieces
+
+The visual reference is `.claude/plans/ui-directions.html` (direction D, Folio). `app/app.config.ts` sets Nuxt UI's defaults to match it, so pages don't repeat the classes:
+
+- **Buttons:** semibold; `md` is 14px with 9px by 14px padding and 16px icons; solid buttons have a 2px inset shadow at the bottom. Outline buttons in a color (Delete) sit on the panel with a border of that color mixed 60% into `--ui-border-accented`, since Nuxt UI's 50% tint is under 3:1 on the page.
+- **Form fields:** semibold labels and size `lg` by default, which makes inputs, selects, and textareas 40px tall with 15px text. Dense places (Sheet fields, the schema builder) set `size="md"` on their `UFormField`. `VisibilityField` styles its own cards: the chosen one a panel outlined in primary, the other on the page tone.
+- **Navigation menu:** 15px rows, small uppercase group labels, no separators between groups; the current item is the solid primary pill.
+- **Tabs, `variant="link"`:** the underline tabs used for My / Find and the sheet page. The underline is drawn from the active tab (`::before`), not Nuxt UI's sliding indicator, which only exists after hydration and jumped on load.
+- **Tables:** a bordered panel with a header row on the shaded surface (`bg-elevated`) of small uppercase labels, and a light hover.
+- **Modals:** a display-font title over a divider, and a footer on the page tone.
+
+Shared components carry the rest: `PageContainer` (page width and padding), `PageHeader` (eyebrow, title, line, actions), `DetailHeader` (back link, eyebrow, 40px title, badges, actions, ornament rule), `DetailPanel` (a bordered panel with a 22px title and actions), `AboutPanel` (facts with dashed separators), `ResourceList` (tabs, search, view toggle, count, pages), `ResourceCards`, `ResourceActionsMenu`, `ListViewToggle`, `RecentCard`, and the chips. Every pill outside Sheets is a `LabelChip` (bold 12px on a rounded fill; tones `primary` for Official, `primarySoft` for Default and Admin, `accent` for Public, `neutral` for Community, categories, and roles, `outline` for Limited, `error`), which `SourceBadge` and `VisibilityBadge` wrap; `UBadge`'s 10% tints don't match the theme's soft fills, so only Sheet badges use it. The soft fills are `--ui-primary-soft` and `--ui-secondary-soft` (ours, not Nuxt UI's; checked by the contrast test). `ReadableIdBadge` is the monospace ID chip; lists, cards, and detail headers show the full address, `owner/id` (`resourceAddress` in `app/utils/owner-label.ts`), and the About panel the plain ID. Where Nuxt UI's theme can't produce the look, write the classes in the component (as `ListViewToggle` does).
 
 ## Accessibility rules
 

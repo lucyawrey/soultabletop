@@ -68,6 +68,9 @@ const textPairs: [string, string][] = [
   ...statusColors.map((c): [string, string] => ["ui-text-inverted", c]),
   // Soft and subtle variants: colored text on a 10% tint of the same color.
   ...statusColors.map((c): [string, string] => [c, `${c}/10@ui-bg`]),
+  // Chips: primary and accent text on their soft fills.
+  ["ui-primary", "ui-primary-soft"],
+  ["ui-secondary", "ui-secondary-soft"],
 ];
 
 // Control outlines, focus rings, and selected states need 3:1 (WCAG 1.4.11).

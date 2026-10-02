@@ -10,10 +10,14 @@ interface SystemItem {
   id: string;
   source: ResourceSource;
   readableId: string;
+  // The owner's username or group ID, for the `owner/id` address.
+  ownerReadableId: string | null;
   name: string;
   isPubliclyReadable: boolean;
   createdAt: string;
   updatedAt: string;
+  // Content types its owner made for it that the viewer can read.
+  contentTypeCount: number;
   canEdit: boolean;
   ownerGroupId: string | null;
   canChangeOwner: boolean;
@@ -29,7 +33,7 @@ const columns: TableColumn<SystemItem>[] = [
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString(),
+    cell: ({ row }) => formatShortDate(row.original.updatedAt),
   },
   { id: "actions" },
 ];
@@ -57,6 +61,17 @@ function openCreate() {
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
+
+// `?new=1` (the dashboard's "New System" start card) opens the New dialog after
+// mount, then drops the query param so a refresh doesn't reopen it.
+const route = useRoute();
+const router = useRouter();
+onMounted(() => {
+  if (route.query.new === undefined) return;
+  if (loggedIn.value) openCreate();
+  const { new: _new, ...rest } = route.query;
+  router.replace({ query: rest });
+});
 
 function openEdit(item: SystemItem) {
   form.ownerGroupId = item.ownerGroupId;
@@ -147,14 +162,19 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Systems</h1>
-      <UButton v-if="loggedIn" icon="i-lucide-plus" size="sm" @click="openCreate">
+    <PageHeader section="build" title="Systems">
+      <UButton v-if="loggedIn" icon="i-lucide-plus" @click="openCreate">
         New System
       </UButton>
-    </div>
+    </PageHeader>
 
-    <ResourceList :list="list" noun="Systems">
+    <ResourceList
+      :list="list"
+      noun="Systems"
+      singular="system"
+      view-key="systems"
+      default-view="table"
+    >
 <UTable
       :data="systems"
       :columns="columns"
@@ -163,10 +183,13 @@ async function remove() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/systems/${row.original.id}`"
-          class="font-medium text-highlighted hover:underline"
+          class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>
+        <span class="mt-0.5 block font-mono text-xs text-muted">
+          {{ resourceAddress(row.original.ownerReadableId, row.original.readableId) }}
+        </span>
       </template>
 
       <template #source-cell="{ row }">
@@ -180,39 +203,37 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
-        <UDropdownMenu
-          v-if="row.original.canEdit"
-          :items="[
-            [
-              {
-                label: 'Edit',
-                icon: 'i-lucide-pencil',
-                onSelect: () => openEdit(row.original),
-              },
-            ],
-            [
-              {
-                label: 'Delete',
-                icon: 'i-lucide-trash',
-                color: 'error',
-                onSelect: () => confirmDelete(row.original),
-              },
-            ],
-          ]"
-        >
-          <UButton
-            icon="i-lucide-ellipsis"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-          />
-        </UDropdownMenu>
+        <ResourceActionsMenu
+          :can-edit="row.original.canEdit"
+          :view-to="`/systems/${row.original.id}`"
+          :name="row.original.name" @edit="openEdit(row.original)"
+          @delete="confirmDelete(row.original)"
+        />
       </template>
 
       <template #empty>
-        <ResourceListEmpty :list="list" plural="systems" />
+        <ResourceListEmpty :list="list" plural="systems" create-label="New System" @create="openCreate()" />
       </template>
     </UTable>
+          <template #cards>
+        <ResourceCards :items="systems" :to="(item) => `/systems/${item.id}`">
+          <template #summary="{ item }">
+            {{ item.contentTypeCount }}
+            {{ item.contentTypeCount === 1 ? "content type" : "content types" }}
+          </template>
+          <template #actions="{ item }">
+            <ResourceActionsMenu
+              :can-edit="item.canEdit"
+              :view-to="`/systems/${item.id}`"
+              :name="item.name" @edit="openEdit(item)"
+              @delete="confirmDelete(item)"
+            />
+          </template>
+          <template #empty>
+            <ResourceListEmpty :list="list" plural="systems" create-label="New System" @create="openCreate()" />
+          </template>
+        </ResourceCards>
+      </template>
     </ResourceList>
 
     <UModal
