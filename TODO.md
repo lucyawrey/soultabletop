@@ -10,12 +10,6 @@ Nothing right now.
 
 # Next up
 
-- **Resources missing from dropdowns until a hard refresh** · bug
-  A newly created resource doesn't show up in dropdowns and pickers (system selector, content type, sheet pickers) until the page is hard-refreshed; the cached list data isn't refreshed after a create. Probably the `useFetch` keys for the picker lists (the Systems pages already call `refreshNuxtData("system-selector")`); find every create path and refresh the matching keys.
-- **Wrong source label ("You") on other people's resources in dropdowns** · bug
-  Resources that belong to someone else show "You" as their source in a dropdown. Find which dropdown (see `getResourceSource` and `ResourceOption.vue`) and fix the source it computes or passes; check Official, shared, and community resources in each picker.
-- **Show the source in the header system selector** · chore
-  `SystemSelector.vue` lists system names only. Show the source (Official/Community, as `ResourceOption.vue` does in the other pickers) on each option.
 - **Move Vercel functions closer to the database (or the reverse)** · chore · needs decision: move functions to cle1 (next to AWS us-east-2), or move the Neon database to us-east-1 (iad1); check the plan allows cle1
   Neon driver evaluation (2026-10-01): keep node-postgres, since no driver is meaningfully faster warm (one query costs about one network round trip with each; Postgres runs the list query in under 1 ms) and switching to Neon's HTTP driver would mean rewriting the 9 interactive-transaction routes. The cost is distance: functions run in iad1 (us-east-1) and the database is in us-east-2 (Ohio), and a logged-in list request makes 6 or more database round trips in a row, so the region change probably saves 50-80 ms per request, more than any driver change. Neon's WebSocket driver would only save about 40-60 ms per new connection, which warm Fluid instances rarely pay. Measured from a VPN, so absolute numbers were inflated; the structure holds. Unverified: the real iad1 to us-east-2 round trip and per-request database time in production (see the Server-Timing item), Neon's autosuspend setting, and whether cle1 is available on this plan.
 
