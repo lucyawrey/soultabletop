@@ -33,6 +33,7 @@ const tabs = computed(() => [
         :model-value="list.tab.value"
         :items="tabs"
         :content="false"
+        variant="link"
         class="w-full sm:w-auto"
         @update:model-value="list.setTab($event as ResourceListTab)"
       />
