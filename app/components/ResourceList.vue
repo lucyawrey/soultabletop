@@ -53,13 +53,21 @@ const tabs = computed(() => [
     <slot v-if="view === 'cards'" name="cards" />
     <slot v-else />
 
-    <div v-if="list.total.value > list.pageSize.value || list.page.value > 1" class="flex justify-center">
+    <div
+      v-if="list.total.value > 0"
+      class="flex flex-wrap items-center justify-between gap-2 text-sm text-muted"
+    >
+      <span>
+        {{ list.total.value }} {{ list.total.value === 1 ? "result" : "results" }}
+      </span>
       <UPagination
+        v-if="list.total.value > list.pageSize.value || list.page.value > 1"
         :page="list.page.value"
         :total="list.total.value"
         :items-per-page="list.pageSize.value"
         @update:page="list.setPage"
       />
+      <span v-else>Page 1 of 1</span>
     </div>
   </div>
 </template>

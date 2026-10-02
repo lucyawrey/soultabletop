@@ -27,11 +27,11 @@ const navGroups = computed(() => {
     label,
     icon,
   });
-  const characters = link("/characters", "Characters", "i-lucide-users");
-  const content = link("/content", "Content", "i-lucide-book-open");
-  const sheets = link("/sheets", "Sheets", "i-lucide-scroll-text");
+  const characters = link("/characters", "Characters", "i-lucide-user");
+  const content = link("/content", "Content", "i-lucide-message-square");
+  const sheets = link("/sheets", "Sheets", "i-lucide-table-2");
   const types = link("/types", "Types", "i-lucide-shapes");
-  const systems = link("/systems", "Systems", "i-lucide-library");
+  const systems = link("/systems", "Systems", "i-lucide-globe");
   if (!loggedIn.value)
     return [
       { label: "Browse", items: [characters, content, sheets, types, systems] },
@@ -40,14 +40,14 @@ const navGroups = computed(() => {
     {
       label: "Play",
       items: [
-        link("/campaigns", "Campaigns", "i-lucide-swords"),
+        link("/campaigns", "Campaigns", "i-lucide-flag"),
         characters,
         content,
       ],
     },
     {
       label: "Build",
-      items: [sheets, types, systems, link("/groups", "Groups", "i-lucide-users-round")],
+      items: [sheets, types, systems, link("/groups", "Groups", "i-lucide-users")],
     },
   ];
 });

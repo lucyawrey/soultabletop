@@ -333,17 +333,27 @@ function formatUpdated(updatedAt: string) {
         <UBadge color="primary" variant="subtle" size="lg">
           {{ copy.home.badge }}
         </UBadge>
-        <h1 class="text-4xl font-bold text-highlighted sm:text-5xl">
+        <h1 class="text-[44px] leading-none font-bold text-highlighted sm:text-[56px]">
           {{ copy.home.heading }}
         </h1>
         <p class="text-lg text-muted">
           {{ copy.home.intro }}
         </p>
+        <UButton
+          to="/systems"
+          color="primary"
+          variant="link"
+          trailing-icon="i-lucide-arrow-right"
+          class="p-0 font-semibold"
+        >
+          Browse public systems and sheets
+        </UButton>
       </div>
 
-      <UPageCard class="w-full max-w-sm">
+      <UPageCard class="w-full max-w-sm shadow-lg shadow-black/5">
         <UAuthForm
           ref="authForm"
+          :ui="{ title: 'font-display text-[32px] leading-tight font-bold' }"
           :key="mode"
           :fields="fields"
           :title="isRegistering ? 'Create an account' : 'Sign in'"
