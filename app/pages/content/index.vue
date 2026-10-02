@@ -261,6 +261,7 @@ async function remove() {
       <template #actions-cell="{ row }">
         <ResourceActionsMenu
           :can-edit="row.original.canEdit"
+          :view-to="`/content/${row.original.id}`"
           :name="row.original.name" :edit-to="`/content/${row.original.id}`"
           @delete="confirmDelete(row.original)"
         />
@@ -275,6 +276,7 @@ async function remove() {
           <template #actions="{ item }">
             <ResourceActionsMenu
               :can-edit="item.canEdit"
+              :view-to="`/content/${item.id}`"
               :name="item.name" :edit-to="`/content/${item.id}`"
               @delete="confirmDelete(item)"
             />

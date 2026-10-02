@@ -280,6 +280,7 @@ async function remove() {
       <template #actions-cell="{ row }">
         <ResourceActionsMenu
           :can-edit="row.original.canEdit"
+          :view-to="`/sheets/${row.original.id}`"
           :name="row.original.name" :edit-to="`/sheets/${row.original.id}/edit`"
           @delete="confirmDelete(row.original)"
         />
@@ -294,6 +295,7 @@ async function remove() {
           <template #actions="{ item }">
             <ResourceActionsMenu
               :can-edit="item.canEdit"
+              :view-to="`/sheets/${item.id}`"
               :name="item.name" :edit-to="`/sheets/${item.id}/edit`"
               @delete="confirmDelete(item)"
             />

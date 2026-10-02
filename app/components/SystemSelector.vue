@@ -36,10 +36,10 @@ const selected = computed({
   <USelect
     v-model="selected"
     :items="items"
-    size="sm"
+    size="md"
     aria-label="Current system"
     class="w-44"
-    :ui="{ content: 'w-max min-w-(--reka-select-trigger-width) max-w-[90vw]' }"
+    :ui="{ base: 'bg-(--st-page) text-sm', content: 'w-max min-w-(--reka-select-trigger-width) max-w-[90vw]' }"
   >
     <template #item-label="{ item }">
       <ResourceOption :option="item as ResourceOptionItem" />

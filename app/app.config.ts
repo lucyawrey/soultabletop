@@ -11,7 +11,8 @@ export default defineAppConfig({
     navigationMenu: {
       slots: {
         // Roomier rows, and small uppercase group labels like the mockup.
-        link: "py-2 text-[15px]",
+        link: "py-1.5 text-[15px]",
+        linkLeadingIcon: "size-4",
         label: "px-2.5 pb-1 text-[11px] font-bold tracking-widest text-muted uppercase",
       },
       // The current page is a solid primary pill, not Nuxt UI's tinted one.

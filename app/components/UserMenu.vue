@@ -53,6 +53,9 @@ const avatar = computed(() => ({
   icon: initials.value ? undefined : "i-lucide-user",
 }));
 
+// A gilt disc with the initials, like the mockup.
+const avatarUi = { root: "bg-secondary", fallback: "font-bold text-inverted" };
+
 const toast = useToast();
 const router = useRouter();
 const signOutBusy = ref(false);
@@ -122,7 +125,13 @@ const items = computed<DropdownMenuItem[][]>(() => [
         name="i-lucide-loader-circle"
         class="size-8 animate-spin p-1.5"
       />
-      <UAvatar v-else ref="triggerAvatar" v-bind="avatar" size="md" />
+      <UAvatar
+        v-else
+        ref="triggerAvatar"
+        v-bind="avatar"
+        size="md"
+        :ui="avatarUi"
+      />
       <span v-if="!collapsed" class="min-w-0 flex-1 text-start">
         <span class="block truncate text-sm font-semibold text-highlighted">
           {{ displayName }}
