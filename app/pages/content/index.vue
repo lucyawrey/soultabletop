@@ -15,6 +15,8 @@ interface ContentItem {
   id: string;
   source: ResourceSource;
   readableId: string;
+  // The owner's username or group ID, for the `owner/id` address.
+  ownerReadableId: string | null;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -76,7 +78,7 @@ const columns: TableColumn<ContentItem>[] = [
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString(),
+    cell: ({ row }) => formatShortDate(row.original.updatedAt),
   },
   { id: "actions" },
 ];
@@ -192,25 +194,29 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Content</h1>
+    <PageHeader section="play" title="Content">
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
-        size="sm"
         :disabled="standardContentTypes.length === 0"
         @click="openCreate"
       >
         New Content
       </UButton>
-    </div>
+    </PageHeader>
 
     <p v-if="loggedIn && contentTypesStatus === 'success' && standardContentTypes.length === 0" class="text-sm text-muted">
       Create a content type with the General or Page category before adding
       content records.
     </p>
 
-    <ResourceList :list="list" noun="Content">
+    <ResourceList
+      :list="list"
+      noun="Content"
+      singular="content"
+      view-key="content"
+      default-view="table"
+    >
 <UTable
       :data="contentRecords"
       :columns="columns"
@@ -219,10 +225,13 @@ async function remove() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/content/${row.original.id}`"
-          class="font-medium text-highlighted hover:underline"
+          class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>
+        <span class="mt-0.5 block font-mono text-xs text-muted">
+          {{ resourceAddress(row.original.ownerReadableId, row.original.readableId) }}
+        </span>
       </template>
 
       <template #systemId-cell="{ row }">
@@ -252,39 +261,49 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
-        <UDropdownMenu
-          v-if="row.original.canEdit"
-          :items="[
-            [
-              {
-                label: 'Edit',
-                icon: 'i-lucide-pencil',
-                to: `/content/${row.original.id}`,
-              },
-            ],
-            [
-              {
-                label: 'Delete',
-                icon: 'i-lucide-trash',
-                color: 'error',
-                onSelect: () => confirmDelete(row.original),
-              },
-            ],
-          ]"
-        >
-          <UButton
-            icon="i-lucide-ellipsis"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-          />
-        </UDropdownMenu>
+        <ResourceActionsMenu
+          :can-edit="row.original.canEdit"
+          :view-to="`/content/${row.original.id}`"
+          :name="row.original.name" :edit-to="`/content/${row.original.id}`"
+          @delete="confirmDelete(row.original)"
+        />
       </template>
 
       <template #empty>
-        <ResourceListEmpty :list="list" plural="content" uncountable />
+        <ResourceListEmpty :list="list" plural="content" uncountable create-label="New Content" :create-disabled="standardContentTypes.length === 0" @create="openCreate()" />
       </template>
     </UTable>
+          <template #cards>
+        <ResourceCards :items="contentRecords" :to="(item) => `/content/${item.id}`">
+          <template #actions="{ item }">
+            <ResourceActionsMenu
+              :can-edit="item.canEdit"
+              :view-to="`/content/${item.id}`"
+              :name="item.name" :edit-to="`/content/${item.id}`"
+              @delete="confirmDelete(item)"
+            />
+          </template>
+      <template #details="{ item }">
+          <dt class="text-muted">System</dt>
+          <dd><SystemLink :system-id="item.systemId" /></dd>
+          <dt class="text-muted">Type</dt>
+          <dd>
+            <NuxtLink
+              v-if="standardContentTypes.some((type) => type.id === item.contentTypeId)"
+              :to="`/types/${item.contentTypeId}`"
+              class="text-primary hover:underline"
+            >
+              {{ contentTypeName(item.contentTypeId) }}
+            </NuxtLink>
+            <LookupSkeleton v-else-if="isLoading(contentTypesStatus)" />
+            <template v-else>Unknown</template>
+          </dd>
+      </template>
+          <template #empty>
+            <ResourceListEmpty :list="list" plural="content" uncountable create-label="New Content" :create-disabled="standardContentTypes.length === 0" @create="openCreate()" />
+          </template>
+        </ResourceCards>
+      </template>
     </ResourceList>
 
     <UModal

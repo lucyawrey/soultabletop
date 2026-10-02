@@ -74,7 +74,7 @@ watch(
   </div>
 
   <div v-else-if="node.type === 'array' && node.item" class="space-y-2">
-    <UFormField label="Item Type">
+    <UFormField size="md" label="Item Type">
       <USelect
         v-model="node.item.type"
         :items="typeOptions"
@@ -94,6 +94,7 @@ watch(
 
   <div v-else-if="node.type === 'content'" class="grid gap-3 sm:grid-cols-2">
     <UFormField
+      size="md"
       label="Content Type"
       :error="errors.get(contentTypeErrorId(node.id))"
       required
@@ -106,7 +107,7 @@ watch(
         :disabled="readonly"
       />
     </UFormField>
-    <UFormField label="Allow">
+    <UFormField size="md" label="Allow">
       <USelect
         v-model="node.allow"
         :items="allowOptions"
@@ -118,6 +119,7 @@ watch(
 
   <UFormField
     v-else-if="node.type === 'resourceLink'"
+    size="md"
     label="Kind"
     description="Limit links to one kind of resource, or allow any."
   >

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import {
+  CONTENT_CATEGORY_LABELS,
+  type ContentCategory,
+} from "#shared/content-categories";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
 interface SystemDetail {
@@ -18,6 +22,7 @@ interface ContentTypeOption {
   name: string;
   readableId: string;
   systemId: string;
+  contentCategory: ContentCategory;
 }
 
 const route = useRoute();
@@ -118,28 +123,21 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <UButton
-      to="/systems"
-      icon="i-lucide-arrow-left"
-      color="neutral"
-      variant="link"
-      size="sm"
-    >
-      Back to Systems
-    </UButton>
-
     <template v-if="system">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
-            {{ system.name }}
-            <ReadableIdBadge :readable-id="system.readableId" />
-          </h1>
-          <p class="text-sm text-muted">
-            {{ visibilityLabel(system.isPubliclyReadable) }}
-          </p>
-        </div>
-        <div v-if="system?.canEdit" class="flex gap-2">
+      <DetailHeader
+        back-to="/systems"
+        back-label="Back to Systems"
+        eyebrow="System"
+        :title="system.name"
+      >
+        <template #meta>
+          <ReadableIdBadge
+            :readable-id="system.readableId"
+            :owner="system.ownerReadableId"
+          />
+          <VisibilityBadge :is-publicly-readable="system.isPubliclyReadable" />
+        </template>
+        <template v-if="system.canEdit" #actions>
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
@@ -159,52 +157,66 @@ async function remove() {
           >
             Delete
           </UButton>
-        </div>
-      </div>
+        </template>
+      </DetailHeader>
 
-      <UPageCard :ui="{ header: 'w-full' }">
-        <template #header>
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="text-lg font-semibold text-highlighted">
-              Content Types
-            </h2>
+      <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <DetailPanel title="Content Types">
+          <template v-if="loggedIn" #actions>
             <UButton
-              v-if="loggedIn"
               :to="{ path: '/types', query: { systemId: id } }"
               icon="i-lucide-plus"
-              size="sm"
             >
               New Content Type
             </UButton>
-          </div>
-        </template>
+          </template>
 
-        <ul
-          v-if="systemContentTypes.length"
-          class="divide-y divide-default"
-        >
-          <li
-            v-for="type in systemContentTypes"
-            :key="type.id"
-            class="flex items-center justify-between py-2"
+          <ul
+            v-if="systemContentTypes.length"
+            class="divide-y divide-default"
           >
-            <NuxtLink
-              :to="`/types/${type.id}`"
-              class="font-medium text-highlighted hover:underline"
+            <li
+              v-for="type in systemContentTypes"
+              :key="type.id"
+              class="flex flex-wrap items-center justify-between gap-3 px-[18px] py-3"
             >
-              {{ type.name }}
-            </NuxtLink>
-            <span class="text-sm text-muted">{{ type.readableId }}</span>
-          </li>
-        </ul>
-        <TableSkeleton
-          v-else-if="isLoading(contentTypesStatus)"
-          :rows="2"
+              <span class="flex items-center gap-2.5">
+                <UIcon
+                  :name="CONTENT_CATEGORY_ICONS[type.contentCategory]"
+                  class="size-[17px] shrink-0 text-secondary"
+                />
+                <NuxtLink
+                  :to="`/types/${type.id}`"
+                  class="font-bold text-highlighted hover:text-primary hover:underline"
+                >
+                  {{ type.name }}
+                </NuxtLink>
+              </span>
+              <LabelChip>
+                {{ CONTENT_CATEGORY_LABELS[type.contentCategory] }}
+              </LabelChip>
+            </li>
+          </ul>
+          <TableSkeleton
+            v-else-if="isLoading(contentTypesStatus)"
+            :rows="2"
+            class="px-[18px]"
+          />
+          <p v-else class="px-[18px] py-6 text-center text-sm text-muted">
+            No content types for this system yet.
+          </p>
+        </DetailPanel>
+
+        <AboutPanel
+          :facts="[
+            { label: 'Owner', value: ownerLabel(system) },
+            { label: 'ID', value: system.readableId, mono: true },
+            { label: 'Visibility', value: visibilityLabel(system.isPubliclyReadable) },
+            { label: 'Content types', value: isLoading(contentTypesStatus) ? null : systemContentTypes.length },
+            { label: 'Updated', value: formatShortDate(system.updatedAt) },
+          ]"
         />
-        <p v-else class="py-6 text-center text-sm text-muted">
-          No content types for this system yet.
-        </p>
-      </UPageCard>
+      </div>
     </template>
 
     <UModal v-model:open="isFormOpen" title="Edit System">

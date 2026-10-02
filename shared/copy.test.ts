@@ -5,7 +5,7 @@ import copy from "../content/copy.yml";
 const declaredKeys = {
   site: ["title", "description"],
   home: ["badge", "heading", "intro", "registerNote", "signInNote"],
-  dashboard: ["heading", "subheading"],
+  dashboard: ["heading", "subheading", "newHeading", "welcome"],
 };
 
 describe("content/copy.yml", () => {

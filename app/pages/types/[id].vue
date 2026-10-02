@@ -31,6 +31,7 @@ interface ContentTypeDetail {
   ownerGroupId: string | null;
   canChangeOwner: boolean;
   isPubliclyReadable: boolean;
+  updatedAt?: string;
 }
 
 interface SystemOption {
@@ -70,7 +71,7 @@ if (!contentType.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
 
-const { data: systems, status: systemsStatus } = await useLazyFetch<SystemOption[]>("/api/system", {
+const { data: systems } = await useLazyFetch<SystemOption[]>("/api/system", {
   default: () => [],
 });
 const system = computed(() =>
@@ -296,40 +297,24 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <UButton
-      to="/types"
-      icon="i-lucide-arrow-left"
-      color="neutral"
-      variant="link"
-      size="sm"
-    >
-      Back to Content Types
-    </UButton>
-
     <template v-if="contentType">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
-            {{ contentType.name }}
-            <ReadableIdBadge :readable-id="contentType.readableId" />
-          </h1>
-          <p class="text-sm text-muted">
-            {{ visibilityLabel(contentType.isPubliclyReadable) }} ·
-            <LookupSkeleton v-if="!system && isLoading(systemsStatus)" />
-            <NuxtLink
-              v-else-if="system"
-              :to="`/systems/${system.id}`"
-              class="hover:underline"
-            >
-              {{ system.name }}
-            </NuxtLink>
-            · {{ CONTENT_CATEGORY_LABELS[contentType.contentCategory] }}
-            <template v-if="contentType.hasStrictSchema">
-              · Strict schema
-            </template>
-          </p>
-        </div>
-        <div v-if="contentType.canEdit" class="flex gap-2">
+      <DetailHeader
+        back-to="/types"
+        back-label="Back to Content Types"
+        eyebrow="Content Type"
+        :title="contentType.name"
+      >
+        <template #meta>
+          <ReadableIdBadge
+            :readable-id="contentType.readableId"
+            :owner="contentType.ownerReadableId"
+          />
+          <VisibilityBadge :is-publicly-readable="contentType.isPubliclyReadable" />
+          <LabelChip>
+            {{ CONTENT_CATEGORY_LABELS[contentType.contentCategory] }}
+          </LabelChip>
+        </template>
+        <template v-if="contentType.canEdit" #actions>
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
@@ -349,104 +334,111 @@ async function remove() {
           >
             Delete
           </UButton>
-        </div>
-      </div>
+        </template>
+      </DetailHeader>
 
-      <UPageCard :ui="{ header: 'w-full' }">
-        <template #header>
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="text-lg font-semibold text-highlighted">Sheets</h2>
+      <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <DetailPanel title="Sheets">
+          <template v-if="loggedIn" #actions>
             <UButton
-              v-if="loggedIn"
               :to="{ path: '/sheets', query: { contentTypeId: id } }"
               icon="i-lucide-plus"
-              size="sm"
             >
               New Sheet
             </UButton>
-          </div>
-        </template>
+          </template>
 
-        <ul v-if="typeSheets.length" class="divide-y divide-default">
-          <li
-            v-for="item in typeSheets"
-            :key="item.id"
-            class="flex items-center justify-between gap-2 py-2"
-          >
-            <span class="flex items-center gap-2">
-              <NuxtLink
-                :to="`/sheets/${item.id}`"
-                class="font-medium text-highlighted hover:underline"
-              >
-                {{ item.name }}
-              </NuxtLink>
-              <UBadge v-if="item.isDefault" variant="subtle" size="sm">
-                Default
-              </UBadge>
-            </span>
-            <span class="text-sm text-muted">{{ item.readableId }}</span>
-          </li>
-        </ul>
-        <TableSkeleton
-          v-else-if="isLoading(sheetsStatus)"
-          :rows="2"
+          <ul v-if="typeSheets.length" class="divide-y divide-default">
+            <li
+              v-for="item in typeSheets"
+              :key="item.id"
+              class="flex flex-wrap items-center justify-between gap-3 px-[18px] py-3"
+            >
+              <span class="flex items-center gap-2.5">
+                <UIcon name="i-lucide-table-2" class="size-[17px] shrink-0 text-secondary" />
+                <NuxtLink
+                  :to="`/sheets/${item.id}`"
+                  class="font-bold text-highlighted hover:text-primary hover:underline"
+                >
+                  {{ item.name }}
+                </NuxtLink>
+              </span>
+              <span class="flex items-center gap-2">
+                <LabelChip v-if="item.isDefault" tone="primarySoft">
+                  Default
+                </LabelChip>
+                <ReadableIdBadge :readable-id="item.readableId" />
+              </span>
+            </li>
+          </ul>
+          <TableSkeleton
+            v-else-if="isLoading(sheetsStatus)"
+            :rows="2"
+            class="px-[18px]"
+          />
+          <p v-else class="px-[18px] py-6 text-center text-sm text-muted">
+            No sheets for this content type yet.
+          </p>
+        </DetailPanel>
+
+        <AboutPanel
+          :facts="[
+            { label: 'Owner', value: ownerLabel(contentType) },
+            { label: 'ID', value: contentType.readableId, mono: true },
+            { label: 'Visibility', value: visibilityLabel(contentType.isPubliclyReadable) },
+            { label: 'System', value: system?.name },
+            { label: 'Category', value: CONTENT_CATEGORY_LABELS[contentType.contentCategory] },
+            { label: 'Strict schema', value: contentType.hasStrictSchema ? 'Yes' : 'No' },
+            { label: 'Sheets', value: isLoading(sheetsStatus) ? null : typeSheets.length },
+            { label: 'Updated', value: contentType.updatedAt ? formatShortDate(contentType.updatedAt) : null },
+          ]"
         />
-        <p v-else class="py-6 text-center text-sm text-muted">
-          No sheets for this content type yet.
-        </p>
-      </UPageCard>
+      </div>
 
-      <UPageCard :ui="{ header: 'w-full' }">
-        <template #header>
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-semibold text-highlighted">Schema</h2>
-              <p class="text-sm text-muted">
-                Every content type also has a built-in name field.
-                <template v-if="contentType.canEdit">
-                  Renaming a key doesn't move existing content's values to the
-                  new key.
-                </template>
-              </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <UFieldGroup size="sm">
-                <UButton
-                  label="Builder"
-                  :color="schemaMode === 'builder' ? 'primary' : 'neutral'"
-                  :variant="schemaMode === 'builder' ? 'solid' : 'outline'"
-                  @click="setSchemaMode('builder')"
-                />
-                <UButton
-                  label="JSON"
-                  :color="schemaMode === 'json' ? 'primary' : 'neutral'"
-                  :variant="schemaMode === 'json' ? 'solid' : 'outline'"
-                  @click="setSchemaMode('json')"
-                />
-              </UFieldGroup>
-              <template v-if="contentType.canEdit">
-                <UButton
-                  label="Discard"
-                  color="neutral"
-                  variant="outline"
-                  size="sm"
-                  :disabled="!schemaDirty || schemaBusy"
-                  @click="discardSchema"
-                />
-                <UButton
-                  label="Save schema"
-                  icon="i-lucide-save"
-                  size="sm"
-                  :loading="schemaBusy"
-                  :disabled="!schemaDirty || builderHasErrors"
-                  @click="saveSchema()"
-                />
-              </template>
-            </div>
-          </div>
+      <DetailPanel title="Schema">
+        <template #actions>
+          <UFieldGroup size="sm">
+            <UButton
+              label="Builder"
+              :color="schemaMode === 'builder' ? 'primary' : 'neutral'"
+              :variant="schemaMode === 'builder' ? 'solid' : 'outline'"
+              @click="setSchemaMode('builder')"
+            />
+            <UButton
+              label="JSON"
+              :color="schemaMode === 'json' ? 'primary' : 'neutral'"
+              :variant="schemaMode === 'json' ? 'solid' : 'outline'"
+              @click="setSchemaMode('json')"
+            />
+          </UFieldGroup>
+          <template v-if="contentType.canEdit">
+            <UButton
+              label="Discard"
+              color="neutral"
+              variant="outline"
+              size="sm"
+              :disabled="!schemaDirty || schemaBusy"
+              @click="discardSchema"
+            />
+            <UButton
+              label="Save schema"
+              icon="i-lucide-save"
+              size="sm"
+              :loading="schemaBusy"
+              :disabled="!schemaDirty || builderHasErrors"
+              @click="saveSchema()"
+            />
+          </template>
         </template>
 
-        <div class="space-y-4">
+        <div class="space-y-4 p-[18px]">
+          <p class="text-sm text-muted">
+            Every content type also has a built-in name field.
+            <template v-if="contentType.canEdit">
+              Renaming a key doesn't move existing content's values to the
+              new key.
+            </template>
+          </p>
           <UAlert
             v-if="schemaError"
             color="error"
@@ -475,7 +467,7 @@ async function remove() {
             />
           </ClientOnly>
         </div>
-      </UPageCard>
+      </DetailPanel>
     </template>
 
     <UModal v-model:open="isFormOpen" title="Edit Content Type">

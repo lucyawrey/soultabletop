@@ -18,6 +18,8 @@ interface ContentTypeItem {
   id: string;
   source: ResourceSource;
   readableId: string;
+  // The owner's username or group ID, for the `owner/id` address.
+  ownerReadableId: string | null;
   name: string;
   systemId: string;
   contentCategory: ContentCategory;
@@ -229,24 +231,28 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-highlighted">Content Types</h1>
+    <PageHeader section="build" title="Content Types">
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
-        size="sm"
         :disabled="systems.length === 0"
         @click="openCreate()"
       >
         New Content Type
       </UButton>
-    </div>
+    </PageHeader>
 
     <p v-if="loggedIn && systemsStatus === 'success' && systems.length === 0" class="text-sm text-muted">
       Create a system before adding content types.
     </p>
 
-    <ResourceList :list="list" noun="Content Types">
+    <ResourceList
+      :list="list"
+      noun="Content Types"
+      singular="content type"
+      view-key="types"
+      default-view="table"
+    >
 <UTable
       :data="contentTypes"
       :columns="columns"
@@ -255,10 +261,13 @@ async function remove() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/types/${row.original.id}`"
-          class="font-medium text-highlighted hover:underline"
+          class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>
+        <span class="mt-0.5 block font-mono text-xs text-muted">
+          {{ resourceAddress(row.original.ownerReadableId, row.original.readableId) }}
+        </span>
       </template>
 
       <template #systemId-cell="{ row }">
@@ -284,40 +293,41 @@ async function remove() {
       </template>
 
       <template #actions-cell="{ row }">
-        <!-- Edit and delete both require edit access server-side. -->
-        <UDropdownMenu
-          v-if="row.original.canEdit"
-          :items="[
-            [
-              {
-                label: 'Edit',
-                icon: 'i-lucide-pencil',
-                onSelect: () => openEdit(row.original),
-              },
-            ],
-            [
-              {
-                label: 'Delete',
-                icon: 'i-lucide-trash',
-                color: 'error',
-                onSelect: () => confirmDelete(row.original),
-              },
-            ],
-          ]"
-        >
-          <UButton
-            icon="i-lucide-ellipsis"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-          />
-        </UDropdownMenu>
+        <ResourceActionsMenu
+          :can-edit="row.original.canEdit"
+          :view-to="`/types/${row.original.id}`"
+          :name="row.original.name" @edit="openEdit(row.original)"
+          @delete="confirmDelete(row.original)"
+        />
       </template>
 
       <template #empty>
-        <ResourceListEmpty :list="list" plural="content types" />
+        <ResourceListEmpty :list="list" plural="content types" create-label="New Content Type" :create-disabled="systems.length === 0" @create="openCreate()" />
       </template>
     </UTable>
+          <template #cards>
+        <ResourceCards :items="contentTypes" :to="(item) => `/types/${item.id}`">
+          <template #actions="{ item }">
+            <ResourceActionsMenu
+              :can-edit="item.canEdit"
+              :view-to="`/types/${item.id}`"
+              :name="item.name" @edit="openEdit(item)"
+              @delete="confirmDelete(item)"
+            />
+          </template>
+      <template #details="{ item }">
+          <dt class="text-muted">System</dt>
+          <dd><SystemLink :system-id="item.systemId" /></dd>
+          <dt class="text-muted">Category</dt>
+          <dd>{{ CONTENT_CATEGORY_LABELS[item.contentCategory] }}</dd>
+          <dt class="text-muted">Strict Schema</dt>
+          <dd>{{ item.hasStrictSchema ? "Yes" : "No" }}</dd>
+      </template>
+          <template #empty>
+            <ResourceListEmpty :list="list" plural="content types" create-label="New Content Type" :create-disabled="systems.length === 0" @create="openCreate()" />
+          </template>
+        </ResourceCards>
+      </template>
     </ResourceList>
 
     <UModal

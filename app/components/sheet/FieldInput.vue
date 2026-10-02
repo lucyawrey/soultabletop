@@ -352,7 +352,7 @@ const imageError = computed(() =>
     />
   </div>
 
-  <UFormField v-else-if="display === 'json'" :error="jsonError || undefined">
+  <UFormField v-else-if="display === 'json'" size="md" :error="jsonError || undefined">
     <ClientOnly>
       <CodeEditor
         :model-value="jsonText"
@@ -365,7 +365,7 @@ const imageError = computed(() =>
     </ClientOnly>
   </UFormField>
 
-  <UFormField v-else-if="display === 'image'" :error="imageError">
+  <UFormField v-else-if="display === 'image'" size="md" :error="imageError">
     <UInput
       v-model="text"
       :disabled="disabled"

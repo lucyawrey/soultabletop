@@ -94,6 +94,7 @@ export default defineNuxtConfig({
     families: [
       { name: "Nunito Sans", provider: "google", weights: [400, 600, 700] },
       { name: "Cormorant Garamond", provider: "google", weights: [600, 700] },
+      { name: "JetBrains Mono", provider: "google", weights: [400, 500] },
       ...sheetFonts.map(({ name }) => ({
         name,
         provider: "google",

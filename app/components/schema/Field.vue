@@ -34,6 +34,7 @@ const open = ref(field.value.type === "struct" || field.value.type === "array");
         aria-hidden="true"
       />
       <UFormField
+        size="md"
         :error="error"
         class="min-w-40 flex-1"
         :ui="{ error: 'text-xs' }"
@@ -82,14 +83,14 @@ const open = ref(field.value.type === "struct" || field.value.type === "array");
     </div>
     <div v-if="open" class="space-y-3 border-t border-default p-3 ps-8">
       <div class="grid gap-3 sm:grid-cols-2">
-        <UFormField label="Label" hint="Optional">
+        <UFormField size="md" label="Label" hint="Optional">
           <UInput
             v-model="field.label"
             class="w-full"
             :disabled="readonly"
           />
         </UFormField>
-        <UFormField label="Description" hint="Optional">
+        <UFormField size="md" label="Description" hint="Optional">
           <UInput
             v-model="field.description"
             class="w-full"

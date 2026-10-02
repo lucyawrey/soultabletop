@@ -180,34 +180,18 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <UButton
-      to="/groups"
-      icon="i-lucide-arrow-left"
-      color="neutral"
-      variant="link"
-      size="sm"
-    >
-      Back to Groups
-    </UButton>
-
     <template v-if="group">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="flex flex-wrap items-center gap-x-3 gap-y-1 text-2xl font-bold text-highlighted">
-            {{ group.name }}
-            <ReadableIdBadge :readable-id="group.readableId" />
-            <UBadge v-if="group.kind === 'system'" variant="subtle">
-              Official
-            </UBadge>
-          </h1>
-          <p class="text-sm text-muted">
-            <template v-if="group.role">
-              You are <span class="capitalize">{{ group.role }}</span>
-            </template>
-            <template v-else>You manage it as a site admin</template>
-          </p>
-        </div>
-        <div v-if="isAdmin" class="flex gap-2">
+      <DetailHeader
+        back-to="/groups"
+        back-label="Back to Groups"
+        eyebrow="Group"
+        :title="group.name"
+      >
+        <template #meta>
+          <ReadableIdBadge :readable-id="group.readableId" />
+          <LabelChip v-if="group.kind === 'system'" tone="primary">Official</LabelChip>
+        </template>
+        <template v-if="isAdmin" #actions>
           <UButton
             icon="i-lucide-pencil"
             color="neutral"
@@ -227,15 +211,12 @@ async function remove() {
           >
             Delete
           </UButton>
-        </div>
-      </div>
-
-      <UPageCard>
-        <template #header>
-          <h2 class="text-lg font-semibold text-highlighted">Members</h2>
         </template>
+      </DetailHeader>
 
-        <div class="space-y-4">
+      <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <DetailPanel title="Members">
+        <div class="space-y-4 p-[18px]">
           <!-- Deliberately not a <form>, and nothing says "username" in the
                name/placeholder: Firefox treats a lone username-like field in a
                form as a login form and autofills saved credentials, ignoring
@@ -262,8 +243,10 @@ async function remove() {
                 class="w-32"
               />
             </UFormField>
+            <!-- As tall as the 40px fields beside it. -->
             <UButton
               icon="i-lucide-user-plus"
+              class="h-10"
               :loading="memberBusy"
               :disabled="!addForm.username.trim()"
               @click="addMember"
@@ -279,8 +262,11 @@ async function remove() {
             :description="memberError"
           />
 
+        </div>
+
           <UTable
             :data="members"
+            :ui="{ root: 'rounded-none border-0 border-t border-default' }"
             :columns="memberColumns"
             :loading="membersStatus === 'pending'"
           >
@@ -321,8 +307,17 @@ async function remove() {
               />
             </template>
           </UTable>
-        </div>
-      </UPageCard>
+      </DetailPanel>
+
+      <AboutPanel
+        :facts="[
+          { label: 'ID', value: group.readableId, mono: true },
+          { label: 'Kind', value: group.kind === 'system' ? 'Official' : 'Community' },
+          { label: 'Your role', value: group.role ? group.role.charAt(0).toUpperCase() + group.role.slice(1) : 'Site admin' },
+          { label: 'Members', value: isLoading(membersStatus) ? null : members.length },
+        ]"
+      />
+      </div>
     </template>
 
     <UModal v-model:open="isFormOpen" title="Edit Group">

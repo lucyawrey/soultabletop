@@ -21,3 +21,7 @@ home:
 dashboard:
   heading: Welcome back, {name}
   subheading: Pick up where you left off.
+  # Copy: written by the team. The heading while the user has nothing yet.
+  newHeading: First-visit heading goes here
+  # Copy: written by the team. Under it: what Soul Tabletop is, the main concepts.
+  welcome: Welcome text goes here

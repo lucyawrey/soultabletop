@@ -12,6 +12,7 @@
 @theme static {
   --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Cormorant Garamond", Georgia, ui-serif, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --color-plum-50: #fbf4f7;
   --color-plum-100: #f1dfe7;
@@ -74,6 +75,11 @@
   --ui-bg-elevated: var(--color-folio-200);
   --ui-bg-accented: #e6dccb;
   --ui-bg-inverted: var(--color-folio-900);
+
+  /* Not Nuxt UI's: the soft fills behind primary and accent text on chips
+     (`LabelChip`), the mockup's primary-soft and accent-soft. */
+  --ui-primary-soft: var(--color-plum-100);
+  --ui-secondary-soft: var(--color-gilt-100);
 
   /* Dividers only. Anything that outlines a control uses `-accented`,
      which keeps 3:1 against the panel and the page (WCAG 1.4.11). */
