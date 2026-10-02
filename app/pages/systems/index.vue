@@ -146,7 +146,7 @@ async function remove() {
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-(--ui-container) space-y-6 p-4 py-8">
+  <PageContainer>
     <div class="flex flex-wrap items-center justify-between gap-4">
       <h1 class="text-2xl font-bold text-highlighted">Systems</h1>
       <UButton v-if="loggedIn" icon="i-lucide-plus" size="sm" @click="openCreate">
@@ -291,5 +291,5 @@ async function remove() {
         />
       </template>
     </UModal>
-  </div>
+  </PageContainer>
 </template>

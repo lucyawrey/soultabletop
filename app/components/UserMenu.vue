@@ -2,8 +2,8 @@
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { authClient } from "~/utils/auth-client";
 
-// The signed-in user's icon in the header, opening a menu with who is signed
-// in, Profile, and Sign out. The header shows it only when logged in.
+// The signed-in user's icon and name in the sidebar footer, opening a menu with who is signed
+// in, Profile, and Sign out. The sidebar shows it only when logged in.
 const session = await useAuthSession();
 const user = computed(() => session.data.value?.user);
 const { data: profile } = await useProfile(() => user.value?.id);
@@ -31,7 +31,7 @@ const initials = computed(() => {
 });
 
 // UAvatar falls back when its image fires `error`, but on a server-rendered
-// page the image can fail before hydration adds that listener, so the header
+// page the image can fail before hydration adds that listener, so the sidebar
 // avatar also checks on mount.
 const iconUrl = computed(() => profile.value?.iconImageUrl ?? undefined);
 const iconFailed = ref(false);
@@ -101,7 +101,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
 <template>
   <UDropdownMenu
     :items="items"
-    :content="{ align: 'end' }"
+    :content="{ align: 'start', side: 'top' }"
     :ui="{ content: 'w-72' }"
   >
     <!-- The avatar in the default slot rather than UButton's `avatar` prop,
@@ -109,7 +109,8 @@ const items = computed<DropdownMenuItem[][]>(() => [
     <UButton
       color="neutral"
       variant="ghost"
-      class="rounded-full p-0.5"
+      block
+      class="justify-start gap-2 p-1.5"
       aria-label="User menu"
     >
       <UIcon
@@ -118,6 +119,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
         class="size-8 animate-spin p-1.5"
       />
       <UAvatar v-else ref="triggerAvatar" v-bind="avatar" size="md" />
+      <span class="min-w-0 flex-1 truncate text-start">{{ displayName }}</span>
     </UButton>
 
     <template #account>

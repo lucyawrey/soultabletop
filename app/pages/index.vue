@@ -324,7 +324,7 @@ function formatUpdated(updatedAt: string) {
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-(--ui-container) p-4">
+  <PageContainer>
     <div
       v-if="!isLoggedIn"
       class="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center gap-12 lg:flex-row lg:gap-24"
@@ -410,7 +410,7 @@ function formatUpdated(updatedAt: string) {
       </UPageCard>
     </div>
 
-    <div v-else class="space-y-6 py-8">
+    <div v-else class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold text-highlighted">
@@ -490,5 +490,5 @@ function formatUpdated(updatedAt: string) {
         </UPageCard>
       </div>
     </div>
-  </div>
+  </PageContainer>
 </template>
