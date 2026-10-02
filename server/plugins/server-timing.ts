@@ -1,6 +1,7 @@
 import { setHeader } from "h3";
 import {
   createRequestTiming,
+  currentRequestTiming,
   runWithRequestTiming,
   formatServerTiming,
   isServerTimingEnabled,
@@ -12,7 +13,7 @@ import {
 // `SERVER_TIMING` is set to 1/true. The header carries numbers only.
 export default defineNitroPlugin((nitroApp) => {
   const enabled = isServerTimingEnabled(
-    process.env.SERVER_TIMING ?? useRuntimeConfig().serverTiming,
+    process.env.SERVER_TIMING,
     import.meta.dev,
   );
   if (!enabled) return;
@@ -21,6 +22,10 @@ export default defineNitroPlugin((nitroApp) => {
   // (a hook cannot do this: it runs in its own async context).
   const handler = nitroApp.h3App.handler;
   nitroApp.h3App.handler = (event) => {
+    // An internal call (SSR `$fetch` to `/api/...`) joins the outer request's
+    // timing and writes no header of its own.
+    const outer = currentRequestTiming();
+    if (outer) return handler(event);
     const timing = createRequestTiming();
     event.context.serverTiming = timing;
     return runWithRequestTiming(timing, () => handler(event));

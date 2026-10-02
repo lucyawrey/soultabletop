@@ -25,11 +25,16 @@ export function runWithRequestTiming<T>(timing: RequestTiming, fn: () => T) {
 
 /**
  * The current request's timing, if any. Read it when a query starts, not when
- * it finishes: pg's callbacks run in the socket's async context, which
- * belongs to whichever request opened the connection.
+ * it finishes or from inside pg-pool: its queue callbacks and pg's socket
+ * callbacks run in another request's async context.
  */
 export function currentRequestTiming() {
   return storage.getStore();
+}
+
+/** Adds time that was not a query (such as waiting for a connection). */
+export function addDbTime(timing: RequestTiming, durationMs: number) {
+  timing.dbMs += durationMs;
 }
 
 export function addQuery(timing: RequestTiming, durationMs: number) {

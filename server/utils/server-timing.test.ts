@@ -59,3 +59,12 @@ describe("isServerTimingEnabled", () => {
     expect(isServerTimingEnabled("0", true)).toBe(false);
   });
 });
+
+describe("nested requests", () => {
+  it("an inner call sees the outer timing, so the plugin reuses it", () => {
+    const outer = createRequestTiming(0);
+    runWithRequestTiming(outer, () => {
+      expect(currentRequestTiming()).toBe(outer);
+    });
+  });
+});

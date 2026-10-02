@@ -37,7 +37,7 @@ pnpm dev
 | `DATABASE_URL`       | Pooled Neon Postgres connection string (app and `drizzle-kit`)           |
 | `BETTER_AUTH_SECRET` | Signs sessions and tokens; generate with `openssl rand -base64 32`       |
 | `EMAIL_API_KEY`      | Resend API key (reserved for email features; not read by the code yet)   |
-| `SERVER_TIMING`      | Optional. `1` adds a `Server-Timing` response header (database time, query count, total time); on in `pnpm dev`, off in production unless set |
+| `SERVER_TIMING`      | Optional, read at runtime. `1`, `true`, `on`, or `yes` adds a `Server-Timing` response header (database time, query count, total time); `0` turns it off. On in `pnpm dev`, off in production unless set. Error responses and redirects never carry it |
 
 All are server-only and never sent to the browser. The first three are set in all
 three Vercel environments (Production, Preview, Development). While the app is

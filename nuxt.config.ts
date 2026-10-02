@@ -34,7 +34,6 @@ export default defineNuxtConfig({
   runtimeConfig: {
     databaseUrl: process.env.DATABASE_URL ?? "",
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? "",
-    serverTiming: process.env.SERVER_TIMING ?? "",
   },
 
   // Scalar's API reference logs hydration mismatches inside its own
