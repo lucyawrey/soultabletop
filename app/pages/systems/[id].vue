@@ -152,22 +152,16 @@ async function remove() {
         </template>
       </DetailHeader>
 
-      <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
-        <UPageCard :ui="{ header: 'w-full' }">
-          <template #header>
-            <div class="flex items-center justify-between gap-4">
-              <h2 class="text-lg font-semibold text-highlighted">
-                Content Types
-              </h2>
-              <UButton
-                v-if="loggedIn"
-                :to="{ path: '/types', query: { systemId: id } }"
-                icon="i-lucide-plus"
-                size="sm"
-              >
-                New Content Type
-              </UButton>
-            </div>
+      <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <DetailPanel title="Content Types">
+          <template v-if="loggedIn" #actions>
+            <UButton
+              :to="{ path: '/types', query: { systemId: id } }"
+              icon="i-lucide-plus"
+              size="sm"
+            >
+              New Content Type
+            </UButton>
           </template>
 
           <ul
@@ -177,32 +171,33 @@ async function remove() {
             <li
               v-for="type in systemContentTypes"
               :key="type.id"
-              class="flex items-center justify-between py-2"
+              class="flex items-center justify-between gap-3 px-[18px] py-3"
             >
               <NuxtLink
                 :to="`/types/${type.id}`"
-                class="font-medium text-highlighted hover:underline"
+                class="font-bold text-highlighted hover:text-primary hover:underline"
               >
                 {{ type.name }}
               </NuxtLink>
-              <span class="text-sm text-muted">{{ type.readableId }}</span>
+              <ReadableIdBadge :readable-id="type.readableId" />
             </li>
           </ul>
           <TableSkeleton
             v-else-if="isLoading(contentTypesStatus)"
             :rows="2"
+            class="px-[18px]"
           />
-          <p v-else class="py-6 text-center text-sm text-muted">
+          <p v-else class="px-[18px] py-6 text-center text-sm text-muted">
             No content types for this system yet.
           </p>
-        </UPageCard>
+        </DetailPanel>
 
         <AboutPanel
           :facts="[
             { label: 'Owner', value: system.ownerReadableId },
             { label: 'ID', value: system.readableId },
             { label: 'Visibility', value: visibilityLabel(system.isPubliclyReadable) },
-            { label: 'Updated', value: new Date(system.updatedAt).toLocaleString() },
+            { label: 'Updated', value: new Date(system.updatedAt).toLocaleDateString(undefined, { dateStyle: 'medium' }) },
           ]"
         />
       </div>

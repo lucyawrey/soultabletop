@@ -123,10 +123,14 @@ const items = computed<DropdownMenuItem[][]>(() => [
         class="size-8 animate-spin p-1.5"
       />
       <UAvatar v-else ref="triggerAvatar" v-bind="avatar" size="md" />
-      <span
-        v-if="!collapsed"
-        class="min-w-0 flex-1 truncate text-start"
-      >{{ displayName }}</span>
+      <span v-if="!collapsed" class="min-w-0 flex-1 text-start">
+        <span class="block truncate text-sm font-semibold text-highlighted">
+          {{ displayName }}
+        </span>
+        <span v-if="showUsername" class="block truncate text-xs font-normal text-muted">
+          @{{ username }}
+        </span>
+      </span>
     </UButton>
 
     <template #account>

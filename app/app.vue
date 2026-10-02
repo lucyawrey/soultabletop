@@ -78,10 +78,10 @@ watch(
         v-model:collapsed="collapsed"
         collapsible
                 :min-size="14"
-        :default-size="16"
+        :default-size="18"
         :max-size="22"
         class="print:hidden"
-        :ui="{ footer: 'border-t border-default' }"
+        :ui="{ root: 'bg-default border-e border-default', footer: 'border-t border-default' }"
       >
         <template #header="{ collapsed: isCollapsed }">
           <div
@@ -94,7 +94,7 @@ watch(
               class="-ms-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
             >
               <UIcon name="i-lucide-dices" class="size-5 text-primary" />
-              <span>Soul Tabletop</span>
+              <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
             </NuxtLink>
             <!-- One toggle for both states; phones use the drawer instead. -->
             <UButton

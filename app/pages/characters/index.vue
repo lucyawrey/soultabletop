@@ -91,7 +91,7 @@ const columns: TableColumn<ContentItem>[] = [
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString(),
+    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString(undefined, { dateStyle: "medium" }),
   },
   { id: "actions" },
 ];
@@ -207,7 +207,7 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <PageHeader title="Characters">
+    <PageHeader eyebrow="Play" title="Characters">
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
@@ -246,10 +246,13 @@ async function remove() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/characters/${row.original.id}`"
-          class="font-medium text-highlighted hover:underline"
+          class="font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>
+        <span class="mt-0.5 block font-mono text-xs text-muted">
+          {{ row.original.readableId }}
+        </span>
       </template>
 
       <template #systemId-cell="{ row }">

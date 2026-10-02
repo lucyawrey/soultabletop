@@ -37,12 +37,12 @@ const tabs = computed(() => [
         @update:model-value="list.setTab($event as ResourceListTab)"
       />
 
-      <div class="flex min-w-0 flex-1 basis-64 items-center gap-2">
+      <div class="flex min-w-0 flex-1 basis-64 items-center justify-end gap-2">
         <UInput
           :model-value="list.search.value"
           icon="i-lucide-search"
           :placeholder="`Search ${noun.toLowerCase()} by name or ID`"
-          class="min-w-0 flex-1"
+          class="min-w-0 flex-1 sm:max-w-80"
           @update:model-value="list.setSearch(String($event))"
         />
         <ListViewToggle v-model="view" />

@@ -1,16 +1,13 @@
 <script setup lang="ts">
-// A resource's readable ID, shown as a small rounded pill beside its name.
+// A resource's readable ID, shown as a small monospace chip beside its name.
 defineProps<{ readableId: string }>();
 </script>
 
 <template>
-  <UBadge
-    color="neutral"
-    variant="outline"
-    size="sm"
+  <span
     :title="`ID: ${readableId}`"
-    class="max-w-full font-mono font-normal break-all whitespace-normal"
+    class="inline-block max-w-full rounded-sm bg-muted px-[7px] py-[3px] font-mono text-xs leading-tight font-medium break-all text-muted"
   >
     {{ readableId }}
-  </UBadge>
+  </span>
 </template>

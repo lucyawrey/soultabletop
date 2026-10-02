@@ -6,23 +6,20 @@ defineProps<{ facts: { label: string; value?: string | null }[] }>();
 </script>
 
 <template>
-  <aside
-    class="rounded-lg border border-default bg-default p-4 print:hidden"
-    aria-labelledby="about-heading"
-  >
-    <h2 id="about-heading" class="mb-3 text-lg font-semibold text-highlighted">
-      About
-    </h2>
-    <dl class="space-y-3 text-sm">
+  <DetailPanel title="About" class="print:hidden">
+    <dl class="px-[18px] pt-1.5 pb-3.5 text-sm">
       <template v-for="fact in facts" :key="fact.label">
-        <div v-if="fact.value">
-          <dt class="text-xs font-semibold tracking-wide text-muted uppercase">
-            {{ fact.label }}
-          </dt>
-          <dd class="break-words text-default">{{ fact.value }}</dd>
+        <div
+          v-if="fact.value"
+          class="flex justify-between gap-3 border-b border-dashed border-default py-2.5 last:border-b-0"
+        >
+          <dt class="text-muted">{{ fact.label }}</dt>
+          <dd class="text-end font-semibold break-words text-default">
+            {{ fact.value }}
+          </dd>
         </div>
       </template>
       <slot />
     </dl>
-  </aside>
+  </DetailPanel>
 </template>

@@ -13,7 +13,7 @@ defineProps<{
 </script>
 
 <template>
-  <header class="space-y-3">
+  <div class="space-y-5">
     <UButton
       :to="backTo"
       icon="i-lucide-arrow-left"
@@ -24,27 +24,25 @@ defineProps<{
     >
       {{ backLabel }}
     </UButton>
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="min-w-0 space-y-2">
-        <p class="text-xs font-semibold tracking-wide text-muted uppercase">
-          {{ eyebrow }}
-        </p>
-        <h1 class="text-3xl font-bold text-highlighted break-words">
+    <header class="space-y-2">
+      <p class="text-xs font-bold tracking-widest text-muted uppercase">
+        {{ eyebrow }}
+      </p>
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <h1 class="text-[32px] leading-[1.05] font-bold break-words text-highlighted sm:text-[40px]">
           {{ title }}
         </h1>
         <div
-          v-if="$slots.meta"
-          class="flex flex-wrap items-center gap-2"
+          v-if="$slots.actions"
+          class="flex flex-wrap items-center gap-2 print:hidden"
         >
-          <slot name="meta" />
+          <slot name="actions" />
         </div>
       </div>
-      <div
-        v-if="$slots.actions"
-        class="flex flex-wrap items-center gap-2 print:hidden"
-      >
-        <slot name="actions" />
+      <div v-if="$slots.meta" class="flex flex-wrap items-center gap-2">
+        <slot name="meta" />
       </div>
-    </div>
-  </header>
+    </header>
+    <OrnamentRule />
+  </div>
 </template>

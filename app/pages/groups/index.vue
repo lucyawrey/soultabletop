@@ -90,7 +90,7 @@ async function submitForm() {
 
 <template>
   <PageContainer>
-    <PageHeader title="Groups">
+    <PageHeader eyebrow="Build" title="Groups">
       <UButton icon="i-lucide-plus" size="sm" @click="openCreate">
         New Group
       </UButton>
@@ -142,10 +142,13 @@ async function submitForm() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/groups/${row.original.id}`"
-          class="font-medium text-highlighted hover:underline"
+          class="font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>
+        <span class="mt-0.5 block font-mono text-xs text-muted">
+          {{ row.original.readableId }}
+        </span>
         <UBadge
           v-if="row.original.kind === 'system'"
           variant="subtle"

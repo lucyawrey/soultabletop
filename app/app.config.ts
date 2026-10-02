@@ -9,6 +9,11 @@ export default defineAppConfig({
       neutral: "folio",
     },
     navigationMenu: {
+      slots: {
+        // Roomier rows, and small uppercase group labels like the mockup.
+        link: "py-2 text-[15px]",
+        label: "px-2.5 pb-1 text-[11px] font-bold tracking-widest text-muted uppercase",
+      },
       // The current page is a solid primary pill, not Nuxt UI's tinted one.
       compoundVariants: [
         {
@@ -32,6 +37,8 @@ export default defineAppConfig({
     },
     table: {
       slots: {
+        // The table sits in a bordered panel.
+        root: "rounded-lg border border-default bg-default",
         // A tinted header row with small uppercase labels, and a hover row.
         thead: "bg-muted",
         th: "py-2.5 text-xs font-semibold tracking-wide text-highlighted uppercase",

@@ -7,17 +7,15 @@ import {
 // Where a resource comes from, relative to the viewer (`source` on list rows).
 defineProps<{ source: ResourceSource }>();
 
-const colors = {
-  you: "success",
-  yourGroups: "success",
-  shared: "info",
-  official: "primary",
-  community: "neutral",
-} as const;
 </script>
 
 <template>
-  <UBadge :color="colors[source]" variant="subtle">
+  <!-- Official stands out (solid primary); everything else is a quiet chip. -->
+  <UBadge
+    :color="source === 'official' ? 'primary' : 'neutral'"
+    :variant="source === 'official' ? 'solid' : 'subtle'"
+    class="rounded-full font-bold"
+  >
     {{ RESOURCE_SOURCE_LABELS[source] }}
   </UBadge>
 </template>

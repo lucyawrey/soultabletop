@@ -229,7 +229,7 @@ async function remove() {
 
 <template>
   <PageContainer>
-    <PageHeader title="Content Types">
+    <PageHeader eyebrow="Build" title="Content Types">
       <UButton
         v-if="loggedIn"
         icon="i-lucide-plus"
@@ -259,10 +259,13 @@ async function remove() {
       <template #name-cell="{ row }">
         <NuxtLink
           :to="`/types/${row.original.id}`"
-          class="font-medium text-highlighted hover:underline"
+          class="font-bold text-highlighted hover:text-primary hover:underline"
         >
           {{ row.original.name }}
         </NuxtLink>
+        <span class="mt-0.5 block font-mono text-xs text-muted">
+          {{ row.original.readableId }}
+        </span>
       </template>
 
       <template #systemId-cell="{ row }">
