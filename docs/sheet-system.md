@@ -334,10 +334,12 @@ runs the exact same code in the browser, lazy-loaded there).
   root-targeting rule (`:root { … }`) can't use `& ~`/`& +` or a leading `~`/`+`. Violations are errors
   (the rule is dropped). The same checks run on save (no scope ID) and when scoping. Don't loosen these without
   re-checking that nothing can style the app outside the sheet; tests in `shared/sheet/css.test.ts`.
-- Fonts (decided): curated, self-hosted list. `@nuxt/fonts` (already installed by `@nuxt/ui`) only scans the app's
-  own CSS at build time, so the sheet fonts are declared in `nuxt.config.ts` `fonts.families` with `global: true`.
-  The list lives in `shared/sheet/fonts.ts` (also used by the editor's reference panel); a `font-family` naming an
-  unlisted font is a warning, not an error. Starting set chosen at implementation time (a few display/serif fonts).
+- Fonts (decided): curated, self-hosted list. Sheets may use every font on the site: the app's own (Nunito Sans,
+  Cormorant Garamond, JetBrains Mono) and the extra sheet fonts. `@nuxt/fonts` (already installed by `@nuxt/ui`) only
+  scans the app's own CSS at build time, so all of them are declared in `nuxt.config.ts` `fonts.families` with
+  `global: true`. The list, with weights, lives in `shared/fonts.ts` (also used by the editor's reference panel); the
+  font table with designers and licenses is in `docs/theme.md`. A `font-family` naming an unlisted font is a warning,
+  not an error.
 
 ---
 
