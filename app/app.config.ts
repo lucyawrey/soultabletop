@@ -71,7 +71,7 @@ export default defineAppConfig({
         // The table sits in a bordered panel.
         root: "rounded-lg border border-default bg-default",
         // A tinted header row with small uppercase labels, and a hover row.
-        thead: "bg-muted",
+        thead: "bg-elevated",
         th: "px-4 py-2.5 text-xs font-bold tracking-[0.08em] text-muted uppercase",
         td: "px-4 py-3",
         tr: "hover:bg-primary/5",

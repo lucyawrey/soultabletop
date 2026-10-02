@@ -337,14 +337,9 @@ function printPage() {
             :owner="item.ownerReadableId"
           />
           <VisibilityBadge :is-publicly-readable="item.isPubliclyReadable" />
-          <UBadge
-            v-if="contentType"
-            color="neutral"
-            variant="subtle"
-            class="rounded-full font-bold ring-0"
-          >
+          <LabelChip v-if="contentType">
             {{ contentType.name }}
-          </UBadge>
+          </LabelChip>
           <span class="text-sm text-muted">
             <SystemLink :system-id="item.systemId" />
             · Updated {{ formatShortDate(item.updatedAt) }}

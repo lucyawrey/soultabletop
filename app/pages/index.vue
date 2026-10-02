@@ -377,9 +377,9 @@ function formatUpdated(updatedAt: string) {
       <!-- On large screens the hero and the form stay together, centered in
            the page, instead of spreading to its edges. -->
       <div class="max-w-lg space-y-4 text-center lg:max-w-none lg:text-left">
-        <UBadge color="primary" variant="soft" class="rounded-full px-2.5 py-1 text-[13px]">
+        <span class="inline-flex rounded-full bg-(--ui-primary-soft) px-2.5 py-1 text-[13px]/[1.2] font-bold text-primary">
           {{ copy.home.badge }}
-        </UBadge>
+        </span>
         <h1 class="text-[44px] leading-none font-bold text-highlighted sm:text-[56px] 2xl:text-[64px]">
           {{ copy.home.heading }}
         </h1>

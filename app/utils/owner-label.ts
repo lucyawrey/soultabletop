@@ -7,3 +7,9 @@ export function ownerLabel(item: {
   if (!item.ownerReadableId) return null;
   return item.ownerGroupId ? item.ownerReadableId : `@${item.ownerReadableId}`;
 }
+
+// A resource's full address as lists and detail headers show it,
+// `owner/readable-id`, or just the readable ID while the owner isn't known.
+export function resourceAddress(owner: string | null | undefined, readableId: string) {
+  return owner ? `${owner}/${readableId}` : readableId;
+}

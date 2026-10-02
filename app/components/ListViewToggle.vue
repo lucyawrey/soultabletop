@@ -7,7 +7,7 @@ import type { ListView } from "~/composables/useListView";
 const view = defineModel<ListView>({ required: true });
 
 const options = [
-  { value: "table", label: "Table view", icon: "i-lucide-list" },
+  { value: "table", label: "Table view", icon: "i-lucide-menu" },
   { value: "cards", label: "Cards view", icon: "i-lucide-layout-grid" },
 ] as const;
 </script>
@@ -26,7 +26,7 @@ const options = [
       :aria-pressed="view === option.value"
       :title="option.label"
       class="grid size-[34px] place-items-center rounded-[6px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-      :class="view === option.value ? 'bg-primary text-inverted' : 'text-muted hover:bg-muted hover:text-default'"
+      :class="view === option.value ? 'bg-primary text-inverted' : 'text-muted hover:bg-elevated hover:text-default'"
       @click="view = option.value"
     >
       <UIcon :name="option.icon" class="size-4" />

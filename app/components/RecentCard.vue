@@ -10,7 +10,7 @@ defineProps<{ to: string; name: string; detail?: string }>();
   >
     <span
       aria-hidden="true"
-      class="grid size-[42px] shrink-0 place-items-center rounded-full bg-primary/10 font-display text-xl font-bold text-primary"
+      class="grid size-[42px] shrink-0 place-items-center rounded-full bg-(--ui-primary-soft) font-display text-xl font-bold text-primary"
     >
       {{ name.charAt(0).toUpperCase() }}
     </span>

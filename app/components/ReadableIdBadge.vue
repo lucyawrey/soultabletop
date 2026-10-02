@@ -7,8 +7,9 @@ defineProps<{ readableId: string; owner?: string | null }>();
 <template>
   <span
     :title="`ID: ${readableId}`"
-    class="inline-block max-w-full rounded-sm bg-muted px-[7px] py-[3px] font-mono text-xs leading-tight font-medium break-all text-muted"
+    class="inline-block max-w-full rounded-sm bg-elevated px-[7px] py-[3px] font-mono text-xs leading-tight font-medium [overflow-wrap:anywhere] text-muted"
   >
-    <template v-if="owner">{{ owner }}/</template>{{ readableId }}
+    <!-- Long addresses wrap after the slash before anywhere else. -->
+    <template v-if="owner">{{ owner }}/<wbr></template>{{ readableId }}
   </span>
 </template>

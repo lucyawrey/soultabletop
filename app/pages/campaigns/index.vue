@@ -9,6 +9,8 @@ interface CampaignItem {
   id: string;
   source: ResourceSource;
   readableId: string;
+  // The owner's username or group ID, for the `owner/id` address.
+  ownerReadableId: string | null;
   name: string;
   systemId: string;
   isPubliclyReadable: boolean;
@@ -211,7 +213,7 @@ async function remove() {
           {{ row.original.name }}
         </NuxtLink>
         <span class="mt-0.5 block font-mono text-xs text-muted">
-          {{ row.original.readableId }}
+          {{ resourceAddress(row.original.ownerReadableId, row.original.readableId) }}
         </span>
       </template>
 

@@ -2,7 +2,7 @@
 import type { ResourceCardItem } from "~/utils/resource-card";
 
 // The cards view of a resource list: a grid with one card per item showing its
-// name (the card's link), readable ID, Source and Visibility badges, details
+// name (the card's link), address (`owner/id`), Source and Visibility badges, details
 // from the page (`#details`), the page's actions menu (`#actions`), and a
 // footer with the updated date.
 defineProps<{ items: T[]; to: (item: T) => string }>();
@@ -30,7 +30,12 @@ defineProps<{ items: T[]; to: (item: T) => string }>();
         </div>
       </div>
 
-      <ReadableIdBadge v-if="item.readableId" :readable-id="item.readableId" class="self-start" />
+      <ReadableIdBadge
+        v-if="item.readableId"
+        :readable-id="item.readableId"
+        :owner="item.ownerReadableId"
+        class="self-start"
+      />
 
       <div class="flex flex-wrap items-center gap-2">
         <SourceBadge v-if="item.source" :source="item.source" />

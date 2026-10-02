@@ -184,12 +184,7 @@ async function remove() {
         {{ API_KEY_ACCESS_LABELS[row.original.access] }}
       </template>
       <template #expiresAt-cell="{ row }">
-        <UBadge
-          v-if="isExpired(row.original)"
-          color="error"
-          variant="subtle"
-          label="Expired"
-        />
+        <LabelChip v-if="isExpired(row.original)" tone="error">Expired</LabelChip>
         <span v-else>{{ formatDate(row.original.expiresAt) || "Never" }}</span>
       </template>
       <template #actions-cell="{ row }">

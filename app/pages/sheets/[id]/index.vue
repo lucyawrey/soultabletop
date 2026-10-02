@@ -123,13 +123,7 @@ async function remove() {
             :owner="sheet.ownerReadableId"
           />
           <VisibilityBadge :is-publicly-readable="sheet.isPubliclyReadable" />
-          <UBadge
-            v-if="sheet.isDefault"
-            variant="subtle"
-            class="rounded-full font-bold ring-0"
-          >
-            Default
-          </UBadge>
+          <LabelChip v-if="sheet.isDefault" tone="primarySoft">Default</LabelChip>
         </template>
         <template v-if="sheet.canEdit" #actions>
           <UButton

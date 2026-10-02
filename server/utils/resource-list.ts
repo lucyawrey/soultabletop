@@ -1,7 +1,7 @@
 import { createError, getQuery, type H3Event } from "h3";
 import { and, asc, desc, ilike, or, sql, type SQL } from "drizzle-orm";
 import type { User } from "better-auth";
-import { group, resource, type Resource } from "../database/schema";
+import { group, ownerReadableId, resource, type Resource } from "../database/schema";
 import {
   clampPage,
   escapeLike,
@@ -33,6 +33,10 @@ import {
 // Official resources (owned by a system group) are labeled as such and sort
 // before Community ones; select `official` and order by `listOrder`.
 export const officialColumn = sql<boolean>`coalesce(${group.kind} = 'system', false)`;
+// The owner's readable ID (a username or group ID), for each row's `owner/id`
+// address; select it as `ownerReadableId`. One lookup on the table's unique
+// user or group key per row, in the same query.
+export const ownerReadableIdColumn = sql<string | null>`(select ${ownerReadableId.readableId} from ${ownerReadableId} where ${ownerReadableId.userId} = ${resource.ownerUserId} or ${ownerReadableId.groupId} = ${resource.ownerGroupId} limit 1)`;
 export const listOrder = [
   desc(officialColumn),
   asc(resource.name),

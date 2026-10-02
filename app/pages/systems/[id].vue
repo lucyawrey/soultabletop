@@ -192,9 +192,9 @@ async function remove() {
                   {{ type.name }}
                 </NuxtLink>
               </span>
-              <UBadge color="neutral" variant="subtle" class="rounded-full font-bold ring-0">
+              <LabelChip>
                 {{ CONTENT_CATEGORY_LABELS[type.contentCategory] }}
-              </UBadge>
+              </LabelChip>
             </li>
           </ul>
           <TableSkeleton

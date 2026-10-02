@@ -13,6 +13,8 @@ interface SheetItem {
   id: string;
   source: ResourceSource;
   readableId: string;
+  // The owner's username or group ID, for the `owner/id` address.
+  ownerReadableId: string | null;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -239,7 +241,7 @@ async function remove() {
           {{ row.original.name }}
         </NuxtLink>
         <span class="mt-0.5 block font-mono text-xs text-muted">
-          {{ row.original.readableId }}
+          {{ resourceAddress(row.original.ownerReadableId, row.original.readableId) }}
         </span>
       </template>
 
@@ -260,9 +262,9 @@ async function remove() {
       </template>
 
       <template #isDefault-cell="{ row }">
-        <UBadge v-if="row.original.isDefault" variant="subtle">
+        <LabelChip v-if="row.original.isDefault" tone="primarySoft">
           Default
-        </UBadge>
+        </LabelChip>
         <!-- An empty slot makes the table print the raw `false` instead. -->
         <span v-else />
       </template>
@@ -301,7 +303,7 @@ async function remove() {
             />
           </template>
       <template #badges="{ item }">
-        <UBadge v-if="item.isDefault" variant="subtle">Default</UBadge>
+        <LabelChip v-if="item.isDefault" tone="primarySoft">Default</LabelChip>
       </template>
       <template #details="{ item }">
           <dt class="text-muted">System</dt>

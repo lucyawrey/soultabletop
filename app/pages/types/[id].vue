@@ -310,9 +310,9 @@ async function remove() {
             :owner="contentType.ownerReadableId"
           />
           <VisibilityBadge :is-publicly-readable="contentType.isPubliclyReadable" />
-          <UBadge color="neutral" variant="subtle" class="rounded-full font-bold ring-0">
+          <LabelChip>
             {{ CONTENT_CATEGORY_LABELS[contentType.contentCategory] }}
-          </UBadge>
+          </LabelChip>
         </template>
         <template v-if="contentType.canEdit" #actions>
           <UButton
@@ -364,9 +364,9 @@ async function remove() {
                 </NuxtLink>
               </span>
               <span class="flex items-center gap-2">
-                <UBadge v-if="item.isDefault" variant="subtle" class="rounded-full font-bold ring-0">
+                <LabelChip v-if="item.isDefault" tone="primarySoft">
                   Default
-                </UBadge>
+                </LabelChip>
                 <ReadableIdBadge :readable-id="item.readableId" />
               </span>
             </li>

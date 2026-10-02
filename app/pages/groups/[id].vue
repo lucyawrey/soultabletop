@@ -189,12 +189,7 @@ async function remove() {
       >
         <template #meta>
           <ReadableIdBadge :readable-id="group.readableId" />
-          <UBadge
-            v-if="group.kind === 'system'"
-            class="rounded-full font-bold"
-          >
-            Official
-          </UBadge>
+          <LabelChip v-if="group.kind === 'system'" tone="primary">Official</LabelChip>
         </template>
         <template v-if="isAdmin" #actions>
           <UButton

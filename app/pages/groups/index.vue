@@ -113,20 +113,19 @@ async function submitForm() {
       :to="(item) => `/groups/${item.id}`"
     >
       <template #badges="{ item }">
-        <UBadge v-if="item.kind === 'system'" variant="subtle">Official</UBadge>
+        <LabelChip v-if="item.kind === 'system'" tone="primary">Official</LabelChip>
       </template>
       <template #details="{ item }">
         <dt class="text-muted">Your Role</dt>
         <dd>
           <span v-if="!item.role">Site admin</span>
-          <UBadge
+          <LabelChip
             v-else
-            :color="item.role === 'admin' ? 'primary' : 'neutral'"
-            variant="subtle"
+            :tone="item.role === 'admin' ? 'primarySoft' : 'neutral'"
             class="capitalize"
           >
             {{ item.role }}
-          </UBadge>
+          </LabelChip>
         </dd>
         <dt class="text-muted">Members</dt>
         <dd>{{ item.memberCount }}</dd>
@@ -150,28 +149,22 @@ async function submitForm() {
         <span class="mt-0.5 block font-mono text-xs text-muted">
           {{ row.original.readableId }}
         </span>
-        <UBadge
-          v-if="row.original.kind === 'system'"
-          variant="subtle"
-          size="sm"
-          class="ms-2"
-        >
+        <LabelChip v-if="row.original.kind === 'system'" tone="primary" class="ms-2">
           Official
-        </UBadge>
+        </LabelChip>
       </template>
 
       <template #role-cell="{ row }">
         <span v-if="!row.original.role" class="text-sm text-muted">
           Site admin
         </span>
-        <UBadge
+        <LabelChip
           v-else
-          :color="row.original.role === 'admin' ? 'primary' : 'neutral'"
-          variant="subtle"
+          :tone="row.original.role === 'admin' ? 'primarySoft' : 'neutral'"
           class="capitalize"
         >
           {{ row.original.role }}
-        </UBadge>
+        </LabelChip>
       </template>
 
       <template #empty>

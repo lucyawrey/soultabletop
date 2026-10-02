@@ -7,6 +7,7 @@ import {
   listQueryParameters,
   listResources,
   officialColumn,
+  ownerReadableIdColumn,
   requireListQuery,
   respondWithList,
 } from "../../utils/resource-list";
@@ -18,7 +19,7 @@ defineRouteMeta({
     summary: "List accessible systems",
     parameters: [...listQueryParameters],
     responses: {
-      200: { description: "System list. Each row has `source`: you, yourGroups, shared, official, or community" },
+      200: { description: "System list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
     },
   },
 });
@@ -32,7 +33,7 @@ export default defineEventHandler(async (event) => {
     user,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
-        .select({ resource, official: officialColumn })
+        .select({ resource, official: officialColumn, ownerReadableId: ownerReadableIdColumn })
         .from(system)
         .innerJoin(resource, eq(resource.id, system.resourceId))
         .leftJoin(group, eq(group.id, resource.ownerGroupId))
@@ -51,8 +52,9 @@ export default defineEventHandler(async (event) => {
     },
   });
   return respondWithList(
-    rows.map(({ resource: item, source, access }) => ({
+    rows.map(({ resource: item, ownerReadableId, source, access }) => ({
       ...item,
+      ownerReadableId,
       source,
       canEdit: access.canEdit,
       canChangeOwner:
