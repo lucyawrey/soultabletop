@@ -6,6 +6,7 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 
 - Make sure sheet designers can use tailwind classes insheets (unless i am wrong and tailwind is not already in scope)
 - Set favicon icon to current dice icon.
+- UI Bug: Group "official" badge on the groups page table does not look right.
 
 # In progress
 
