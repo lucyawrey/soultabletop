@@ -1,6 +1,11 @@
 import { createError } from "h3";
 import { eq } from "drizzle-orm";
-import { campaign, resource, system } from "../../database/schema";
+import {
+  campaign,
+  campaignMembership,
+  resource,
+  system,
+} from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
@@ -19,6 +24,8 @@ defineRouteMeta({
   openAPI: {
     tags: ["Campaign"],
     summary: "Create a campaign",
+    description:
+      "The creating user becomes a member with the GM role; change roles with the members endpoint.",
     requestBody: {
       required: true,
       content: {
@@ -95,6 +102,13 @@ export default defineEventHandler(async (event) => {
           systemId: body.systemId as string,
         })
         .returning();
+      // The creator is the campaign's GM by default; editors can change any
+      // member's role later (members.post), including their own.
+      await tx.insert(campaignMembership).values({
+        campaignId: createdResource.id,
+        userId: user.id,
+        role: "gm",
+      });
       return { ...createdResource, ...createdCampaign };
     });
     setResponseStatus(event, 201);
