@@ -151,7 +151,7 @@ watch(
             class="flex items-center gap-2 rounded-md p-1 font-semibold text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
           >
             <UIcon name="i-lucide-dices" class="size-5 text-primary" />
-            <span>Soul Tabletop</span>
+            <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
           </NuxtLink>
         </div>
         <NuxtPage />
