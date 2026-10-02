@@ -9,7 +9,7 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 # In progress
 
 - **Redesign the UI to be warmer and more inviting** · feature · large
-  Planned with the user (2026-10-02): `.claude/plans/ui-redesign.md` (direction D Folio from `.claude/plans/ui-directions.html`, sidebar shell, list and detail patterns, one light theme, documented Sheet theme tokens; bundles empty-state next steps and Print content). Three PRs: theme (#60), sidebar shell (#61), and lists and details (#64) are merged. Left: polish and QA (an axe pass, phone widths, skeletons).
+  Planned with the user (2026-10-02): `.claude/plans/ui-redesign.md` (direction D Folio from `.claude/plans/ui-directions.html`, sidebar shell, list and detail patterns, one light theme, documented Sheet theme tokens; bundles empty-state next steps and Print content). Three PRs: theme (#60), sidebar shell (#61), and lists and details (#64) are merged. Last: polish and QA, PR #65 (branch `ui-polish`), open for the user's review. Delete this item when it merges.
 
 # Next up
 

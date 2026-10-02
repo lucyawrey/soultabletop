@@ -4,6 +4,6 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-10-02
 
-- **In progress:** nothing. The UI redesign's lists and details PR merged as #64; its worktree and branch are removed.
-- **Next:** the redesign's last PR, polish and QA (`.claude/plans/ui-redesign.md`, PR 5; the In progress item in `TODO.md`), unless the user picks something from Soon first. How to check UI work is in `.claude/running-commands.md`.
+- **In progress:** the UI redesign's last PR, polish and QA: #65 (branch `ui-polish`, worktree `../soultabletop-worktrees/ui-polish`), pushed and waiting for the user's review (Tier B). A dev server from that worktree may still be running on port 3005.
+- **On merge:** delete the redesign item from `TODO.md`, merge `origin/main` into `docs`, remove the worktree and branch.
 - **Waiting on the user:** the formula plan walkthrough before any Sheet formula work (see the Sheet system follow-ups item in `TODO.md`).
