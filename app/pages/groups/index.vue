@@ -100,6 +100,7 @@ async function submitForm() {
       <UInput
         v-model="search"
         icon="i-lucide-search"
+          :ui="{ base: 'h-10' }"
         placeholder="Search groups by name or ID"
         class="min-w-0 flex-1"
       />

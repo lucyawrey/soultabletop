@@ -42,6 +42,7 @@ const tabs = computed(() => [
         <UInput
           :model-value="list.search.value"
           icon="i-lucide-search"
+          :ui="{ base: 'h-10' }"
           :placeholder="`Search ${noun.toLowerCase()} by name or ID`"
           class="min-w-0 flex-1"
           @update:model-value="list.setSearch(String($event))"

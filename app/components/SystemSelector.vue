@@ -39,7 +39,7 @@ const selected = computed({
     size="md"
     aria-label="Current system"
     class="w-44"
-    :ui="{ base: 'bg-(--st-page) text-sm', content: 'w-max min-w-(--reka-select-trigger-width) max-w-[90vw]' }"
+    :ui="{ base: 'h-[35px] bg-(--st-page) text-sm text-default', trailingIcon: 'size-3.5 text-default', content: 'w-max min-w-(--reka-select-trigger-width) max-w-[90vw]' }"
   >
     <template #item-label="{ item }">
       <ResourceOption :option="item as ResourceOptionItem" />

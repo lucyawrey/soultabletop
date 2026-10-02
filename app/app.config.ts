@@ -38,14 +38,20 @@ export default defineAppConfig({
       ],
     },
     tabs: {
-      // Link tabs are the mockup's underline tabs: 18px apart, semibold, with
-      // a 2px indicator.
+      // Link tabs are the mockup's underline tabs: semibold, side by side with
+      // no gap between them, with a 2px underline.
       variants: {
         variant: {
+          // The underline is drawn from the active tab's own state rather than
+          // Nuxt UI's sliding indicator, which only exists after hydration and
+          // so jumps on load.
           link: {
-            list: "w-auto gap-[18px] p-0",
-            trigger: "px-0.5 pt-1.5 pb-[9px] text-[15px] font-semibold",
-            indicator: "h-0.5",
+            list: "w-auto gap-0 p-0",
+            // `::before`, with Nuxt UI's own pre-hydration `::after` underline
+            // hidden, so the server and client render the same line.
+            trigger:
+              "relative px-3 pt-1.5 pb-[9px] text-[15px] font-semibold after:hidden! data-[state=active]:before:absolute data-[state=active]:before:inset-x-0 data-[state=active]:before:-bottom-px data-[state=active]:before:h-0.5 data-[state=active]:before:bg-primary data-[state=active]:before:content-['']",
+            indicator: "hidden",
           },
         },
       },

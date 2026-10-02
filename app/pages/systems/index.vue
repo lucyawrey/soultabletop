@@ -58,6 +58,17 @@ function openCreate() {
   isFormOpen.value = true;
 }
 
+// `?new=1` (the dashboard's "New System" start card) opens the New dialog after
+// mount, then drops the query param so a refresh doesn't reopen it.
+const route = useRoute();
+const router = useRouter();
+onMounted(() => {
+  if (route.query.new === undefined) return;
+  if (loggedIn.value) openCreate();
+  const { new: _new, ...rest } = route.query;
+  router.replace({ query: rest });
+});
+
 function openEdit(item: SystemItem) {
   form.ownerGroupId = item.ownerGroupId;
   editingSystem.value = item;

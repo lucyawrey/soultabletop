@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// A page's title row: an optional small eyebrow above the title, and the
-// page's actions (buttons) at the end. The title is the display font.
-defineProps<{ title: string; eyebrow?: string }>();
+// A page's title row: an optional small eyebrow above the title and line
+// below it, and the page's actions (buttons) at the end. The title is the display font.
+defineProps<{ title: string; eyebrow?: string; description?: string }>();
 </script>
 
 <template>
@@ -16,6 +16,7 @@ defineProps<{ title: string; eyebrow?: string }>();
       <h1 class="text-[34px] leading-[1.05] font-bold text-highlighted">
         {{ title }}
       </h1>
+      <p v-if="description" class="mt-1 text-muted">{{ description }}</p>
     </div>
     <div v-if="$slots.default" class="flex print:hidden flex-wrap items-center gap-2">
       <slot />

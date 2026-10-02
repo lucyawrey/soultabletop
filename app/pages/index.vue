@@ -20,12 +20,22 @@ interface RecentItem {
   id: string;
   name: string;
   updatedAt: string;
+  systemId: string | null;
+}
+
+interface RecentCampaign extends RecentItem {
+  // The user's role, or null for a campaign they own without being a member.
+  role: "gm" | "player" | null;
+}
+
+interface RecentContent extends RecentItem {
+  contentTypeId: string;
 }
 
 interface Dashboard {
-  campaigns: RecentItem[];
-  characters: RecentItem[];
-  content: RecentItem[];
+  campaigns: RecentCampaign[];
+  characters: RecentContent[];
+  content: RecentContent[];
 }
 
 const mode = ref<AuthMode>("login");
@@ -268,38 +278,73 @@ watch([isLoggedIn, authBusy], ([loggedIn, submittingAuth]) => {
   if (loggedIn && !submittingAuth) refreshDashboard();
 });
 
-const recentSections = computed(() => {
-  // "idle" counts too: the fetch only starts once signed in, so on the server
-  // (and before the client's first watch run) nothing has been requested yet,
-  // and showing the empty state there would flash "No ... yet." before loading.
-  const loading = isLoading(dashboardStatus.value);
-  return [
-    {
-      title: "Campaigns",
-      icon: "i-lucide-swords",
-      path: "/campaigns",
-      empty: "No campaigns yet.",
-      items: dashboard.value.campaigns,
-      loading,
-    },
-    {
-      title: "Characters",
-      icon: "i-lucide-users",
-      path: "/characters",
-      empty: "No characters yet.",
-      items: dashboard.value.characters,
-      loading,
-    },
-    {
-      title: "Content",
-      icon: "i-lucide-file-text",
-      path: "/content",
-      empty: "No content yet.",
-      items: dashboard.value.content,
-      loading,
-    },
-  ];
+// The dashboard names systems and content types from lists the viewer can
+// read, so an item never shows the name of something they can't see.
+const { findSystem } = useSystems();
+const { data: contentTypes } = useLazyFetch<{ id: string; name: string }[]>(
+  "/api/content-type",
+  { key: "dashboard-content-types", default: () => [], immediate: isLoggedIn.value },
+);
+watch(isLoggedIn, (loggedIn) => {
+  if (loggedIn) refreshNuxtData("dashboard-content-types");
 });
+const ROLE_LABELS = { gm: "GM", player: "Player" } as const;
+
+function itemDetail(item: RecentItem & Partial<RecentCampaign & RecentContent>) {
+  return [
+    item.role ? ROLE_LABELS[item.role] : undefined,
+    item.contentTypeId
+      ? contentTypes.value.find((type) => type.id === item.contentTypeId)?.name
+      : undefined,
+    findSystem(item.systemId)?.name,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+// "idle" counts as loading too: the fetch only starts once signed in, so on the
+// server (and before the client's first watch run) nothing has been requested
+// yet, and showing the empty state there would flash before loading.
+const dashboardLoading = computed(() => isLoading(dashboardStatus.value));
+
+const recentSections = computed(() =>
+  [
+    { title: "Campaigns", kind: "Campaign", path: "/campaigns", items: dashboard.value.campaigns },
+    { title: "Characters", kind: "Character", path: "/characters", items: dashboard.value.characters },
+    { title: "Content", kind: "Content", path: "/content", items: dashboard.value.content },
+  ].map((section) => ({
+    ...section,
+    cards: section.items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      updatedAt: item.updatedAt,
+      to: `${section.path}/${item.id}`,
+      detail: itemDetail(item),
+    })),
+  })),
+);
+
+// The most recently edited item of all, for the Continue card.
+const continueItem = computed(() => {
+  const all = recentSections.value.flatMap((section) =>
+    section.cards.map((card) => ({ ...card, kind: section.kind })),
+  );
+  return all.reduce<(typeof all)[number] | undefined>(
+    (latest, card) =>
+      !latest || Date.parse(card.updatedAt) > Date.parse(latest.updatedAt) ? card : latest,
+    undefined,
+  );
+});
+
+// Someone with nothing yet gets the first-visit heading and start cards.
+const isNewUser = computed(() => !dashboardLoading.value && !continueItem.value);
+
+const startCards = [
+  { title: "Make a character", icon: "i-lucide-user", label: "New Character", to: "/characters?new=1", primary: true },
+  { title: "Start a campaign", icon: "i-lucide-flag", label: "New Campaign", to: "/campaigns?new=1" },
+  { title: "Find a system", icon: "i-lucide-globe", label: "Browse Systems", to: "/systems?tab=find" },
+  { title: "Build your own", icon: "i-lucide-shapes", label: "New System", to: "/systems?new=1" },
+];
 
 const relativeTime = new Intl.RelativeTimeFormat(undefined, {
   numeric: "auto",
@@ -420,15 +465,20 @@ function formatUpdated(updatedAt: string) {
       </UPageCard>
     </div>
 
-    <div v-else class="space-y-6">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-highlighted">
-            {{ fillCopy(copy.dashboard.heading, { name: sessionState.data.value?.user.name ?? "" }) }}
-          </h1>
-          <p class="text-sm text-muted">{{ copy.dashboard.subheading }}</p>
-        </div>
-      </div>
+    <div v-else class="space-y-5">
+      <PageHeader
+        :title="
+          isNewUser
+            ? copy.dashboard.newHeading
+            : fillCopy(copy.dashboard.heading, { name: sessionState.data.value?.user.name ?? '' })
+        "
+        :description="isNewUser ? undefined : copy.dashboard.subheading"
+      >
+        <UButton to="/characters?new=1" icon="i-lucide-plus">New Character</UButton>
+        <UButton to="/campaigns?new=1" icon="i-lucide-plus" color="neutral" variant="outline">
+          New Campaign
+        </UButton>
+      </PageHeader>
 
       <UAlert
         v-if="errorMessage"
@@ -437,59 +487,70 @@ function formatUpdated(updatedAt: string) {
         :description="errorMessage"
       />
 
-      <div class="grid gap-6 lg:grid-cols-3">
-        <UPageCard v-for="section in recentSections" :key="section.title">
-          <template #header>
-            <div class="flex items-center justify-between gap-4">
-              <h2
-                class="flex items-center gap-2 text-lg font-semibold text-highlighted"
-              >
-                <UIcon :name="section.icon" class="size-5 text-primary" />
-                Recent {{ section.title }}
-              </h2>
-              <UButton
-                :to="section.path"
-                color="neutral"
-                variant="link"
-                size="sm"
-                trailing-icon="i-lucide-arrow-right"
-              >
-                View all
-              </UButton>
-            </div>
-          </template>
+      <TableSkeleton v-if="dashboardLoading" :rows="3" />
 
-          <ul v-if="section.items.length" class="divide-y divide-default">
-            <li
-              v-for="item in section.items"
-              :key="item.id"
-              class="flex items-center justify-between gap-2 py-2"
+      <template v-else-if="isNewUser">
+        <div class="rounded-lg border-2 border-dashed border-accented px-[18px] py-4">
+          <p class="font-semibold text-toned">{{ copy.dashboard.welcome }}</p>
+        </div>
+        <ul class="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+          <li
+            v-for="card in startCards"
+            :key="card.title"
+            class="space-y-3 rounded-lg border border-default bg-default p-4"
+          >
+            <h2 class="flex items-center gap-2 font-bold text-highlighted">
+              <UIcon :name="card.icon" class="size-[18px] text-secondary" />
+              {{ card.title }}
+            </h2>
+            <UButton
+              :to="card.to"
+              :color="card.primary ? 'primary' : 'neutral'"
+              :variant="card.primary ? 'solid' : 'outline'"
             >
-              <NuxtLink
-                :to="`${section.path}/${item.id}`"
-                class="truncate font-medium text-highlighted hover:underline"
-              >
-                {{ item.name }}
-              </NuxtLink>
-              <span class="shrink-0 text-sm text-muted">
-                {{ formatUpdated(item.updatedAt) }}
-              </span>
+              {{ card.label }}
+            </UButton>
+          </li>
+        </ul>
+      </template>
+
+      <template v-else>
+        <section
+          v-if="continueItem"
+          class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-default bg-default px-[22px] py-5"
+        >
+          <div class="min-w-0">
+            <p class="text-xs font-bold tracking-[0.1em] text-muted uppercase">
+              Continue · {{ continueItem.kind }}
+            </p>
+            <h2 class="font-display text-[34px] leading-tight font-bold text-highlighted">
+              {{ continueItem.name }}
+            </h2>
+            <p class="text-sm text-muted">
+              <template v-if="continueItem.detail">{{ continueItem.detail }} · </template>
+              edited {{ formatUpdated(continueItem.updatedAt) }}
+            </p>
+          </div>
+          <UButton :to="continueItem.to">Open</UButton>
+        </section>
+
+        <section v-for="section in recentSections" :key="section.title" class="space-y-2.5">
+          <div class="flex items-center justify-between gap-4">
+            <h2 class="font-display text-[26px] leading-tight font-bold text-highlighted">
+              {{ section.title }}
+            </h2>
+            <UButton :to="section.path" variant="link" class="p-0">View all</UButton>
+          </div>
+          <ul
+            v-if="section.cards.length"
+            class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3"
+          >
+            <li v-for="card in section.cards" :key="card.id">
+              <RecentCard :to="card.to" :name="card.name" :detail="card.detail" />
             </li>
           </ul>
-          <!-- One row, as tall as a real item: the shortest loaded card, so the
-               page only grows when the entries arrive. -->
-          <div v-else-if="section.loading" role="status">
-            <span class="sr-only">Loading</span>
-            <div
-              aria-hidden="true"
-              class="flex h-10 items-center justify-between gap-2"
-            >
-              <LookupSkeleton size-class="h-4 w-40 max-w-2/3" />
-              <LookupSkeleton size-class="h-3.5 w-16" />
-            </div>
-          </div>
-          <p v-else class="py-6 text-center text-sm text-muted">
-            {{ section.empty }}
+          <p v-else class="text-sm text-muted">
+            No {{ section.title.toLowerCase() }} yet.
             <NuxtLink
               :to="{ path: section.path, query: { new: '1' } }"
               class="text-primary hover:underline"
@@ -497,8 +558,8 @@ function formatUpdated(updatedAt: string) {
               Create one.
             </NuxtLink>
           </p>
-        </UPageCard>
-      </div>
+        </section>
+      </template>
     </div>
   </PageContainer>
 </template>
