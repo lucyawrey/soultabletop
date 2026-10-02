@@ -19,8 +19,6 @@ Nothing right now.
   Better Auth's `session.cookieCache` is off, so every logged-in request looks up the session in the database before anything else. Turning it on removes that round trip; the cost is that a revoked session stays valid until the cache expires.
 - **Leave heavy columns out of list queries** · chore
   List endpoints select the full `markup`, `css_styles`, `data`, and schema columns for every row (about 20 KB per sheet page, and Neon's HTTP responses aren't compressed). Select only what the list shows; detail routes keep the full row.
-- **Add database timing and `attachDatabasePool`** · chore
-  Add per-request database time (for example a `Server-Timing` header) so production latency can be measured instead of guessed, and call `attachDatabasePool(pool)` from `@vercel/functions` in `server/utils/database.ts` (Neon's guidance for Vercel with Fluid compute: it closes idle connections before an instance suspends).
 
 - **Redesign the UI to be warmer and more inviting** · feature · large · needs decision: visual direction (palette, type, mood) and whether Sheet CSS authors get documented theme tokens
   More appropriate to playing tabletop RPGs. Remove light/dark mode and use one unified, mostly light theme. Reason: Sheet designers need a consistent site-wide theme to fit their designs into, and authoring Sheets is easier against one theme. Touches the Sheet editor's dark-mode syntax colors (in the Sheet system follow-ups) and the light-and-dark manual QA item under Before launch: drop those parts if this lands.
