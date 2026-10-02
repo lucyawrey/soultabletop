@@ -156,24 +156,17 @@ async function remove() {
 </script>
 
 <template>
-  <!-- The card's wrapper is `items-start`; stretch the header so the button
-       sits at the right edge. -->
-  <UPageCard :ui="{ header: 'w-full' }">
-    <template #header>
-      <div class="space-y-1">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-lg font-semibold text-highlighted">API Keys</h2>
-          <UButton icon="i-lucide-plus" size="sm" @click="openCreate">
-            New API Key
-          </UButton>
-        </div>
-        <p class="text-sm text-muted">
-          Send a key as <code>Authorization: Bearer &lt;key&gt;</code> or
-          <code>x-api-key: &lt;key&gt;</code>. A key acts as you; Read Only
-          keys can't change anything.
-        </p>
-      </div>
+  <DetailPanel title="API Keys">
+    <template #actions>
+      <UButton icon="i-lucide-plus" @click="openCreate">New API Key</UButton>
     </template>
+
+    <div class="space-y-4 p-[18px]">
+    <p class="text-sm text-muted">
+      Send a key as <code>Authorization: Bearer &lt;key&gt;</code> or
+      <code>x-api-key: &lt;key&gt;</code>. A key acts as you; Read Only
+      keys can't change anything.
+    </p>
 
     <UAlert
       v-if="listError"
@@ -327,5 +320,6 @@ async function remove() {
         />
       </template>
     </UModal>
-  </UPageCard>
+    </div>
+  </DetailPanel>
 </template>
