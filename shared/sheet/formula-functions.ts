@@ -45,6 +45,8 @@ export interface FormulaFunction {
   itemArgs?: readonly number[];
   // Arguments are evaluated by the function (only the ones it needs).
   lazy?: boolean;
+  // Eager and walks list arguments: each item costs a step.
+  walksLists?: boolean;
   signature: string;
   description: string;
   // Result type from the argument types.
@@ -68,10 +70,6 @@ function textTooLong() {
     "too-long",
     `Text from a formula can be at most ${formulaLimits.maxStringLength.toLocaleString("en-US")} characters`,
   );
-}
-
-function checkText(text: string): FormulaValue {
-  return text.length > formulaLimits.maxStringLength ? textTooLong() : text;
 }
 
 // A finite result, or an error.
@@ -139,6 +137,7 @@ function extremum(name: "min" | "max"): FormulaFunction {
     name,
     minArgs: 1,
     maxArgs: formulaLimits.maxArgs,
+    walksLists: true,
     signature: `${name}(a, b, …) or ${name}(list)`,
     description: `The ${name === "min" ? "smallest" : "largest"} number, skipping empty values; nothing if there are none`,
     result: () => formulaTypes.number,
@@ -447,6 +446,7 @@ const functionList: FormulaFunction[] = [
     name: "join",
     minArgs: 2,
     maxArgs: 2,
+    walksLists: true,
     signature: "join(list, separator)",
     description: "Joins a list of text or numbers with separator between them, skipping empty items",
     result: () => formulaTypes.string,
@@ -462,15 +462,18 @@ const functionList: FormulaFunction[] = [
       if (!Array.isArray(list)) return typeError("join", "a list", list!);
       if (separator !== null && typeof separator !== "string")
         return typeError("join", "text as its separator", separator!);
-      const parts: string[] = [];
+      let text = "";
+      let first = true;
       for (const item of list as unknown[]) {
         const value = toFormulaValue(item);
         if (value === null) continue;
         const part = textOf("join", value, false);
         if (isFormulaError(part)) return part;
-        parts.push(part);
+        text += first ? part : (separator ?? "") + part;
+        first = false;
+        if (text.length > formulaLimits.maxStringLength) return textTooLong();
       }
-      return checkText(parts.join(separator ?? ""));
+      return text;
     },
   },
   {

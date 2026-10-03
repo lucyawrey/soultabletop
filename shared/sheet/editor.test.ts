@@ -142,3 +142,11 @@ describe("formulaHighlights", () => {
     expect(source.slice(max!.from, max!.to)).toBe("max");
   });
 });
+
+describe("markupFormulaRanges on unclosed formulas", () => {
+  it("runs in linear time", () => {
+    const start = performance.now();
+    markupFormulaRanges(`<Note>${"{=".repeat(20_000)}</Note>`);
+    expect(performance.now() - start).toBeLessThan(200);
+  });
+});

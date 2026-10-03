@@ -764,3 +764,49 @@ describe("formula types from the schema", () => {
     expect(messages('<Value formula="misc.a + 1" />', quiet)).toEqual([]);
   });
 });
+
+describe("dynamic number attributes", () => {
+  it("take {…} only where they're computed when rendering", () => {
+    expect(messages('<Heading level="{= 2}">Hi</Heading>')).toEqual([
+      "error invalid-attribute: level on <Heading> must be a plain number, not {…}",
+    ]);
+    expect(errorCodes('<Grid cols="{hp}">x</Grid>')).toEqual(["invalid-attribute"]);
+    expect(errorCodes('<Section span="{= 2}">x</Section>')).toEqual(["invalid-attribute"]);
+    expect(messages('<Number field="hp" min="{= 0}" max="{hpMax}" step="{= 1}" />')).toEqual([]);
+    expect(messages('<Tracker field="hp" max="{= hpMax}" />')).toEqual([]);
+  });
+});
+
+describe("review follow-ups", () => {
+  it("checks the bodies of definitions that can't be used", () => {
+    expect(errorCodes('<Define name="a" formula="1" /><Define name="a" formula="1 +* 2" />')).toEqual([
+      "duplicate-definition",
+      "formula-syntax",
+    ]);
+    expect(errorCodes('<Define name="floor" formula="(" />')).toEqual(["formula-reserved-name", "formula-syntax"]);
+  });
+
+  it("rejects dice-like definition and parameter names", () => {
+    expect(messages('<Define name="d6" formula="1" />')).toEqual([
+      "error formula-reserved-name: d6 looks like dice (2d6); choose another name",
+    ]);
+    expect(errorCodes('<Define name="f" params="d20" formula="1" />')).toEqual(["invalid-attribute"]);
+  });
+
+  it("warns about overrides bound to required fields", () => {
+    const required: SheetSchemas = {
+      ...schemas,
+      root: { ...character, schema: { ...character.schema, ac: { type: "number", required: true } } },
+    };
+    expect(messages('<Number field="ac" formula="10" />', required)).toEqual([
+      'warning override-required: "ac" is required, so going back to the computed value (which clears it) can\'t be saved; make the field optional',
+    ]);
+    expect(messages('<Number field="hp" formula="10" />', required)).toEqual([]);
+  });
+
+  it("explains a quote that cuts a {= } attribute short", () => {
+    expect(messages('<Section title="{= concat("a", hp)}">x</Section>')).toContain(
+      "error formula-syntax: The formula ends at this \"; inside title=\"…\", write text in single quotes, like 'expert'",
+    );
+  });
+});

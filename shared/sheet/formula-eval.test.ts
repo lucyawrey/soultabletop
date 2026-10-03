@@ -408,3 +408,23 @@ describe("formatFormulaValue", () => {
     expect(formatFormulaValue(0, refs, "signed")).toBe("0");
   });
 });
+
+describe("long lists", () => {
+  const big = Array.from({ length: 200_000 }, (_, index) => index);
+  const scope: SheetScope = { value: { big }, path: [] };
+
+  it.each(["count(big)", "sum(big)", "sum(big, . * 2)", "any(big, . > 5)", "max(big)", "min(big)", "join(big, ',')"])(
+    "%s fails fast when the list is longer than the budget",
+    (source) => {
+      const start = performance.now();
+      expect(failure(source, { root: scope, scope, budget: { steps: 1_000 } }).code).toBe("budget");
+      expect(performance.now() - start).toBeLessThan(20);
+    },
+  );
+
+  it("still allows lists that fit", () => {
+    const small: SheetScope = { value: { list: [1, 2, 3] }, path: [] };
+    expect(evaluate("max(list) + count(list)", { root: small, scope: small, budget: { steps: 30 } })).toBe(6);
+    expect(evaluate("length(big)", { root: scope, scope, budget: { steps: 10 } })).toBe(200_000);
+  });
+});

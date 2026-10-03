@@ -112,7 +112,8 @@ const tags = computed(() =>
     : [],
 );
 
-const trackerMax = computed(() => number(props.node.attrs.max) ?? 0);
+// A computed maximum can be anything; keep it a whole number of at least 0.
+const trackerMax = computed(() => Math.max(Math.floor(number(props.node.attrs.max) ?? 0), 0));
 const trackerValue = computed(() =>
   typeof value.value === "number" ? value.value : 0,
 );

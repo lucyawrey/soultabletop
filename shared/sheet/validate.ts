@@ -173,6 +173,8 @@ const iconPattern = /^i-[a-z0-9]+(?:-[a-z0-9]+)+$/;
 const classNamePattern = /^[a-z][a-z0-9-]*$/;
 const indexPattern = /^\d+$/;
 const identifierPattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
+// Read as dice in formulas (`d6`), so not usable as a name there.
+const dicePattern = /^d\d+$/;
 
 function describeField(field: ContentFieldSchema) {
   switch (field.type) {
@@ -567,8 +569,16 @@ class Validator {
       const nameAttr = attrNamed(node, "name");
       const name = nameAttr && nameAttr.value !== true ? plainText(nameAttr.value)?.trim() : undefined;
       // A missing or malformed name is reported with the tag's attributes.
-      if (!name || !identifierPattern.test(name) || isReservedKey(name)) continue;
+      if (!name || !identifierPattern.test(name) || isReservedKey(name)) {
+        this.checkUnusedDefinition(node);
+        continue;
+      }
       const nameLoc = nameAttr!.valueLoc ?? nameAttr!.loc;
+      if (dicePattern.test(name)) {
+        this.error("formula-reserved-name", `${name} looks like dice (2d6); choose another name`, nameLoc);
+        this.checkUnusedDefinition(node);
+        continue;
+      }
 
       if (this.definitions.size >= formulaLimits.maxDefinitions) {
         this.error(
@@ -580,6 +590,7 @@ class Validator {
       }
       if (this.definitions.has(name)) {
         this.error("duplicate-definition", `${name} is defined more than once`, nameLoc);
+        this.checkUnusedDefinition(node);
         continue;
       }
       if (formulaReservedNames.has(name)) {
@@ -588,6 +599,7 @@ class Validator {
           `${name} is a built-in name; choose another name for this definition`,
           nameLoc,
         );
+        this.checkUnusedDefinition(node);
         continue;
       }
       if (formulaLaterBuiltins.includes(name)) {
@@ -617,6 +629,15 @@ class Validator {
     this.reportCycles();
   }
 
+  // The syntax of a `<Define>` that can't be used (a bad or taken name), so
+  // its mistakes still show.
+  private checkUnusedDefinition(node: SheetElement) {
+    const params = this.definitionParams(node) ?? [];
+    const formulaAttr = attrNamed(node, "formula");
+    if (formulaAttr?.raw === undefined || !formulaAttr.valueLoc) return;
+    this.diagnostics.push(...parseFormula(formulaAttr.raw, formulaAttr.valueLoc.start, { params }).diagnostics);
+  }
+
   // A definition's parameter names, or undefined if they're invalid.
   private definitionParams(node: SheetElement): string[] | undefined {
     const attr = attrNamed(node, "params");
@@ -636,6 +657,8 @@ class Validator {
         problem = `"${param}" isn't a valid parameter name; use letters, numbers, and underscores, starting with a letter`;
       else if (formulaReservedWords.includes(param) || isReservedKey(param))
         problem = `"${param}" is reserved; choose another parameter name`;
+      else if (dicePattern.test(param))
+        problem = `"${param}" looks like dice (2d6); choose another parameter name`;
       else if (seen.has(param)) problem = `Parameter "${param}" is listed twice`;
       if (problem) {
         this.error("invalid-attribute", problem, loc);
@@ -861,6 +884,13 @@ class Validator {
     if (formula && !this.formulaResultFits(spec, formula, binding)) {
       return broken(`<${spec.name}> has errors`);
     }
+    if (formula && binding?.field?.required) {
+      this.warn(
+        "override-required",
+        `"${attrs.field as string}" is required, so going back to the computed value (which clears it) can't be saved; make the field optional`,
+        node.loc,
+      );
+    }
 
     return {
       type: "element",
@@ -1000,6 +1030,9 @@ class Validator {
 
     if (type.kind === "number") {
       const [only] = attr.value;
+      if (!type.dynamic && attr.value.some((part) => typeof part === "object")) {
+        return fail(`${name} on <${spec.name}> must be a plain number, not {…}`);
+      }
       if (attr.value.length === 1 && typeof only === "object") {
         if (isFormulaPart(only)) {
           const compiled = this.compileFormula(only.formula, only.bodyStart, scope, only.loc);
@@ -1020,7 +1053,11 @@ class Validator {
       const raw = plainText(attr.value)?.trim();
       const number = raw ? Number(raw) : Number.NaN;
       if (raw === undefined || !Number.isFinite(number))
-        return fail(`${name} on <${spec.name}> must be a number, a single {field}, or a single {= formula}`);
+        return fail(
+          type.dynamic
+            ? `${name} on <${spec.name}> must be a number, a single {field}, or a single {= formula}`
+            : `${name} on <${spec.name}> must be a number`,
+        );
       if (type.integer && !Number.isInteger(number))
         return fail(`${name} on <${spec.name}> must be a whole number`);
       if ((type.min !== undefined && number < type.min) || (type.max !== undefined && number > type.max)) {

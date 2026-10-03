@@ -5,7 +5,7 @@
 // See docs/sheet-system.md, section 1.
 
 import { isReservedKey, RESERVED_KEYS } from "../content-schema";
-import type { FormulaNode } from "./formula";
+import { formulaLimits, type FormulaNode } from "./formula";
 
 export interface Position {
   line: number; // 1-based
@@ -386,7 +386,18 @@ class Parser {
       if (close !== -1) {
         this.pos = close + 1;
         const after = this.src[this.pos];
-        if (isRaw && after !== undefined && !isWhitespace(after) && after !== ">" && after !== "/") {
+        const cutShort = after !== undefined && !isWhitespace(after) && after !== ">" && after !== "/";
+        const value = this.src.slice(valueStart, close);
+        const openFormula = value.lastIndexOf("{=");
+        if (!isRaw && cutShort && openFormula !== -1 && !value.includes("}", openFormula)) {
+          this.report(
+            "formula-syntax",
+            `The formula ends at this ${quote}; inside ${name}=${quote}…${quote}, write text in ${quote === "\"" ? "single quotes, like 'expert'" : "double quotes, like \"expert\""}`,
+            close,
+            close + 1,
+          );
+        }
+        if (isRaw && cutShort) {
           this.report(
             "formula-syntax",
             `The formula ends at this ${quote}; inside ${name}=${quote}…${quote}, write text in ${quote === "\"" ? "single quotes, like 'expert'" : "double quotes, like \"expert\""}`,
@@ -494,12 +505,17 @@ class Parser {
   }
 
   // The `}` that ends a formula starting at `from` (after `{=`), skipping
-  // quoted text in it; -1 if there is none before `end`.
+  // quoted text in it; -1 if there is none before `end`. The search stops
+  // after the longest formula allowed (so markup can't make parsing
+  // quadratic) and at a closing tag (an unclosed `{=` doesn't swallow the
+  // tags after it).
   private formulaEnd(from: number, end: number) {
+    end = Math.min(end, from + formulaLimits.maxLength + 1);
     let index = from;
     while (index < end) {
       const char = this.src[index]!;
       if (char === "}") return index;
+      if (char === "<" && this.src[index + 1] === "/" && isNameStart(this.src[index + 2])) return -1;
       if (char === "'" || char === "\"") {
         index += 1;
         while (index < end && this.src[index] !== char) {
@@ -560,7 +576,7 @@ class Parser {
         if (close === -1) {
           this.report(
             "unterminated-formula",
-            "{= starts a formula but has no closing }; write \\{ for a literal {",
+            `{= starts a formula but has no closing } (within ${formulaLimits.maxLength.toLocaleString("en-US")} characters); write \\{ for a literal {`,
             index,
             index + 2,
           );

@@ -771,8 +771,9 @@ async function insertPath(path: string) {
               (read-only), or on <code>Number</code>, <code>Text</code>, and
               <code>Checkbox</code>, where a <code>field</code> can also hold a
               manual value that wins until it is cleared. Anywhere else, use
-              <code>{= …}</code> in text, in number attributes like
-              <code>max="{= …}"</code>, and in <code>show="{= …}"</code>, which
+              <code>{= …}</code> in text, in <code>Tracker</code>'s <code>max</code> and
+              <code>Number</code>'s <code>min</code>/<code>max</code>/<code>step</code>
+              (<code>max="{= …}"</code>), and in <code>show="{= …}"</code>, which
               hides the tag when false or empty.
             </p>
             <p class="text-muted">

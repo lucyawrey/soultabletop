@@ -22,7 +22,7 @@ import {
   type FormulaCallContext,
   type FormulaFunction,
 } from "./formula-functions";
-import { itemScopes, resolveSheetPath, type SheetRefs, type SheetScope } from "./scope";
+import { resolveSheetPath, type SheetRefs, type SheetScope } from "./scope";
 
 export interface FormulaBudget {
   steps: number;
@@ -169,6 +169,11 @@ function callBuiltin(
     for (const arg of node.args) {
       const value = evaluateNode(arg, env);
       if (isFormulaError(value)) return value;
+      // Walking a list costs a step per item, like the per-item functions.
+      if (fn.walksLists && Array.isArray(value)) {
+        env.budget.steps -= value.length;
+        if (env.budget.steps < 0) return budgetError();
+      }
       args.push(value);
     }
     return fn.eager(args);
@@ -184,13 +189,23 @@ function callBuiltin(
       if (list.value === null || list.value === undefined) return [];
       if (!Array.isArray(list.value))
         return typeError(fn.name, "a list", toFormulaValue(list.value));
+      // Each item costs a step: a list longer than what's left fails before
+      // anything is built for it.
+      const items = list.value as unknown[];
+      if (items.length > env.budget.steps) {
+        env.budget.steps = -1;
+        return budgetError();
+      }
       const values: FormulaValue[] = [];
-      for (const item of itemScopes(list)) {
+      for (let index = 0; index < items.length; index += 1) {
         if (!step(env)) return budgetError();
         const value =
           exprIndex === undefined
-            ? toFormulaValue(item.value)
-            : evaluateNode(node.args[exprIndex]!, { ...env, scope: item });
+            ? toFormulaValue(items[index])
+            : evaluateNode(node.args[exprIndex]!, {
+                ...env,
+                scope: { value: items[index], path: list.path ? [...list.path, index] : null },
+              });
         if (isFormulaError(value)) return value;
         values.push(value);
       }

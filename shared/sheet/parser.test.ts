@@ -469,3 +469,21 @@ describe("formulas", () => {
     expect(node.attrs[1]!.raw).toBeUndefined();
   });
 });
+
+describe("unclosed formulas", () => {
+  it("parse in linear time", () => {
+    const start = performance.now();
+    const { diagnostics } = parseSheetMarkup(`<Sheet><Section>${"{=".repeat(20_000)}</Section></Sheet>`);
+    expect(performance.now() - start).toBeLessThan(200);
+    expect(diagnostics[0]?.code).toBe("unterminated-formula");
+  });
+
+  it("don't swallow the tags after them", () => {
+    const { nodes, diagnostics } = parseSheetMarkup(
+      '<Sheet><Section title="A">Hi {= level <Number field="x" /></Section><Section title="B">{name}</Section></Sheet>',
+    );
+    expect(diagnostics.map((item) => item.code)).toContain("unterminated-formula");
+    const sheet = element(nodes[0]);
+    expect(sheet.children.filter((child) => child.type === "element").map((child) => (child as SheetElement).attrs[0]?.raw)).toEqual(["A", "B"]);
+  });
+});

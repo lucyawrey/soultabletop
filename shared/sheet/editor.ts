@@ -7,7 +7,7 @@ import {
   type ContentFieldSchema,
   type ContentTypeSchema,
 } from "../content-schema";
-import { lexFormula } from "./formula";
+import { formulaLimits, lexFormula } from "./formula";
 import { resolveFormulaCall } from "./formula-functions";
 import { humanizeFieldName } from "./registry";
 import type { SheetSchemas } from "./validate";
@@ -111,10 +111,12 @@ const paramsAttribute = /\bparams\s*=\s*(["'])(.*?)\1/s;
 // The `}` that ends a `{=` formula body starting at `from` (skipping quoted
 // text), or -1.
 function formulaClose(doc: string, from: number, end: number) {
+  end = Math.min(end, from + formulaLimits.maxLength + 1);
   let index = from;
   while (index < end) {
     const char = doc[index]!;
     if (char === "}") return index;
+    if (char === "<" && doc[index + 1] === "/" && /[A-Za-z]/.test(doc[index + 2] ?? "")) return -1;
     if (char === "'" || char === "\"") {
       index += 1;
       while (index < end && doc[index] !== char) index += doc[index] === "\\" ? 2 : 1;

@@ -129,7 +129,7 @@ const numberFormat = computed(() =>
 );
 
 // Tracker
-const trackerMax = computed(() => Math.max(number(props.node.attrs.max) ?? 0, 0));
+const trackerMax = computed(() => Math.max(Math.floor(number(props.node.attrs.max) ?? 0), 0));
 const pips = computed(() =>
   Array.from({ length: Math.min(trackerMax.value, 50) }, (_, index) => index),
 );

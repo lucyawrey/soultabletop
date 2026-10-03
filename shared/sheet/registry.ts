@@ -6,8 +6,9 @@
 export type AttrType =
   // Free text; may contain {path} interpolation.
   | { kind: "text" }
-  // A number, or a single {path} resolved when rendering.
-  | { kind: "number"; min?: number; max?: number; integer?: boolean }
+  // A number; with `dynamic`, also a single {path} or {= formula} computed
+  // when rendering.
+  | { kind: "number"; min?: number; max?: number; integer?: boolean; dynamic?: boolean }
   // Bare attribute, "true", or "false".
   | { kind: "boolean" }
   | { kind: "enum"; values: readonly string[] }
@@ -348,9 +349,9 @@ const tagList: TagSpec[] = [
     attrs: {
       ...fieldAttrs,
       formula: overrideFormula,
-      min: { type: { kind: "number" }, description: "Smallest value" },
-      max: { type: { kind: "number" }, description: "Largest value" },
-      step: { type: { kind: "number" }, description: "Increment" },
+      min: { type: { kind: "number", dynamic: true }, description: "Smallest value" },
+      max: { type: { kind: "number", dynamic: true }, description: "Largest value" },
+      step: { type: { kind: "number", dynamic: true }, description: "Increment" },
       format: formatAttr,
       variant: oneOf(
         ["input", "stat"],
@@ -409,7 +410,7 @@ const tagList: TagSpec[] = [
       ...fieldAttrs,
       formula: readOnlyFormula,
       max: {
-        type: { kind: "number", min: 1 },
+        type: { kind: "number", min: 1, dynamic: true },
         required: true,
         description: "Maximum: a number, {field}, or {= formula}",
       },

@@ -89,7 +89,9 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list | formula | condition | name; required; default), allowed children, and which schema field types it may bind to.
-Number attrs accept one `{path}` or one `{= formula}` (e.g. `max="{hpMax}"`); text attrs accept both mixed with text.
+Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one `{path}` or one
+`{= formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
+mixed with text.
 Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`), `show` (conditional display; not on `Column`), and
 `live`, `locked`, and `display` (section 5; `Tab` and `RowDetails` accept only `class` and `show`; `Define` accepts
 none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixed hooks inside: `sheet-field-label` on the visible label (for `Number variant="stat"` the small label under the number; not rendered with `hideLabel` or in `Column` cells) and `sheet-field-value` on a wrapper around the value or input. Sheet CSS targets these instead of `:first-child` or component classes.
@@ -226,6 +228,9 @@ Formulas (errors unless noted; codes in parentheses):
 | Dice (`2d6`, `roll(…)`) | error (`formula-dice`) |
 | `<Define>`: duplicate name; a built-in or reserved name; invalid params; a cycle (every definition in it) | error (`duplicate-definition`, `formula-reserved-name`, `invalid-attribute`, `formula-cycle`) |
 | `<Define>` named like a built-in added after v1 | warning (`formula-shadows-builtin`); the definition wins in that sheet |
+| `<Define>` name or parameter that looks like dice (`d6`) | error (`formula-reserved-name`, `invalid-attribute`) |
+| An override (`field` and `formula`) on a required field | warning (`override-required`): going back to the computed value clears the field, which can't be saved |
+| An unclosed `{=` (no `}` within 1,000 characters or before a closing tag) | error (`unterminated-formula`) |
 | Over a limit (see "Formulas") | error (`formula-too-large`) |
 | Paths in formulas | the same rules as `field` paths above (strictness, free-form objects, `content-too-deep`, `showSheetWarnings`) |
 
@@ -486,8 +491,8 @@ every formula once; the renderer evaluates the compiled trees (`evaluateSheetFor
 ### Where formulas go
 - `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox` (override), and as
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
-- `{= expr}` in text, in text attributes (`title="HP {= hp.max}"`), in number attributes (`max="{= …}"`), and in
-  `show="{= …}"`. In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
+- `{= expr}` in text, in text attributes (`title="HP {= hp.max}"`), in the number attributes read when rendering
+  (`Tracker max`, `Number min`/`max`/`step`), and in `show="{= …}"`. In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
   there, but the editor's XML highlighting reads it as a tag.
 
 ### Grammar
@@ -553,7 +558,8 @@ a()`) is an error on every definition in it, and calling a broken definition giv
 formulas per sheet; per-item functions nested 2 levels; definitions calling each other 16 levels deep; text results of
 10,000 characters.
 
-Steps (every node visit and aggregate item counts; definitions share their caller's budget): one evaluation may take
+Steps (every node visit and every list item counts, also for `min`, `max`, and `join`, and a list longer than the
+steps left fails at once; definitions share their caller's budget): one evaluation may take
 at most 20,000, and a whole sheet about 2,000,000 (`maxSheetSteps`), shared evenly. The validator gives each formula
 `min(20,000, 2,000,000 / the sheet's formula count)` (`stepBudget`), and the renderer divides that again by the item
 counts of the Lists and Table rows around it, since a formula inside a List runs once per item. Both depend only on
