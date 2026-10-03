@@ -23,6 +23,11 @@ export const formulaLimits = {
   maxItemNesting: 2,
   // Node visits and aggregate items in one evaluation.
   maxSteps: 20_000,
+  // Steps for all of a sheet's formulas together, split evenly between them:
+  // each gets the smaller of maxSteps and this divided by the formula count,
+  // so a sheet with many formulas can't take seconds to show (measured: about
+  // 70 ns a step, so 2,000,000 steps is roughly 150 ms).
+  maxSheetSteps: 2_000_000,
   // Definitions calling definitions.
   maxCallDepth: 16,
   maxStringLength: 10_000,

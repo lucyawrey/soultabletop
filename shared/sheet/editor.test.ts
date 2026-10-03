@@ -115,6 +115,13 @@ describe("markupFormulaRanges", () => {
     ]);
   });
 
+  it("keeps reading after a tag missing its >", () => {
+    expect(ranges('<Value formula="a"\n<Value formula="flo"')).toEqual([
+      { text: "a", params: [] },
+      { text: "flo", params: [] },
+    ]);
+  });
+
   it("skips comments and escapes, and runs an unclosed {= to the line end", () => {
     expect(ranges("<!-- {= no} --> \\{= no} {= yes\nnext")).toEqual([{ text: " yes", params: [] }]);
   });

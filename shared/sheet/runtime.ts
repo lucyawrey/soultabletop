@@ -38,6 +38,7 @@ import {
 export {
   findRef,
   itemScopes,
+  ownProperty,
   refRecord,
   resolveSheetPath,
   type SheetRef,
@@ -155,6 +156,8 @@ export function defaultSheetValue(
 // The sheet's `<Define>`s, for formulas that call them.
 export interface SheetFormulaDefinitions {
   definitions: ReadonlyMap<string, SheetDefinition>;
+  // Steps per evaluation (ValidationResult.stepBudget); maxSteps if missing.
+  stepBudget?: number;
   // The value of a definition without parameters, if it is cached (the
   // renderer computes each once).
   cached?: (name: string) => FormulaValue | undefined;
@@ -172,7 +175,7 @@ function formulaEnv(
     root,
     scope,
     refs,
-    budget: formulaBudget(),
+    budget: { steps: formulas.stepBudget ?? formulaBudget().steps },
     call(name, args) {
       const definition = formulas.definitions.get(name);
       if (!definition) return undefined;
@@ -207,7 +210,10 @@ export function evaluateSheetDefinition(
   refs: SheetRefs,
   formulas: SheetFormulaDefinitions,
 ): FormulaValue {
-  const env = formulaEnv(root, root, refs, { definitions: formulas.definitions });
+  const env = formulaEnv(root, root, refs, {
+    definitions: formulas.definitions,
+    stepBudget: formulas.stepBudget,
+  });
   try {
     return env.call(name, []) ?? null;
   } catch {

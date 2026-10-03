@@ -28,9 +28,17 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+// A record's own property (never an inherited one like `constructor`). Reads
+// the property first: Vue tracks that read, so a computed that found the key
+// missing reruns when it's added (`Object.hasOwn` alone isn't tracked).
+export function ownProperty<T>(record: Record<string, T>, key: string): T | undefined {
+  const value = record[key];
+  return Object.hasOwn(record, key) ? value : undefined;
+}
+
 // The loaded Content an ID refers to (own entries only).
 export function findRef(refs: SheetRefs, id: string): SheetRef | undefined {
-  return Object.hasOwn(refs, id) ? refs[id] : undefined;
+  return ownProperty(refs, id);
 }
 
 // Referenced Content as the record a Sheet sees: its data plus `name`.
@@ -62,8 +70,8 @@ export function resolveSheetPath(
     const value =
       Array.isArray(container) && typeof key === "number"
         ? container[key]
-        : isRecord(container) && Object.hasOwn(container, segment)
-          ? container[segment]
+        : isRecord(container)
+          ? ownProperty(container, segment)
           : undefined;
     current = { value, path: containerPath ? [...containerPath, key] : null };
   }

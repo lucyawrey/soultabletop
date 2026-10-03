@@ -111,7 +111,7 @@ export const pathfinder2eMarkup = `<Sheet>
         <Value formula="check('dex', skills.stealth.rank)" label="Stealth" format="signed" />
       </Grid>
     </Tab>
-    <Tab label="Spells" show="{= spellcasting.tradition != null}">
+    <Tab label="Spells" show="{= length(spellcasting.tradition) > 0}">
       <Number formula="10 + get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell DC" variant="stat" />
       <Value formula="get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell Attack" format="signed" />
     </Tab>

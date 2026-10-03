@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
-import { defaultSheetValue, findRef, refRecord } from "#shared/sheet/runtime";
+import { defaultSheetValue, findRef, ownProperty, refRecord } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // The editing control of a field tag (see Field.vue for viewing). Disabled, it
@@ -162,9 +162,7 @@ const linkField = computed(() =>
   field.value?.type === "resourceLink" ? field.value : undefined,
 );
 const linked = computed(() =>
-  typeof props.value === "string" && Object.hasOwn(context.links.value, props.value)
-    ? context.links.value[props.value]
-    : undefined,
+  typeof props.value === "string" ? ownProperty(context.links.value, props.value) : undefined,
 );
 function pickLink(id: string, link: SheetLink) {
   context.addLink(id, link);

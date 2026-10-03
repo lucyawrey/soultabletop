@@ -15,12 +15,13 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "./runtime";
-import { FormulaError, parseFormula, type FormulaValue } from "./formula";
+import { FormulaError, formulaLimits, parseFormula, type FormulaValue } from "./formula";
 import { pathfinder2eMarkup, pathfinder2eSchemas } from "./fixtures/pathfinder2e";
 import {
   compileSheet,
   isCompiledFormula,
   parseSheetPath,
+  sheetStepBudget,
   type CompiledFormula,
   type SheetSchemas,
   type ValidatedElement,
@@ -368,5 +369,56 @@ describe("the Pathfinder 2e example", () => {
     expect(value("speed - if(armor.strength != null and armor.strength > attributes.str, 5, 0)")).toBe(20);
     expect(value("floor(sum(inventory, qty * coalesce(item.bulk, 0)))")).toBe(2);
     expect(value("10 + get(attributes, spellcasting.attribute) + prof(spellcasting.rank)")).toBe(21);
+  });
+});
+
+describe("reactivity", () => {
+  // Vue tracks property reads (the `get` trap), not Object.hasOwn: a computed
+  // that found a key missing must have read it, so it reruns when the key is
+  // added (an override's first value). This proxy records the reads.
+  function watched(target: Record<string, unknown>) {
+    const reads: string[] = [];
+    const proxy = new Proxy(target, {
+      get(object, key, receiver) {
+        if (typeof key === "string") reads.push(key);
+        return Reflect.get(object, key, receiver);
+      },
+    });
+    return { proxy, reads };
+  }
+
+  it("reads missing keys of a path through get", () => {
+    const { proxy, reads } = watched({ stats: {} });
+    const scope = { value: proxy, path: [] };
+    expect(resolveSheetPath(parseSheetPath("ac"), scope, scope, refs).value).toBeUndefined();
+    expect(reads).toContain("ac");
+  });
+
+  it("reads missing keys of get() through get", () => {
+    const { proxy, reads } = watched({});
+    const scope = { value: { stats: proxy }, path: [] };
+    const ast = parseFormula("get(stats, 'dex')", { line: 1, column: 1, offset: 0 }).ast!;
+    expect(evaluateSheetFormula(ast, scope, scope, refs)).toBeNull();
+    expect(reads).toContain("dex");
+  });
+});
+
+describe("sheet step budget", () => {
+  it("splits the sheet's budget between its formulas", () => {
+    expect(sheetStepBudget(1)).toBe(formulaLimits.maxSteps);
+    expect(sheetStepBudget(0)).toBe(formulaLimits.maxSteps);
+    expect(sheetStepBudget(2_000)).toBe(formulaLimits.maxSheetSteps / 2_000);
+    const empty = { root: { hasStrictSchema: false, schema: {} }, types: {} };
+    expect(compileSheet('<Value formula="1" /><Note>{= 2} {= 3}</Note>', empty).stepBudget).toBe(formulaLimits.maxSteps);
+  });
+
+  it("gives evaluations the sheet's budget", () => {
+    const list = Array.from({ length: 50 }, (_, index) => index);
+    const scope: SheetScope = { value: { list }, path: [] };
+    const ast = parseFormula("sum(list)", { line: 1, column: 1, offset: 0 }).ast!;
+    expect(evaluateSheetFormula(ast, scope, scope, refs, { definitions: new Map(), stepBudget: 100 })).toBe(1225);
+    expect(evaluateSheetFormula(ast, scope, scope, refs, { definitions: new Map(), stepBudget: 20 })).toEqual(
+      new FormulaError("budget", "This formula takes too many steps to compute"),
+    );
   });
 });

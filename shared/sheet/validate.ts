@@ -136,6 +136,17 @@ export interface ValidationResult {
   nodes: ValidatedNode[];
   diagnostics: SheetDiagnostic[];
   definitions: ReadonlyMap<string, SheetDefinition>;
+  // Steps each evaluation of one of this sheet's formulas may take (see
+  // formulaLimits.maxSheetSteps).
+  stepBudget: number;
+}
+
+// The step budget per formula for a sheet with this many formulas.
+export function sheetStepBudget(formulaCount: number) {
+  return Math.min(
+    formulaLimits.maxSteps,
+    Math.floor(formulaLimits.maxSheetSteps / Math.max(formulaCount, 1)),
+  );
 }
 
 // What a path points at. `record` is a set of named fields: the top level, an
@@ -260,7 +271,7 @@ class Validator {
   readonly diagnostics: SheetDiagnostic[] = [];
   readonly definitions = new Map<string, DefinitionState>();
   private readonly rootShape: Shape;
-  private formulaSites = 0;
+  formulaSites = 0;
 
   constructor(private readonly schemas: SheetSchemas) {
     this.rootShape = {
@@ -1081,6 +1092,7 @@ export function validateSheet(nodes: SheetNode[], schemas: SheetSchemas): Valida
     nodes: validated,
     diagnostics: validator.diagnostics,
     definitions: publicDefinitions(validator.definitions),
+    stepBudget: sheetStepBudget(validator.formulaSites),
   };
 }
 
@@ -1091,7 +1103,7 @@ export function compileSheet(markup: string, schemas: SheetSchemas): ValidationR
   const diagnostics = [...parsed.diagnostics, ...validated.diagnostics].sort(
     (a, b) => a.loc.start.offset - b.loc.start.offset,
   );
-  return { nodes: validated.nodes, diagnostics, definitions: validated.definitions };
+  return { ...validated, diagnostics };
 }
 
 export function hasErrors(diagnostics: SheetDiagnostic[]) {

@@ -1,5 +1,10 @@
 import type { InjectionKey, Ref } from "vue";
-import { isFormulaError, type FormulaNode, type FormulaValue } from "#shared/sheet/formula";
+import {
+  formulaLimits,
+  isFormulaError,
+  type FormulaNode,
+  type FormulaValue,
+} from "#shared/sheet/formula";
 import type { Interpolation, TextPart } from "#shared/sheet/parser";
 import type { SheetDisplay } from "#shared/sheet/registry";
 import {
@@ -71,6 +76,9 @@ const defaultFlags = (): SheetFlags => ({
 const contextKey: InjectionKey<SheetContext> = Symbol("sheet");
 const scopeKey: InjectionKey<Ref<SheetScope>> = Symbol("sheet-scope");
 const flagsKey: InjectionKey<Ref<SheetFlags>> = Symbol("sheet-flags");
+// How many times this part of the sheet is repeated (the item counts of the
+// enclosing Lists and Table rows, multiplied).
+const repeatKey: InjectionKey<Ref<number>> = Symbol("sheet-repeat");
 
 export function provideSheetContext(context: SheetContext) {
   provide(contextKey, context);
@@ -81,8 +89,11 @@ export function provideSheetContext(context: SheetContext) {
   );
 }
 
-export function provideSheetScope(scope: Ref<SheetScope>) {
+// `repeat`: how many siblings this scope has (the List's or Table's items).
+export function provideSheetScope(scope: Ref<SheetScope>, repeat?: () => number) {
   provide(scopeKey, scope);
+  const parent = inject(repeatKey, ref(1));
+  provide(repeatKey, computed(() => parent.value * Math.max(repeat?.() ?? 1, 1)));
 }
 
 // Applies a tag's own live/locked/display attributes on top of the inherited
@@ -142,7 +153,16 @@ export function useSheetEditable(
 export function useSheet() {
   const context = inject(contextKey);
   const scope = inject(scopeKey);
+  const repeat = inject(repeatKey, ref(1));
   if (!context || !scope) throw new Error("Sheet components need a SheetRenderer");
+
+  // A formula repeated for every item of a List shares the sheet's step
+  // budget with its copies, so a long List can't make a render take seconds.
+  const formulas = (times = 1): SheetFormulaDefinitions => {
+    const current = context.formulas.value;
+    const budget = current.stepBudget ?? formulaLimits.maxSteps;
+    return { ...current, stepBudget: Math.max(1, Math.floor(budget / (repeat.value * times))) };
+  };
 
   const resolve = (path: SheetPath | string) =>
     resolveSheetPath(
@@ -159,7 +179,7 @@ export function useSheet() {
       context.root.value,
       scope.value,
       context.refs.value,
-      context.formulas.value,
+      formulas(),
     );
 
   return {
@@ -179,7 +199,7 @@ export function useSheet() {
         context.root.value,
         scope.value,
         context.refs.value,
-        context.formulas.value,
+        formulas(),
       ),
     // Text with the formulas that failed marked, to show their message.
     segments: (parts: TextPart[]): SheetTextSegment[] =>
@@ -188,16 +208,17 @@ export function useSheet() {
         context.root.value,
         scope.value,
         context.refs.value,
-        context.formulas.value,
+        formulas(),
       ),
-    // A tag's `show` in the current scope, or in `at` (a Table row).
-    condition: (show: AttrValue | undefined, at?: SheetScope) =>
+    // A tag's `show` in the current scope, or in `at`, one of `times` rows
+    // (a Table's RowDetails).
+    condition: (show: AttrValue | undefined, at?: SheetScope, times?: number) =>
       sheetCondition(
         show,
         context.root.value,
         at ?? scope.value,
         context.refs.value,
-        context.formulas.value,
+        formulas(times),
       ),
     // A number attribute: a literal, a {path}, or a {= formula} computed now.
     number: (value: AttrValue | undefined) => {

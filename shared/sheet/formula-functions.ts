@@ -18,7 +18,7 @@ import {
   type FormulaType,
   type FormulaValue,
 } from "./formula";
-import { findRef, refRecord, type SheetRefs } from "./scope";
+import { findRef, ownProperty, refRecord, type SheetRefs } from "./scope";
 import { isReservedKey } from "../content-schema";
 
 // What a function sees of its call, for lazy and per-item functions.
@@ -281,8 +281,8 @@ function getValue(record: FormulaValue, key: FormulaValue, refs: SheetRefs): For
   if (typeof container !== "object" || container === null || isFormulaError(container))
     return typeError("get", "a group of fields", record);
   const name = String(key);
-  if (isReservedKey(name) || !Object.hasOwn(container, name)) return null;
-  return toFormulaValue((container as Record<string, unknown>)[name]);
+  if (isReservedKey(name)) return null;
+  return toFormulaValue(ownProperty(container as Record<string, unknown>, name));
 }
 
 const functionList: FormulaFunction[] = [

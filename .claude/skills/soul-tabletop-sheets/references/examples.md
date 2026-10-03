@@ -523,7 +523,7 @@ Markup:
         <Value formula="check('dex', skills.stealth.rank)" label="Stealth" format="signed" />
       </Grid>
     </Tab>
-    <Tab label="Spells" show="{= spellcasting.tradition != null}">
+    <Tab label="Spells" show="{= length(spellcasting.tradition) > 0}">
       <Number formula="10 + get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell DC" variant="stat" />
       <Value formula="get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell Attack" format="signed" />
     </Tab>
@@ -545,6 +545,7 @@ Notes:
   inside it is the character's level.
 - `get(attributes, keyAttribute)` reads the attribute a text field names (`'dex'`); `check('wis', perceptionRank)`
   passes the name in.
+- The Spells tab tests `length(spellcasting.tradition) > 0`, not `!= null`: a cleared text field holds `""`.
 - The Speed badge is written as `armor.strength > attributes.str` rather than with `<`, which in text would break the
   editor's colors.
 - No CSS: the default look is enough here.

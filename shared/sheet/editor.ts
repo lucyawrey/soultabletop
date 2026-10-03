@@ -198,7 +198,8 @@ export function markupFormulaRanges(doc: string): MarkupFormulaRange[] {
       for (const range of tagRanges) range.params = names;
     }
     ranges.push(...tagRanges);
-    index = cursor + 1;
+    // A tag missing its ">" ends where the next one starts.
+    index = doc[cursor] === "<" ? cursor : cursor + 1;
     textStart = index;
   }
   interpolatedFormulas(doc, textStart, doc.length, ranges);

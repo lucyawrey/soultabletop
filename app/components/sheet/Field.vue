@@ -2,6 +2,7 @@
 import { isFormulaError } from "#shared/sheet/formula";
 import {
   findRef,
+  ownProperty,
   resourceLinkPath,
   sheetOverride,
   type SheetScope,
@@ -126,9 +127,7 @@ const refInfo = computed(() => {
   const current = value.value;
   if (typeof current === "string") {
     if (props.node.binding?.field?.type === "resourceLink") {
-      const link = Object.hasOwn(context.links.value, current)
-        ? context.links.value[current]
-        : undefined;
+      const link = ownProperty(context.links.value, current);
       return link
         ? { name: link.name, to: resourceLinkPath(current, link) }
         : { name: "Unavailable", to: undefined, muted: true };

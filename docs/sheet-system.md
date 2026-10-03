@@ -530,7 +530,8 @@ paths and feed `sum`, `count`, `length`, `get`, `join`, `min`/`max`, or definiti
 result. No implicit conversion: arithmetic and ordering take numbers (`+` doesn't join text; use `concat`), `==`
 compares type and value, `if`/`and`/`or`/`not` take true/false with nothing counting as false. A missing value (absent
 key, unloaded reference, a path through a non-object) is nothing; arithmetic or ordering with nothing gives nothing
-(shown empty); aggregates skip nothing; `sum` and `count` of an empty list are 0. Numbers show without floating-point
+(shown empty); aggregates skip nothing; `sum` and `count` of an empty list are 0. A text field that was cleared holds `""`, not
+nothing, so test text with `length(x) > 0` (false for both) rather than `x != null`. Numbers show without floating-point
 noise (`toPrecision(12)`) and without locale formatting, so server and browser render the same text.
 
 ### Errors
@@ -549,9 +550,20 @@ a()`) is an error on every definition in it, and calling a broken definition giv
 
 ### Limits (`formulaLimits`)
 1,000 characters and 200 nodes per expression; nesting depth 32; 32 arguments per call; 200 `<Define>`s and 2,000
-formulas per sheet; per-item functions nested 2 levels; 20,000 evaluation steps per evaluation (every node visit and
-aggregate item counts; definitions share their caller's budget); definitions calling each other 16 levels deep; text
-results of 10,000 characters.
+formulas per sheet; per-item functions nested 2 levels; definitions calling each other 16 levels deep; text results of
+10,000 characters.
+
+Steps (every node visit and aggregate item counts; definitions share their caller's budget): one evaluation may take
+at most 20,000, and a whole sheet about 2,000,000 (`maxSheetSteps`), shared evenly. The validator gives each formula
+`min(20,000, 2,000,000 / the sheet's formula count)` (`stepBudget`), and the renderer divides that again by the item
+counts of the Lists and Table rows around it, since a formula inside a List runs once per item. Both depend only on
+the markup and the data, so the server and the browser get the same results (no hydration mismatches). A formula out
+of steps shows "—" with "This formula takes too many steps to compute". Measured (2026-10-02, Mac, vitest): about
+70 ns a step; the worst case of 2,000 formulas each summing 500 rows with a nested sum took 1.95 s before the sheet
+budget and 178 ms after it, and 200 formulas in a 500-row List took 7 s before the per-item division. Whole pages that
+large are slow to render anyway (about 3 to 5 s for 2,000 tags with no formulas, in dev and production builds, much of
+it database time from this machine), so the budget keeps formulas from adding to that rather than making big sheets
+fast.
 
 ### Security
 Formulas read only the data the viewer already has (the content and its loaded references) and produce text, numbers,
