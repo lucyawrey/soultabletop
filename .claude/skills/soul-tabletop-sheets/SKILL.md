@@ -19,7 +19,8 @@ So produce files, tell the user which is which, and check them before handing th
 Read these when in doubt; this skill is a summary and the code wins if they disagree.
 
 - `shared/sheet/registry.ts`: every tag, attribute, enum value, allowed children and parents, and what each tag can bind to.
-- `shared/sheet/parser.ts` (syntax), `shared/sheet/validate.ts` (tags, attributes, field paths), `shared/sheet/css.ts` and `shared/fonts.ts` (CSS).
+- `shared/sheet/parser.ts` (syntax), `shared/sheet/validate.ts` (tags, attributes, field paths, formula checks), `shared/sheet/css.ts` and `shared/fonts.ts` (CSS).
+- `shared/sheet/formula.ts` (formula grammar and limits), `shared/sheet/formula-functions.ts` (every built-in function with its signature and description).
 - `docs/sheet-system.md` (design; parts can be stale, see "Known doc drift" below), `shared/sheet/*.test.ts` (exact behavior), `app/components/sheet/` (rendering).
 
 ## Workflow
@@ -36,11 +37,12 @@ Read these when in doubt; this skill is a summary and the code wins if they disa
 - The `<Sheet>` root is optional (top level only). Any number of top-level nodes is fine.
 - Attributes: `name="value"` or `name='value'`. A bare `name` means true (booleans only). Unquoted values are an error. A duplicate attribute is an error. Attribute names are `[A-Za-z_][A-Za-z0-9_-]*`.
 - Text goes directly inside layout tags and renders as a paragraph; whitespace collapses like HTML. `<Grid>`, `<Section>`, etc. accept text; `Heading`, `Note`, `Callout`, `Badge` accept only text; `Divider` and field tags accept nothing.
-- Interpolation: `{path}` in text and in text attribute values inserts a field's value (a path lookup, no expressions or math). A missing value is empty. Booleans show Yes/No; numbers are plain; arrays are comma-joined; a reference to other Content shows its name. `{}` and invalid paths are errors; interpolating a struct/object only warns.
+- Interpolation: `{path}` in text and in text attribute values inserts a field's value (a path lookup). A missing value is empty. Booleans show Yes/No; numbers are plain; arrays are comma-joined; a reference to other Content shows its name. `{}` and invalid paths are errors; interpolating a struct/object only warns.
+- Formulas: `{= expr}` in text and attribute values computes a value (see "Formulas" below). `formula="expr"` on some field tags is raw text, without braces.
 - Escapes: `\{` `\}` `\\` for literal braces and backslash. Entities `&lt; &gt; &amp; &quot; &apos;` and numeric `&#123;` / `&#x7B;`. A bare `<` in text is an error (write `&lt;`).
 - Comments: `<!-- ... -->` (an unterminated comment is an error).
 - Limits: 100,000 characters, 32 levels of nesting, 5,000 nodes. CSS: 50,000 characters.
-- Some attributes take `{path}` instead of a literal: number attributes accept exactly one `{path}` (e.g. `max="{hp.max}"`), text attributes accept interpolation mixed with text; enum, boolean, icon, class, list, and field attributes cannot use `{...}`.
+- Some attributes take `{path}` instead of a literal: number attributes accept exactly one `{path}` or one `{= formula}` (e.g. `max="{hp.max}"`, `max="{= hp.base + level * 2}"`), text attributes accept both mixed with text; enum, boolean, icon, class, list, and field attributes cannot use `{...}`.
 - No raw HTML, `style`, `on*` events, or URLs. Icons are Iconify names like `i-lucide-sword`. Images are `https` URLs held in a string field.
 
 ## Tags
@@ -48,9 +50,10 @@ Read these when in doubt; this skill is a summary and the code wins if they disa
 The full list of attributes and children is in `references/tags.md` (verified against the registry). Summary:
 
 - Layout: `Sheet`, `Section` (card; `title`, `description`, `icon`, `span`, `collapsible`, `collapsed`), `Grid` (`cols` 1-12, `gap`), `Stack` (`direction`, `gap`, `align`, `wrap`), `Tabs` (only `Tab` children) and `Tab` (`label` required), `Divider`, `Heading` (`level` 1-4), `Note`, `Callout`, `Badge`, `Collapsible` (`title` required).
-- Fields (all need `field`; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (`options` required), `Tags`, `Tracker` (`max` required), `Ref`, `Value` (never editable), `Markdown`, `Image`.
-- Repeaters: `List` (repeats its children per array item), `Table` (only `Column` and `RowDetails` children).
-- Every tag also takes `class`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class`.
+- Fields (need `field`, or `formula` where allowed; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (`options` required), `Tags`, `Tracker` (`max` required), `Ref`, `Value` (never editable), `Markdown`, `Image`.
+- Repeaters: `List` (repeats its children per array item), `Table` (only `Column` and `RowDetails` children; `Column` takes `field` or `formula`, and `format`).
+- Definitions: `Define` (`name`, `params`, `formula`; top level or directly inside `Sheet`; renders nothing).
+- Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Define` takes none.
 
 Rendering notes: `Number variant="stat"` shows a big number with its label small. `format="signed"` (on `Number` and `Value`) shows `+2` for positives; an editable `Number` input shows the sign too, while the saved value stays a plain number. `Tracker style="pips"` shows boxes instead of a bar. `Ref` shows a link to the referenced resource or Content.
 
@@ -66,6 +69,19 @@ Rendering notes: `Number variant="stat"` shows a big number with its label small
 - Which tag binds which field type: `Text`, `Select`, `Markdown`, `Image` bind string; `Number`, `Tracker` bind number; `Checkbox`, `Toggle` bind boolean; `Tags` binds an array of strings; `Ref` binds resourceLink and content; `Value` binds anything; `Field` binds string, number, boolean, scalar, object, resourceLink, content, and arrays of strings; `Column` binds string, number, boolean, scalar, resourceLink, content.
 - Unknown paths: error when the content type has a strict schema, warning when not (`hasStrictSchema`), and the warning only shows if the sheet's content type has `showSheetWarnings` on (off by default). `{path}` follows the same rule.
 - Labels: `label` attribute, else the schema field's `label`, else the humanized name (`hitPoints` becomes "Hit Points"). `hint` falls back to the schema description. `label=""` does NOT hide the label (it falls back to the schema label); add `hideLabel` (on any field tag or `Column`) to hide it. A hidden label still names the input for screen readers.
+
+## Formulas
+
+Computed when the sheet is shown, never saved. Full rules: `docs/sheet-system.md`, "Formulas".
+
+- Where: `formula="…"` on `Value`, `Column`, `Tracker` (read-only, instead of `field`) and on `Number`, `Text`, `Checkbox` (alone it's read-only; with `field` too, the field holds an optional manual value that wins, and a reset button goes back to the computed one; use this for values a player may need to override, like AC). `{= …}` in text, text attributes, number attributes, and `show`. No other tag takes `formula`, and `Image` never will.
+- Syntax: `+ - * / %`, `== != < <= > >=` (not chained), `and or not`, parentheses, numbers, text in quotes (`'expert'`; inside `formula="…"` always single quotes), `true false null`, paths (`stats.str`, `/level` from the top inside a List, `.` the item), calls `name(args)`. No `=`, `&&`, `||`, `!`, `?:`. In text formulas write `&lt;` for `<` (or flip the comparison to `>`): a bare `<` parses but breaks the editor's colors.
+- Built-ins: `floor ceil trunc abs round(x, digits?) clamp(x, lo, hi) min max sum(list[, expr]) count(list[, cond]) any(list, cond) all(list, cond) length coalesce concat join(list, sep) signed number text if(cond, then, else) switch(value, k1, v1, …, default?) get(record, key)`. In `sum(list, expr)` and friends, `expr` is per item: paths are the item's, `/` the top level. `get(attributes, attr)` picks a field by name (own keys only).
+- Types: no implicit conversion (`+` adds numbers only; `concat` joins text). Empty values pass through arithmetic and show empty; `coalesce(x, 0)` gives a default. `if`, `and`, `or` treat empty as false. A list or group of fields can't be a final value.
+- Definitions: `<Define name="prof" params="rank" formula="…" />` at the top level, called as `prof(x)`; one without parameters is called `pb()`. Inside its formula, a parameter name is the parameter; `/name` reaches the field. Names of built-ins are reserved. No cycles.
+- `show="{= expr}"` or `show="{boolField}"`: hides the tag (and all inside) when false or empty. Works on `Tab` (hidden tabs leave the list) and `RowDetails` (per row). A `show` formula that fails shows the tag.
+- Errors: a formula that can never work (unknown field, `name + 1` on text, wrong arity, a result the tag can't show) is an error and blocks saving; a runtime failure (division by zero) shows "—", with a warning icon for sheet editors.
+- Not available: dice (`2d6`, `roll`), dates, regex, writing data. Store a value in a field when players should type it; compute it when it follows from other fields.
 
 ## `live`, `locked`, `display`
 
@@ -106,11 +122,12 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 
 ## Worked examples
 
-`references/examples.md`: a player character sheet (tabs, tracker, live/locked, table, content reference), an NPC stat block, and a spell card, each with its schema, markup, and CSS. They compile without errors against their schemas.
+`references/examples.md`: a player character sheet (tabs, tracker, live/locked, table, content reference), an NPC stat block, a spell card, and a Pathfinder 2e character sheet built on formulas (definitions, overrides, `show`, per-item sums), each with its schema and markup (and CSS for the first three). They compile without errors against their schemas.
 
 ## Known limits
 
-- No formulas or computed values yet: ability modifiers, bonuses, and DCs must be stored fields. Do not write expressions inside `{...}`.
+- Formulas can't roll dice or write data, and computed values aren't saved or returned by the API.
+- `{path}` is only a path; write expressions as `{= …}`.
 - Dice buttons, choice fields in schemas, and iterating a struct's entries in a `List`/`Table` are all planned in TODO.md, not available.
 
 ## Known doc drift

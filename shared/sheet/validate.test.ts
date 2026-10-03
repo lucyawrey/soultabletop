@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ContentTypeRules } from "../content-schema";
+import { pathfinder2eMarkup, pathfinder2eSchemas } from "./fixtures/pathfinder2e";
 import { parseSheetMarkup } from "./parser";
 import { humanizeFieldName } from "./registry";
 import {
@@ -716,5 +717,13 @@ describe("show", () => {
   it("evaluates in the tag's scope and still validates hidden content", () => {
     expect(messages('<List field="attacks"><Note show="{= bonus > 0}">{name}</Note></List>')).toEqual([]);
     expect(errorCodes('<Section show="{= false}"><Number field="nope" /></Section>')).toEqual(["unknown-field"]);
+  });
+});
+
+describe("the Pathfinder 2e example", () => {
+  it("compiles with no diagnostics", () => {
+    const { diagnostics, definitions } = compileSheet(pathfinder2eMarkup, pathfinder2eSchemas);
+    expect(diagnostics).toEqual([]);
+    expect([...definitions.keys()]).toEqual(["prof", "check", "classDc"]);
   });
 });

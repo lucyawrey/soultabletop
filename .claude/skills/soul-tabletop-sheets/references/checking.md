@@ -84,6 +84,11 @@ imports `sheetTags` and `commonAttrs` from `./registry` and prints `JSON.stringi
 
 ## What the check does not cover
 
+- It doesn't evaluate formulas: it checks their syntax, functions, argument counts, and types, and their paths follow
+  the same rules as `field` paths (errors in strict schemas, warnings otherwise, shown only with `showSheetWarnings`).
+  A formula that divides by zero for some data, or reads an empty field, still passes; look at the preview with
+  sample data and with real content.
+
 - It does not render anything: layout and looks need the editor preview.
 - It does not check data against Select `options`, or that a referenced content exists.
 - Warnings are not errors, but read them: an unknown path in a non-strict schema is a warning and shows an empty value.
