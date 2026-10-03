@@ -1,7 +1,12 @@
 <script setup lang="ts">
 useHead({
   meta: [{ name: "viewport", content: "width=device-width, initial-scale=1" }],
-  link: [{ rel: "icon", href: "/favicon.ico" }],
+  // The sidebar logo's dice icon in the primary color; the .ico is the
+  // fallback for browsers without SVG favicons.
+  link: [
+    { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+    { rel: "icon", href: "/favicon.ico", sizes: "any" },
+  ],
   htmlAttrs: {
     lang: "en",
   },
