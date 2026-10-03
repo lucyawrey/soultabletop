@@ -17,7 +17,7 @@ Sheet formulas: computed values in Sheet markup, never stored. A small expressio
   - The Sheets skill, including the full Pathfinder 2e example.
   - The content GET's OpenAPI description now says computed values aren't part of `data`.
   - **Rule-file change:** the Sheet bullet in `.claude/CLAUDE.md` now names the formula files and says formulas are computed at render time, never stored.
-- **Tests (commits 7–8):** about 600 tests in `shared/sheet` (was 383 across the whole suite before):
+- **Tests (commits 7–8):** 628 tests in `shared/sheet` (was 383 across the whole suite before):
   - parser, evaluator, and checker case tables;
   - a seeded fuzz test (random token soup never throws, finishes within the budget, and round-trips print → parse);
   - the Pathfinder 2e example compiles cleanly and evaluates to hand-checked numbers.
@@ -48,6 +48,20 @@ Sheet formulas: computed values in Sheet markup, never stored. A small expressio
 
 6. **Reactivity fix found in the browser.** Reading data with `Object.hasOwn` alone isn't tracked by Vue, so an override's first manual value didn't show. Reads now go through the property first (`ownProperty` in `scope.ts`), with a test that records proxy reads.
 
+## From review
+
+A fresh reviewer (Opus, clean context) found these; all fixed in the last commit, with tests. A second review of that commit was started and stopped (not needed for merge per the user).
+
+- **Lists bypassed the step budget:** `count`, `sum`, `min`, `max`, and `join` over a huge list cost time proportional to its length whatever the budget. Now every list item costs a step, a list longer than the steps left fails at once, and `join` stops at the text limit.
+- **An unclosed `{=` made parsing quadratic** (20,000 of them took a second, on the server) and swallowed the tags after it. The search for its `}` now stops after 1,000 characters and at a closing tag.
+- **`{…}` in layout numbers rendered broken tags:** `level="{= 2}"` gave an invalid tag name. Only the number attributes read when rendering (Tracker `max`; Number `min`, `max`, `step`) take `{…}` or `{= …}` now. No existing sheet in the shared database used them elsewhere.
+- **Smaller fixes:**
+  - Definitions with a taken or bad name still get their formula checked.
+  - Dice-like names (`d6`) are rejected for definitions and parameters.
+  - Overrides on required fields get a warning, because going back to the computed value clears the field, and a required field can't be saved empty.
+  - A quote that cuts `title="{= …"…"}"` short gets a hint.
+- **Not fixed here (older than this branch):** a free-form path ending in `.length` can write to an array's length through `setSheetValue`.
+
 ## Database check (step 0)
 
 Read-only scan of the shared database for reserved keys: 0 of 8 content type schemas, 0 of 14 content records, 0 of 9 sheets' markup. Nothing to migrate.
@@ -77,7 +91,7 @@ Read-only scan of the shared database for reserved keys: 0 of 8 content type sch
 
 ## Notes for review
 
-- On `main`, the content picker in an editable Table cell shows a raw content ID until its list loads. I saw it during the browser check; this branch doesn't touch it.
+- During the browser check, the content picker in an editable Table cell showed a raw content ID. This branch doesn't touch the picker; not checked on `main`.
 - Step 8 (the Pathfinder 2e test sheet uploaded with an API key) comes after this PR and needs you.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
