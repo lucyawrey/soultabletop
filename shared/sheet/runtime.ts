@@ -7,20 +7,27 @@ import {
   type ContentFieldSchema,
   type ResourceLinkKind,
 } from "../content-schema";
-import type { TextPart } from "./parser";
+import { isFormulaError, type FormulaValue } from "./formula";
+import { formatFormulaNumber } from "./formula-functions";
+import { parseSheetPath, type TextPart } from "./parser";
 import {
-  parseSheetPath,
-  type SheetPath,
-  type SheetSchemas,
-} from "./validate";
+  findRef,
+  isRecord,
+  resolveSheetPath,
+  type SheetRefs,
+  type SheetScope,
+} from "./scope";
+import type { SheetSchemas } from "./validate";
 
-export interface SheetRef {
-  name: string;
-  contentTypeId: string;
-  data: Record<string, unknown>;
-}
-
-export type SheetRefs = Record<string, SheetRef>;
+export {
+  findRef,
+  itemScopes,
+  refRecord,
+  resolveSheetPath,
+  type SheetRef,
+  type SheetRefs,
+  type SheetScope,
+} from "./scope";
 
 // A resource a `resourceLink` field points at, as loaded for the viewer.
 export interface SheetLink {
@@ -43,68 +50,6 @@ export function resourceLinkPath(id: string, link: SheetLink) {
   return `${RESOURCE_PAGES[link.kind]}/${id}`;
 }
 
-// A value in the rendered data, and where it lives. `path` is its location in
-// the Content's own data (for editing), or null when it was reached through a
-// reference to other Content, which is read-only here.
-export interface SheetScope {
-  value: unknown;
-  path: (string | number)[] | null;
-  // A reference on the way was not loaded (missing, or not readable).
-  unavailable?: boolean;
-}
-
-const indexPattern = /^\d+$/;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-// Referenced Content as the record a Sheet sees: its data plus `name`.
-export function refRecord(ref: SheetRef): Record<string, unknown> {
-  return { ...ref.data, name: ref.name };
-}
-
-export function resolveSheetPath(
-  path: SheetPath,
-  root: SheetScope,
-  scope: SheetScope,
-  refs: SheetRefs,
-): SheetScope {
-  let current = path.absolute ? root : scope;
-  for (const segment of path.segments) {
-    if (current.unavailable) return current;
-    let container = current.value;
-    let containerPath = current.path;
-    // A string where fields are expected is a reference to other Content.
-    if (typeof container === "string") {
-      const ref = refs[container];
-      if (!ref) return { value: undefined, path: null, unavailable: true };
-      container = refRecord(ref);
-      containerPath = null;
-    }
-    const key = Array.isArray(container) && indexPattern.test(segment)
-      ? Number(segment)
-      : segment;
-    const value =
-      Array.isArray(container) && typeof key === "number"
-        ? container[key]
-        : isRecord(container) && Object.hasOwn(container, segment)
-          ? container[segment]
-          : undefined;
-    current = { value, path: containerPath ? [...containerPath, key] : null };
-  }
-  return current;
-}
-
-// Each item of an array value, as the scope for a List or Table row.
-export function itemScopes(list: SheetScope): SheetScope[] {
-  if (!Array.isArray(list.value)) return [];
-  return list.value.map((value, index) => ({
-    value,
-    path: list.path ? [...list.path, index] : null,
-  }));
-}
-
 export function formatSheetValue(
   value: unknown,
   refs: SheetRefs,
@@ -115,7 +60,7 @@ export function formatSheetValue(
     return format === "signed" && value > 0 ? `+${value}` : String(value);
   }
   if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (typeof value === "string") return refs[value]?.name ?? value;
+  if (typeof value === "string") return findRef(refs, value)?.name ?? value;
   if (Array.isArray(value))
     return value
       .map((item) => formatSheetValue(item, refs, format))
@@ -203,4 +148,19 @@ export function interpolateSheetText(
           ),
     )
     .join("");
+}
+
+// A formula value as text: numbers without floating-point noise, references
+// as their names. Errors show as an empty string; callers show "—".
+export function formatFormulaValue(
+  value: FormulaValue,
+  refs: SheetRefs,
+  format: "plain" | "signed" = "plain",
+): string {
+  if (isFormulaError(value)) return "";
+  if (typeof value === "number") {
+    const text = formatFormulaNumber(value);
+    return format === "signed" && value > 0 ? `+${text}` : text;
+  }
+  return formatSheetValue(value, refs, format);
 }

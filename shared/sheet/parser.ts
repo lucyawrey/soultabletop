@@ -79,6 +79,19 @@ export function usesReservedKey(path: string) {
   return path.replace(/^\//, "").split(".").some(isReservedKey);
 }
 
+export interface SheetPath {
+  // Starts at the top level (`/name`) instead of the current List item.
+  absolute: boolean;
+  // Empty for `.`, the current item itself.
+  segments: string[];
+}
+
+export function parseSheetPath(path: string): SheetPath {
+  const absolute = path.startsWith("/");
+  const rest = absolute ? path.slice(1) : path;
+  return { absolute, segments: rest === "." ? [] : rest.split(".") };
+}
+
 // The message for a path that isn't valid.
 export function invalidPathMessage(path: string) {
   return usesReservedKey(path)
