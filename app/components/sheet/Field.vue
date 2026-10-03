@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { isFormulaError } from "#shared/sheet/formula";
-import { findRef, resourceLinkPath, type SheetScope } from "#shared/sheet/runtime";
+import {
+  findRef,
+  resourceLinkPath,
+  sheetOverride,
+  type SheetScope,
+} from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // Every field tag (Text, Number, Field, Column, ...): its value, or its input
@@ -24,17 +29,11 @@ const formulaError = computed(() =>
 );
 // An override with nothing stored (or empty text) shows the computed value.
 const stored = computed(() => resolved.value.value);
-const automatic = computed(
-  () =>
-    !!props.node.formula &&
-    (stored.value === undefined ||
-      stored.value === null ||
-      (props.node.tag === "Text" && stored.value === "")),
+const override = computed(() =>
+  sheetOverride(props.node.tag, stored.value, computedValue.value),
 );
-const value = computed<unknown>(() => {
-  if (!automatic.value) return stored.value;
-  return formulaError.value ? undefined : computedValue.value;
-});
+const automatic = computed(() => override.value.automatic);
+const value = computed(() => override.value.value);
 // The computed value as text, for the input's placeholder.
 const computedText = computed(() =>
   computedValue.value === undefined ? "" : formatFormula(computedValue.value),

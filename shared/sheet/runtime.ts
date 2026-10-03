@@ -298,3 +298,18 @@ export function sheetCondition(
   if (value === false || value === null || value === undefined) return { shown: false };
   return { shown: true, error: "show needs true or false" };
 }
+
+// An override field (a field tag with both `field` and `formula`): with no
+// stored value (missing, null, or empty text on a Text tag) it is automatic
+// and shows the computed value; otherwise the stored value wins.
+export function sheetOverride(
+  tag: string,
+  stored: unknown,
+  computed: FormulaValue | undefined,
+): { automatic: boolean; value: unknown } {
+  const automatic =
+    computed !== undefined &&
+    (stored === undefined || stored === null || (tag === "Text" && stored === ""));
+  if (!automatic) return { automatic, value: stored };
+  return { automatic, value: isFormulaError(computed) ? undefined : computed };
+}

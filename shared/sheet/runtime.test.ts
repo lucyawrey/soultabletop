@@ -6,6 +6,7 @@ import {
   evaluateSheetFormula,
   setSheetValue,
   sheetCondition,
+  sheetOverride,
   sheetTextSegments,
   formatSheetValue,
   interpolateSheetText,
@@ -14,10 +15,13 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "./runtime";
-import { FormulaError, parseFormula } from "./formula";
+import { FormulaError, parseFormula, type FormulaValue } from "./formula";
+import { pathfinder2eMarkup, pathfinder2eSchemas } from "./fixtures/pathfinder2e";
 import {
   compileSheet,
+  isCompiledFormula,
   parseSheetPath,
+  type CompiledFormula,
   type SheetSchemas,
   type ValidatedElement,
   type ValidatedText,
@@ -288,5 +292,81 @@ describe("sheetCondition", () => {
   it("evaluates in the given scope", () => {
     const [rope] = itemScopes(resolve("inventory"));
     expect(show('<Note show="{= qty > 1}">x</Note>', rope)).toEqual({ shown: true });
+  });
+});
+
+describe("sheetOverride", () => {
+  it.each([
+    ["Number", undefined, 5, true, 5],
+    ["Number", null, 5, true, 5],
+    ["Number", 0, 5, false, 0],
+    ["Number", 7, 5, false, 7],
+    ["Text", "", "auto", true, "auto"],
+    ["Text", "mine", "auto", false, "mine"],
+    ["Checkbox", undefined, true, true, true],
+    ["Checkbox", false, true, false, false],
+    // Without a formula, the stored value is all there is.
+    ["Number", undefined, undefined, false, undefined],
+  ])("%s stored %j, computed %j", (tag, stored, computed, automatic, value) => {
+    expect(sheetOverride(tag, stored, computed as FormulaValue | undefined)).toEqual({ automatic, value });
+  });
+
+  it("shows nothing when the automatic value failed", () => {
+    expect(sheetOverride("Number", undefined, new FormulaError("type", "x"))).toEqual({
+      automatic: true,
+      value: undefined,
+    });
+  });
+});
+
+describe("compiled number attributes", () => {
+  it("evaluates {= } in number attributes", () => {
+    const { nodes } = compileSheet('<Tracker field="hp" max="{= hp * 2 + stats.str}" />', {
+      root: { hasStrictSchema: false, schema: {} },
+      types: {},
+    });
+    const max = (nodes[0] as ValidatedElement).attrs.max;
+    expect(isCompiledFormula(max)).toBe(true);
+    expect(evaluateSheetFormula((max as CompiledFormula).ast, root, root, refs)).toBe(26);
+  });
+});
+
+describe("the Pathfinder 2e example", () => {
+  const compiled = compileSheet(pathfinder2eMarkup, pathfinder2eSchemas);
+  const formulas = { definitions: compiled.definitions };
+  const character = {
+    name: "Ezren",
+    level: 5,
+    keyAttribute: "int",
+    attributes: { str: 0, dex: 2, con: 1, int: 4, wis: 1, cha: 0 },
+    perceptionRank: "expert",
+    classDcRank: "trained",
+    saves: { fortitude: { rank: "trained" }, reflex: { rank: "trained" }, will: { rank: "expert" } },
+    skills: { athletics: { rank: "untrained" }, stealth: { rank: "trained" } },
+    armor: { rank: "trained", dexCap: 5, itemBonus: 1, strength: 1 },
+    speed: 25,
+    hp: { current: 30, ancestry: 6, classPerLevel: 6 },
+    spellcasting: { tradition: "arcane", attribute: "int", rank: "trained" },
+    inventory: [
+      { item: "torch-id", qty: 10 },
+      { item: { name: "Staff", bulk: 1 }, qty: 1 },
+    ],
+  };
+  const pc: SheetScope = { value: character, path: [] };
+  const items: SheetRefs = { "torch-id": { name: "Torch", contentTypeId: "pf2e-item", data: { bulk: 0.1 } } };
+  function value(source: string) {
+    const ast = parseFormula(source, { line: 1, column: 1, offset: 0 }).ast!;
+    return evaluateSheetFormula(ast, pc, pc, items, formulas);
+  }
+
+  it("computes the derived numbers", () => {
+    expect(value("10 + min(attributes.dex, coalesce(armor.dexCap, 99)) + prof(armor.rank) + coalesce(armor.itemBonus, 0)")).toBe(20);
+    expect(value("check('wis', perceptionRank)")).toBe(10);
+    expect(value("check('str', skills.athletics.rank)")).toBe(0);
+    expect(value("classDc()")).toBe(21);
+    expect(value("hp.ancestry + (hp.classPerLevel + attributes.con) * level + coalesce(hp.bonus, 0)")).toBe(41);
+    expect(value("speed - if(armor.strength != null and armor.strength > attributes.str, 5, 0)")).toBe(20);
+    expect(value("floor(sum(inventory, qty * coalesce(item.bulk, 0)))")).toBe(2);
+    expect(value("10 + get(attributes, spellcasting.attribute) + prof(spellcasting.rank)")).toBe(21);
   });
 });

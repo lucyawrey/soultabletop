@@ -727,3 +727,40 @@ describe("the Pathfinder 2e example", () => {
     expect([...definitions.keys()]).toEqual(["prof", "check", "classDc"]);
   });
 });
+
+describe("formula types from the schema", () => {
+  const loose: SheetSchemas = { root: { ...character, hasStrictSchema: false, showSheetWarnings: true }, types: schemas.types };
+
+  it.each([
+    ["hp + 1", []],
+    ["notes + 1", ["formula-type"]],
+    ["alive + 1", ["formula-type"]],
+    ["stats + 1", ["formula-type"]],
+    ["tags + 1", ["formula-type"]],
+    // scalar, free-form, and content values could be anything that fits.
+    ["extra + 1", []],
+    ["misc.deep.value + 1", []],
+    ["class == 'x'", []],
+    ["inventory.0.item == 'x'", []],
+    ["link == 'x'", []],
+    ["inventory.0.item.weight + 1", []],
+    ["inventory.0.item.cost + 1", ["formula-type"]],
+  ])("strict: %s", (source, codes) => {
+    expect(errorCodes(`<Value formula="${source}" />`)).toEqual(codes);
+  });
+
+  it("treats paths a non-strict schema doesn't know as anything, with a warning", () => {
+    expect(messages('<Value formula="unknown + 1" />', loose)).toEqual([
+      'warning unknown-field: "unknown": the schema has no field "unknown"; it will show whatever the data holds',
+    ]);
+    expect(errorCodes('<Value formula="notes + 1" />', loose)).toEqual(["formula-type"]);
+  });
+
+  it("only warns about free-form object paths when the content type asks for it", () => {
+    expect(messages('<Value formula="misc.a + 1" />')).toEqual([
+      'warning free-form-path: "misc.a": "misc" is a free-form object, so "a" isn\'t checked; it will show whatever the data holds',
+    ]);
+    const quiet: SheetSchemas = { ...schemas, root: { ...character, showSheetWarnings: false } };
+    expect(messages('<Value formula="misc.a + 1" />', quiet)).toEqual([]);
+  });
+});
