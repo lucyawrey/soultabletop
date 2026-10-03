@@ -9,9 +9,6 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 
 # Next up
 
-- **Use the dice icon as the favicon** · chore · small
-  The sidebar logo is the Lucide `dices` icon in the primary plum (`app/app.vue`), but the site serves a generic `public/favicon.ico`. Add an SVG favicon of the same icon in the theme's plum (`<link rel="icon" type="image/svg+xml">` in `app/app.vue`, keeping the `.ico` as the fallback), and check it in a browser tab at small size.
-
 # Soon
 
 - **Tailwind classes just work in Sheets, with an optional minimal base theme** · feature · large · needs decision: how to compile per sheet (when, where, how scoped) and what the minimal theme resets
