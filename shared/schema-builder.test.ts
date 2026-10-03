@@ -109,6 +109,17 @@ describe("builderErrors", () => {
     expect(errors.get(fields[4]!.id)).toMatch(/built in/);
   });
 
+  it.each(["__proto__", "constructor", "prototype"])("rejects the reserved key %s", (key) => {
+    const fields = schemaToBuilder({
+      stats: { type: "struct", entries: { ok: { type: "number" } } },
+    });
+    fields.push(newBuilderField(key));
+    fields[0]!.fields.push(newBuilderField(key));
+    const errors = builderErrors(fields);
+    expect(errors.get(fields[1]!.id)).toBe("That name is reserved; choose another key");
+    expect(errors.get(fields[0]!.fields[1]!.id)).toBe("That name is reserved; choose another key");
+  });
+
   it("allows `name` inside groups", () => {
     const fields = schemaToBuilder({
       stats: { type: "struct", entries: { name: { type: "string" } } },

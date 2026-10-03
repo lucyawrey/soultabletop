@@ -11,6 +11,7 @@ import {
   type ContentTypeSchema,
 } from "../content-schema";
 import {
+  invalidPathMessage,
   isValidSheetPath,
   parseSheetMarkup,
   type Interpolation,
@@ -567,7 +568,7 @@ class Validator {
         const path = raw.trim();
         return isValidSheetPath(path)
           ? path
-          : fail(`"${path}" isn't a valid field path; use names joined by dots, like stats.strength`);
+          : fail(invalidPathMessage(path));
       }
       case "list": {
         const items = raw.split(",").map((item) => item.trim()).filter(Boolean);

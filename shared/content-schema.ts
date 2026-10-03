@@ -45,6 +45,15 @@ export const NAME_FIELD = "name";
 // Field keys are used in dotted sheet paths, so they must be identifiers.
 export const fieldKeyPattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
+// Names JavaScript objects inherit or treat specially. They're never field
+// keys or path segments, so data and sheet paths can't reach (or write into)
+// the object prototype.
+export const RESERVED_KEYS: readonly string[] = ["__proto__", "constructor", "prototype"];
+
+export function isReservedKey(key: string) {
+  return RESERVED_KEYS.includes(key);
+}
+
 // How many `content` fields a value or sheet path may pass through.
 export const MAX_CONTENT_DEPTH = 3;
 

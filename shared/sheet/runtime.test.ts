@@ -75,6 +75,13 @@ describe("resolveSheetPath", () => {
     expect(resolve(".", sword)).toBe(sword);
   });
 
+  it("doesn't read inherited properties", () => {
+    expect(resolve("constructor")).toEqual({ value: undefined, path: ["constructor"] });
+    expect(resolve("stats.__proto__")).toEqual({ value: undefined, path: ["stats", "__proto__"] });
+    expect(resolve("stats.toString")).toEqual({ value: undefined, path: ["stats", "toString"] });
+    expect(resolve("class.constructor").value).toBeUndefined();
+  });
+
   it("gives item scopes no path when the list came through a reference", () => {
     const scopes = itemScopes({ value: ["a"], path: null });
     expect(scopes).toEqual([{ value: "a", path: null }]);
@@ -118,6 +125,26 @@ describe("setSheetValue", () => {
       new: { deep: true },
       rows: [undefined, { x: "y" }],
     });
+  });
+
+  it("never writes through reserved keys", () => {
+    const target: Record<string, unknown> = {};
+    try {
+      setSheetValue(target, ["__proto__", "polluted"], 1);
+      setSheetValue(target, ["constructor", "prototype", "polluted"], 1);
+      setSheetValue(target, ["a", "__proto__"], 1);
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect(target).toEqual({});
+    } finally {
+      delete (Object.prototype as Record<string, unknown>).polluted;
+    }
+  });
+
+  it("doesn't walk into inherited objects", () => {
+    const target: Record<string, unknown> = {};
+    setSheetValue(target, ["toString", "x"], 1);
+    expect(Object.hasOwn(target, "toString")).toBe(true);
+    expect((Function.prototype as unknown as Record<string, unknown>).x).toBeUndefined();
   });
 
   it("ignores an empty path", () => {

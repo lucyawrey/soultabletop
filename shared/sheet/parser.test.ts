@@ -377,4 +377,24 @@ describe("isValidSheetPath", () => {
   it.each(["", "/", "/.", "a.", ".a", "0", "a..b", "a b", "a-b", "a.b.", "../a"])("rejects %j", (path) => {
     expect(isValidSheetPath(path)).toBe(false);
   });
+  it.each([
+    "__proto__",
+    "constructor",
+    "prototype",
+    "/__proto__",
+    "a.__proto__",
+    "a.constructor.b",
+    "/a.prototype",
+  ])("rejects the reserved %j", (path) => {
+    expect(isValidSheetPath(path)).toBe(false);
+  });
+  it("names reserved keys in the diagnostic", () => {
+    const { diagnostics } = parseSheetMarkup("{stats.__proto__}");
+    expect(diagnostics).toMatchObject([
+      {
+        code: "invalid-path",
+        message: "\"stats.__proto__\" uses a reserved name (__proto__, constructor, prototype)",
+      },
+    ]);
+  });
 });

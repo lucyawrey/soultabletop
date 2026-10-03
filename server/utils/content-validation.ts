@@ -4,6 +4,7 @@ import { createError } from "h3";
 import { content, contentType, resource } from "../database/schema";
 import {
   fieldKeyPattern,
+  isReservedKey,
   MAX_CONTENT_DEPTH,
   MAX_CONTENT_REFS,
   NAME_FIELD,
@@ -121,7 +122,7 @@ function validateField(
 
 // Free-form `object` values: anything goes, but keys at every level must be
 // identifiers (so sheet paths can reach them) and nesting is bounded.
-function freeObjectError(
+export function freeObjectError(
   value: unknown,
   path: string,
   nesting: number,
@@ -138,6 +139,7 @@ function freeObjectError(
   for (const [key, item] of Object.entries(value)) {
     if (!fieldKeyPattern.test(key))
       return `${path} has key "${key}"; keys must start with a letter or underscore and contain only letters, numbers, and underscores`;
+    if (isReservedKey(key)) return `${path} has key "${key}", which is reserved`;
     const error = freeObjectError(item, `${path}.${key}`, nesting + 1);
     if (error) return error;
   }
@@ -156,7 +158,7 @@ function validateObject(
 
   for (const [key, field] of Object.entries(schema)) {
     const fieldPath = path ? `${path}.${key}` : key;
-    if (!(key in value)) {
+    if (!Object.hasOwn(value, key)) {
       if (field.required && !pending.allowMissingRequired)
         return `${fieldPath} is required`;
       continue;
@@ -174,7 +176,7 @@ function validateObject(
   }
 
   if (strict) {
-    const extraKey = Object.keys(value).find((key) => !(key in schema));
+    const extraKey = Object.keys(value).find((key) => !Object.hasOwn(schema, key));
     if (extraKey) return `${path ? `${path}.` : ""}${extraKey} is not allowed`;
   }
 
@@ -322,9 +324,9 @@ export function extractDataName(data: Record<string, unknown>) {
   return { data: rest, name: name.trim() };
 }
 
-// Rejects field keys that aren't identifiers (TypeBox's Record ignores key
-// patterns), at every nesting level.
-function assertFieldKeys(schema: ContentTypeSchema) {
+// Rejects field keys that aren't identifiers or are reserved (TypeBox's Record
+// ignores key patterns), at every nesting level.
+export function assertFieldKeys(schema: ContentTypeSchema) {
   const visit = (field: ContentFieldSchema) => {
     if (field.type === "array") visit(field.itemType);
     else if (field.type === "struct") assertFieldKeys(field.entries);
@@ -334,6 +336,12 @@ function assertFieldKeys(schema: ContentTypeSchema) {
       throw createError({
         statusCode: 400,
         statusMessage: `Field key "${key}" must start with a letter or underscore and contain only letters, numbers, and underscores`,
+      });
+    }
+    if (isReservedKey(key)) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Field key "${key}" is reserved; choose another key`,
       });
     }
     visit(field);

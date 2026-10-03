@@ -4,6 +4,8 @@
 // with a location, and parsing carries on so the editor can show all of them.
 // See docs/sheet-system.md, section 1.
 
+import { isReservedKey, RESERVED_KEYS } from "../content-schema";
+
 export interface Position {
   line: number; // 1-based
   column: number; // 1-based
@@ -69,7 +71,19 @@ const pathPattern =
   /^(?:\.|\/?[A-Za-z_][A-Za-z0-9_]*(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|\d+))*)$/;
 
 export function isValidSheetPath(path: string) {
-  return pathPattern.test(path);
+  return pathPattern.test(path) && !usesReservedKey(path);
+}
+
+// Whether any segment of a path is a reserved key (`__proto__`, ...).
+export function usesReservedKey(path: string) {
+  return path.replace(/^\//, "").split(".").some(isReservedKey);
+}
+
+// The message for a path that isn't valid.
+export function invalidPathMessage(path: string) {
+  return usesReservedKey(path)
+    ? `"${path}" uses a reserved name (${RESERVED_KEYS.join(", ")})`
+    : `"${path}" isn't a valid field path; use names joined by dots, like stats.strength`;
 }
 
 const namedEntities: Record<string, string> = {
@@ -474,7 +488,7 @@ class Parser {
         } else if (!isValidSheetPath(path)) {
           this.report(
             "invalid-path",
-            `"${path}" isn't a valid field path; use names joined by dots, like stats.strength`,
+            invalidPathMessage(path),
             index,
             close + 1,
           );

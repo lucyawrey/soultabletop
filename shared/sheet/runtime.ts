@@ -2,7 +2,11 @@
 // against the data (following references into loaded Content), and formatting
 // values as text. Framework-free so it can be unit-tested.
 
-import type { ContentFieldSchema, ResourceLinkKind } from "../content-schema";
+import {
+  isReservedKey,
+  type ContentFieldSchema,
+  type ResourceLinkKind,
+} from "../content-schema";
 import type { TextPart } from "./parser";
 import {
   parseSheetPath,
@@ -84,7 +88,7 @@ export function resolveSheetPath(
     const value =
       Array.isArray(container) && typeof key === "number"
         ? container[key]
-        : isRecord(container)
+        : isRecord(container) && Object.hasOwn(container, segment)
           ? container[segment]
           : undefined;
     current = { value, path: containerPath ? [...containerPath, key] : null };
@@ -122,17 +126,20 @@ export function formatSheetValue(
 }
 
 // Writes `value` at `path` inside `root`, creating missing objects and arrays
-// on the way (an array when the next key is a number). Mutates `root`.
+// on the way (an array when the next key is a number). Mutates `root`. Writes
+// nothing if the path uses a reserved key, and never follows inherited
+// properties.
 export function setSheetValue(
   root: Record<string, unknown>,
   path: (string | number)[],
   value: unknown,
 ) {
   if (!path.length) return;
+  if (path.some((key) => typeof key === "string" && isReservedKey(key))) return;
   let container: Record<string | number, unknown> = root;
   for (let index = 0; index < path.length - 1; index += 1) {
     const key = path[index]!;
-    let next = container[key];
+    let next = Object.hasOwn(container, key) ? container[key] : undefined;
     if (typeof next !== "object" || next === null) {
       next = typeof path[index + 1] === "number" ? [] : {};
       container[key] = next;
