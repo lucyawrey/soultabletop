@@ -684,3 +684,37 @@ describe("newSheetErrors", () => {
     ]);
   });
 });
+
+describe("show", () => {
+  it("takes one {= formula} or one {field}, on every tag but Column", () => {
+    expect(messages('<Section show="{= hp > 0}"><Note show="{alive}">x</Note></Section>')).toEqual([]);
+    expect(messages('<Tabs><Tab label="A" show="{= hp > 1}">a</Tab></Tabs>')).toEqual([]);
+    expect(messages('<Table field="attacks"><Column field="name" /><RowDetails show="{= bonus > 0}">x</RowDetails></Table>')).toEqual([]);
+    expect(messages('<Value field="hp" show=" {= hp > 1} " />')).toEqual([]);
+    expect(messages('<Table field="attacks"><Column field="name" show="{= true}" /></Table>')).toEqual([
+      "error unknown-attribute: <Column> has no show attribute; use show on the Table, or a formula in the column",
+    ]);
+  });
+
+  it("rejects anything else", () => {
+    const rule = "error invalid-attribute: show must be one {= formula} or one {field}, like show=\"{= level >= 5}\"";
+    expect(messages('<Note show="true">x</Note>')).toEqual([rule]);
+    expect(messages('<Note show="{alive}{alive}">x</Note>')).toEqual([rule]);
+    expect(messages('<Note show="x {alive}">x</Note>')).toEqual([rule]);
+  });
+
+  it("needs true, false, or nothing", () => {
+    expect(messages('<Note show="{= hp}">x</Note>')).toEqual([
+      "error formula-result-type: show must give true or false, but {= hp} gives a number",
+    ]);
+    expect(messages('<Note show="{notes}">x</Note>')[0]).toMatch(
+      /^error formula-result-type: show="\{notes\}" must point at a boolean field, but it's a text field/,
+    );
+    expect(messages('<Note show="{= extra}">x</Note>')).toEqual([]);
+  });
+
+  it("evaluates in the tag's scope and still validates hidden content", () => {
+    expect(messages('<List field="attacks"><Note show="{= bonus > 0}">{name}</Note></List>')).toEqual([]);
+    expect(errorCodes('<Section show="{= false}"><Number field="nope" /></Section>')).toEqual(["unknown-field"]);
+  });
+});

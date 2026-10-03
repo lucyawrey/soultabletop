@@ -5,6 +5,7 @@ import {
   defaultSheetValue,
   evaluateSheetFormula,
   setSheetValue,
+  sheetCondition,
   sheetTextSegments,
   formatSheetValue,
   interpolateSheetText,
@@ -261,5 +262,31 @@ describe("formulas in text", () => {
     expect(evaluateSheetFormula(ast, root, root, refs, { definitions: cyclic.definitions })).toEqual(
       new FormulaError("definition", "a has errors; fix its <Define>"),
     );
+  });
+});
+
+describe("sheetCondition", () => {
+  const empty = { root: { hasStrictSchema: false, schema: {} }, types: {} };
+  function show(markup: string, scope: SheetScope = root) {
+    const [node] = compileSheet(markup, empty).nodes;
+    return sheetCondition((node as ValidatedElement).attrs.show, root, scope, refs);
+  }
+
+  it("shows on true and hides on false or nothing", () => {
+    expect(show('<Note show="{= hp > 5}">x</Note>')).toEqual({ shown: true });
+    expect(show('<Note show="{= hp > 10}">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="{missing}">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="{= missing > 1}">x</Note>')).toEqual({ shown: false });
+    expect(show("<Note>x</Note>")).toEqual({ shown: true });
+  });
+
+  it("shows the tag when the formula fails, with the error", () => {
+    expect(show('<Note show="{= 1 / 0 > 1}">x</Note>')).toEqual({ shown: true, error: "Division by zero" });
+    expect(show('<Note show="{= get(stats, \'str\')}">x</Note>')).toEqual({ shown: true, error: "show needs true or false" });
+  });
+
+  it("evaluates in the given scope", () => {
+    const [rope] = itemScopes(resolve("inventory"));
+    expect(show('<Note show="{= qty > 1}">x</Note>', rope)).toEqual({ shown: true });
   });
 });

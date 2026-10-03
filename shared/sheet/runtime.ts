@@ -28,7 +28,12 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "./scope";
-import type { SheetDefinition, SheetSchemas } from "./validate";
+import {
+  isCompiledFormula,
+  type AttrValue,
+  type SheetDefinition,
+  type SheetSchemas,
+} from "./validate";
 
 export {
   findRef,
@@ -266,4 +271,30 @@ export function formatFormulaValue(
     return format === "signed" && value > 0 ? `+${text}` : text;
   }
   return formatSheetValue(value, refs, format);
+}
+
+// Whether a tag with `show` is shown: true shows it, false or nothing hides
+// it. A formula that fails (or a value that isn't true or false) shows the
+// tag, so a typo never hides content, with the problem in `error`.
+export function sheetCondition(
+  condition: AttrValue | undefined,
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
+): { shown: boolean; error?: string } {
+  if (condition === undefined) return { shown: true };
+  let value: FormulaValue;
+  if (isCompiledFormula(condition)) {
+    value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas);
+  } else if (typeof condition === "object" && "path" in condition) {
+    const resolved = resolveSheetPath(parseSheetPath(condition.path), root, scope, refs);
+    value = resolved.unavailable ? null : (resolved.value as FormulaValue);
+  } else {
+    return { shown: true };
+  }
+  if (isFormulaError(value)) return { shown: true, error: value.message };
+  if (value === true) return { shown: true };
+  if (value === false || value === null || value === undefined) return { shown: false };
+  return { shown: true, error: "show needs true or false" };
 }

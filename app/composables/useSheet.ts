@@ -5,6 +5,7 @@ import type { SheetDisplay } from "#shared/sheet/registry";
 import {
   evaluateSheetFormula,
   formatFormulaValue,
+  sheetCondition,
   formatSheetValue,
   interpolateSheetText,
   itemScopes,
@@ -186,6 +187,15 @@ export function useSheet() {
         parts,
         context.root.value,
         scope.value,
+        context.refs.value,
+        context.formulas.value,
+      ),
+    // A tag's `show` in the current scope, or in `at` (a Table row).
+    condition: (show: AttrValue | undefined, at?: SheetScope) =>
+      sheetCondition(
+        show,
+        context.root.value,
+        at ?? scope.value,
         context.refs.value,
         context.formulas.value,
       ),

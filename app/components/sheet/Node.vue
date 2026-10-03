@@ -20,7 +20,7 @@ import SheetWrapper from "./Wrapper.vue";
 // cells).
 const props = defineProps<{ node: ValidatedNode; compact?: boolean }>();
 
-const { context, segments } = useSheet();
+const { context, segments, condition } = useSheet();
 provideSheetFlags(() => props.node);
 
 // Tags not listed here (Tab, Column, RowDetails) are rendered by their parent.
@@ -39,6 +39,11 @@ const components: Record<string, Component> = {
   List: SheetList,
   Table: SheetTable,
 };
+
+// `show`: hidden tags render nothing (their data is kept).
+const visibility = computed(() =>
+  props.node.type === "element" ? condition(props.node.attrs.show) : { shown: true },
+);
 
 const component = computed(() => {
   if (props.node.type !== "element") return undefined;
@@ -60,10 +65,11 @@ const component = computed(() => {
     <UIcon name="i-lucide-triangle-alert" class="size-4 shrink-0" />
     <span>{{ node.message }} (line {{ node.loc.start.line }})</span>
   </div>
-  <component
-    :is="component"
-    v-else-if="component"
-    :node="node"
-    :compact="compact"
-  />
+  <template v-else-if="component && visibility.shown">
+    <SheetFormulaWarning
+      v-if="visibility.error && context.showInvalid.value"
+      :message="`show: ${visibility.error}`"
+    />
+    <component :is="component" :node="node" :compact="compact" />
+  </template>
 </template>
