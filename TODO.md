@@ -6,14 +6,12 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 
 # In progress
 
+- **Sheet formulas, with conditional display (and Sheet path hardening)** · feature · large
+  Built on branch `sheet-formulas` (worktree `../soultabletop-worktrees/sheet-formulas`) from `.claude/plans/sheet-formulas-build.md`, steps 0–7 committed; PR not opened yet (draft description: `.claude/plans/sheet-formulas-pr.md`). After the PR: the Pathfinder 2e test sheet (step 8 there).
+
 # Next up
 
 The exact order: do these one at a time, top first.
-
-- **Harden Sheet paths against prototype keys (formulas PR 0)** · bug · small
-  Reject `__proto__`/`constructor`/`prototype` path segments, use `Object.hasOwn` in `resolveSheetPath`, and refuse them in `setSheetValue` (`shared/sheet/runtime.ts`). Reproduce with a failing test first. Needed before formulas, which read more paths.
-- **Sheet formulas, with conditional display** · feature · large · depends on: Sheet path hardening
-  A safe expression language for computed values plus `show="{= …}"` conditional display, built as planned in `.claude/plans/sheet-formulas.md` (walked through with the user 2026-10-02; decisions at its top: PRs 1–5 there, after PR 0 above) (design context in `docs/sheet-system.md`, phase 9). It is the Sheet feature that matters most: every ability modifier, skill bonus, saving throw, and spell DC in a real system sheet is typed by hand today. Update `docs/sheet-system.md` with the decisions as they land. Build plan for one fresh-session run: `.claude/plans/sheet-formulas-build.md` (written 2026-10-02, waiting for the user's approval). After the PR, a Pathfinder 2e test character sheet is built and uploaded with a one-time API-key script (step 8 there); Pathfinder 2e is the first target system.
 
 # Phase 1: Sheets ready for real systems
 
