@@ -2,7 +2,7 @@
 
 **Status:** waiting for the user's approval (written 2026-10-02). Once approved, a **fresh session** builds all of it in one go from this file, without stopping for questions: every decision is made below. Where something unexpected comes up, take the option closest to this plan's intent, note it in the PR description under "Deviations", and keep going; stop only if a step would break a hard rule in `CLAUDE.md`.
 
-**Read first:** `.claude/CLAUDE.md` (all of it), `docs/sheet-system.md`, `shared/sheet/*.ts`, `app/composables/useSheet.ts`, `app/components/sheet/{Node,Field,FieldInput,Table,List,Tabs}.vue`, `app/components/CodeEditor.client.vue`, the formula parts of `app/pages/sheets/[id]/edit.vue`, `server/utils/sheet-schemas.ts`, and the Sheets skill (`.claude/skills/soul-tabletop-sheets/`). Background only (this file wins where they differ): `.claude/plans/sheet-formulas.md` (the original design with its reasoning) and `sheet-formulas-sandboxed-js.md` (why not JavaScript).
+**Read first:** `.claude/CLAUDE.md` (all of it) and the topic files it points to for this work (`.claude/running-commands.md`, `.claude/data-model.md`, `.claude/conventions.md`), `docs/sheet-system.md`, `shared/sheet/*.ts`, `app/composables/useSheet.ts`, `app/components/sheet/{Node,Field,FieldInput,Table,List,Tabs}.vue`, `app/components/CodeEditor.client.vue`, the formula parts of `app/pages/sheets/[id]/edit.vue`, `server/utils/sheet-schemas.ts`, and the Sheets skill (`.claude/skills/soul-tabletop-sheets/`). Background only (this file wins where they differ): `.claude/plans/sheet-formulas.md` (the original design with its reasoning) and `sheet-formulas-sandboxed-js.md` (why not JavaScript).
 
 **What ships:** formulas in Sheet markup, computed when a sheet is shown and never stored. Three ways to write them, reusable definitions, overridable computed defaults, conditional display, editor support, and docs. Plus the path hardening the engine needs first. No database, API shape, or schema changes (except rejecting three reserved key names, step 0).
 
@@ -10,41 +10,50 @@
 
 ## How the result looks
 
+Pathfinder 2e is the first target system (see `TODO.md`), so the examples, fixtures, and the real-sheet test use its math (Remaster: attribute modifiers are stored directly, proficiency is level + 2/4/6/8 by rank, untrained adds nothing):
+
 ```xml
 <Sheet>
-  <Define name="pb" formula="ceil(level / 4) + 1" />
-  <Define name="mod" params="score" formula="floor((score - 10) / 2)" />
-  <Define name="skill" params="score, training"
-          formula="mod(score) + switch(training, 'proficient', 1, 'expertise', 2, 0) * pb()" />
-  <Define name="castMod" formula="mod(get(abilities, spellcasting.ability))" />
+  <Define name="prof" params="rank"
+          formula="if(rank == 'untrained' or rank == null, 0, level + switch(rank, 'trained', 2, 'expert', 4, 'master', 6, 'legendary', 8, 0))" />
+  <Define name="check" params="attr, rank" formula="get(attributes, attr) + prof(rank)" />
+  <Define name="classDc" formula="10 + get(attributes, keyAttribute) + prof(classDcRank)" />
 
   <Grid cols="6">
-    <Number formula="mod(abilities.str)" label="STR" format="signed" variant="stat" />
+    <Number field="attributes.str" label="Str" format="signed" variant="stat" />
     …
   </Grid>
-  <Number field="ac" formula="10 + mod(abilities.dex)" label="AC" variant="stat" />
-  <Value formula="skill(abilities.dex, skills.stealth.training)" label="Stealth" format="signed" />
-  <Badge>Initiative {= signed(mod(abilities.dex))}</Badge>
-  <Tracker field="hp.current" max="{= hp.max + coalesce(hp.temp, 0)}" />
+  <Number field="ac" label="AC" variant="stat"
+          formula="10 + min(attributes.dex, coalesce(armor.dexCap, 99)) + prof(armor.rank) + coalesce(armor.itemBonus, 0)" />
+  <Value formula="check('wis', perceptionRank)" label="Perception" format="signed" />
+  <Value formula="check('dex', skills.stealth.rank)" label="Stealth" format="signed" />
+  <Value formula="check('con', saves.fortitude.rank)" label="Fortitude" format="signed" />
+  <Number formula="classDc()" label="Class DC" variant="stat" />
+  <Badge>Speed {= speed - if(armor.strength != null and attributes.str < armor.strength, 5, 0)} ft</Badge>
+  <Tracker field="hp.current" max="{= hp.ancestry + (hp.classPerLevel + attributes.con) * level + coalesce(hp.bonus, 0)}" />
 
-  <Tab label="Spells" show="{= spellcasting.ability != null}">
-    <Number formula="8 + pb() + castMod()" label="Spell Save DC" variant="stat" />
+  <Tab label="Spells" show="{= spellcasting.tradition != null}">
+    <Number formula="10 + get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell DC" variant="stat" />
+    <Value formula="get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell Attack" format="signed" />
   </Tab>
 
   <Table field="inventory">
     <Column field="item" />
     <Column field="qty" />
-    <Column formula="qty * coalesce(item.weight, 0)" label="Weight" />
+    <Column formula="qty * coalesce(item.bulk, 0)" label="Bulk" />
   </Table>
-  <Value formula="sum(inventory, qty * coalesce(item.weight, 0))" label="Carried" />
+  <Value formula="floor(sum(inventory, qty * coalesce(item.bulk, 0)))" label="Bulk Carried" />
+  <Note show="{= sum(inventory, qty * coalesce(item.bulk, 0)) > 5 + attributes.str}">Encumbered</Note>
 </Sheet>
 ```
+
+(Light bulk is stored as 0.1, so `floor` turns ten L items into 1 Bulk.)
 
 ---
 
 ## Delivery
 
-- **One branch, `sheet-formulas`, in its own worktree** off `origin/main` (`../soultabletop-worktrees/sheet-formulas`; copy `.env.local` in, never move it), **one commit per step below**, so the user can review commit by commit. One PR, **Tier B** (it changes `shared/`), opened after every step is done and verified. Never push without the user's approval (see "Git workflow"): commit locally, then ask once at the end, after the secrets check.
+- **One branch, `sheet-formulas`, in its own worktree** off `origin/main` (`../soultabletop-worktrees/sheet-formulas`; copy `.env.local` in, never move it), **one commit per step below**, so the user can review commit by commit. One PR, **Tier B** (it changes `shared/`), opened after every step is done and verified. Push only at the end, when opening the PR, after the secrets check passes (the standing approval in "Git workflow"); subagents never push.
 - The branch `sheet-path-hardening` and its worktree (`../soultabletop-worktrees/sheet-path-hardening`, created 2026-10-02, no commits) are superseded: remove the worktree and delete the branch first.
 - Model: Opus for steps 1–4 (the engine is the security boundary); the session may use Sonnet subagents for the docs step if it wants, never in parallel on the same files.
 - Review: before opening the PR, start one fresh reviewer subagent (Opus, clean context: the PR diff and "what it's meant to do" from this file's summary, not the session's notes) and fix what it finds (one round; a second only if a fix touches the evaluator's limits or path access).
@@ -140,7 +149,7 @@ The table entry per function: name, min/max arity, which arguments are per-item 
 - Result type must fit: `Number` and `Tracker` number; `Text` string; `Checkbox` boolean; `Column` a scalar; `Value` anything; number attributes number; `{= }` in text anything scalar; `show` boolean or null. For `override` tags the result also has to fit the field's schema type. Mismatch: `formula-result-type`.
 - Store compiled formulas on the validated tree: `ValidatedElement.formula?: { ast, type }`, formula text parts carry `ast`, number attributes may be a compiled formula (`AttrValue` gains it). `ValidationResult` gains `definitions` (name → params, type, AST) for the renderer and editor.
 - Diagnostic codes: `formula-syntax`, `formula-unknown-function`, `formula-arity`, `formula-cycle`, `formula-too-large`, `formula-type`, `formula-result-type`, `formula-reserved-name`, `formula-shadows-builtin`, plus `flag-no-effect`. A dice token anywhere is an error ("dice rolls aren't available here yet").
-- Server: `assertValidSheetMarkup` already rejects errors; check that formula errors block a save and that `findSheetsBrokenBy` lists a sheet a schema change newly breaks (`abilities.str` number → string breaks `mod(abilities.str)`), with a test.
+- Server: `assertValidSheetMarkup` already rejects errors; check that formula errors block a save and that `findSheetsBrokenBy` lists a sheet a schema change newly breaks (`attributes.dex` number → string breaks the AC formula), with a test.
 
 **Rendering:**
 - `Renderer.vue`: one `computed` per definition without parameters, reachable through `SheetContext`; definitions with parameters are evaluated inline at each call. `useSheet()` gains `evaluate(ast)` using the current scope; `text()` and `number()` handle formula parts and compiled number attributes.
@@ -168,28 +177,32 @@ The table entry per function: name, min/max arity, which arguments are per-item 
 ## Step 5: docs and skill
 
 - `docs/sheet-system.md`: §1 syntax (`{= expr}`, the raw `formula` attribute) and AST; §2 `formula` on field tags (which tags, read-only vs override), `Define`, `show`, `Column format`; a new "Formulas" section (grammar, functions, types and nulls, errors and who sees them, limits, scoping, calls without sigil and reserved names, `get`, dice reservation, the no-URL-output rule); §3 the new validation rows; §5 how formula fields, overrides, and `show` behave in view and edit mode; §8 phase 9: formulas and conditional display done. Record the decisions: render time only, never stored, schema-level computed fields maybe later.
-- Sheets skill: `SKILL.md` (interpolation, a Formulas section, binding rules), `references/tags.md` (`formula`, `Define`, `show`, `Column format`), `references/examples.md` (the D&D example above, full), `references/checking.md` ("formula path warnings follow the same rules; the check doesn't evaluate formulas"). These are agent files, but they document this feature's code, so they ship in this PR.
+- Sheets skill: `SKILL.md` (interpolation, a Formulas section, binding rules), `references/tags.md` (`formula`, `Define`, `show`, `Column format`), `references/examples.md` (the Pathfinder 2e example above, full), `references/checking.md` ("formula path warnings follow the same rules; the check doesn't evaluate formulas"). These are agent files, but they document this feature's code, so they ship in this PR.
 - `CLAUDE.md`'s Sheet bullet: name the formula files in `shared/sheet/` and add "Formulas are computed at render time, never stored (see docs/sheet-system.md)". This is a rule-file change: say so in the PR.
 - OpenAPI: one sentence in `server/api/content/[id].get.ts`'s description: values computed by a sheet's formulas aren't part of `data`.
 
 ## Step 6: tests across the app
 
 - `parser.test.ts`: `{=` scanning past `<` and `}` in strings; old `{path}` unchanged; `valueLoc`/`raw`; `formula` attributes raw.
-- `validate.test.ts`: types over strict, non-strict, `scalar`, `object`, `content`; result type per tag; overrides; cycles, arity, unknown functions, reserved names, later-built-in warning, params hiding paths only in their definition; `Define` placement; `show` rules; diagnostic positions inside attributes and `{= }`; the D&D example compiles with no diagnostics against a matching schema.
+- `validate.test.ts`: types over strict, non-strict, `scalar`, `object`, `content`; result type per tag; overrides; cycles, arity, unknown functions, reserved names, later-built-in warning, params hiding paths only in their definition; `Define` placement; `show` rules; diagnostic positions inside attributes and `{= }`; the Pathfinder 2e example compiles with no diagnostics against a matching schema.
 - `runtime.test.ts`: formula parts in `interpolateSheetText`; compiled number attributes; override fallback; `get`.
 - `generate.test.ts`: generated sheets still validate clean.
 
 ## Step 7: verify in the browser and measure
 
 - Dev server from the worktree on a spare port (3005): `scripts/agent-run.sh pnpm nuxt dev --dotenv /Users/lucy/Developer/games/soultabletop/.env.local --port 3005` (adjust the path on the other machine). Check `lsof` first; never kill a server you didn't start; stop yours at the end.
-- Playwright from the scratchpad (`channel: "chrome"` on the Mac; the cached headless shell on CachyOS) with `withSmokeUser`: create a content type (a small D&D-like schema), a sheet using every feature above, and content, through the API; delete them before the callback ends (the helper deletes only the user).
-- Check: edit mode, change STR → modifier, skills, saves, DC update without reload; `display="box"` shows computed values as disabled inputs; override: placeholder shows the computed value, typing overrides, the reset button returns to automatic (Number and Checkbox); `show` hides the Spells tab and brings it back; a division-by-zero formula shows the warning to the owner and "—" to a second smoke user given read access; the sheet editor's Problems list jumps to the right column inside `formula="…"`; completion offers `floor` and `mod`, colored differently; no console errors and **no hydration warnings** (SSR determinism).
+- Playwright from the scratchpad (`channel: "chrome"` on the Mac; the cached headless shell on CachyOS) with `withSmokeUser`: create a content type (a small Pathfinder 2e-like schema), a sheet using every feature above, and content, through the API; delete them before the callback ends (the helper deletes only the user).
+- Check: edit mode, change level or Dex → proficiency, AC, skills, saves, and DCs update without reload; `display="box"` shows computed values as disabled inputs; override: placeholder shows the computed value, typing overrides, the reset button returns to automatic (Number and Checkbox); `show` hides the Spells tab and brings it back; a division-by-zero formula shows the warning to the owner and "—" to a second smoke user given read access; the sheet editor's Problems list jumps to the right column inside `formula="…"`; completion offers `floor` and `prof`, colored differently; no console errors and **no hydration warnings** (SSR determinism).
 - Measure: a pathological sheet (the limits' worst case: 2,000 sites, a 500-row list, nested aggregates) rendered by the dev server (SSR) and in the browser. If a page render is over 200 ms, lower `formulaLimits` steps and record the numbers in the PR.
-- Screenshots of the converted sections at desktop and phone width go in the PR description (as text descriptions if images can't be attached).
+- Screenshots of the test sheet at desktop and phone width go in the PR description (as text descriptions if images can't be attached).
 
-## Step 8 (after the PR, needs the user): convert the D&D 2024 test sheet
+## Step 8 (after the PR is open, needs the user): a Pathfinder 2e test sheet
 
-Not part of the PR. The test sheet's files are on the user's CachyOS machine (the database copies were changed on purpose while testing the UI; don't use them). On that machine, after the PR's preview works: rewrite the hand-typed modifiers, skills, saves, passive Perception, spell DC/attack, and initiative with formulas, use `show` for the Spells tab and empty spell levels, and upload with a one-time script in the scratchpad (not committed): a user API key from the user (`x-api-key` header, read from an env var they set, never printed), `PATCH` the sheet's markup by owner and readable ID (`/api/sheet/<owner>/<readableId>`), and the content type schema if it needs choice values. Report what formulas couldn't express: that list feeds the "Sheet features found missing" and "Class and level driven sheet data" items in `TODO.md`.
+Not part of the PR. Pathfinder 2e is the first target system and there is no sheet for it yet, so this step builds a test one (not the official system: that comes after the authoring CLI and the database reset, in `TODO.md` Phase 2, and has its own license check). It can run on either machine.
+
+- Write a Pathfinder 2e character content type schema and a character sheet in the scratchpad (not committed): attributes as modifiers, level, proficiency ranks as strings (`untrained`/`trained`/`expert`/`master`/`legendary`) for Perception, saves, skills, armor, class DC, and spellcasting, HP parts, speed, armor (Dex cap, Strength, item bonus), inventory with bulk, and a Spells tab. Use the formulas from the example above for every derived number, `show` for the Spells tab and empty spell ranks, and overrides where a player might need to (AC).
+- Upload with a one-time script (scratchpad, not committed), owned by the user: a user API key the user creates on `/profile` and puts in an env var (`x-api-key` header; never print it), `POST` the content type and sheet (or `PATCH` them by owner and readable ID, `/api/<kind>/<owner>/<readableId>`, on later runs), and one sample character. Use the local dev server running the PR branch (same shared database): `main`'s code rejects formula markup, so on production the sheet shows broken-tag placeholders until the PR merges; say so to the user.
+- Check it in the browser at desktop and phone width, then report to the user what formulas and `show` couldn't express. That list feeds "Sheet features found missing" (Phase 1; add the Pathfinder 2e findings there) and "Class and level driven sheet data" in `TODO.md`.
 
 ---
 
