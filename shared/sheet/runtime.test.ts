@@ -3,7 +3,9 @@ import type { ContentFieldSchema } from "../content-schema";
 import { parseSheetMarkup, type SheetText } from "./parser";
 import {
   defaultSheetValue,
+  evaluateSheetFormula,
   setSheetValue,
+  sheetTextSegments,
   formatSheetValue,
   interpolateSheetText,
   itemScopes,
@@ -11,7 +13,14 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "./runtime";
-import { parseSheetPath, type SheetSchemas } from "./validate";
+import { FormulaError, parseFormula } from "./formula";
+import {
+  compileSheet,
+  parseSheetPath,
+  type SheetSchemas,
+  type ValidatedElement,
+  type ValidatedText,
+} from "./validate";
 
 const refs: SheetRefs = {
   "rope-id": { name: "Rope", contentTypeId: "item", data: { weight: 5 } },
@@ -147,6 +156,13 @@ describe("setSheetValue", () => {
     expect((Function.prototype as unknown as Record<string, unknown>).x).toBeUndefined();
   });
 
+  it("removes the key when the value is undefined", () => {
+    const target: Record<string, unknown> = { stats: { str: 1, dex: 2 } };
+    setSheetValue(target, ["stats", "str"], undefined);
+    expect(target).toEqual({ stats: { dex: 2 } });
+    expect(Object.hasOwn(target.stats as object, "str")).toBe(false);
+  });
+
   it("ignores an empty path", () => {
     const target = { a: 1 };
     setSheetValue(target, [], 2);
@@ -197,5 +213,53 @@ describe("interpolateSheetText", () => {
   it("fills in {paths}", () => {
     const text = parseSheetMarkup("{name} ({class.name}) has {hp} HP and {missing}.").nodes[0] as SheetText;
     expect(interpolateSheetText(text.parts, root, root, refs)).toBe("Violet (Wizard) has 7 HP and .");
+  });
+});
+
+describe("formulas in text", () => {
+  const compiled = compileSheet(
+    '<Define name="twice" params="x" formula="x * 2" /><Define name="base" formula="hp + 1" />' +
+      "<Note>{name} has {= twice(hp) + base()} HP, {= 1 / 0}, {= 0.1 + 0.2}</Note>",
+    { root: { hasStrictSchema: false, schema: {} }, types: {} },
+  );
+  const note = compiled.nodes.find(
+    (node): node is ValidatedElement => node.type === "element" && node.tag === "Note",
+  )!;
+  const parts = (note.children[0] as ValidatedText).parts;
+  const formulas = { definitions: compiled.definitions };
+
+  it("computes {= } parts, with definitions", () => {
+    expect(interpolateSheetText(parts, root, root, refs, formulas)).toBe("Violet has 22 HP, —, 0.3");
+  });
+
+  it("marks failed formulas in segments", () => {
+    expect(sheetTextSegments(parts, root, root, refs, formulas)[4]).toEqual({
+      text: "—",
+      error: "Division by zero",
+    });
+  });
+
+  it("uses cached values of definitions without parameters", () => {
+    const cached = { definitions: compiled.definitions, cached: () => 100 };
+    expect(interpolateSheetText(parts.slice(2, 3), root, root, refs, cached)).toBe("114");
+  });
+
+  it("shows a broken formula part as —", () => {
+    const broken = compileSheet("<Note>{= nope(}</Note>", { root: { hasStrictSchema: false, schema: {} }, types: {} });
+    const brokenParts = ((broken.nodes[0] as ValidatedElement).children[0] as ValidatedText).parts;
+    expect(sheetTextSegments(brokenParts, root, root, refs)).toEqual([
+      { text: "—", error: "This formula has errors" },
+    ]);
+  });
+
+  it("gives broken definitions an error value", () => {
+    const cyclic = compileSheet('<Define name="a" formula="a()" /><Value formula="1" />', {
+      root: { hasStrictSchema: false, schema: {} },
+      types: {},
+    });
+    const ast = parseFormula("a()", { line: 1, column: 1, offset: 0 }).ast!;
+    expect(evaluateSheetFormula(ast, root, root, refs, { definitions: cyclic.definitions })).toEqual(
+      new FormulaError("definition", "a has errors; fix its <Define>"),
+    );
   });
 });

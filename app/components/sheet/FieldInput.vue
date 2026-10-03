@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
-import { defaultSheetValue, refRecord } from "#shared/sheet/runtime";
+import { defaultSheetValue, findRef, refRecord } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // The editing control of a field tag (see Field.vue for viewing). Disabled, it
@@ -13,6 +13,9 @@ const props = defineProps<{
   path: (string | number)[];
   label: string;
   disabled?: boolean;
+  // An override without a manual value: the computed value, shown as the
+  // input's placeholder.
+  automatic?: string;
 }>();
 
 const { context, number } = useSheet();
@@ -110,7 +113,9 @@ function updateJson(text: string) {
   }
 }
 
-const placeholder = computed(() => attrText(props.node.attrs.placeholder) || undefined);
+const placeholder = computed(
+  () => props.automatic || attrText(props.node.attrs.placeholder) || undefined,
+);
 const options = computed(() => (props.node.attrs.options as string[] | undefined) ?? []);
 const min = computed(() => number(props.node.attrs.min));
 const max = computed(() => number(props.node.attrs.max));
@@ -143,7 +148,7 @@ const isLocal = computed(
   () => typeof props.value === "object" && props.value !== null,
 );
 const referenced = computed(() =>
-  typeof props.value === "string" ? context.refs.value[props.value] : undefined,
+  typeof props.value === "string" ? findRef(context.refs.value, props.value) : undefined,
 );
 const localName = computed({
   get: () =>
@@ -157,7 +162,9 @@ const linkField = computed(() =>
   field.value?.type === "resourceLink" ? field.value : undefined,
 );
 const linked = computed(() =>
-  typeof props.value === "string" ? context.links.value[props.value] : undefined,
+  typeof props.value === "string" && Object.hasOwn(context.links.value, props.value)
+    ? context.links.value[props.value]
+    : undefined,
 );
 function pickLink(id: string, link: SheetLink) {
   context.addLink(id, link);
@@ -219,6 +226,7 @@ const imageError = computed(() =>
     :max="max"
     :step="step"
     :format-options="numberFormat"
+    :placeholder="automatic"
     :aria-label="label"
     class="w-full"
   />

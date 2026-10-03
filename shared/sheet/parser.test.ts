@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  isFormulaPart,
   isValidSheetPath,
   parseSheetMarkup,
   sheetParseLimits,
   type SheetElement,
   type SheetNode,
   type SheetText,
+  type TextPart,
 } from "./parser";
 
 function element(node: SheetNode | undefined): SheetElement {
@@ -22,11 +24,17 @@ function codes(source: string) {
   return parseSheetMarkup(source).diagnostics.map((item) => item.code);
 }
 
+// A text part without its location.
+function partShape(part: TextPart) {
+  if (typeof part === "string") return part;
+  return isFormulaPart(part) ? { formula: part.formula } : { path: part.path };
+}
+
 // Strips locations so trees can be compared structurally.
 function shape(nodes: SheetNode[]): unknown[] {
   return nodes.map((node) =>
     node.type === "text"
-      ? node.parts.map((part) => (typeof part === "string" ? part : { path: part.path }))
+      ? node.parts.map(partShape)
       : {
           tag: node.tag,
           attrs: Object.fromEntries(
@@ -34,7 +42,7 @@ function shape(nodes: SheetNode[]): unknown[] {
               attr.name,
               attr.value === true
                 ? true
-                : attr.value.map((part) => (typeof part === "string" ? part : { path: part.path })),
+                : attr.value.map(partShape),
             ]),
           ),
           ...(node.selfClosing ? { selfClosing: true } : {}),
@@ -396,5 +404,68 @@ describe("isValidSheetPath", () => {
         message: "\"stats.__proto__\" uses a reserved name (__proto__, constructor, prototype)",
       },
     ]);
+  });
+});
+
+describe("formulas", () => {
+  it("reads {= expr} in text, past < and quoted }", () => {
+    const { nodes, diagnostics } = parseSheetMarkup("<Note>A {= a <b} and {= concat('}', x)} end</Note>");
+    expect(diagnostics).toEqual([]);
+    expect(shape(nodes)).toEqual([
+      {
+        tag: "Note",
+        attrs: {},
+        children: [["A ", { formula: " a <b" }, " and ", { formula: " concat('}', x)" }, " end"]],
+      },
+    ]);
+  });
+
+  it("records where the formula body starts", () => {
+    const text = parseSheetMarkup("x\n  {=  hp}").nodes[0] as SheetText;
+    expect(text.parts[1]).toMatchObject({
+      formula: "  hp",
+      bodyStart: { line: 2, column: 5, offset: 6 },
+      loc: { start: { line: 2, column: 3 }, end: { line: 2, column: 10 } },
+    });
+  });
+
+  it("reads {= } in attribute values, bounded by the quotes", () => {
+    const node = element(parseSheetMarkup('<Tracker max="{= a > 1}" />').nodes[0]);
+    expect(node.attrs[0]!.value).toMatchObject([{ formula: " a > 1" }]);
+  });
+
+  it("keeps \\{= literal and reports an unclosed {=", () => {
+    expect(shape(parseSheetMarkup("\\{= a}").nodes)).toEqual([["{= a}"]]);
+    expect(parseSheetMarkup("<Note>{= a</Note>").diagnostics).toMatchObject([
+      { code: "unterminated-formula" },
+    ]);
+  });
+
+  it("parses old markup exactly as before", () => {
+    const old = parseSheetMarkup('<Section title="{name} \\{x\\}">Hi {hp}, {= }</Section>');
+    expect(shape(old.nodes)).toEqual([
+      {
+        tag: "Section",
+        attrs: { title: [{ path: "name" }, " {x}"] },
+        children: [["Hi ", { path: "hp" }, ", ", { formula: " " }]],
+      },
+    ]);
+  });
+
+  it("keeps formula attributes raw, with the value's location", () => {
+    const node = element(parseSheetMarkup('<Value\n  formula="a &lt; {b} \\\\ 1" />').nodes[0]);
+    const [attr] = node.attrs;
+    expect(attr).toMatchObject({
+      name: "formula",
+      value: ["a &lt; {b} \\\\ 1"],
+      raw: "a &lt; {b} \\\\ 1",
+      valueLoc: { start: { line: 2, column: 12, offset: 18 }, end: { line: 2, column: 27 } },
+    });
+  });
+
+  it("records raw and valueLoc on every valued attribute", () => {
+    const node = element(parseSheetMarkup("<Grid cols='2' wrap />").nodes[0]);
+    expect(node.attrs[0]).toMatchObject({ raw: "2", valueLoc: { start: { column: 13 }, end: { column: 14 } } });
+    expect(node.attrs[1]!.raw).toBeUndefined();
   });
 });

@@ -20,7 +20,7 @@ import SheetWrapper from "./Wrapper.vue";
 // cells).
 const props = defineProps<{ node: ValidatedNode; compact?: boolean }>();
 
-const { context, text } = useSheet();
+const { context, segments } = useSheet();
 provideSheetFlags(() => props.node);
 
 // Tags not listed here (Tab, Column, RowDetails) are rendered by their parent.
@@ -48,7 +48,9 @@ const component = computed(() => {
 </script>
 
 <template>
-  <p v-if="node.type === 'text'" class="sheet-text">{{ text(node.parts) }}</p>
+  <p v-if="node.type === 'text'" class="sheet-text">
+    <SheetInlineText :segments="segments(node.parts)" />
+  </p>
   <div
     v-else-if="node.type === 'invalid'"
     v-show="context.showInvalid.value"

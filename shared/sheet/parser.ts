@@ -5,6 +5,7 @@
 // See docs/sheet-system.md, section 1.
 
 import { isReservedKey, RESERVED_KEYS } from "../content-schema";
+import type { FormulaNode } from "./formula";
 
 export interface Position {
   line: number; // 1-based
@@ -22,14 +23,35 @@ export interface Interpolation {
   loc: Loc;
 }
 
-export type TextPart = string | Interpolation;
+// `{= expr}`: a formula, as written (entities not decoded). The validator
+// parses it and sets `ast` when it is valid.
+export interface FormulaPart {
+  formula: string;
+  loc: Loc;
+  // Where the expression starts, after `{=`.
+  bodyStart: Position;
+  ast?: FormulaNode;
+}
+
+export type TextPart = string | Interpolation | FormulaPart;
+
+export function isFormulaPart(part: TextPart): part is FormulaPart {
+  return typeof part === "object" && "formula" in part;
+}
 
 export interface SheetAttr {
   name: string;
-  // `true` for a bare attribute (`<Text multiline />`).
+  // `true` for a bare attribute (`<Text multiline />`). A `formula` attribute
+  // is raw text: one string part, as written.
   value: TextPart[] | true;
   loc: Loc;
+  // The value without its quotes, as written, and where it is.
+  raw?: string;
+  valueLoc?: Loc;
 }
+
+// Attributes whose value is a formula, kept as written.
+const rawAttributes = new Set(["formula"]);
 
 export interface SheetElement {
   type: "element";
@@ -327,12 +349,15 @@ class Parser {
     }
 
     let value: SheetAttr["value"] = true;
+    let raw: Pick<SheetAttr, "raw" | "valueLoc"> = {};
     const afterName = this.pos;
     this.skipWhitespace();
     if (this.src[this.pos] === "=") {
       this.pos += 1;
       this.skipWhitespace();
-      value = this.attributeValue(name);
+      const result = this.attributeValue(name);
+      value = result.value;
+      raw = { raw: this.src.slice(result.start, result.end), valueLoc: this.loc(result.start, result.end) };
     } else {
       this.pos = afterName;
     }
@@ -343,17 +368,33 @@ class Parser {
       this.reportAt("duplicate-attribute", `${name} is set more than once on <${element.tag}>`, loc);
       return;
     }
-    element.attrs.push({ name, value, loc });
+    element.attrs.push({ name, value, loc, ...raw });
   }
 
-  private attributeValue(name: string): TextPart[] {
+  // The value of attribute `name` and where it is (without its quotes).
+  private attributeValue(name: string): { value: TextPart[]; start: number; end: number } {
+    const isRaw = rawAttributes.has(name.toLowerCase());
+    const read = (start: number, end: number) => ({
+      value: isRaw ? [this.src.slice(start, end)] : this.parts(start, end, false),
+      start,
+      end,
+    });
     const quote = this.src[this.pos];
     if (quote === "\"" || quote === "'") {
       const valueStart = this.pos + 1;
       const close = this.src.indexOf(quote, valueStart);
       if (close !== -1) {
         this.pos = close + 1;
-        return this.parts(valueStart, close, false);
+        const after = this.src[this.pos];
+        if (isRaw && after !== undefined && !isWhitespace(after) && after !== ">" && after !== "/") {
+          this.report(
+            "formula-syntax",
+            `The formula ends at this ${quote}; inside ${name}=${quote}…${quote}, write text in ${quote === "\"" ? "single quotes, like 'expert'" : "double quotes, like \"expert\""}`,
+            close,
+            close + 1,
+          );
+        }
+        return read(valueStart, close);
       }
       // Unterminated: assume the value ends at the tag's ">".
       const tagEnd = this.src.indexOf(">", valueStart);
@@ -365,7 +406,7 @@ class Parser {
         end,
       );
       this.pos = end;
-      return this.parts(valueStart, end, false);
+      return read(valueStart, end);
     }
 
     const valueStart = this.pos;
@@ -379,7 +420,7 @@ class Parser {
     }
     if (this.pos === valueStart) {
       this.report("missing-attribute-value", `${name}= needs a value in quotes`, valueStart, valueStart);
-      return [];
+      return { value: [], start: valueStart, end: valueStart };
     }
     this.report(
       "unquoted-attribute",
@@ -387,7 +428,7 @@ class Parser {
       valueStart,
       this.pos,
     );
-    return this.parts(valueStart, this.pos, false);
+    return read(valueStart, this.pos);
   }
 
   private closeTag(stack: SheetElement[]) {
@@ -427,7 +468,20 @@ class Parser {
     const start = this.pos;
     let end = start;
     while (end < this.src.length && !this.startsMarkup(end)) {
-      if (this.src[end] === "<") {
+      const char = this.src[end];
+      if (char === "\\" && end + 1 < this.src.length && "{}\\".includes(this.src[end + 1]!)) {
+        end += 2;
+        continue;
+      }
+      // A formula may contain < and quoted }; skip to its end.
+      if (char === "{" && this.src[end + 1] === "=") {
+        const close = this.formulaEnd(end + 2, this.src.length);
+        if (close !== -1) {
+          end = close + 1;
+          continue;
+        }
+      }
+      if (char === "<") {
         this.report("stray-less-than", "Write &lt; for a literal <", end, end + 1);
       }
       end += 1;
@@ -439,8 +493,27 @@ class Parser {
     siblings.push({ type: "text", parts, loc: this.loc(start, end) });
   }
 
-  // Text and attribute values: entities, `\{` `\}` `\\` escapes, and `{path}`
-  // interpolation. Text collapses whitespace like HTML and is trimmed.
+  // The `}` that ends a formula starting at `from` (after `{=`), skipping
+  // quoted text in it; -1 if there is none before `end`.
+  private formulaEnd(from: number, end: number) {
+    let index = from;
+    while (index < end) {
+      const char = this.src[index]!;
+      if (char === "}") return index;
+      if (char === "'" || char === "\"") {
+        index += 1;
+        while (index < end && this.src[index] !== char) {
+          index += this.src[index] === "\\" ? 2 : 1;
+        }
+      }
+      index += 1;
+    }
+    return -1;
+  }
+
+  // Text and attribute values: entities, `\{` `\}` `\\` escapes, `{path}`
+  // interpolation, and `{= expr}` formulas. Text collapses whitespace like
+  // HTML and is trimmed.
   private parts(start: number, end: number, collapse: boolean): TextPart[] {
     const parts: TextPart[] = [];
     let buffer = "";
@@ -480,6 +553,29 @@ class Parser {
           index += match[0].length;
           continue;
         }
+      }
+
+      if (char === "{" && next === "=") {
+        const close = this.formulaEnd(index + 2, end);
+        if (close === -1) {
+          this.report(
+            "unterminated-formula",
+            "{= starts a formula but has no closing }; write \\{ for a literal {",
+            index,
+            index + 2,
+          );
+          buffer += this.src.slice(index, end);
+          index = end;
+          continue;
+        }
+        flush();
+        parts.push({
+          formula: this.src.slice(index + 2, close),
+          loc: this.loc(index, close + 1),
+          bodyStart: this.position(index + 2),
+        });
+        index = close + 1;
+        continue;
       }
 
       if (char === "{") {

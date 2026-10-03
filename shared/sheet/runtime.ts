@@ -7,9 +7,20 @@ import {
   type ContentFieldSchema,
   type ResourceLinkKind,
 } from "../content-schema";
-import { isFormulaError, type FormulaValue } from "./formula";
+import {
+  FormulaError,
+  isFormulaError,
+  type FormulaNode,
+  type FormulaValue,
+} from "./formula";
+import {
+  callFormulaDefinition,
+  evaluateFormula,
+  formulaBudget,
+  type FormulaEnv,
+} from "./formula-eval";
 import { formatFormulaNumber } from "./formula-functions";
-import { parseSheetPath, type TextPart } from "./parser";
+import { isFormulaPart, parseSheetPath, type TextPart } from "./parser";
 import {
   findRef,
   isRecord,
@@ -17,7 +28,7 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "./scope";
-import type { SheetSchemas } from "./validate";
+import type { SheetDefinition, SheetSchemas } from "./validate";
 
 export {
   findRef,
@@ -71,7 +82,8 @@ export function formatSheetValue(
 }
 
 // Writes `value` at `path` inside `root`, creating missing objects and arrays
-// on the way (an array when the next key is a number). Mutates `root`. Writes
+// on the way (an array when the next key is a number). Mutates `root`.
+// `undefined` removes the key (an override going back to automatic). Writes
 // nothing if the path uses a reserved key, and never follows inherited
 // properties.
 export function setSheetValue(
@@ -91,7 +103,10 @@ export function setSheetValue(
     }
     container = next as Record<string | number, unknown>;
   }
-  container[path.at(-1)!] = value;
+  const last = path.at(-1)!;
+  // `undefined` removes the key, so the saved data has no trace of it.
+  if (value === undefined && !Array.isArray(container)) Reflect.deleteProperty(container, last);
+  else container[last] = value;
 }
 
 // A starting value for a new field or List item: empty values, with required
@@ -132,21 +147,109 @@ export function defaultSheetValue(
   }
 }
 
+// The sheet's `<Define>`s, for formulas that call them.
+export interface SheetFormulaDefinitions {
+  definitions: ReadonlyMap<string, SheetDefinition>;
+  // The value of a definition without parameters, if it is cached (the
+  // renderer computes each once).
+  cached?: (name: string) => FormulaValue | undefined;
+}
+
+const noDefinitions: SheetFormulaDefinitions = { definitions: new Map() };
+
+function formulaEnv(
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions,
+): FormulaEnv {
+  return {
+    root,
+    scope,
+    refs,
+    budget: formulaBudget(),
+    call(name, args) {
+      const definition = formulas.definitions.get(name);
+      if (!definition) return undefined;
+      if (definition.broken || !definition.ast) {
+        return new FormulaError("definition", `${name} has errors; fix its <Define>`);
+      }
+      if (!definition.params.length) {
+        const cached = formulas.cached?.(name);
+        if (cached !== undefined) return cached;
+      }
+      return callFormulaDefinition({ params: definition.params, ast: definition.ast }, args, this);
+    },
+  };
+}
+
+// A formula's value in `scope`. Never throws.
+export function evaluateSheetFormula(
+  ast: FormulaNode,
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
+): FormulaValue {
+  return evaluateFormula(ast, formulaEnv(root, scope, refs, formulas));
+}
+
+// The value of a definition without parameters, as calls see it (it may be a
+// list). Never throws.
+export function evaluateSheetDefinition(
+  name: string,
+  root: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions,
+): FormulaValue {
+  const env = formulaEnv(root, root, refs, { definitions: formulas.definitions });
+  try {
+    return env.call(name, []) ?? null;
+  } catch {
+    return new FormulaError("internal", "This formula couldn't be computed");
+  }
+}
+
+// One piece of rendered text; `error` is set where a formula failed (its
+// text is "—").
+export interface SheetTextSegment {
+  text: string;
+  error?: string;
+}
+
+export function sheetTextSegments(
+  parts: TextPart[],
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
+): SheetTextSegment[] {
+  return parts.map((part) => {
+    if (typeof part === "string") return { text: part };
+    if (isFormulaPart(part)) {
+      if (!part.ast) return { text: "—", error: "This formula has errors" };
+      const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas);
+      if (isFormulaError(value)) return { text: "—", error: value.message };
+      return { text: formatFormulaValue(value, refs) };
+    }
+    return {
+      text: formatSheetValue(
+        resolveSheetPath(parseSheetPath(part.path), root, scope, refs).value,
+        refs,
+      ),
+    };
+  });
+}
+
 export function interpolateSheetText(
   parts: TextPart[],
   root: SheetScope,
   scope: SheetScope,
   refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
 ): string {
-  return parts
-    .map((part) =>
-      typeof part === "string"
-        ? part
-        : formatSheetValue(
-            resolveSheetPath(parseSheetPath(part.path), root, scope, refs).value,
-            refs,
-          ),
-    )
+  return sheetTextSegments(parts, root, scope, refs, formulas)
+    .map((segment) => segment.text)
     .join("");
 }
 

@@ -362,12 +362,14 @@ const tagGroups = computed(() => {
     layout: [],
     field: [],
     repeater: [],
+    definition: [],
   };
   for (const spec of sheetTags.values()) groups[spec.category].push(spec);
   return [
     { title: "Layout", tags: groups.layout },
     { title: "Fields", tags: groups.field },
     { title: "Repeaters", tags: groups.repeater },
+    { title: "Definitions", tags: groups.definition },
   ];
 });
 function attrType(spec: TagSpec["attrs"][string]) {

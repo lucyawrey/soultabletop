@@ -1,8 +1,13 @@
 <script setup lang="ts">
+import type { ComputedRef, EffectScope } from "vue";
+import type { FormulaValue } from "#shared/sheet/formula";
 import {
+  evaluateSheetDefinition,
   setSheetValue,
+  type SheetFormulaDefinitions,
   type SheetLinks,
   type SheetRefs,
+  type SheetScope,
 } from "#shared/sheet/runtime";
 import type { SheetDisplay } from "#shared/sheet/registry";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
@@ -48,12 +53,48 @@ const emit = defineEmits<{
 }>();
 
 const compiled = computed(() => compileSheet(props.markup, props.schemas));
+const root = computed<SheetScope>(() => ({ value: props.data, path: [] }));
+
+// Definitions without parameters are computed once each and recomputed only
+// when what they read changes; those with parameters run at each call.
+const definitionValues = shallowRef(new Map<string, ComputedRef<FormulaValue>>());
+let definitionScope: EffectScope | undefined;
+watch(
+  () => compiled.value.definitions,
+  (definitions) => {
+    definitionScope?.stop();
+    definitionScope = effectScope(true);
+    const values = new Map<string, ComputedRef<FormulaValue>>();
+    definitionScope.run(() => {
+      for (const [name, definition] of definitions) {
+        if (definition.params.length || definition.broken) continue;
+        values.set(
+          name,
+          computed(() =>
+            evaluateSheetDefinition(name, root.value, props.refs, formulas.value),
+          ),
+        );
+      }
+    });
+    definitionValues.value = values;
+  },
+  { immediate: true },
+);
+onScopeDispose(() => definitionScope?.stop());
+const formulas = computed<SheetFormulaDefinitions>(() => {
+  const values = definitionValues.value;
+  return {
+    definitions: compiled.value.definitions,
+    cached: (name) => values.get(name)?.value,
+  };
+});
 
 provideSheetContext({
-  root: computed(() => ({ value: props.data, path: [] })),
+  root,
   refs: computed(() => props.refs),
   links: computed(() => props.links ?? {}),
   schemas: computed(() => props.schemas),
+  formulas,
   showInvalid: computed(() => props.canEditSheet ?? false),
   canEdit: computed(() => props.canEdit ?? false),
   editMode: computed(() => props.editMode ?? false),

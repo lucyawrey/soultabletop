@@ -18,7 +18,13 @@ export type AttrType =
   // Iconify name, e.g. i-lucide-sword.
   | { kind: "icon" }
   // Space-separated CSS class names for the Sheet's own CSS.
-  | { kind: "className" };
+  | { kind: "className" }
+  // A formula, written as is (no braces): `formula="level + 2"`.
+  | { kind: "formula" }
+  // Exactly one `{= expr}` or `{path}` that gives true, false, or nothing.
+  | { kind: "condition" }
+  // An identifier, like a `<Define>`'s name.
+  | { kind: "name" };
 
 export interface AttrSpec {
   type: AttrType;
@@ -50,7 +56,7 @@ export type ChildrenRule =
 
 export interface TagSpec {
   name: string;
-  category: "layout" | "field" | "repeater";
+  category: "layout" | "field" | "repeater" | "definition";
   description: string;
   attrs: Record<string, AttrSpec>;
   children: ChildrenRule;
@@ -62,8 +68,16 @@ export interface TagSpec {
   // Children are resolved against each item of the bound array.
   itemScope?: boolean;
   // The parent renders this tag itself, so live/locked/display on it would do
-  // nothing: only `class` is common to it.
+  // nothing: only `class` and `show` are common to it.
   noFlagAttrs?: boolean;
+  // Takes no common attributes at all.
+  noCommonAttrs?: boolean;
+  // With `parents`: may also be at the top level.
+  topLevel?: boolean;
+  // Field tags that accept `formula`: `readOnly` shows the computed value
+  // instead of a field; `override` may also have a field, which holds an
+  // optional manual value that wins over the computed one.
+  formula?: "readOnly" | "override";
 }
 
 export const colors = [
@@ -116,19 +130,30 @@ export const commonAttrs: Record<string, AttrSpec> = {
     SHEET_DISPLAYS,
     "How fields inside look when they can't be edited: text, or box (their input, disabled); defaults to the sheet's setting",
   ),
+  show: {
+    type: { kind: "condition" },
+    description:
+      "Shows the tag only when this is true, like show=\"{= level >= 5}\" or show=\"{hasSpells}\"; false or empty hides it",
+  },
+};
+
+// Tags that take no `show` (with the reason, for the error message).
+export const noShowTags: Readonly<Record<string, string>> = {
+  Column: "use show on the Table, or a formula in the column",
 };
 
 // The common attributes a tag accepts.
 export function commonAttrsFor(spec: TagSpec): Record<string, AttrSpec> {
-  if (!spec.noFlagAttrs) return commonAttrs;
-  const { class: className } = commonAttrs;
-  return { class: className! };
+  if (spec.noCommonAttrs) return {};
+  const { class: className, show, ...flags } = commonAttrs;
+  const visible: Record<string, AttrSpec> = spec.name in noShowTags ? {} : { show: show! };
+  if (spec.noFlagAttrs) return { class: className!, ...visible };
+  return { class: className!, ...flags, ...visible };
 }
 
 const fieldAttrs: Record<string, AttrSpec> = {
   field: {
     type: { kind: "field" },
-    required: true,
     description: "Path of the field this shows, e.g. stats.strength",
   },
   label: text(
@@ -138,6 +163,17 @@ const fieldAttrs: Record<string, AttrSpec> = {
     "Doesn't show the label (a Column's header is left empty); it still names the input for screen readers",
   ),
   hint: text("Help text; defaults to the schema description"),
+};
+
+// `formula` on field tags; see TagSpec.formula.
+const readOnlyFormula: AttrSpec = {
+  type: { kind: "formula" },
+  description: "Computes the value instead of reading a field, like formula=\"level * 2\"",
+};
+const overrideFormula: AttrSpec = {
+  type: { kind: "formula" },
+  description:
+    "Computes the value; with field, the field holds an optional manual value that wins, and clearing it goes back to the computed one",
 };
 
 const formatAttr = oneOf(
@@ -297,11 +333,13 @@ const tagList: TagSpec[] = [
     description: "A text field",
     attrs: {
       ...fieldAttrs,
+      formula: overrideFormula,
       multiline: bool("Several lines"),
       placeholder: text("Shown when empty while editing"),
     },
     children: "none",
     binds: ["string"],
+    formula: "override",
   },
   {
     name: "Number",
@@ -309,6 +347,7 @@ const tagList: TagSpec[] = [
     description: "A number field",
     attrs: {
       ...fieldAttrs,
+      formula: overrideFormula,
       min: { type: { kind: "number" }, description: "Smallest value" },
       max: { type: { kind: "number" }, description: "Largest value" },
       step: { type: { kind: "number" }, description: "Increment" },
@@ -320,14 +359,16 @@ const tagList: TagSpec[] = [
     },
     children: "none",
     binds: ["number"],
+    formula: "override",
   },
   {
     name: "Checkbox",
     category: "field",
     description: "A checkbox",
-    attrs: { ...fieldAttrs },
+    attrs: { ...fieldAttrs, formula: overrideFormula },
     children: "none",
     binds: ["boolean"],
+    formula: "override",
   },
   {
     name: "Toggle",
@@ -366,15 +407,17 @@ const tagList: TagSpec[] = [
     description: "A current value out of a maximum, as a bar or boxes",
     attrs: {
       ...fieldAttrs,
+      formula: readOnlyFormula,
       max: {
         type: { kind: "number", min: 1 },
         required: true,
-        description: "Maximum, a number or {field}",
+        description: "Maximum: a number, {field}, or {= formula}",
       },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
     },
     children: "none",
     binds: ["number"],
+    formula: "readOnly",
   },
   {
     name: "Ref",
@@ -390,10 +433,12 @@ const tagList: TagSpec[] = [
     description: "Shows a value; never editable",
     attrs: {
       ...fieldAttrs,
+      formula: readOnlyFormula,
       format: formatAttr,
     },
     children: "none",
     binds: ["anyValue"],
+    formula: "readOnly",
   },
   {
     name: "Markdown",
@@ -423,7 +468,7 @@ const tagList: TagSpec[] = [
     description:
       "Repeats its content for each item of an array; paths inside are relative to the item",
     attrs: {
-      field: fieldAttrs.field!,
+      field: { ...fieldAttrs.field!, required: true },
       label: fieldAttrs.label!,
       layout: oneOf(["stack", "grid"], "stack (default) or grid"),
       cols: {
@@ -440,7 +485,7 @@ const tagList: TagSpec[] = [
     name: "Table",
     category: "repeater",
     description: "An array of objects as a table; contains Column tags",
-    attrs: { field: fieldAttrs.field!, label: fieldAttrs.label! },
+    attrs: { field: { ...fieldAttrs.field!, required: true }, label: fieldAttrs.label! },
     children: { only: ["Column", "RowDetails"] },
     binds: ["objectArray"],
     itemScope: true,
@@ -451,11 +496,14 @@ const tagList: TagSpec[] = [
     description: "One column of a Table",
     attrs: {
       ...fieldAttrs,
+      formula: readOnlyFormula,
+      format: formatAttr,
       width: oneOf(["auto", "xs", "sm", "md", "lg"], "Column width"),
     },
     children: "none",
     parents: ["Table"],
     binds: ["string", "number", "boolean", "scalar", "resourceLink", "content"],
+    formula: "readOnly",
   },
   {
     name: "RowDetails",
@@ -465,6 +513,30 @@ const tagList: TagSpec[] = [
     children: "any",
     parents: ["Table"],
     noFlagAttrs: true,
+  },
+
+  // Definitions
+  {
+    name: "Define",
+    category: "definition",
+    description:
+      "A reusable formula: called as name() or name(a, b) in any formula of the sheet; shows nothing",
+    attrs: {
+      name: { type: { kind: "name" }, required: true, description: "The name to call it by" },
+      params: {
+        type: { kind: "list" },
+        description: "Comma-separated parameter names (at most 8), like params=\"attr, rank\"",
+      },
+      formula: {
+        type: { kind: "formula" },
+        required: true,
+        description: "The formula; parameters are used by name, and /name reaches a field with the same name",
+      },
+    },
+    children: "none",
+    parents: ["Sheet"],
+    topLevel: true,
+    noCommonAttrs: true,
   },
 ];
 

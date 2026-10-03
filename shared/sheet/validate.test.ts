@@ -5,6 +5,7 @@ import { humanizeFieldName } from "./registry";
 import {
   compileSheet,
   hasErrors,
+  newSheetErrors,
   parseSheetPath,
   validateSheet,
   type SheetSchemas,
@@ -467,5 +468,219 @@ describe("humanizeFieldName", () => {
     ["HP", "HP"],
   ])("%s -> %s", (key, label) => {
     expect(humanizeFieldName(key)).toBe(label);
+  });
+});
+
+describe("formulas", () => {
+  function element(markup: string) {
+    const [node] = compile(markup).nodes;
+    expect(node?.type).toBe("element");
+    return node as ValidatedElement;
+  }
+
+  it("compiles formulas on field tags, with their result type", () => {
+    expect(messages('<Value formula="hp * 2" label="Double" />')).toEqual([]);
+    const node = element('<Value formula="hp * 2" label="Double" />');
+    expect(node.binding).toBeUndefined();
+    expect(node.formula?.type).toEqual({ kind: "number" });
+    expect(node.formula?.ast).toMatchObject({ type: "binary", op: "*" });
+  });
+
+  it("needs a field or a formula on field tags, and not both unless the tag overrides", () => {
+    expect(errorCodes("<Value />")).toEqual(["missing-attribute"]);
+    expect(messages("<Value />")[0]).toMatch(/needs a field or formula attribute/);
+    expect(messages("<Image />")[0]).toMatch(/needs a field attribute$/);
+    expect(messages('<Value field="hp" formula="1" />')).toEqual([
+      "error invalid-attribute: <Value> takes field or formula, not both",
+    ]);
+    expect(messages('<Number field="hp" formula="hpMax" />')).toEqual([]);
+    expect(messages('<Text field="notes" formula="concat(\'x\', hp)" />')).toEqual([]);
+    expect(messages('<Checkbox field="alive" formula="hp > 0" />')).toEqual([]);
+  });
+
+  it("takes formula only on the tags that support it", () => {
+    for (const tag of ["Image", "Ref", "Markdown", "Select", "Tags", "Toggle", "Field"]) {
+      expect(errorCodes(`<${tag} field="notes" formula="1" />`), tag).toContain("unknown-attribute");
+    }
+    expect(errorCodes('<List field="tags" formula="1"><Value field="." /></List>')).toContain(
+      "unknown-attribute",
+    );
+  });
+
+  it("checks that the result fits the tag and the field", () => {
+    expect(messages('<Number formula="notes" />')).toEqual([
+      "error formula-result-type: <Number>'s formula must give a number, but it gives text",
+    ]);
+    expect(errorCodes('<Checkbox formula="hp" />')).toEqual(["formula-result-type"]);
+    expect(errorCodes('<Text formula="hp" />')).toEqual(["formula-result-type"]);
+    expect(errorCodes('<Tracker formula="notes" max="10" />')).toEqual(["formula-result-type"]);
+    expect(messages('<Value formula="tags" />')).toEqual([
+      "error formula-result-type: The formula gives a list; <Value> shows a single value (use sum, count, or join)",
+    ]);
+    expect(messages('<Table field="attacks"><Column formula="bonus + 1" format="signed" /></Table>')).toEqual([]);
+    expect(errorCodes('<Value formula="extra" />')).toEqual([]);
+    expect(errorCodes('<Value formula="misc.anything" />')).toEqual([]);
+  });
+
+  it("warns that live and locked do nothing on a computed value", () => {
+    expect(messages('<Value formula="hp" live />')).toEqual([
+      "warning flag-no-effect: live has no effect on <Value> with a formula and no field: a computed value can't be edited",
+    ]);
+    expect(messages('<Number field="hp" formula="hpMax" live locked />')).toEqual([]);
+  });
+
+  it("resolves formula paths through the schema, in List scope", () => {
+    expect(messages('<Value formula="nope + 1" />')).toEqual([
+      'error unknown-field: "nope": the schema has no field "nope"',
+    ]);
+    expect(messages('<List field="attacks"><Value formula="bonus + /hp" /></List>')).toEqual([]);
+    expect(errorCodes('<List field="attacks"><Value formula="hp" /></List>')).toEqual(["unknown-field"]);
+    expect(messages('<Value formula="sum(inventory, qty * coalesce(item.weight, 0))" />')).toEqual([]);
+    expect(errorCodes('<Value formula="sum(inventory, item.nope)" />')).toEqual(["unknown-field"]);
+    expect(messages('<Value formula="class.sub.sub.hitDie" />')).toEqual([]);
+    expect(errorCodes('<Value formula="class.sub.sub.sub.hitDie" />')).toEqual(["content-too-deep"]);
+  });
+
+  it("puts diagnostics at their place inside the attribute", () => {
+    const [diagnostic] = compile('<Sheet>\n  <Value formula="hp +\n    nope" />\n</Sheet>').diagnostics;
+    expect(diagnostic).toMatchObject({
+      code: "unknown-field",
+      loc: { start: { line: 3, column: 5 }, end: { line: 3, column: 9 } },
+    });
+    const [syntax] = compile('<Value formula="hp + * 2" />').diagnostics;
+    expect(syntax).toMatchObject({ code: "formula-syntax", loc: { start: { line: 1, column: 22 } } });
+    const [inText] = compile("<Note>HP {= hp +}</Note>").diagnostics;
+    expect(inText).toMatchObject({ code: "formula-syntax", loc: { start: { column: 17 } } });
+  });
+
+  it("reports type errors, unknown functions, arity, and dice", () => {
+    expect(errorCodes('<Value formula="notes + 1" />')).toEqual(["formula-type"]);
+    expect(errorCodes('<Value formula="nope(1)" />')).toEqual(["formula-unknown-function"]);
+    expect(errorCodes('<Value formula="floor()" />')).toEqual(["formula-arity"]);
+    expect(messages('<Value formula="2d6 + hp" />')).toEqual([
+      "error formula-dice: Dice rolls aren't available here yet",
+    ]);
+  });
+
+  it("explains a double quote that ends a formula attribute", () => {
+    expect(messages('<Value formula="concat("a", hp)" />')[0]).toBe(
+      "error formula-syntax: The formula ends at this \"; inside formula=\"…\", write text in single quotes, like 'expert'",
+    );
+  });
+
+  it("compiles {= } in text and attributes", () => {
+    const { nodes, diagnostics } = compile('<Section title="HP {= hp * 2}">Max {= hpMax}</Section>');
+    expect(diagnostics).toEqual([]);
+    const section = nodes[0] as ValidatedElement;
+    expect((section.attrs.title as unknown[])[1]).toMatchObject({ formula: " hp * 2", ast: { type: "binary" } });
+    expect(section.children[0]).toMatchObject({ type: "text", parts: ["Max ", { ast: { type: "path" } }] });
+    expect(errorCodes("<Note>{= tags}</Note>")).toEqual(["formula-result-type"]);
+  });
+
+  it("takes number attributes as {= formula}", () => {
+    expect(messages('<Tracker field="hp" max="{= hpMax + stats.str}" />')).toEqual([]);
+    const node = element('<Tracker field="hp" max="{= hpMax * 2}" />');
+    expect(node.attrs.max).toMatchObject({ source: " hpMax * 2", type: { kind: "number" } });
+    expect(messages('<Tracker field="hp" max="{= notes}" />')).toEqual([
+      "error formula-result-type: max must be a number, but {= notes} gives text",
+    ]);
+  });
+
+  it("limits formulas per sheet", () => {
+    const many = Array.from({ length: 2_001 }, () => "{= 1}").join(" ");
+    expect(errorCodes(`<Note>${many}</Note>`)).toEqual(["formula-too-large"]);
+  });
+});
+
+describe("definitions", () => {
+  it("collects definitions in any order, with params and types", () => {
+    const { diagnostics, definitions } = compile(`
+      <Value formula="double(hp) + base()" />
+      <Define name="double" params="x" formula="x * 2" />
+      <Sheet><Define name="base" formula="hpMax + /stats.str" /></Sheet>
+    `);
+    expect(diagnostics).toEqual([]);
+    expect(definitions.get("double")).toMatchObject({ params: ["x"], broken: false, type: { kind: "number" } });
+    expect(definitions.get("base")?.ast).toBeDefined();
+  });
+
+  it("lets parameters hide fields only in their definition", () => {
+    expect(messages('<Define name="f" params="hp" formula="hp + /hp" /><Value formula="hp + f(1)" />')).toEqual([]);
+    expect(errorCodes('<Define name="f" params="x" formula="x" /><Value formula="x" />')).toEqual(["unknown-field"]);
+  });
+
+  it("checks names, params, and placement", () => {
+    expect(messages('<Define name="floor" formula="1" />')).toEqual([
+      "error formula-reserved-name: floor is a built-in name; choose another name for this definition",
+    ]);
+    expect(errorCodes('<Define name="roll" formula="1" />')).toEqual(["formula-reserved-name"]);
+    expect(errorCodes('<Define name="and" formula="1" />')).toEqual(["formula-reserved-name"]);
+    expect(errorCodes('<Define name="a" formula="1" /><Define name="a" formula="2" />')).toEqual([
+      "duplicate-definition",
+    ]);
+    expect(errorCodes('<Define name="2a" formula="1" />')).toEqual(["invalid-attribute"]);
+    expect(errorCodes('<Define name="__proto__" formula="1" />')).toEqual(["invalid-attribute"]);
+    expect(errorCodes('<Define name="a" params="x, x" formula="1" />')).toEqual(["invalid-attribute"]);
+    expect(errorCodes('<Define name="a" params="not" formula="1" />')).toEqual(["invalid-attribute"]);
+    expect(errorCodes('<Define name="a" params="a,b,c,d,e,f,g,h,i" formula="1" />')).toEqual([
+      "invalid-attribute",
+    ]);
+    expect(errorCodes('<Define formula="1" />')).toEqual(["missing-attribute"]);
+    expect(messages('<Section><Define name="a" formula="1" /></Section>')).toEqual([
+      "error misplaced-tag: <Define> must be at the top level or directly inside <Sheet>",
+    ]);
+    expect(errorCodes('<Define name="a" formula="1" class="x" />')).toEqual(["unknown-attribute"]);
+  });
+
+  it("checks calls against definitions", () => {
+    expect(messages('<Define name="f" params="x" formula="x" /><Value formula="f()" />')).toEqual([
+      "error formula-arity: f takes 1 argument (x)",
+    ]);
+    expect(errorCodes('<Define name="t" formula="\'a\'" /><Number formula="t()" />')).toEqual([
+      "formula-result-type",
+    ]);
+  });
+
+  it("reports every definition in a cycle and marks them broken", () => {
+    const { diagnostics, definitions } = compile(`
+      <Define name="a" formula="b() + 1" />
+      <Define name="b" formula="a()" />
+      <Define name="c" formula="c()" />
+      <Define name="d" formula="a()" />
+    `);
+    expect(diagnostics.map((item) => item.message)).toEqual([
+      "a calls itself: a() → b() → a()",
+      "b calls itself: b() → a() → b()",
+      "c calls itself: c() → c()",
+    ]);
+    expect([...definitions.values()].map((item) => [item.name, item.broken])).toEqual([
+      ["a", true],
+      ["b", true],
+      ["c", true],
+      ["d", false],
+    ]);
+  });
+
+  it("marks definitions with errors broken, without stopping calls from checking", () => {
+    const { diagnostics, definitions } = compile('<Define name="f" formula="nope" /><Value formula="f()" />');
+    expect(diagnostics.map((item) => item.code)).toEqual(["unknown-field"]);
+    expect(definitions.get("f")).toMatchObject({ broken: true, ast: undefined });
+  });
+});
+
+describe("newSheetErrors", () => {
+  it("lists errors a schema change adds", () => {
+    const markup = '<Define name="ac" formula="10 + stats.str" /><Value formula="ac()" /><Number field="hp" />';
+    const changed: SheetSchemas = {
+      ...schemas,
+      root: {
+        ...character,
+        schema: { ...character.schema, stats: { type: "struct", entries: { str: { type: "string" } } } },
+      },
+    };
+    expect(newSheetErrors(markup, schemas, schemas)).toEqual([]);
+    expect(newSheetErrors(markup, schemas, changed).map((item) => item.message)).toEqual([
+      "+ needs numbers (use concat to join text), not text",
+    ]);
   });
 });

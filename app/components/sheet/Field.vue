@@ -1,16 +1,44 @@
 <script setup lang="ts">
-import { resourceLinkPath } from "#shared/sheet/runtime";
+import { isFormulaError } from "#shared/sheet/formula";
+import { findRef, resourceLinkPath, type SheetScope } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // Every field tag (Text, Number, Field, Column, ...): its value, or its input
 // (FieldInput.vue) when editable, or that input disabled when `display="box"`.
+// With a `formula`, the value is computed; with a field too (an override),
+// the field's value wins when it has one.
 const props = defineProps<{ node: ValidatedElement; compact?: boolean }>();
 
-const { context, resolve, format, number } = useSheet();
+const { context, resolve, format, formatFormula, evaluate, number } = useSheet();
 const attrText = useSheetAttrText();
 
-const resolved = computed(() => resolve(props.node.binding!.path));
-const value = computed(() => resolved.value.value);
+// A formula-only field has no place in the data, so it can't be edited.
+const resolved = computed<SheetScope>(() =>
+  props.node.binding ? resolve(props.node.binding.path) : { value: undefined, path: null },
+);
+const computedValue = computed(() =>
+  props.node.formula ? evaluate(props.node.formula.ast) : undefined,
+);
+const formulaError = computed(() =>
+  isFormulaError(computedValue.value) ? computedValue.value.message : undefined,
+);
+// An override with nothing stored (or empty text) shows the computed value.
+const stored = computed(() => resolved.value.value);
+const automatic = computed(
+  () =>
+    !!props.node.formula &&
+    (stored.value === undefined ||
+      stored.value === null ||
+      (props.node.tag === "Text" && stored.value === "")),
+);
+const value = computed<unknown>(() => {
+  if (!automatic.value) return stored.value;
+  return formulaError.value ? undefined : computedValue.value;
+});
+// The computed value as text, for the input's placeholder.
+const computedText = computed(() =>
+  computedValue.value === undefined ? "" : formatFormula(computedValue.value),
+);
 const label = computed(
   () => attrText(props.node.attrs.label) || props.node.binding?.label || "",
 );
@@ -63,9 +91,20 @@ const showStatLabel = computed(
     !props.compact,
 );
 
-const text = computed(() =>
-  format(value.value, props.node.attrs.format === "signed" ? "signed" : "plain"),
+const text = computed(() => {
+  const signed = props.node.attrs.format === "signed";
+  if (automatic.value) return formatFormula(computedValue.value ?? null, signed ? "signed" : "plain");
+  return format(value.value, signed ? "signed" : "plain");
+});
+// Shown instead of the value when the formula failed.
+const showsError = computed(() => automatic.value && !!formulaError.value);
+// An override that holds a manual value can go back to the computed one.
+const canReset = computed(
+  () => !!props.node.formula && !!props.node.binding && !automatic.value && editable.value,
 );
+function useAutomatic() {
+  if (resolved.value.path) context.update(resolved.value.path, undefined);
+}
 
 const tags = computed(() =>
   Array.isArray(value.value)
@@ -88,12 +127,14 @@ const refInfo = computed(() => {
   const current = value.value;
   if (typeof current === "string") {
     if (props.node.binding?.field?.type === "resourceLink") {
-      const link = context.links.value[current];
+      const link = Object.hasOwn(context.links.value, current)
+        ? context.links.value[current]
+        : undefined;
       return link
         ? { name: link.name, to: resourceLinkPath(current, link) }
         : { name: "Unavailable", to: undefined, muted: true };
     }
-    const ref = context.refs.value[current];
+    const ref = findRef(context.refs.value, current);
     if (ref) return { name: ref.name, to: `/content/${current}` };
     return { name: "Unavailable", to: undefined, muted: true };
   }
@@ -126,12 +167,22 @@ const imageSize = computed(
     ]"
   >
     <div
-      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable"
+      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || canReset"
       class="flex items-center gap-1 text-xs font-medium text-muted"
     >
       <span v-if="shownLabel && !compact" class="sheet-field-label">{{
         shownLabel
       }}</span>
+      <UButton
+        v-if="canReset"
+        icon="i-lucide-rotate-ccw"
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        aria-label="Use automatic value"
+        title="Use automatic value"
+        @click="useAutomatic"
+      />
       <UButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
@@ -147,11 +198,19 @@ const imageSize = computed(
     <template v-if="editable && resolved.path">
       <SheetFieldInput
         :node="node"
-        :value="value"
+        :value="node.tag === 'Checkbox' ? value : stored"
         :path="resolved.path"
         :label="label"
+        :automatic="automatic ? computedText : undefined"
       />
     </template>
+
+    <span v-else-if="showsError" class="tabular-nums">
+      —<SheetFormulaWarning
+        v-if="context.showInvalid.value"
+        :message="formulaError!"
+      />
+    </span>
 
     <span v-else-if="resolved.unavailable" class="text-sm text-dimmed">
       Unavailable

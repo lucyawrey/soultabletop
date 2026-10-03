@@ -19,6 +19,7 @@ import type { SheetDisplay } from "../../shared/sheet/registry";
 import {
   compileSheet,
   hasErrors,
+  newSheetErrors,
   type SheetSchemas,
 } from "../../shared/sheet/validate";
 import { useDatabase } from "./database";
@@ -252,14 +253,7 @@ export async function findSheetsBrokenBy(
     }
     const pair = schemaCache.get(item.contentTypeId);
     if (!pair) continue;
-    const errorsBefore = compileSheet(item.markup, pair[0]).diagnostics.filter(
-      (diagnostic) => diagnostic.severity === "error",
-    );
-    const errorsAfter = compileSheet(item.markup, pair[1]).diagnostics.filter(
-      (diagnostic) => diagnostic.severity === "error",
-    );
-    const known = new Set(errorsBefore.map((diagnostic) => diagnostic.message));
-    const added = errorsAfter.filter((diagnostic) => !known.has(diagnostic.message));
+    const added = newSheetErrors(item.markup, pair[0], pair[1]);
     if (!added.length) continue;
     if (!getResourceAccess(item.resource, context).canRead) {
       hiddenCount += 1;
