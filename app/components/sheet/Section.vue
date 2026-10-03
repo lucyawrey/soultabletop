@@ -21,9 +21,11 @@ const hasHeader = computed(
 </script>
 
 <template>
+  <!-- A border, not UCard's outer ring: the sheet root's `contain: paint`
+       clips anything drawn outside a box that sits flush with its edge. -->
   <UCard
     :class="[sheetClasses(node), span]"
-    :ui="{ body: open ? undefined : 'hidden' }"
+    :ui="{ root: 'border border-default ring-0', body: open ? undefined : 'hidden' }"
   >
     <template v-if="hasHeader" #header>
       <component
