@@ -10,12 +10,10 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 
 The exact order: do these one at a time, top first.
 
-- **Walk through the Sheet formula plan with the user** · chore · small · needs decision: the plan's open questions
-  No code. Go through `.claude/plans/sheet-formulas.md` with the user (their nine decisions are at the top; sections 1, 4, and 10 still need updating for decisions 4 and 8) and `.claude/plans/sheet-formulas-sandboxed-js.md` (the user asked to weigh sandboxed JavaScript first; recommendation: build the formula plan as written and keep an opt-in QuickJS Script section as a later possibility; its section 6 has four open questions). Update the plan with what is decided. Do this before any formula code.
 - **Harden Sheet paths against prototype keys (formulas PR 0)** · bug · small
   Reject `__proto__`/`constructor`/`prototype` path segments, use `Object.hasOwn` in `resolveSheetPath`, and refuse them in `setSheetValue` (`shared/sheet/runtime.ts`). Reproduce with a failing test first. Needed before formulas, which read more paths.
-- **Sheet formulas** · feature · large · depends on: the formula plan walkthrough, Sheet path hardening
-  A safe expression language for computed values, built as planned in `.claude/plans/sheet-formulas.md` (design context in `docs/sheet-system.md`, phase 9). It is the Sheet feature that matters most: every ability modifier, skill bonus, saving throw, and spell DC in a real system sheet is typed by hand today. Update `docs/sheet-system.md` with the decisions as they land.
+- **Sheet formulas, with conditional display** · feature · large · depends on: Sheet path hardening
+  A safe expression language for computed values plus `show="{= …}"` conditional display, built as planned in `.claude/plans/sheet-formulas.md` (walked through with the user 2026-10-02; decisions at its top: PRs 1–5 there, after PR 0 above) (design context in `docs/sheet-system.md`, phase 9). It is the Sheet feature that matters most: every ability modifier, skill bonus, saving throw, and spell DC in a real system sheet is typed by hand today. Update `docs/sheet-system.md` with the decisions as they land. After conditional display (plan PR 3), convert the D&D 2024 test sheet to formulas and upload it with a one-time script using a user API key; its files are on the user's CachyOS machine (the database copies were changed on purpose while testing the UI).
 
 # Phase 1: Sheets ready for real systems
 
@@ -24,11 +22,14 @@ What official systems like Pathfinder 2e and D&D 2024 need from the Sheet system
 - **Sheet features found missing while building the D&D 2024 sheet** · feature · depends on: Sheet formulas
   Found while building the D&D 2024 character sheet (2026-09-30; the test sheet's files are local only):
   - **Formulas matter most** (already in the follow-ups above): every ability modifier, skill bonus, saving throw, passive Perception, spell save DC, and spell attack bonus is typed in by hand. Formulas should cover these cases: a modifier from a score, a bonus from modifier + proficiency bonus by training, and values shown with a sign.
-  - **Conditional display**: show or hide a tag by a field's value (e.g. an `if="{path}"` attribute), to hide the Spells tab for non-casters or spell levels with no slots.
   - **Choice fields in schemas**: a string limited to listed options (size, alignment, skill training, spellcasting ability). Today the options live only in the markup's `Select`, so saved data isn't checked, and the generated sheet shows a plain text input.
   - **Default values in schemas**: e.g. size "Medium", or arrays that start with rows. `defaultContentData` only fills empty values for required fields.
   - **Tables for fixed rows**: `Table` binds only arrays, so a fixed set like the 18 skills (a `struct` of structs) needs one small `Grid` each. E.g. let `Table`/`List` iterate a struct's entries.
   - **Compact checkbox in text display**: a boolean shows "✓ Yes" / "✗ No" under its label; proficiency marks need an icon-only or dot variant.
+- **Content pickers for arrays in Sheets** · feature · needs decision: the design, after formulas and the D&D test · depends on: Sheet formulas
+  From the user (2026-10-02), part of making built-in sheet features cover what custom JavaScript otherwise would: a built-in way to add items, spells, feats, and the like to a content array from a picker (search the content of the array's content type, add a reference or a local copy), so sheet authors don't hand-roll it. Check what `ListAdd` and `ContentPicker` already do first. Design with Opus.
+- **Class and level driven sheet data** · feature · large · needs decision: the whole design, after formulas and the D&D test · depends on: Sheet formulas
+  From the user (2026-10-02): a character sets their class (or classes) and level, and the sheet fills in what follows from them (features, proficiency, hit dice, spell slots, ...), from the class's content, with formulas and built-in sheet features rather than custom JavaScript. Very complex; let the D&D and Pathfinder sheets show what's needed (tables by level, per-class data, multiclassing) before designing. Design with Opus.
 - **Sheet dice buttons and image uploads** · feature · large · depends on: Sheet formulas
   Design in `docs/sheet-system.md`, phase 9: dice-roll buttons (rolls will post to a campaign's dice log once Make Campaigns places to play exists) and image uploads. Formulas are their own item above.
 - **Tailwind classes just work in Sheets, with an optional minimal base theme** · feature · large · needs decision: how to compile per sheet (when, where, how scoped) and what the minimal theme resets

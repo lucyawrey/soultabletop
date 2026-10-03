@@ -7,16 +7,22 @@ Written 2026-10-01 by a read-only planning agent for the user to review and edit
 Answers to the nine decisions in section 11 below. The plan itself is unchanged; where an answer differs from the recommendation, the change is noted.
 
 1. **Where formulas live:** sheet markup now, schema-level computed fields later (recommended).
-2. **Reuse:** `<Define>` with parameters and `$name` syntax (recommended).
+2. **Reuse:** `<Define>` with parameters (recommended), **called without a sigil** (changed 2026-10-02, it was `$name`): `mod(abilities.str)`, and `pb()` for a definition without parameters. See "Calling definitions" in section 1.
 3. **Stored or computed:** computed when the sheet is shown, never stored (recommended).
 4. **Override: `field` + `formula` now** (NOT the recommendation, which was "not in v1"). A tag may carry both: the field holds an optional manual value and an empty value means "automatic" (the formula). Plan consequences to design in PR 2: the validator accepts `field` + `formula` together (was an error), the field's value type must match the formula's result type, edit mode edits the field and shows the computed value as its placeholder or default, clearing the field returns to automatic, and `live`/`locked`/`display` apply to the field part as they do today. Sections 1, 4, and 10 must be updated before PR 2 starts.
 5. **Syntax:** spreadsheet-like (recommended).
 6. **Missing values:** the result is empty, aggregates skip them, `coalesce` gives a default (recommended).
 7. **Errors:** sheet editors see a marker and the message, everyone else sees a dash (recommended).
 8. **Functions:** the planner's list **plus dynamic `get(record, key)`** (NOT the recommendation). Constraints: own keys only (`Object.hasOwn`), refuse `__proto__`, `constructor`, and `prototype` keys, treat the result type as unknown (`any`) so it is not statically checked, and require the path-hardening PR 0 first.
-9. **Names:** `<Define>` and `$name` (settled with decision 2); conditional display is included as an optional later PR with the attribute **`show="{= ...}"**.
+9. **Names:** `<Define>`, called like a built-in (decision 2). **Conditional display (`show="{= ...}"`) is part of the base release** (changed 2026-10-02; it was an optional later PR): PR 3 in section 10.
 
-**Status:** no code started. The user is first reading this plan and wants to weigh an alternative: sandboxed JavaScript (functions defined in `<Define>` tags and in a JS section of the sheet) instead of the self-written formula language. This plan stays as the baseline; any comparison is a separate document next to it.
+**Walkthrough (2026-10-02):** the user confirmed decisions 1 and 3–8 with examples, and changed 2 (no `$`) and 9 (`show` in the base release). Sections 1, 2, 3, 4, 8, and 10 now include decisions 2, 4, 8, and 9; sections 11 and the summary keep the original recommendations as history.
+
+**Sandboxed JavaScript (2026-10-02):** compared in `sheet-formulas-sandboxed-js.md`; the user chose this formula language only. A QuickJS backend stays a small possibility if new evidence makes it clearly worth it, but **nothing JS-specific is added now** (no reserved `Script` tag or `script.` namespace): the plan already keeps values JSON-compatible, errors as values, evaluation pure and synchronous, and output text-only, which is all a later backend would need. Instead, make formulas as useful as possible and close gaps with built-in sheet features (e.g. content pickers for arrays, class and level driven data; tracked in `TODO.md` Phase 1), so JS isn't needed. Sheets working for non-programmers is a product goal.
+
+**Testing on a real sheet:** after PR 3, convert the D&D 2024 test sheet to formulas and upload it with a one-time script using a user API key (no authoring CLI yet). The sheet's files are on the user's CachyOS machine; the database copies were changed on purpose while testing the UI, so don't start from those.
+
+**Status:** no code started. Next is PR 0.
 
 ---
 
@@ -32,30 +38,45 @@ I read `.claude/CLAUDE.md`, `docs/sheet-system.md`, everything in `shared/sheet/
 
 ### Options considered
 
-**A. A `formula=` attribute on display field tags (recommended, together with B and C).** It replaces `field`:
+**A. A `formula=` attribute on display field tags (recommended, together with B and C).** Alone, it replaces `field`; with `field`, it becomes an overridable default (decision 4, below):
 
 ```
-<Number formula="$mod(abilities.str)" label="STR" format="signed" variant="stat" />
+<Number formula="mod(abilities.str)" label="STR" format="signed" variant="stat" />
 ```
 
-- It is read-only in every mode. `useSheetEditable` already treats a `null` path as not editable, so a formula field returns `{ value, path: null }` and the `live`, `locked` and Edit Fields logic needs no new branch.
+- Without `field` it is read-only in every mode. `useSheetEditable` already treats a `null` path as not editable, so a formula field returns `{ value, path: null }` and the `live`, `locked` and Edit Fields logic needs no new branch.
 - `display="box"` still shows the disabled input, so character sheets look the same with Edit Fields on and off.
 - Allowed on `Value`, `Number`, `Text`, `Checkbox`, `Column` and `Tracker`. `Column` also gains `format`.
 - Not allowed on `Image`, `Ref`, `Markdown`, `Select`, `Tags`, or on `List`/`Table` (see section 7: an `Image` formula could leak data).
 
-**B. `{= expr}` interpolation**, in text and in text attributes. Example: `<Badge>Initiative {= signed($mod(abilities.dex))}</Badge>`.
+**Override: `field` + `formula` on one tag (decision 4).** Allowed on `Number`, `Text`, and `Checkbox` (the editable scalar tags):
+
+```
+<Number field="ac" formula="10 + mod(abilities.dex)" label="AC" variant="stat" />
+```
+
+- The field holds an optional manual value. Empty (absent or `null`; `""` for `Text`) means automatic: the tag shows the formula's value. A stored value wins.
+- Edit mode edits the field. The computed value is the input's placeholder, so the player sees what "automatic" would give; clearing the input (which already removes the value, see `FieldInput.vue`) returns to automatic.
+- `live`/`locked`/`display` apply to the field part exactly as today. In text display the tag shows the stored value or else the computed one; nothing marks which (a later "overridden" marker is possible).
+- Types: the formula's result type must fit the field's schema type (`formula-result-type` otherwise). `Checkbox` with a formula can't tell "unchecked" from "automatic" once saved as `false`; document that clearing it needs the field's value removed, or leave `Checkbox` out of overrides if that proves confusing in the browser check.
+- The renderer resolves `binding.path` for writes and evaluates the formula for the fallback; `useSheetEditable` keeps the real path, so nothing else changes.
+
+**B. `{= expr}` interpolation**, in text and in text attributes. Example: `<Badge>Initiative {= signed(mod(abilities.dex))}</Badge>`.
 - A number attribute also accepts exactly one `{= expr}`: `max="{= hp.max + coalesce(hp.temp, 0)}"`.
 - The existing `{path}` interpolation is unchanged and behaves like `{= path}`.
 
 **C. `<Define>` tags for reuse.** They render nothing and may only appear at the top level or directly inside `<Sheet>`. They are hoisted, so order doesn't matter.
 - Without parameters: `<Define name="pb" formula="ceil(level / 4) + 1" />`
-- With parameters: `<Define name="mod" params="score" formula="floor(($score - 10) / 2)" />`
-- They are referenced as `$pb` or `$mod(x)`, so there are four namespaces that never collide:
-  - a bare identifier is always a data path;
-  - `name(` is a built-in function;
-  - `$name` is a sheet definition or a parameter;
-  - `/` and `.` keep their current meaning (root, current item).
+- With parameters: `<Define name="mod" params="score" formula="floor((score - 10) / 2)" />`
+- They are called like built-ins, with no sigil: `pb()` and `mod(x)`.
 - Without this, the 18 D&D skills would each repeat the proficiency expression.
+
+**Calling definitions (decision 2, revised 2026-10-02):**
+- `word(` is always a function call (a built-in or a definition); a bare word is always a data path; `/` and `.` keep their current meaning (root, current item). A definition without parameters is still called with `()`, like a spreadsheet's `PI()`, so a definition can never hide a field.
+- **Parameters** are bare words inside their own definition's formula, and there they hide a data path of the same first segment (`score` is the parameter, `/score` the root field). Nowhere else.
+- **Built-in names are reserved:** a `<Define>` named like a built-in function or a reserved name (`roll`, `dice`, `adv`, `dis`, the reserved words) is an error.
+- **Later built-ins never break a sheet:** if a release adds a built-in that an existing sheet already defines, the sheet's definition wins inside that sheet, with a warning (`formula-shadows-builtin`) suggesting a rename. Implementation: the error applies to a fixed list (`formulaReservedNames`, the v1 built-ins), and every built-in added later goes in a separate list that only warns.
+- **Editor colors:** built-in functions and the sheet's own definitions are highlighted differently (and parameters too, if cheap), from our own formula tokenizer, since lang-xml only sees attribute text (PR 4).
 
 **D. Computed fields in the content type schema** (`{ type: "number", formula: "…" }` in `ContentFieldSchema`). **Deferred** to a later PR (section 10, PR 6), not rejected:
 - It is the "right" home for rule facts that API users, generated sheets and other sheets want to see.
@@ -65,7 +86,7 @@ I read `.claude/CLAUDE.md`, `docs/sheet-system.md`, everything in `shared/sheet/
 **Rejected:**
 - A standalone `<Computed>` tag. It duplicates the field tags' looks (stat, box, signed).
 - Full expressions inside today's `{path}`. That would be ambiguous with plain paths, and the `=` marker keeps old sheets parsing exactly as before.
-- Writing `field` and `formula` on the same tag. That is an error in v1, kept free for "computed default with override" (decision 4).
+- Unlock-to-override with the pencil button (decision 4's third option): unclear about what is stored.
 
 ### How this interacts with the existing markup
 
@@ -78,13 +99,24 @@ I read `.claude/CLAUDE.md`, `docs/sheet-system.md`, everything in `shared/sheet/
 
 **Registry (`shared/sheet/registry.ts`):**
 - New attribute type `{ kind: "formula" }`.
-- `field` is required "unless `formula` is given". `TagSpec` gets `formula?: true`, and `attributes()` in `validate.ts` checks "exactly one of field/formula".
+- `field` is required "unless `formula` is given". `TagSpec` gets `formula?: "readOnly" | "override"` (override for `Number`, `Text`, `Checkbox`), and `attributes()` in `validate.ts` checks "at least one of field/formula", and "both" only where the tag allows overrides.
 - New `Define` tag with category `"definition"`, attributes `name` (identifier), `params` (comma list of identifiers, at most 8) and `formula` (required).
 - `Node.vue`'s component map leaves `Define` out, so it renders nothing.
 
 **`live` / `locked` / `display`:**
-- Inherited flags are ignored on formula fields.
-- Writing `live` or `locked` directly on a formula tag gives a `flag-no-effect` warning.
+- Inherited flags are ignored on formula-only fields.
+- Writing `live` or `locked` directly on a formula-only tag gives a `flag-no-effect` warning. On an override tag they apply to the field part.
+
+**Conditional display: `show="{= …}"` on any tag (decision 9, in the base release, PR 3).** A common attribute like `class`. Its value must be exactly one `{= expr}` whose result is boolean or null; null and `false` hide the tag (and its children) in every mode. Evaluated in the tag's scope (inside a `List` row, relative to the row).
+
+```
+<Tab label="Spells" show="{= spellcasting.ability != null}"> … </Tab>
+<List field="spellSlots"><Section show="{= max > 0}" title="Level {level}"> … </Section></List>
+```
+
+- Hidden tags still validate (their paths are checked), and hidden fields keep their data; nothing is cleared.
+- `Tab`: a hidden tab drops out of the tab list; if the selected tab is hidden, the first visible one shows.
+- An error in a `show` formula shows the tag (and the editor's error marker), so an author never loses content to a typo.
 
 ## 2. The expression language
 
@@ -124,7 +156,7 @@ Precedence from low to high:
 - **Paths:** the `isValidSheetPath` form, with `.` for the current item and a leading `/` for the root.
   - In prefix position, a `/` followed directly by an identifier starts an absolute path. In infix position it is division, which the Pratt parser separates naturally.
   - A path followed by `(` is a function call. A dotted path followed by `(` is an error.
-- **Names:** `$name`, or `$name(args)` for a call.
+- **Parameters** (inside a definition): a bare identifier that names a parameter.
 - **Calls:** `fn(args)`.
 - **Parentheses.**
 - **Dice:** `NdM` (for example `1d20`) is reserved as a dice token (section 6).
@@ -138,10 +170,10 @@ Precedence from low to high:
 ```
 number | string | boolean | null
 path { path: SheetPath, text }     // reuses parseSheetPath
-name { name }                      // a $name
+param { name }                     // a parameter, inside a definition
 unary { op, operand }
 binary { op, left, right }
-call { name, user: boolean, args }
+call { name, user: boolean, args } // user: resolved to a definition at validate time
 dice { count, sides }
 ```
 
@@ -156,15 +188,15 @@ Every node carries a `loc`.
 | Aggregates | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)` | `expr`/`cond` is evaluated once per item, scoped to that item like a `List` (relative paths inside it, `/` is the root): `sum(inventory, qty * item.weight)` |
 | Size | `length(x)` | a string or array |
 | Null handling | `coalesce(a, b, …)` | |
+| Lookup | `get(record, key)` | decision 8: `key` is a string; reads only the record's own keys (`Object.hasOwn`); `__proto__`, `constructor`, and `prototype` give null; through a `content` field the record is the referenced data from `refs`; result type `any`, not checked statically: `get(abilities, spellcasting.ability)` |
 | Text | `concat(...)`, `join(list, sep)`, `signed(n)` | `signed` gives "+3", "0" or "-1" |
 | Conversion | `number(x)`, `text(x)` | `number` parses a string explicitly |
 | Logic | `if`, `switch` | lazy |
 
-**Reserved, not implemented:** `roll`, `dice`, `get`.
+**Reserved, not implemented:** `roll`, `dice`.
 
 **Left out on purpose:**
 - regular expressions (catastrophic-backtracking DoS);
-- dynamic key lookup `get(record, key)` (a prototype-access risk, and it makes paths impossible to check statically; `switch` covers "spellcasting ability");
 - dates, randomness, locale formatting (they break SSR determinism).
 
 ### Types and coercion
@@ -206,9 +238,9 @@ Every node carries a `loc`.
 ## 3. Dependencies and evaluation
 
 **Dependency graph.** Display formulas have no names, so only definitions can depend on each other.
-- At validate time, build the graph of `$name` references and calls between `<Define>` tags and run a DFS.
-- Every definition in a cycle gets a `formula-cycle` error naming the cycle (`$a → $b → $a`), and evaluates to an error.
-- Calling a definition with the wrong number of arguments, or an unknown `$name`, is an error.
+- At validate time, build the graph of calls between `<Define>` tags and run a DFS.
+- Every definition in a cycle gets a `formula-cycle` error naming the cycle (`a() → b() → a()`), and evaluates to an error.
+- Calling a definition with the wrong number of arguments, or calling an unknown function, is an error.
 - Parameters are visible only inside their own definition.
 - No topological order is needed at runtime, because evaluation is on demand and memoised.
 
@@ -225,7 +257,7 @@ Every node carries a `loc`.
 - In `Field.vue`, `resolved` becomes `formula ? { value: evaluate(formula), path: null } : resolve(binding.path)`. It must stop assuming `binding!` exists.
 - `Table.vue` column headers fall back to `label` when there is no binding.
 
-**List and Table rows.** A formula's relative paths resolve against the innermost item, exactly like `{path}`, and `/` reaches the root. Inside a row, definitions run against the root; pass row values in as arguments: `$lineWeight(qty, item.weight)`.
+**List and Table rows.** A formula's relative paths resolve against the innermost item, exactly like `{path}`, and `/` reaches the root. Inside a row, definitions run against the root; pass row values in as arguments: `lineWeight(qty, item.weight)`.
 
 **Across references.** Paths through `content` fields go through `refs`, which `loadContentRefs` filled with what this viewer can read, up to 3 hops. An unreadable reference resolves to `unavailable`, which formulas treat as null.
 - Consequence: different viewers can see different totals. That is inherent and is not a leak.
@@ -250,10 +282,14 @@ The formula checker in `formula-check.ts` takes a callback, `resolvePath(path, l
 |---|---|---|
 | Unknown path in a formula | error (`unknown-field`) | warning, which the hide-warnings flag can hide |
 | Path into a free-form `object` | warning (`free-form-path`) | same |
-| Syntax error, unknown function, wrong arity, unknown `$name`, cycle, limit exceeded | error | error |
+| Syntax error, unknown function, wrong arity, cycle, a definition named like a v1 built-in, limit exceeded | error | error |
 | Operand types known and incompatible (`"a" * 2`, `sum` of a string field) | error (`formula-type`) | error |
 | Result type doesn't fit the tag (`Number` needs number, `Text` string, `Checkbox` boolean, `Column` a scalar, `Value` anything, number attributes number) | error (`formula-result-type`) | error |
-| Both `field` and `formula`, or neither | error | error |
+| Neither `field` nor `formula`; or both on a tag that doesn't allow overrides | error | error |
+| Override: formula result type doesn't fit the field's schema type | error (`formula-result-type`) | error |
+| `show` not a single `{= }`, or its result not boolean/null | error (`formula-result-type`) | error |
+| Definition named like a built-in added after v1 | warning (`formula-shadows-builtin`); the definition wins | same |
+| `get()` result | `any`: never a type error; a wrong key is null at runtime | same |
 | A dice token outside a roll context | error ("dice rolls aren't available here yet") | same |
 
 - New diagnostic codes all start with `formula-`: `formula-syntax`, `formula-unknown-function`, `formula-arity`, `formula-unknown-name`, `formula-cycle`, `formula-too-large`, `formula-type`, `formula-result-type`.
@@ -262,7 +298,7 @@ The formula checker in `formula-check.ts` takes a callback, `resolvePath(path, l
 
 **Saving and schema changes:**
 - `assertValidSheetMarkup` rejects formula errors on save with no changes.
-- `findSheetsBrokenBy` (the `confirmBrokenSheets` path) diffs error *messages* before and after a schema change, so formula messages must be deterministic and contain the path. Example: a content type PATCH that turns `abilities.str` into a string newly breaks `$mod(abilities.str)` and is listed in the 409.
+- `findSheetsBrokenBy` (the `confirmBrokenSheets` path) diffs error *messages* before and after a schema change, so formula messages must be deterministic and contain the path. Example: a content type PATCH that turns `abilities.str` into a string newly breaks `mod(abilities.str)` and is listed in the 409.
 
 ### Editor (`CodeEditor.client.vue`, `edit.vue`)
 
@@ -271,7 +307,7 @@ The formula checker in `formula-check.ts` takes a callback, `resolvePath(path, l
 - In those places offer:
   - paths, using the existing tail logic for List items;
   - the built-in functions, with signature and description from `formula-functions.ts`;
-  - the `$names` from the last compile (a new `formulaNames` prop fed from `compiled.definitions`).
+  - the sheet's definitions from the last compile (a new `formulaNames` prop fed from `compiled.definitions`).
 
 **Problems list and lint.** Positions already work through line and column (`codemirrorDiagnostics`), as long as the parser supplies the attribute value positions (section 1).
 
@@ -308,7 +344,7 @@ The formula checker in `formula-check.ts` takes a callback, `resolvePath(path, l
 - **Function names reserved:** `roll`, `dice`, `adv`, `dis`.
 - **Tag and attribute names reserved:** `Roll` and `roll` (no use today).
 - **Engine shape:** a `dice` member in the type set, and an `env.rng?` hook for later. A future `evaluateRoll(ast, env, rng)` reduces everything except the dice terms to numbers, prints something like "1d20 + 5", and rolls.
-- **Damage text today** works without dice support: `{= concat("1d8", signed($mod(abilities.str)))}`.
+- **Damage text today** works without dice support: `{= concat("1d8", signed(mod(abilities.str)))}`.
 
 ## 7. Security and abuse
 
@@ -340,7 +376,7 @@ Sheet markup is written by one user and runs in other users' browsers and in SSR
 1. **`formula.test.ts` (parser):**
    - every operator and its precedence and associativity;
    - `/` as root path vs division;
-   - `.` paths, `$name` calls, reserved words, the dice token, string escapes;
+   - `.` paths, definition calls and parameters, reserved words, the dice token, string escapes;
    - each syntax error with its exact line and column, including multi-line attributes and the entity-decoded `&lt;`;
    - every limit.
 2. **`formula-eval.test.ts` (evaluator):**
@@ -353,7 +389,7 @@ Sheet markup is written by one user and runs in other users' browsers and in SSR
 3. **`formula-check.test.ts`, plus new cases in `validate.test.ts`:**
    - type inference over strict, non-strict, `scalar`, `object` and `content` shapes;
    - result type against each tag;
-   - cycles, arity, unknown `$name`;
+   - cycles, arity, unknown functions, built-in names reserved, later built-ins only warning, parameters hiding paths only inside their definition;
    - `field` and `formula` together or both missing;
    - `Define` placement;
    - diagnostic positions inside attributes and `{= }`;
@@ -362,25 +398,25 @@ Sheet markup is written by one user and runs in other users' browsers and in SSR
    - `{=` scanning past `<` and `}` inside strings;
    - old `{path}` behaviour unchanged;
    - the new attribute value positions.
-5. **`runtime.test.ts`:** formula parts in `interpolateSheetText`; number attributes.
+5. **`runtime.test.ts`:** formula parts in `interpolateSheetText`; number attributes; `get()` own-key and prototype-key cases; override fallback (stored value wins, empty means automatic).
 6. **`generate.test.ts`:** generated markup still validates cleanly (no change expected).
 
 **D&D 2024 worked example** (a fixture in `validate.test.ts` and later the skill's `examples.md`). It assumes `skills.<name>.training` is a string `none`/`proficient`/`expertise`, `saves.<ab>` is a boolean, and `spellcasting.ability` is a string.
 
 ```
 <Define name="pb" formula="ceil(level / 4) + 1" />
-<Define name="mod" params="score" formula="floor(($score - 10) / 2)" />
-<Define name="skill" params="score, t" formula="$mod($score) + switch($t, 'proficient', 1, 'expertise', 2, 0) * $pb" />
-<Define name="castMod" formula="$mod(switch(spellcasting.ability, 'int', abilities.int, 'wis', abilities.wis, 'cha', abilities.cha, null))" />
+<Define name="mod" params="score" formula="floor((score - 10) / 2)" />
+<Define name="skill" params="score, t" formula="mod(score) + switch(t, 'proficient', 1, 'expertise', 2, 0) * pb()" />
+<Define name="castMod" formula="mod(get(abilities, spellcasting.ability))" />
 ```
 
-1. **Ability modifier:** `<Number formula="$mod(abilities.str)" label="STR" format="signed" variant="stat" />`
-2. **Skill bonus:** `<Value formula="$skill(abilities.dex, skills.stealth.training)" label="Stealth" format="signed" />`
-3. **Saving throw:** `<Value formula="$mod(abilities.wis) + if(saves.wis, $pb, 0)" label="WIS save" format="signed" />`
-4. **Passive Perception:** `<Number formula="10 + $skill(abilities.wis, skills.perception.training)" label="Passive Perception" />`
-5. **Spell save DC:** `<Number formula="8 + $pb + $castMod" label="Spell Save DC" variant="stat" />`
-6. **Spell attack bonus:** `<Value formula="$pb + $castMod" label="Spell Attack" format="signed" />`
-7. **Signed value in text:** `<Badge>Initiative {= signed($mod(abilities.dex))}</Badge>`
+1. **Ability modifier:** `<Number formula="mod(abilities.str)" label="STR" format="signed" variant="stat" />`
+2. **Skill bonus:** `<Value formula="skill(abilities.dex, skills.stealth.training)" label="Stealth" format="signed" />`
+3. **Saving throw:** `<Value formula="mod(abilities.wis) + if(saves.wis, pb(), 0)" label="WIS save" format="signed" />`
+4. **Passive Perception:** `<Number formula="10 + skill(abilities.wis, skills.perception.training)" label="Passive Perception" />`
+5. **Spell save DC:** `<Number formula="8 + pb() + castMod()" label="Spell Save DC" variant="stat" />`
+6. **Spell attack bonus:** `<Value formula="pb() + castMod()" label="Spell Attack" format="signed" />`
+7. **Signed value in text:** `<Badge>Initiative {= signed(mod(abilities.dex))}</Badge>`
 8. **Inventory weight:**
    - per row: `<Column formula="qty * item.weight" label="Weight" />` inside `<Table field="inventory">`
    - total: `<Value formula="sum(inventory, qty * coalesce(item.weight, 0))" label="Carried" />`
@@ -392,7 +428,7 @@ Sheet markup is written by one user and runs in other users' browsers and in SSR
 - Check the console for hydration warnings (this tests the SSR determinism).
 - A sheet editor sees the error marker for a formula dividing by zero; another viewer sees "—".
 - The sheet editor's Problems list jumps to the right column inside `formula="…"`.
-- Completion offers `floor` and `$mod`.
+- Completion offers `floor` and `mod`, and the two are colored differently.
 
 ## 9. Docs and skill updates
 
@@ -423,9 +459,9 @@ Sheet markup is written by one user and runs in other users' browsers and in SSR
 | 0 | **Path hardening:** `isValidSheetPath`, `resolveSheetPath` (`Object.hasOwn`), `setSheetValue`, maybe `fieldKeyPattern`; tests | B | Sonnet | Could reject an existing sheet that uses those names (unlikely) | Closes the possible prototype write; independent of formulas |
 | 1 | **Engine:** `formula.ts`, `formula-functions.ts`, `formula-eval.ts`, `formula-check.ts` (callback-based, no `validate.ts` changes) and tests. Unused by the app. | B | **Opus** (semantics and limits are the security boundary) | Getting the semantics wrong is costly to change later | Nothing visible; can run in parallel with the hide-warnings branch, since `validate.ts` is untouched |
 | 2 | **Formulas in markup:** parser (`{=`, attribute value positions), registry (`formula`, `Define`, `Column format`), Validator wiring (definitions, cycles, types, result-type checks, codes), `useSheet`/`Renderer`/`Field.vue`/`Table.vue` evaluation, error marker; `docs/sheet-system.md` and the skill's reference text in the same PR | B | **Opus** | Parser change in text scanning; Vue tracking; `binding!` assumptions in components; merge order with hide-warnings (both touch `validate.ts`: land hide-warnings first, or rebase) | Formulas usable end to end; saves rejected on formula errors; the `confirmBrokenSheets` diff covers them |
-| 3 | **Editor support:** formula-context completion (functions, paths, `$names`), signature info, Formulas section in the reference slide-over, `formulaNames` prop | A | Sonnet | lang-xml mis-highlighting `{= a < b}` in text (spike first) | Comfortable authoring |
-| 4 | **D&D example and skill polish:** `examples.md` D&D section, `checking.md`; on the `docs` branch if only agent files change | A | Sonnet | none | Agents can write formula sheets |
-| 5 | *(optional, cheap)* **Conditional display:** a `show="{= …}"` boolean attribute on any tag, `v-if` in `Node.vue` (the TODO's `if=`) | B (registry) | Sonnet | Name choice (`show` vs `if`) | Hide the Spells tab for non-casters |
+| 3 | **Conditional display (base release, decision 9):** `show="{= …}"` as a common attribute in the registry, the boolean result check, `v-if` in `Node.vue`, hidden tabs in `Tabs.vue`; docs and skill text | B | Sonnet | Tabs with every tab hidden; scope inside rows | Hide the Spells tab for non-casters; then convert the D&D test sheet and upload it with a one-time API-key script (section "Testing on a real sheet" at the top) |
+| 4 | **Editor support:** formula-context completion (functions, paths, definitions), signature info, distinct colors for built-ins, definitions, and parameters, Formulas section in the reference slide-over, `formulaNames` prop | A | Sonnet | lang-xml mis-highlighting `{= a < b}` in text (spike first) | Comfortable authoring |
+| 5 | **D&D example and skill polish:** `examples.md` D&D section, `checking.md`; on the `docs` branch if only agent files change | A | Sonnet | none | Agents can write formula sheets |
 | 6 | *(later, needs decision 1)* **Schema-level computed fields** (section 5) | B | Opus | Large; API shape | API consumers and generated sheets see computed values |
 
 Dice buttons stay their own follow-up, built on the PR 1 reservations.
@@ -486,7 +522,7 @@ Dice buttons stay their own follow-up, built on the PR 1 reservations.
 **What I'd build:** formulas in sheet markup, computed when the sheet is shown and never stored. Three surfaces:
 - `formula="…"` on read-only display tags (`Value`, `Number`, `Text`, `Checkbox`, `Column`, `Tracker`; never `Image`);
 - `{= expr}` in text, text attributes and number attributes;
-- top-level `<Define name params formula>` for reuse, written `$name`.
+- top-level `<Define name params formula>` for reuse, called like a built-in (`mod(x)`, `pb()`).
 
 The language:
 - spreadsheet-style, parsed by a hand-written Pratt parser in `shared/sheet/formula*.ts`;
