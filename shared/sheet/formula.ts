@@ -716,6 +716,44 @@ export function parseFormula(
   }
 }
 
+export interface FormulaToken {
+  type: "number" | "string" | "word" | "keyword" | "path" | "dice" | "op" | "punctuation";
+  text: string;
+  // Offsets into the source as written (entities count as written).
+  from: number;
+  to: number;
+}
+
+// The tokens of a formula, for editor highlighting: as many as can be read
+// (it stops at the first problem instead of reporting it).
+export function lexFormula(source: string): FormulaToken[] {
+  const { chars, positions } = decode(source.slice(0, formulaLimits.maxLength), {
+    line: 1,
+    column: 1,
+    offset: 0,
+  });
+  const lexer = new Lexer(chars);
+  const tokens: FormulaToken[] = [];
+  try {
+    for (;;) {
+      const token = lexer.next();
+      if (token.type === "end") break;
+      tokens.push({
+        type:
+          token.type === "(" || token.type === ")" || token.type === ","
+            ? "punctuation"
+            : token.type,
+        text: token.text,
+        from: positions[token.start]!.offset,
+        to: positions[token.end]!.offset,
+      });
+    }
+  } catch (error) {
+    if (!(error instanceof FormulaSyntaxError)) throw error;
+  }
+  return tokens;
+}
+
 // Printing (for tests and tooling): fully parenthesized, so printing and
 // parsing again gives the same tree.
 

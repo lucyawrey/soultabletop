@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { sampleSheetData, sheetFieldPaths } from "./editor";
+import {
+  formulaHighlights,
+  markupFormulaRanges,
+  sampleSheetData,
+  sheetFieldPaths,
+} from "./editor";
 import { generateSheetMarkup } from "./generate";
 import { compileSheet, type SheetSchemas } from "./validate";
 
@@ -84,5 +89,49 @@ describe("sampleSheetData", () => {
     const markup = generateSheetMarkup(schemas);
     expect(compileSheet(markup, schemas).diagnostics).toEqual([]);
     expect(Object.keys(sampleSheetData(schemas)).length).toBeGreaterThan(5);
+  });
+});
+
+describe("markupFormulaRanges", () => {
+  function ranges(doc: string) {
+    return markupFormulaRanges(doc).map((range) => ({ text: doc.slice(range.from, range.to), params: range.params }));
+  }
+
+  it("finds formula attributes and {= } in text and attributes", () => {
+    expect(
+      ranges(`<Value formula="a + b" /><Note>x {= c <d} y {= concat('}', e)}</Note><Tracker max="{= f}" show='{= g}' />`),
+    ).toEqual([
+      { text: "a + b", params: [] },
+      { text: " c <d", params: [] },
+      { text: " concat('}', e)", params: [] },
+      { text: " f", params: [] },
+      { text: " g", params: [] },
+    ]);
+  });
+
+  it("gives a Define's formula its params", () => {
+    expect(ranges('<Define params="a, b" name="f" formula="a + b" />')).toEqual([
+      { text: "a + b", params: ["a", "b"] },
+    ]);
+  });
+
+  it("skips comments and escapes, and runs an unclosed {= to the line end", () => {
+    expect(ranges("<!-- {= no} --> \\{= no} {= yes\nnext")).toEqual([{ text: " yes", params: [] }]);
+  });
+});
+
+describe("formulaHighlights", () => {
+  it("colors built-ins, definitions, and parameters", () => {
+    const source = "floor(rank) + prof(rank) + level + nope(1) + rank";
+    const kinds = formulaHighlights(source, ["rank"], new Set(["prof"])).map(
+      (item) => `${source.slice(item.from, item.to)}:${item.kind}`,
+    );
+    expect(kinds).toEqual(["floor:builtin", "rank:param", "prof:define", "rank:param", "rank:param"]);
+  });
+
+  it("uses offsets as written, entities included", () => {
+    const source = "a &lt; max(b)";
+    const [max] = formulaHighlights(source, [], new Set());
+    expect(source.slice(max!.from, max!.to)).toBe("max");
   });
 });

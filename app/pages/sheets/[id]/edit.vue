@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { SheetCssResult } from "#shared/sheet/css";
 import { sampleSheetData, sheetFieldPaths } from "#shared/sheet/editor";
+import { formulaLimits } from "#shared/sheet/formula";
+import { formulaFunctions } from "#shared/sheet/formula-functions";
 import {
   readSheetFile,
   sheetExportFileName,
@@ -235,6 +237,11 @@ async function goTo(where: "markup" | "css", diagnostic: SheetDiagnostic) {
 const fieldPaths = computed(() =>
   sheet.value ? sheetFieldPaths(sheet.value.schemas) : [],
 );
+// The sheet's <Define>s from the last compile, for formula completion and
+// colors.
+const formulaDefinitions = computed(() =>
+  [...(compiled.value?.definitions.values() ?? [])].map(({ name, params }) => ({ name, params })),
+);
 
 // Files: load markup or CSS from a local file as an unsaved change (Upload, or
 // drop it on the editor), and download what's in the editor.
@@ -357,6 +364,7 @@ function addPreviewLink(linkId: string, link: SheetLinks[string]) {
 // Reference panel
 
 const isReferenceOpen = ref(false);
+const formulaFunctionList = [...formulaFunctions.values()];
 const tagGroups = computed(() => {
   const groups: Record<TagSpec["category"], TagSpec[]> = {
     layout: [],
@@ -515,6 +523,7 @@ async function insertPath(path: string) {
                     label="Sheet markup"
                     :diagnostics="markupDiagnostics"
                     :field-paths="fieldPaths.map((item) => item.path)"
+                    :formula-definitions="formulaDefinitions"
                     class="h-[60vh]"
                   />
                 </ClientOnly>
@@ -748,7 +757,54 @@ async function insertPath(path: string) {
             <p v-if="group.title === 'Layout'" class="text-xs text-muted">
               Every tag also accepts
               <code v-for="name in Object.keys(commonAttrs)" :key="name" class="me-1">{{ name }}</code>
-              (<code>Tab</code> and <code>RowDetails</code> only <code>class</code>).
+              (<code>Tab</code> and <code>RowDetails</code> only <code>class</code> and
+              <code>show</code>; <code>Column</code> has no <code>show</code>; <code>Define</code> none).
+            </p>
+          </section>
+
+          <section class="space-y-3">
+            <h3 class="font-semibold text-highlighted">Formulas</h3>
+            <p class="text-muted">
+              Formulas compute values when the sheet is shown; they are never
+              saved. Write one as <code>formula="…"</code> on
+              <code>Value</code>, <code>Column</code>, and <code>Tracker</code>
+              (read-only), or on <code>Number</code>, <code>Text</code>, and
+              <code>Checkbox</code>, where a <code>field</code> can also hold a
+              manual value that wins until it is cleared. Anywhere else, use
+              <code>{= …}</code> in text, in number attributes like
+              <code>max="{= …}"</code>, and in <code>show="{= …}"</code>, which
+              hides the tag when false or empty.
+            </p>
+            <p class="text-muted">
+              Field names are paths (<code>stats.str</code>, <code>/level</code>
+              from the top inside a List). Operators, low to high precedence:
+              <code>or</code>, <code>and</code>, <code>== !=</code>,
+              <code>&lt; &lt;= &gt; &gt;=</code>, <code>+ -</code>,
+              <code>* / %</code>, then <code>-x</code> and <code>not x</code>.
+              Text goes in quotes (<code>'expert'</code>; single quotes inside
+              <code>formula="…"</code>). Empty values pass through arithmetic
+              and show as nothing; a formula that fails shows "—".
+            </p>
+            <p class="text-muted">
+              <code>&lt;Define name="prof" params="rank" formula="…" /&gt;</code>
+              at the top level makes a function for this sheet, called as
+              <code>prof(rank)</code> (one without parameters as
+              <code>pb()</code>). In text, write <code>&amp;lt;</code> for
+              <code>&lt;</code> (or turn the comparison around) so the editor's
+              colors stay right.
+            </p>
+            <ul class="space-y-1 text-xs">
+              <li v-for="fn in formulaFunctionList" :key="fn.name">
+                <code class="font-semibold text-secondary">{{ fn.signature }}</code>
+                <span class="text-muted"> — {{ fn.description }}</span>
+              </li>
+            </ul>
+            <p class="text-xs text-muted">
+              Limits: {{ formulaLimits.maxLength.toLocaleString("en-US") }} characters and
+              {{ formulaLimits.maxNodes }} parts per formula,
+              {{ formulaLimits.maxSites.toLocaleString("en-US") }} formulas and
+              {{ formulaLimits.maxDefinitions }} definitions per sheet. Dice
+              (<code>2d6</code>, <code>roll</code>) aren't available yet.
             </p>
           </section>
 
