@@ -354,6 +354,17 @@ describe.skipIf(!runDbTests)(
       // Saw a player, but they're a GM now: no removal either.
       await expect(removeMembership(id, otherId, "player")).rejects.toMatchObject({ statusCode: 409 });
       expect(await role()).toBe("gm");
+      // Saw a GM (stepping down), but the owner removed them meanwhile: the
+      // GM must not be written back as a player.
+      await database
+        .delete(campaignMembership)
+        .where(and(eq(campaignMembership.campaignId, id), eq(campaignMembership.userId, otherId)));
+      await expect(writeMembership(id, otherId, "player", "gm")).rejects.toMatchObject({ statusCode: 409 });
+      expect(await role()).toBeUndefined();
+      // Two GMs adding the same player at once: the second succeeds too.
+      await writeMembership(id, otherId, "player", null);
+      expect((await writeMembership(id, otherId, "player", null)).role).toBe("player");
+      await removeMembership(id, otherId, "player");
       // While unchanged, the GM's change goes through.
       await writeMembership(id, otherId, "player");
       await removeMembership(id, otherId, "player");

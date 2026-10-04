@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { User } from "better-auth";
 import { createError } from "h3";
 import { campaignMembership, groupMembership, resource, type Resource } from "../database/schema";
@@ -91,28 +91,43 @@ function membershipChanged() {
 }
 
 // Adds a member or changes their role. With `expected` (a GM's change), only
-// while the membership is still what the check saw: the role it had, or none
-// (null). Otherwise 409, so a GM can't overwrite a change an owner made
-// between the check and the write.
+// while the membership is still what the check saw, so a GM can't overwrite
+// a change an owner made between the check and the write: with a role, an
+// update of the row that still has it; with null (no membership), an insert
+// that doesn't touch a row added meanwhile, unless that row already has the
+// requested role (the same change made twice). Otherwise 409.
 export async function writeMembership(
   campaignId: string,
   userId: string,
   role: CampaignRole,
   expected?: CampaignRole | null,
 ) {
-  const [membership] = await useDatabase()
-    .insert(campaignMembership)
-    .values({ campaignId, userId, role })
-    .onConflictDoUpdate({
-      target: [campaignMembership.campaignId, campaignMembership.userId],
-      set: { role },
-      ...(expected === undefined
-        ? {}
-        : { setWhere: expected === null ? sql`false` : eq(campaignMembership.role, expected) }),
-    })
-    .returning();
-  if (!membership) throw membershipChanged();
-  return membership;
+  const database = useDatabase();
+  const target = and(
+    eq(campaignMembership.campaignId, campaignId),
+    eq(campaignMembership.userId, userId),
+  );
+  if (expected) {
+    const [updated] = await database
+      .update(campaignMembership)
+      .set({ role })
+      .where(and(target, eq(campaignMembership.role, expected)))
+      .returning();
+    if (!updated) throw membershipChanged();
+    return updated;
+  }
+  const insert = database.insert(campaignMembership).values({ campaignId, userId, role });
+  const [membership] = await (expected === null
+    ? insert.onConflictDoNothing()
+    : insert.onConflictDoUpdate({
+        target: [campaignMembership.campaignId, campaignMembership.userId],
+        set: { role },
+      })
+  ).returning();
+  if (membership) return membership;
+  const [existing] = await database.select().from(campaignMembership).where(target).limit(1);
+  if (existing?.role === role) return existing;
+  throw membershipChanged();
 }
 
 // Removes a member. With `expected` (a GM's change), only while their role is

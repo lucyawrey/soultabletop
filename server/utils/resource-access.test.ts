@@ -127,7 +127,7 @@ describe("campaign members", () => {
     expect(canDeleteCampaign(owned, context({ campaignRoles: new Map([[owned.id, "gm"]]) }))).toBe(true);
   });
 
-  it("adds GM edit, not delete, to a member of the owning group", () => {
+  it("adds GM edit to a member of the owning group, with canDelete false", () => {
     const grouped = resource({ kind: "campaign", ownerGroupId: PARTY });
     const ctx = context({
       groupRoles: new Map([[PARTY, "member"]]),
