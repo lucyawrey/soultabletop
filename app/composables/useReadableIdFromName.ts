@@ -14,7 +14,9 @@ export function useReadableIdFromName<K extends string = "readableId">(
   function generate(name: string, start: string | undefined) {
     const fromName = toReadableId(name);
     if (!fromName) return "";
-    return start ? toReadableId(`${start}-${fromName}`) : fromName;
+    // A name that already starts with the prefix ("Pf2e Fighter") keeps one.
+    if (!start || fromName === start || fromName.startsWith(`${start}-`)) return fromName;
+    return toReadableId(`${start}-${fromName}`);
   }
 
   watch(

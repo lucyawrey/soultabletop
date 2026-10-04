@@ -15,6 +15,12 @@ describe("systemIdPrefix", () => {
     expect(systemIdPrefix("call-of-cthulhu")).toBe("coc");
   });
 
+  it("keeps every part that holds a digit", () => {
+    expect(systemIdPrefix("2024-5e-rules")).toBe("20245er");
+    expect(systemIdPrefix("13th-age-2e")).toBe("13tha2e");
+    expect(systemIdPrefix("abcdefghi")).toBe("a");
+  });
+
   it("shortens a long single word to its first letter", () => {
     expect(systemIdPrefix("starfinder")).toBe("s");
   });
