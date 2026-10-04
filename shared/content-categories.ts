@@ -9,6 +9,14 @@ export const CONTENT_CATEGORIES = [
 
 export type ContentCategory = (typeof CONTENT_CATEGORIES)[number];
 
+// The order menus list them in.
+export const CONTENT_CATEGORY_MENU_ORDER = [
+  "general",
+  "playerCharacter",
+  "nonPlayerCharacter",
+  "page",
+] as const satisfies readonly ContentCategory[];
+
 export const CHARACTER_CATEGORIES = [
   "playerCharacter",
   "nonPlayerCharacter",
