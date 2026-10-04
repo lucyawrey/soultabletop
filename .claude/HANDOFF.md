@@ -9,4 +9,5 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 - **Also on #71 since review:** `96cc2d3` keeps a field's input in place when the reset/edit button shows (checked in the browser: 8px drop before, none after).
 - **Pathfinder 2e test data** (user `lucyawrey`, system `pf2e-test`, upload script was in a scratchpad, gone): the example sheet only has inputs for attributes, AC, HP and quantities; the user may want a fuller one. Step 8's "what formulas couldn't express" report isn't written.
 - **Waiting on the user:** delete the empty branch `sheet-path-hardening`; checking and merging #71 after cascading lands.
+- **Remind the user at the start of the next session:** they plan to switch from mostly VS Code with the Claude extension to mostly the Claude CLI in a terminal (still opening VS Code windows to read code), and want the workflow checked for it first: e.g. `.claude/parallel-work.md`'s "Showing files" (`code -r`) and windows mode, the VS Code-specific bits of `CLAUDE.md`, and permissions/settings for the CLI.
 - **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70).
