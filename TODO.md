@@ -8,12 +8,13 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
+- **Generated IDs start with the system's ID** · feature · small
+  Branch `system-id-prefix` (worktree `../soultabletop-worktrees/system-id-prefix`), PR #76 (Tier B), in review.
+  From the user (2026-10-04), replacing an earlier idea of separate ID namespaces per system: readable IDs are unique per owner and kind, so the same name in two systems (a "Strength" content in D&D and in Pathfinder) needs a hand-typed ID today. When a form generates the ID from the name (`useReadableIdFromName`, `app/composables/useReadableIdFromName.ts`) for a resource in a system (content types, sheets, content, characters, campaigns), prefix it with the system's readable ID, shortened if long: `pf2e-strength`. Shortening (user's decision, 2026-10-04): a system ID of 8 characters or fewer is used as is; a longer one becomes the first letter of each hyphen-separated part, with parts that contain a digit kept whole (`pathfinder-2e` → `p2e`, `dungeons-and-dragons-5e` → `dad5e`). Systems themselves and groups get no prefix. The prefix follows the selected system until the user edits the ID. Only the generated suggestion changes; IDs stay plain per-owner IDs on the server, and existing ones are left alone. Pairs with the dialog field order item (system picked before the name's ID is final).
+
 # Next up
 
 The exact order: do these one at a time, top first.
-
-- **Generated IDs start with the system's ID** · feature · small
-  From the user (2026-10-04), replacing an earlier idea of separate ID namespaces per system: readable IDs are unique per owner and kind, so the same name in two systems (a "Strength" content in D&D and in Pathfinder) needs a hand-typed ID today. When a form generates the ID from the name (`useReadableIdFromName`, `app/composables/useReadableIdFromName.ts`) for a resource in a system (content types, sheets, content, characters, campaigns), prefix it with the system's readable ID, shortened if long: `pf2e-strength`. Shortening (user's decision, 2026-10-04): a system ID of 8 characters or fewer is used as is; a longer one becomes the first letter of each hyphen-separated part, with parts that contain a digit kept whole (`pathfinder-2e` → `p2e`, `dungeons-and-dragons-5e` → `dad5e`). Systems themselves and groups get no prefix. The prefix follows the selected system until the user edits the ID. Only the generated suggestion changes; IDs stay plain per-owner IDs on the server, and existing ones are left alone. Pairs with the dialog field order item (system picked before the name's ID is final).
 
 # Phase 1: Sheets ready for real systems
 
