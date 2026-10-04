@@ -36,7 +36,6 @@ interface ContentTypeItem {
 const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySystem: true, extraQuery: { categories: NON_CHARACTER_CATEGORIES.join(",") } });
 const { items: contentRecords, status, refresh } = list;
 
-const { systemId: currentSystemId } = useCurrentSystem();
 const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
@@ -47,17 +46,6 @@ const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<Co
 const standardContentTypes = computed(() =>
   contentTypes.value.filter(
     (item) => !isCharacterCategory(item.contentCategory),
-  ),
-);
-
-const { systemLabel } = useSystems();
-const contentTypeOptions = computed(() =>
-  standardContentTypes.value.map((item) =>
-    resourceOption(item.id, {
-      name: item.name,
-      systemName: systemLabel(item.systemId),
-      source: item.source,
-    }),
   ),
 );
 
@@ -89,25 +77,25 @@ const form = reactive({
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
+  systemId: "",
   contentTypeId: "",
 });
+const { systemOptions, typeOptions, selectStartingSystem, onSystemChange } =
+  useSystemTypePicker(form, standardContentTypes);
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const idAvailability = useResourceIdAvailability(form, "content");
 const formBusy = ref(false);
 const formError = ref("");
 
 function openCreate() {
-  const firstContentType =
-    standardContentTypes.value.find((item) => item.systemId === currentSystemId.value) ??
-    standardContentTypes.value[0];
-  if (!firstContentType) return;
+  if (!standardContentTypes.value.length) return;
 
   formError.value = "";
   form.readableId = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
-  form.contentTypeId = firstContentType.id;
+  selectStartingSystem();
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
@@ -327,12 +315,22 @@ async function remove() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField v-model="form.ownerGroupId" />
+          <UFormField name="systemId" label="System" required>
+            <USelect
+              :model-value="form.systemId"
+              :items="systemOptions"
+              class="w-full"
+              @update:model-value="onSystemChange"
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
+          </UFormField>
           <UFormField name="contentTypeId" label="Type" required>
             <USelect
               v-model="form.contentTypeId"
-              :items="contentTypeOptions"
+              :items="typeOptions"
               class="w-full"
             >
               <template #item-label="{ item }">
@@ -340,6 +338,8 @@ async function remove() {
               </template>
             </USelect>
           </UFormField>
+          <OwnerField v-model="form.ownerGroupId" />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"

@@ -486,12 +486,6 @@ async function remove() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField
-            v-if="contentType?.canChangeOwner"
-            v-model="form.ownerGroupId"
-            :original="contentType?.ownerGroupId ?? null"
-          />
           <UFormField name="contentCategory" label="Category" required>
             <USelect
               v-model="form.contentCategory"
@@ -517,6 +511,12 @@ async function remove() {
           >
             <USwitch v-model="form.showSheetWarnings" />
           </UFormField>
+          <OwnerField
+            v-if="contentType?.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="contentType?.ownerGroupId ?? null"
+          />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"

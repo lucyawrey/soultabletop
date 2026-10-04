@@ -576,12 +576,6 @@ async function insertPath(path: string) {
                   :error="readableIdError"
                   @update:model-value="onReadableIdInput"
                 />
-                <VisibilityField v-model="form.isPubliclyReadable" />
-                <OwnerField
-                  v-if="sheet?.canChangeOwner"
-                  v-model="form.ownerGroupId"
-                  :original="sheet?.ownerGroupId ?? null"
-                />
                 <UFormField
                   v-if="canSetDefault"
                   name="isDefault"
@@ -614,6 +608,12 @@ async function insertPath(path: string) {
                     :items="displayOptions"
                   />
                 </UFormField>
+                <OwnerField
+                  v-if="sheet?.canChangeOwner"
+                  v-model="form.ownerGroupId"
+                  :original="sheet?.ownerGroupId ?? null"
+                />
+                <VisibilityField v-model="form.isPubliclyReadable" />
               </div>
             </template>
           </UTabs>

@@ -32,24 +32,12 @@ interface ContentTypeItem {
   canEdit: boolean;
 }
 
-const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<SheetItem>("/api/sheet", loggedIn, { bySystem: true });
 const { items: sheets, status, refresh } = list;
 
 const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   { default: () => [] },
-);
-
-const { systemLabel } = useSystems();
-const contentTypeOptions = computed(() =>
-  contentTypes.value.map((item) =>
-    resourceOption(item.id, {
-      name: item.name,
-      systemName: systemLabel(item.systemId),
-      source: item.source,
-    }),
-  ),
 );
 
 function contentTypeName(contentTypeId: string) {
@@ -80,9 +68,17 @@ const form = reactive({
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
+  systemId: "",
   contentTypeId: "",
   isDefault: false,
 });
+const {
+  systemOptions,
+  typeOptions,
+  selectStartingSystem,
+  selectType,
+  onSystemChange,
+} = useSystemTypePicker(form, contentTypes);
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const idAvailability = useResourceIdAvailability(form, "sheet");
 
@@ -107,11 +103,7 @@ watch(
 );
 
 function openCreate(contentTypeId?: string) {
-  const selectedType =
-    contentTypes.value.find((item) => item.id === contentTypeId) ??
-    contentTypes.value.find((item) => item.systemId === currentSystemId.value) ??
-    contentTypes.value[0];
-  if (!selectedType) return;
+  if (!contentTypes.value.length) return;
 
   formError.value = "";
   replaceDefault.value = undefined;
@@ -119,7 +111,7 @@ function openCreate(contentTypeId?: string) {
   form.name = "";
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
-  form.contentTypeId = selectedType.id;
+  if (!contentTypeId || !selectType(contentTypeId)) selectStartingSystem();
   form.isDefault = false;
   resetReadableIdTouched(false);
   isFormOpen.value = true;
@@ -349,8 +341,18 @@ async function remove() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField v-model="form.ownerGroupId" />
+          <UFormField name="systemId" label="System" required>
+            <USelect
+              :model-value="form.systemId"
+              :items="systemOptions"
+              class="w-full"
+              @update:model-value="onSystemChange"
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
+          </UFormField>
           <UFormField
             name="contentTypeId"
             label="Content Type"
@@ -359,7 +361,7 @@ async function remove() {
           >
             <USelect
               v-model="form.contentTypeId"
-              :items="contentTypeOptions"
+              :items="typeOptions"
               class="w-full"
             >
               <template #item-label="{ item }">
@@ -375,6 +377,8 @@ async function remove() {
           >
             <USwitch v-model="form.isDefault" />
           </UFormField>
+          <OwnerField v-model="form.ownerGroupId" />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <ReplaceDefaultSheetAlert
             v-if="replaceDefault"
             :message="replaceDefault"
