@@ -27,11 +27,19 @@ export async function ensureUserProfile(user: Pick<User, "id" | "name">) {
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const username = `${usernameBase(user.name)}-${randomUUID().slice(0, 8)}`;
-    const [createdProfile] = await database
-      .insert(userProfile)
-      .values({ userId: user.id, username })
-      .onConflictDoNothing()
-      .returning();
+    let createdProfile;
+    try {
+      [createdProfile] = await database
+        .insert(userProfile)
+        .values({ userId: user.id, username })
+        .onConflictDoNothing()
+        .returning();
+    } catch (error) {
+      // A group already has this name as its readable ID: the namespace
+      // trigger's unique violation, which onConflictDoNothing doesn't cover.
+      // Try another random suffix.
+      if (!isUniqueConstraintError(error)) throw error;
+    }
 
     if (createdProfile) return createdProfile;
 
@@ -50,7 +58,14 @@ export async function ensureUserProfile(user: Pick<User, "id" | "name">) {
 // Creates the profile of a user registration just created. If that fails (a
 // username taken since it was checked: 23505), deletes the user again, with
 // its session and account (they cascade), so the email isn't left registered
-// to a user without a profile, then rethrows.
+// to a user without a profile, then rethrows. A failed delete is logged, not
+// thrown, so the caller still sees the insert's error (and answers 409 for a
+// taken username rather than 500).
+//
+// This relies on `signUpEmail` creating a real user. If Better Auth's
+// `requireEmailVerification` is turned on or `autoSignIn` set to false, it
+// answers an existing email with a made-up user instead: the insert then fails
+// its foreign key (23503, not mapped to 409) and the delete matches nothing.
 export async function createProfileOrRemoveUser(userId: string, username: string) {
   const database = useDatabase();
   try {
@@ -60,7 +75,14 @@ export async function createProfileOrRemoveUser(userId: string, username: string
       .returning();
     return profile!;
   } catch (error) {
-    await database.delete(user).where(eq(user.id, userId));
+    try {
+      await database.delete(user).where(eq(user.id, userId));
+    } catch (cleanupError) {
+      console.error(
+        `Could not remove user ${userId} after its profile insert failed`,
+        cleanupError,
+      );
+    }
     throw error;
   }
 }
