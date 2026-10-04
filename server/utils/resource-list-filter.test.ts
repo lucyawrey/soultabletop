@@ -99,6 +99,15 @@ describe("isListed", () => {
       expect(listed(item, edit, "mine")).toBe(true);
     });
 
+    it("includes a limited campaign the user is a member of, in every list", () => {
+      const item = resource({ kind: "campaign" });
+      for (const role of ["player", "gm"] as const) {
+        const ctx = context({ campaignRoles: new Map([[item.id, role]]) });
+        expect(listed(item, ctx, "mine")).toBe(true);
+        expect(listed(item, ctx, undefined)).toBe(true);
+      }
+    });
+
     it("includes a public campaign the user is a member of", () => {
       const item = resource({ kind: "campaign", isPubliclyReadable: true });
       const ctx = context({ campaignRoles: new Map([[item.id, "player"]]) });
@@ -172,7 +181,7 @@ describe("getResourceSource", () => {
     expect(getResourceSource(resource({ ownerUserId: "me" }), false, context())).toBe("you");
   });
 
-  it("says Your Groups for any role, including a system group the viewer is in", () => {
+  it("says Group (yourGroups) for any role, including a system group the viewer is in", () => {
     const ctx = context({ groupRoles: new Map([[PARTY, "member"]]) });
     const owned = resource({ ownerUserId: null, ownerGroupId: PARTY });
     expect(getResourceSource(owned, false, ctx)).toBe("yourGroups");
@@ -210,6 +219,17 @@ describe("getResourceSource", () => {
     const member = context({ campaignRoles: new Map([["camp", "player"]]), grants: [grant] });
     expect(getResourceSource(item, false, member)).toBe("shared");
     expect(getResourceSource(item, false, context({ grants: [grant] }))).toBe("community");
+  });
+
+  it("says Shared for a campaign the viewer is a member of, below Official", () => {
+    const item = resource({ kind: "campaign" });
+    for (const role of ["player", "gm"] as const) {
+      const ctx = context({ campaignRoles: new Map([[item.id, role]]) });
+      expect(getResourceSource(item, false, ctx)).toBe("shared");
+      expect(getResourceSource(item, true, ctx)).toBe("official");
+    }
+    expect(getResourceSource(resource({ kind: "campaign", ownerUserId: "me" }), false,
+      context({ campaignRoles: new Map([[item.id, "gm"]]) }))).toBe("you");
   });
 
   it("gives logged-out viewers only Official and Community", () => {
@@ -293,7 +313,8 @@ function sqlListed(
   const readable =
     viewer.isSiteAdmin ||
     ownedByViewer ||
-    (!item.isAdminHidden && (item.isPubliclyReadable || grantReaches("read")));
+    (!item.isAdminHidden &&
+      (item.isPubliclyReadable || campaignIds().includes(item.id) || grantReaches("read")));
   const stake =
     ownedByViewer ||
     (!item.isAdminHidden && grantReaches("edit")) ||
