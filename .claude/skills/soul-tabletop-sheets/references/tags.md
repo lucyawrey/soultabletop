@@ -8,7 +8,7 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 
 ## Attributes every tag accepts
 
-`Tab` and `RowDetails` are rendered by their parents (`Tabs`, `Table`), so they accept only `class` from this list; `live`, `locked`, and `display` there are an unknown-attribute error.
+`Tab` and `RowDetails` are rendered by their parents (`Tabs`, `Table`), so they accept only `class` and `show` from this list; `live`, `locked`, and `display` there are an unknown-attribute error. `Column` takes no `show` (put it on the `Table`, or use a formula in the column). `Define` takes none of these.
 
 | Attribute | Values | Meaning |
 |---|---|---|
@@ -16,6 +16,7 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 | `live` | bare, `true`, `false` | Fields inside stay editable with Edit off |
 | `locked` | bare, `true`, `false` | Fields inside need their pencil button clicked before editing |
 | `display` | `text` \| `box` | How non-editable fields look: plain value, or their disabled input |
+| `show` | one `{= formula}` or one `{field}` | Shows the tag only when true; false or empty hides it and everything inside |
 
 ## Layout tags
 
@@ -40,23 +41,29 @@ matches `i-<set>-<name>`, for example `i-lucide-sword`. "text" children means te
 
 ## Field tags
 
-All field tags take `field` (req; a path, see SKILL.md), `label`, `hideLabel` (boolean: no visible label; `Column` leaves its header empty; `label=""` does not do this), and `hint`, plus:
+All field tags take `field` (a path, see SKILL.md; required unless the tag has a `formula`), `label`, `hideLabel` (boolean: no visible label; `Column` leaves its header empty; `label=""` does not do this), and `hint`, plus:
 
 | Tag | Extra attributes | Binds | Notes |
 |---|---|---|---|
 | `Field` | none | string, number, boolean, scalar, object, resourceLink, content, array of strings | Input chosen from the schema type |
-| `Text` | `multiline`, `placeholder` | string | |
-| `Number` | `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric) |
-| `Checkbox` | none | boolean | |
+| `Text` | `formula`, `multiline`, `placeholder` | string | `formula` overrides (see below) |
+| `Number` | `formula`, `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric); `formula` overrides |
+| `Checkbox` | `formula` | boolean | `formula` overrides |
 | `Toggle` | none | boolean | On/off switch |
 | `Select` | `options` (req, comma-separated) | string | `options="Small, Medium, Large"` |
 | `Tags` | none | array of strings | |
-| `Tracker` | `max` (req, number >= 1 or one `{path}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"` |
+| `Tracker` | `formula`, `max` (req, number >= 1, one `{path}`, or one `{= formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; `formula` (read-only) computes the current value |
 | `Ref` | none | resourceLink, content | Link to the referenced resource or Content |
-| `Value` | `format` (`plain` \| `signed`) | any value | Never editable |
+| `Value` | `formula`, `format` (`plain` \| `signed`) | any value | Never editable; `formula` (read-only) instead of `field` |
 | `Markdown` | none | string | Formatted long text |
 | `Image` | `alt`, `size` (`sm` \| `md` \| `lg` \| `full`, default md) | string | The string must be an https URL |
-| `Column` | `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class` |
+| `Column` | `formula`, `format` (`plain` \| `signed`), `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class`; `formula` (read-only) is computed per row |
+
+`formula`: read-only on `Value`, `Column`, `Tracker` (instead of `field`; never both). On `Number`, `Text`, and
+`Checkbox` it may stand alone (read-only) or go with `field` (an override: the field's value wins when it has one; the
+computed value is the input's placeholder; a reset button clears the field). Outside `List`/`Table` rows, other
+formulas reading an override's field with nothing stored get its computed value; `{path}` doesn't, `{= path}` does. `live`/`locked` on a tag with a formula
+and no field do nothing (a warning). Other field tags take no `formula`.
 
 Paths the schema does not know (a non-strict content type, or below a free-form `object`) are accepted by every
 field tag, with a warning.
@@ -69,3 +76,9 @@ field tag, with a warning.
 | `Table` | `field` (req), `label` | only `Column` and `RowDetails`; paths inside are relative to each row | array of structs (also content or object items) |
 
 In edit mode a `List` or `Table` gets add, remove, and reorder controls.
+
+## Definitions
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Define` | `name` (req, identifier, not a built-in or reserved name), `params` (comma-separated, at most 8), `formula` (req) | none | Top level or directly inside `Sheet`; renders nothing; called as `name(args)` from any formula; order doesn't matter |

@@ -53,7 +53,7 @@ Asking for parallel work makes the session the coordinator: each feature gets it
 - Characters and Content are both `content` resources, split by the content type's `contentCategory`; use `shared/content-categories.ts` rather than repeating category checks.
 - `ContentFieldSchema` (`shared/content-schema.ts`) and its TypeBox mirror `contentTypeSchemaSchema` (`server/utils/api-schemas.ts`) stay in sync.
 - Code shared by client and server lives in `shared/`; server code imports it with relative paths (drizzle-kit loads the schema without Nuxt aliases).
-- The Sheet system follows `docs/sheet-system.md`; update it when a decision changes.
+- The Sheet system follows `docs/sheet-system.md`; update it when a decision changes. Formulas live in `shared/sheet/formula.ts` (parser, types, limits), `formula-functions.ts` (built-ins), `formula-eval.ts`, and `formula-check.ts`; they are computed at render time, never stored (see docs/sheet-system.md, "Formulas").
 
 ## Conventions
 
