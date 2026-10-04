@@ -14,7 +14,7 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
   - **Campaign players can't read the campaign itself** · bug
     Found by an agent while building readable-ID addressing: `getResourceAccess` doesn't let a campaign member without a grant read the campaign resource, by UUID or readable ID, although My lists campaigns they belong to and the dashboard shows them. Check whether that is intended (the member routes and My list say otherwise), and if not, make members readers through the access rules in code and in `resource-access-sql.ts` together (see "List pages and search" in `.claude/conventions.md`).
     Decided by the user (2026-10-04): every member reads the campaign, and GMs who don't own it can also edit it (not delete it).
-- **Formula additions and Sheet edit-mode fixes** · feature · branch `sheet-formulas-and-fixes`
+- **Formula additions and Sheet edit-mode fixes** · feature · branch `sheet-formulas-and-fixes`, PR #78
   - **A formula function that builds a list** · feature · small
     From the user (2026-10-04): formulas can't build a list today (no list syntax and no function; lists come only from array fields), so `join` and the list functions can't combine separate fields. Add `list(…)` (named to match the `List` tag and the formula docs' "list" wording rather than the schema's `array`; user's decision, 2026-10-04), taking any number of values and returning them as a list: `join(list(speed, flySpeed, swimSpeed), ", ")` gives "30 ft, 20 ft" with the empty one skipped, and `max(list(a, b))`, `sum(list(a, b, c))` work over separate fields. Its items count against the step budget and list limits like other lists. Update `shared/sheet/formula-functions.ts` (reserved name; it's a post-v1 built-in, so `formulaLaterBuiltins`), the checker's types, `docs/sheet-system.md` (Functions), and the Sheets skill.
   - **`Field` takes a formula** · feature · small
@@ -23,11 +23,6 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
     From the Pathfinder 2e test sheet (2026-10-04): a `Column` on a number field with `width="xs"` or `"sm"` shows an empty input (the − and + buttons take all the room); the sheet leaves those columns at auto width.
   - **Sheet content pickers show the content's ID until opened** · bug · small
     From the user (2026-10-03), on `main` too: in edit mode a `content` field's picker (e.g. an inventory Table's item column) shows the referenced content's UUID instead of its name until you pick something. `app/components/sheet/ContentPicker.vue` loads its options only when it opens (`load` on `update:open`), so before that `USelectMenu` has no item for `modelValue` and shows the raw value. The sheet already has the name (view mode shows it, from the content's refs): pass the current ref's name in and include it in `items` until the list loads.
-- **UI polish: groups badge and dashboard cards** · bug · small · branch `ui-polish`
-  - **Group "Official" badge looks off in the groups table** · bug · small
-    The Official `LabelChip` beside the name in the groups table (`app/pages/groups/index.vue`, desktop row and the mobile card) has its layout or spacing wrong (margin, alignment, or wrapping beside the name; user report 2026-10-02, no screenshot yet). Check it at desktop and phone widths against the Official badge in other lists (`SourceBadge`) and fix it to match.
-  - **Dashboard cards aren't all the same height** · bug · small
-    From the user (2026-10-04): cards in a row on the dashboard (`app/pages/index.vue`, `app/components/RecentCard.vue`, and the loading `CardSkeleton.vue`) end at different heights, presumably because their text runs to different lengths. Make each card fill its row's height (e.g. `h-full` on the card, with its footer pushed to the bottom), and check the skeletons match.
 
 # Next up
 
