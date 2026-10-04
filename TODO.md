@@ -25,15 +25,22 @@ The exact order: do these one at a time, top first.
 
 What official systems like Pathfinder 2e and D&D 2024 need from the Sheet system.
 
-- **Pathfinder 2e test sheet with formulas** · chore
-  Step 8 of `.claude/plans/sheet-formulas-build.md`, now that Sheet formulas is merged (#71). Test data exists (user `lucyawrey`, system `pf2e-test`), but its sheet only has inputs for attributes, AC, HP, and quantities: rebuild it with formulas for every derived number, `show` for the Spells tab, and overrides where a player needs them, check it at desktop and phone width, and write the report of what formulas and `show` couldn't express (e.g. no `list(…)`, no way to pick one field from each list item). The report feeds the items below.
-- **Sheet features found missing while building the D&D 2024 sheet** · feature
+- **Sheet features found missing while building the D&D 2024 and Pathfinder 2e sheets** · feature
   Found while building the D&D 2024 character sheet (2026-09-30; the test sheet's files are local only):
   - **Formulas matter most** (built in #71; rebuild the sheet with them to check): every ability modifier, skill bonus, saving throw, passive Perception, spell save DC, and spell attack bonus is typed in by hand. Formulas should cover these cases: a modifier from a score, a bonus from modifier + proficiency bonus by training, and values shown with a sign.
   - **Choice fields in schemas**: a string limited to listed options (size, alignment, skill training, spellcasting ability). Today the options live only in the markup's `Select`, so saved data isn't checked, and the generated sheet shows a plain text input.
   - **Default values in schemas**: e.g. size "Medium", or arrays that start with rows. `defaultContentData` only fills empty values for required fields.
   - **Tables for fixed rows**: `Table` binds only arrays, so a fixed set like the 18 skills (a `struct` of structs) needs one small `Grid` each. E.g. let `Table`/`List` iterate a struct's entries.
   - **Compact checkbox in text display**: a boolean shows "✓ Yes" / "✗ No" under its label; proficiency marks need an icon-only or dot variant.
+  Found while building the Pathfinder 2e test sheet with formulas (2026-10-04; `lucyawrey`'s `pf2e-test` system, characters Test Fighter and Test Cleric). Formulas covered every derived number (proficiency, skills with armor check penalty, saves, AC with a raised shield, class and spell DCs, Strikes with the multiple attack penalty and damage text, max HP, Speed with armor penalties, Bulk and encumbrance). What they and the Sheet tags couldn't do:
+  - **Choice fields again**: every proficiency rank, attribute, and tradition is a `Select` storing lowercase text (`expert`, `wis`), with no way to show a different label (`Expert`, `Wis`) than the stored value; in a `Table` the Lores rank column is a plain text input, since a `Column` can't be a `Select`.
+  - **Tables for fixed rows again**: the 16 skills and 3 saves are hand-written rows (`Stack` of a `Value` and a `Select` each).
+  - **Picking a field from each list item**: no `map`-like function, so `join` can't list item or feat names, and nothing can compare spells known per rank with slots (see the `list(…)` item).
+  - **Conditions with effects**: conditions are free tags; frightened, clumsy, and the like can't feed the numbers they change (a status penalty on checks and DCs). Encumbered's Speed penalty could be computed but isn't.
+  - **Linking strikes to inventory**: a Strike's item bonus and damage dice are typed by hand rather than read from the weapon in the inventory.
+  - **Bug: narrow number columns**: a `Column` on a number field with `width="xs"` or `"sm"` shows an empty input (the − and + buttons take all the room); the sheet leaves those columns at auto width.
+  - **Tables on phones**: a `Table` whose columns are text inputs (Strikes, Spells) squeezes them to a few characters and scrolls sideways at phone width.
+  - **Trackers without a maximum**: a `Tracker` needs a maximum of at least 1, so an empty shield shows "0 / 1"; hiding it with `show` works around it.
 - **Content pickers for arrays in Sheets** · feature · needs decision: the design, after formulas and the Pathfinder 2e test
   From the user (2026-10-02), part of making built-in sheet features cover what custom JavaScript otherwise would: a built-in way to add items, spells, feats, and the like to a content array from a picker (search the content of the array's content type, add a reference or a local copy), so sheet authors don't hand-roll it. Check what `ListAdd` and `ContentPicker` already do first. Design with Opus.
 - **Class and level driven sheet data** · feature · large · needs decision: the whole design, after formulas and the Pathfinder 2e test
