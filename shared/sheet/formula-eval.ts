@@ -166,14 +166,16 @@ function callBuiltin(
   fn: FormulaFunction,
   node: Extract<FormulaNode, { type: "call" }>,
   env: FormulaEnv,
+  evaluated?: FormulaValue[],
 ): FormulaValue {
   if (node.args.length < fn.minArgs || node.args.length > fn.maxArgs) {
     return new FormulaError("arity", `${fn.name} was called with the wrong number of arguments`);
   }
   if (fn.eager) {
     const args: FormulaValue[] = [];
-    for (const arg of node.args) {
-      const value = evaluateNode(arg, env);
+    for (const [index, arg] of node.args.entries()) {
+      // Arguments a definition lookup already evaluated aren't computed twice.
+      const value = evaluated ? evaluated[index]! : evaluateNode(arg, env);
       if (isFormulaError(value)) return value;
       // Walking a list costs a step per item, like the per-item functions.
       if (fn.walksLists && Array.isArray(value)) {
@@ -239,7 +241,7 @@ function evaluateCall(
   }
   const result = env.call(node.name, args);
   if (result !== undefined) return result;
-  if (builtin) return callBuiltin(builtin, node, env);
+  if (builtin) return callBuiltin(builtin, node, env, args);
   return new FormulaError("unknown-function", `There's no function named ${node.name}`);
 }
 

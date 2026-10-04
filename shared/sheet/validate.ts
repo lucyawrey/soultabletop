@@ -263,6 +263,13 @@ const formulaResults: Record<string, { kinds: readonly FormulaBaseKind[]; wanted
   Column: { kinds: ["number", "string", "boolean"], wanted: "a single value" },
 };
 
+// The tag a `Field` with a formula acts as, by its field's schema type.
+const fieldOverrideTags: Record<string, string> = {
+  string: "Text",
+  number: "Number",
+  boolean: "Checkbox",
+};
+
 // Plain attribute text, or undefined if it contains {path} interpolation.
 function plainText(parts: TextPart[]) {
   if (parts.some((part) => typeof part !== "string")) return undefined;
@@ -836,6 +843,15 @@ class Validator {
 
     if (spec.category === "field") {
       const hasField = typeof attrs.field === "string";
+      // `Field` has no input of its own to compute without a field: its type
+      // picks the input.
+      if (spec.name === "Field" && formula && !hasField) {
+        if (attrNamed(node, "field")) return broken(`<${spec.name}> has errors`);
+        return invalid(
+          "missing-attribute",
+          "<Field> with a formula needs a field attribute; use <Value> to show a computed value",
+        );
+      }
       if (!hasField && !formula) {
         // A field attribute that was written but is invalid is reported already.
         if (attrNamed(node, "field")) return broken(`<${spec.name}> has errors`);
@@ -900,7 +916,19 @@ class Validator {
       if (spec.itemScope) childScope = this.itemShape(shape);
     }
 
-    if (formula && !this.formulaResultFits(spec, formula, binding)) {
+    // `Field` with a formula acts as the tag matching its field's type.
+    let overrideTag = spec.name;
+    if (spec.name === "Field" && formula) {
+      overrideTag = fieldOverrideTags[binding?.field?.type ?? ""] ?? "";
+      if (!overrideTag) {
+        return invalid(
+          "invalid-attribute",
+          `<Field> takes a formula only on a text, number, or true/false field, but "${attrs.field as string}" ${binding?.field ? `is ${describeField(binding.field)}` : "has no known type"}`,
+        );
+      }
+    }
+
+    if (formula && !this.formulaResultFits(spec, formula, binding, overrideTag)) {
       return broken(`<${spec.name}> has errors`);
     }
     // Inside a List or Table row the formula reads the row, so only top-level
@@ -909,7 +937,7 @@ class Validator {
       const key = binding.path.segments.join(".");
       const existing = this.computedFields.get(key);
       if (!existing) {
-        this.computedFields.set(key, { tag: spec.name, ast: formula.ast, source: formula.source, loc: node.loc });
+        this.computedFields.set(key, { tag: overrideTag, ast: formula.ast, source: formula.source, loc: node.loc });
       } else if (!sameFormula(existing.ast, formula.ast)) {
         this.error(
           "computed-field-conflict",
@@ -940,7 +968,12 @@ class Validator {
 
   // Whether a field tag's formula gives what the tag (and its field, for
   // overrides) can show. Reports it if not.
-  private formulaResultFits(spec: TagSpec, formula: CompiledFormula, binding?: Binding) {
+  private formulaResultFits(
+    spec: TagSpec,
+    formula: CompiledFormula,
+    binding?: Binding,
+    tag = spec.name,
+  ) {
     const fail = (message: string) => {
       this.error("formula-result-type", message, formula.loc);
       return false;
@@ -950,7 +983,7 @@ class Validator {
         `The formula gives ${describeType(formula.type)}; <${spec.name}> shows a single value (use sum, count, or join)`,
       );
     }
-    const expected = formulaResults[spec.name];
+    const expected = formulaResults[tag];
     if (expected && !couldBe(formula.type, expected.kinds)) {
       return fail(`<${spec.name}>'s formula must give ${expected.wanted}, but it gives ${describeType(formula.type)}`);
     }

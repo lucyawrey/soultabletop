@@ -9,6 +9,9 @@ import type { ResourceOptionItem } from "~/utils/resource-option";
 const props = defineProps<{
   contentTypeId: string;
   modelValue?: string;
+  // The current value's name, shown until the list loads (the options are only
+  // fetched when the picker opens).
+  currentName?: string;
   placeholder?: string;
 }>();
 const emit = defineEmits<{ pick: [id: string, ref: SheetRef] }>();
@@ -36,14 +39,22 @@ async function load(open: boolean) {
   }
 }
 
-const items = computed(() =>
-  options.value.map((item) =>
+const items = computed(() => {
+  const list = options.value.map((item) =>
     resourceOption(item.id, {
       name: item.name,
       source: item.source,
     }),
-  ),
-);
+  );
+  // Without an item for the current value the menu would show its raw ID.
+  if (
+    props.modelValue &&
+    props.currentName &&
+    !list.some((item) => item.value === props.modelValue)
+  )
+    list.unshift(resourceOption(props.modelValue, { name: props.currentName }));
+  return list;
+});
 
 // The list leaves out each content's data, so the picked one's is loaded here.
 const toast = useToast();

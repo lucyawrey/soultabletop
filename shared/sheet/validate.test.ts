@@ -500,12 +500,26 @@ describe("formulas", () => {
   });
 
   it("takes formula only on the tags that support it", () => {
-    for (const tag of ["Image", "Ref", "Markdown", "Select", "Tags", "Toggle", "Field"]) {
+    for (const tag of ["Image", "Ref", "Markdown", "Select", "Tags", "Toggle"]) {
       expect(errorCodes(`<${tag} field="notes" formula="1" />`), tag).toContain("unknown-attribute");
     }
     expect(errorCodes('<List field="tags" formula="1"><Value field="." /></List>')).toContain(
       "unknown-attribute",
     );
+  });
+
+  it("lets Field take a formula on a text, number, or true/false field", () => {
+    expect(messages('<Field field="hp" formula="hpMax" />')).toEqual([]);
+    expect(messages('<Field field="notes" formula="concat(\'x\', hp)" />')).toEqual([]);
+    expect(messages('<Field field="alive" formula="hp > 0" />')).toEqual([]);
+    expect(messages('<Field field="hp" formula="notes" />')).toEqual([
+      "error formula-result-type: <Field>'s formula must give a number, but it gives text",
+    ]);
+    for (const field of ["class", "link", "extra", "misc"])
+      expect(errorCodes(`<Field field="${field}" formula="1" />`), field).toContain("invalid-attribute");
+    expect(errorCodes('<Field formula="1" />')).toEqual(["missing-attribute"]);
+    const { computedFields } = compile('<Field field="hpMax" formula="10" />');
+    expect(computedFields.get("hpMax")).toMatchObject({ tag: "Number", source: "10" });
   });
 
   it("checks that the result fits the tag and the field", () => {

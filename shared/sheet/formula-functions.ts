@@ -3,6 +3,7 @@
 // implementation, and the text the editor shows. See formula.ts.
 
 import {
+  arrayOf,
   couldBe,
   describeType,
   describeValue,
@@ -392,6 +393,24 @@ const functionList: FormulaFunction[] = [
     reduce: (values) => values.every((value) => value === true),
   }),
   {
+    name: "list",
+    minArgs: 0,
+    maxArgs: formulaLimits.maxArgs,
+    signature: "list(a, b, …)",
+    description:
+      "The values as a list, to combine separate fields: join(list(a, b), ', '), sum(list(a, b)); empty values stay in the list; join skips them, and so do sum, min and max",
+    result: (types) => arrayOf(types.length ? unionOf(...types) : formulaTypes.any),
+    check: (types, problems) =>
+      expect(types, problems, "list", ["number", "string", "boolean"], "single values"),
+    eager: (args) => {
+      for (const value of args) {
+        if (value !== null && (Array.isArray(value) || typeof value === "object"))
+          return typeError("list", "single values", value);
+      }
+      return args;
+    },
+  },
+  {
     name: "length",
     minArgs: 1,
     maxArgs: 1,
@@ -448,7 +467,7 @@ const functionList: FormulaFunction[] = [
     maxArgs: 2,
     walksLists: true,
     signature: "join(list, separator)",
-    description: "Joins a list of text or numbers with separator between them, skipping empty items",
+    description: "Joins a list of text or numbers with separator between them, skipping empty items (nothing and empty text)",
     result: () => formulaTypes.string,
     check: (types, problems) => {
       const [list, separator] = types;
@@ -466,7 +485,7 @@ const functionList: FormulaFunction[] = [
       let first = true;
       for (const item of list as unknown[]) {
         const value = toFormulaValue(item);
-        if (value === null) continue;
+        if (value === null || value === "") continue;
         const part = textOf("join", value, false);
         if (isFormulaError(part)) return part;
         text += first ? part : (separator ?? "") + part;
@@ -597,7 +616,7 @@ export const diceNotAvailable = "Dice rolls aren't available here yet";
 // Built-in functions added after the first version. A sheet's `<Define>` with
 // one of these names keeps working (it wins in that sheet, with a warning);
 // add new built-ins here, never to formulaReservedNames.
-export const formulaLaterBuiltins: readonly string[] = [];
+export const formulaLaterBuiltins: readonly string[] = ["list"];
 
 // Names a `<Define>` can't use.
 export const formulaReservedNames: ReadonlySet<string> = new Set([
