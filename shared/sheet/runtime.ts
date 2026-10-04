@@ -2,21 +2,52 @@
 // against the data (following references into loaded Content), and formatting
 // values as text. Framework-free so it can be unit-tested.
 
-import type { ContentFieldSchema, ResourceLinkKind } from "../content-schema";
-import type { TextPart } from "./parser";
 import {
-  parseSheetPath,
-  type SheetPath,
+  isReservedKey,
+  type ContentFieldSchema,
+  type ResourceLinkKind,
+} from "../content-schema";
+import {
+  FormulaError,
+  formulaLimits,
+  isFormulaError,
+  type FormulaNode,
+  type FormulaValue,
+} from "./formula";
+import {
+  callFormulaDefinition,
+  evaluateFormula,
+  evaluateFormulaNode,
+  formulaBudget,
+  type FormulaEnv,
+} from "./formula-eval";
+import { formatFormulaNumber } from "./formula-functions";
+import { isFormulaPart, parseSheetPath, type TextPart } from "./parser";
+import {
+  findRef,
+  isRecord,
+  resolveSheetPath,
+  type SheetRefs,
+  type SheetScope,
+} from "./scope";
+import {
+  isCompiledFormula,
+  type AttrValue,
+  type SheetComputedField,
+  type SheetDefinition,
   type SheetSchemas,
 } from "./validate";
 
-export interface SheetRef {
-  name: string;
-  contentTypeId: string;
-  data: Record<string, unknown>;
-}
-
-export type SheetRefs = Record<string, SheetRef>;
+export {
+  findRef,
+  itemScopes,
+  ownProperty,
+  refRecord,
+  resolveSheetPath,
+  type SheetRef,
+  type SheetRefs,
+  type SheetScope,
+} from "./scope";
 
 // A resource a `resourceLink` field points at, as loaded for the viewer.
 export interface SheetLink {
@@ -39,68 +70,6 @@ export function resourceLinkPath(id: string, link: SheetLink) {
   return `${RESOURCE_PAGES[link.kind]}/${id}`;
 }
 
-// A value in the rendered data, and where it lives. `path` is its location in
-// the Content's own data (for editing), or null when it was reached through a
-// reference to other Content, which is read-only here.
-export interface SheetScope {
-  value: unknown;
-  path: (string | number)[] | null;
-  // A reference on the way was not loaded (missing, or not readable).
-  unavailable?: boolean;
-}
-
-const indexPattern = /^\d+$/;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-// Referenced Content as the record a Sheet sees: its data plus `name`.
-export function refRecord(ref: SheetRef): Record<string, unknown> {
-  return { ...ref.data, name: ref.name };
-}
-
-export function resolveSheetPath(
-  path: SheetPath,
-  root: SheetScope,
-  scope: SheetScope,
-  refs: SheetRefs,
-): SheetScope {
-  let current = path.absolute ? root : scope;
-  for (const segment of path.segments) {
-    if (current.unavailable) return current;
-    let container = current.value;
-    let containerPath = current.path;
-    // A string where fields are expected is a reference to other Content.
-    if (typeof container === "string") {
-      const ref = refs[container];
-      if (!ref) return { value: undefined, path: null, unavailable: true };
-      container = refRecord(ref);
-      containerPath = null;
-    }
-    const key = Array.isArray(container) && indexPattern.test(segment)
-      ? Number(segment)
-      : segment;
-    const value =
-      Array.isArray(container) && typeof key === "number"
-        ? container[key]
-        : isRecord(container)
-          ? container[segment]
-          : undefined;
-    current = { value, path: containerPath ? [...containerPath, key] : null };
-  }
-  return current;
-}
-
-// Each item of an array value, as the scope for a List or Table row.
-export function itemScopes(list: SheetScope): SheetScope[] {
-  if (!Array.isArray(list.value)) return [];
-  return list.value.map((value, index) => ({
-    value,
-    path: list.path ? [...list.path, index] : null,
-  }));
-}
-
 export function formatSheetValue(
   value: unknown,
   refs: SheetRefs,
@@ -111,7 +80,7 @@ export function formatSheetValue(
     return format === "signed" && value > 0 ? `+${value}` : String(value);
   }
   if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (typeof value === "string") return refs[value]?.name ?? value;
+  if (typeof value === "string") return findRef(refs, value)?.name ?? value;
   if (Array.isArray(value))
     return value
       .map((item) => formatSheetValue(item, refs, format))
@@ -123,23 +92,30 @@ export function formatSheetValue(
 
 // Writes `value` at `path` inside `root`, creating missing objects and arrays
 // on the way (an array when the next key is a number). Mutates `root`.
+// `undefined` removes the key (an override going back to automatic). Writes
+// nothing if the path uses a reserved key, and never follows inherited
+// properties.
 export function setSheetValue(
   root: Record<string, unknown>,
   path: (string | number)[],
   value: unknown,
 ) {
   if (!path.length) return;
+  if (path.some((key) => typeof key === "string" && isReservedKey(key))) return;
   let container: Record<string | number, unknown> = root;
   for (let index = 0; index < path.length - 1; index += 1) {
     const key = path[index]!;
-    let next = container[key];
+    let next = Object.hasOwn(container, key) ? container[key] : undefined;
     if (typeof next !== "object" || next === null) {
       next = typeof path[index + 1] === "number" ? [] : {};
       container[key] = next;
     }
     container = next as Record<string | number, unknown>;
   }
-  container[path.at(-1)!] = value;
+  const last = path.at(-1)!;
+  // `undefined` removes the key, so the saved data has no trace of it.
+  if (value === undefined && !Array.isArray(container)) Reflect.deleteProperty(container, last);
+  else container[last] = value;
 }
 
 // A starting value for a new field or List item: empty values, with required
@@ -180,20 +156,197 @@ export function defaultSheetValue(
   }
 }
 
+// The sheet's `<Define>`s, for formulas that call them.
+export interface SheetFormulaDefinitions {
+  definitions: ReadonlyMap<string, SheetDefinition>;
+  // Steps per evaluation (ValidationResult.stepBudget); maxSteps if missing.
+  stepBudget?: number;
+  // The value of a definition without parameters, if it is cached (the
+  // renderer computes each once).
+  cached?: (name: string) => FormulaValue | undefined;
+  // Override fields at the top level by path (ValidationResult.computedFields):
+  // a formula that reads one with nothing stored gets its computed value.
+  computedFields?: ReadonlyMap<string, SheetComputedField>;
+}
+
+const noDefinitions: SheetFormulaDefinitions = { definitions: new Map() };
+
+function formulaEnv(
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions,
+): FormulaEnv {
+  return {
+    root,
+    scope,
+    refs,
+    budget: { steps: formulas.stepBudget ?? formulaBudget().steps },
+    call(name, args) {
+      const definition = formulas.definitions.get(name);
+      if (!definition) return undefined;
+      if (definition.broken || !definition.ast) {
+        return new FormulaError("definition", `${name} has errors; fix its <Define>`);
+      }
+      // Not inside a computed field: a cached value computed from that field
+      // could be the one being computed, and the cycle would go unnoticed.
+      if (!definition.params.length && !this.computing?.size) {
+        const cached = formulas.cached?.(name);
+        if (cached !== undefined) return cached;
+      }
+      return callFormulaDefinition({ params: definition.params, ast: definition.ast }, args, this);
+    },
+    computedField(path, stored, env) {
+      const field = formulas.computedFields?.get(path.join("."));
+      if (!field || !sheetOverride(field.tag, stored, null).automatic) return undefined;
+      const key = path.join(".");
+      if (env.computing?.has(key)) {
+        return new FormulaError("formula-cycle", `${key} is computed from itself`);
+      }
+      const depth = env.depth ?? 0;
+      if (depth >= formulaLimits.maxCallDepth) {
+        return new FormulaError(
+          "too-deep",
+          `Computed values depend on each other more than ${formulaLimits.maxCallDepth} levels deep`,
+        );
+      }
+      return evaluateFormulaNode(field.ast, {
+        ...env,
+        scope: root,
+        params: undefined,
+        depth: depth + 1,
+        computing: new Set([...(env.computing ?? []), key]),
+      });
+    },
+  };
+}
+
+// A formula's value in `scope`. Never throws.
+export function evaluateSheetFormula(
+  ast: FormulaNode,
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
+): FormulaValue {
+  return evaluateFormula(ast, formulaEnv(root, scope, refs, formulas));
+}
+
+// The value of a definition without parameters, as calls see it (it may be a
+// list). Never throws.
+export function evaluateSheetDefinition(
+  name: string,
+  root: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions,
+): FormulaValue {
+  const env = formulaEnv(root, root, refs, {
+    definitions: formulas.definitions,
+    stepBudget: formulas.stepBudget,
+    computedFields: formulas.computedFields,
+  });
+  try {
+    return env.call(name, []) ?? null;
+  } catch {
+    return new FormulaError("internal", "This formula couldn't be computed");
+  }
+}
+
+// One piece of rendered text; `error` is set where a formula failed (its
+// text is "—").
+export interface SheetTextSegment {
+  text: string;
+  error?: string;
+}
+
+export function sheetTextSegments(
+  parts: TextPart[],
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
+): SheetTextSegment[] {
+  return parts.map((part) => {
+    if (typeof part === "string") return { text: part };
+    if (isFormulaPart(part)) {
+      if (!part.ast) return { text: "—", error: "This formula has errors" };
+      const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas);
+      if (isFormulaError(value)) return { text: "—", error: value.message };
+      return { text: formatFormulaValue(value, refs) };
+    }
+    return {
+      text: formatSheetValue(
+        resolveSheetPath(parseSheetPath(part.path), root, scope, refs).value,
+        refs,
+      ),
+    };
+  });
+}
+
 export function interpolateSheetText(
   parts: TextPart[],
   root: SheetScope,
   scope: SheetScope,
   refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
 ): string {
-  return parts
-    .map((part) =>
-      typeof part === "string"
-        ? part
-        : formatSheetValue(
-            resolveSheetPath(parseSheetPath(part.path), root, scope, refs).value,
-            refs,
-          ),
-    )
+  return sheetTextSegments(parts, root, scope, refs, formulas)
+    .map((segment) => segment.text)
     .join("");
+}
+
+// A formula value as text: numbers without floating-point noise, references
+// as their names. Errors show as an empty string; callers show "—".
+export function formatFormulaValue(
+  value: FormulaValue,
+  refs: SheetRefs,
+  format: "plain" | "signed" = "plain",
+): string {
+  if (isFormulaError(value)) return "";
+  if (typeof value === "number") {
+    const text = formatFormulaNumber(value);
+    return format === "signed" && value > 0 ? `+${text}` : text;
+  }
+  return formatSheetValue(value, refs, format);
+}
+
+// Whether a tag with `show` is shown: true shows it, false or nothing hides
+// it. A formula that fails (or a value that isn't true or false) shows the
+// tag, so a typo never hides content, with the problem in `error`.
+export function sheetCondition(
+  condition: AttrValue | undefined,
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
+): { shown: boolean; error?: string } {
+  if (condition === undefined) return { shown: true };
+  let value: FormulaValue;
+  if (isCompiledFormula(condition)) {
+    value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas);
+  } else if (typeof condition === "object" && "path" in condition) {
+    const resolved = resolveSheetPath(parseSheetPath(condition.path), root, scope, refs);
+    value = resolved.unavailable ? null : (resolved.value as FormulaValue);
+  } else {
+    return { shown: true };
+  }
+  if (isFormulaError(value)) return { shown: true, error: value.message };
+  if (value === true) return { shown: true };
+  if (value === false || value === null || value === undefined) return { shown: false };
+  return { shown: true, error: "show needs true or false" };
+}
+
+// An override field (a field tag with both `field` and `formula`): with no
+// stored value (missing, null, or empty text on a Text tag) it is automatic
+// and shows the computed value; otherwise the stored value wins.
+export function sheetOverride(
+  tag: string,
+  stored: unknown,
+  computed: FormulaValue | undefined,
+): { automatic: boolean; value: unknown } {
+  const automatic =
+    computed !== undefined &&
+    (stored === undefined || stored === null || (tag === "Text" && stored === ""));
+  if (!automatic) return { automatic, value: stored };
+  return { automatic, value: isFormulaError(computed) ? undefined : computed };
 }

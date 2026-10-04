@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { autocompletion, type CompletionContext } from "@codemirror/autocomplete";
+import {
+  autocompletion,
+  type Completion,
+  type CompletionContext,
+} from "@codemirror/autocomplete";
 import { css as cssLanguage } from "@codemirror/lang-css";
 import { json, jsonParseLinter } from "@codemirror/lang-json";
 import { xml, xmlLanguage } from "@codemirror/lang-xml";
@@ -10,10 +14,23 @@ import {
   setDiagnostics,
   type Diagnostic,
 } from "@codemirror/lint";
-import { EditorState, type Text } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorState, RangeSetBuilder, StateEffect, type Text } from "@codemirror/state";
+import {
+  Decoration,
+  EditorView,
+  ViewPlugin,
+  type DecorationSet,
+  type ViewUpdate,
+} from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
+import { formulaReservedWords } from "#shared/sheet/formula";
+import { formulaFunctions, formulaLaterBuiltins } from "#shared/sheet/formula-functions";
+import {
+  formulaHighlights,
+  markupFormulaRanges,
+  type MarkupFormulaRange,
+} from "#shared/sheet/editor";
 import type { Position, SheetDiagnostic } from "#shared/sheet/parser";
 import { commonAttrsFor, sheetTags } from "#shared/sheet/registry";
 
@@ -27,8 +44,10 @@ const props = defineProps<{
   // Sheet markup/CSS problems to show (JSON is checked by CodeMirror).
   diagnostics?: SheetDiagnostic[];
   readonly?: boolean;
-  // Paths offered inside field="…" and {…} (markup only).
+  // Paths offered inside field="…", {…}, and formulas (markup only).
   fieldPaths?: string[];
+  // The sheet's <Define>s, offered and colored in formulas (markup only).
+  formulaDefinitions?: { name: string; params: string[] }[];
   label: string;
 }>();
 const emit = defineEmits<{ "update:modelValue": [value: string] }>();
@@ -61,13 +80,8 @@ function markupExtensions() {
     ),
   }));
 
-  // Field paths inside field="…" / max="{…}" / text {…}.
-  const fieldPathSource = (context: CompletionContext) => {
-    const match =
-      context.matchBefore(/field\s*=\s*["'][\w./]*$/) ??
-      context.matchBefore(/\{[\w./]*$/);
-    if (!match) return null;
-    const typed = match.text.match(/[\w./]*$/)![0];
+  // Paths with List item paths also offered by their tail.
+  const pathOptions = () => {
     const paths = new Set<string>();
     for (const path of props.fieldPaths ?? []) {
       // Paths inside Lists are relative to the item: offer their tail too.
@@ -75,18 +89,116 @@ function markupExtensions() {
       if (!path.includes("[]")) paths.add(path);
       if (tail) paths.add(tail);
     }
+    return [...paths];
+  };
+
+  // Inside a formula: paths, built-in functions, the sheet's definitions, and
+  // (in a <Define>) its parameters.
+  const formulaSource = (context: CompletionContext) => {
+    const range = formulaRangeAt(context.state.doc.toString(), context.pos);
+    if (!range) return null;
+    const match = context.matchBefore(/\/?[\w.]*$/);
+    if (!match || (match.from === match.to && !context.explicit)) return null;
+    const typed = match.text;
+    const options: Completion[] = pathOptions().map((path) => ({
+      label: typed.startsWith("/") ? `/${path}` : path,
+      type: "variable",
+    }));
+    if (!typed.includes(".") && !typed.startsWith("/")) {
+      const definitions = props.formulaDefinitions ?? [];
+      for (const fn of formulaFunctions.values()) {
+        if (formulaLaterBuiltins.includes(fn.name) && definitions.some((item) => item.name === fn.name))
+          continue;
+        options.push({
+          label: fn.name,
+          type: "function",
+          detail: fn.signature,
+          info: fn.description,
+          apply: `${fn.name}(`,
+          boost: 1,
+        });
+      }
+      for (const definition of definitions) {
+        options.push({
+          label: definition.name,
+          type: "method",
+          detail: `${definition.name}(${definition.params.join(", ")}) · this sheet`,
+          apply: `${definition.name}(`,
+          boost: 2,
+        });
+      }
+      for (const param of range.params) {
+        options.push({ label: param, type: "variable", detail: "parameter", boost: 3 });
+      }
+      for (const word of formulaReservedWords) options.push({ label: word, type: "keyword" });
+    }
+    return { from: match.from, options, validFor: /^\/?[\w.]*$/ };
+  };
+
+  // Field paths inside field="…" / max="{…}" / text {…}.
+  const fieldPathSource = (context: CompletionContext) => {
+    const match =
+      context.matchBefore(/field\s*=\s*["'][\w./]*$/) ??
+      context.matchBefore(/\{[\w./]*$/);
+    if (!match) return null;
+    const typed = match.text.match(/[\w./]*$/)![0];
     return {
       from: match.to - typed.length,
-      options: [...paths].map((path) => ({ label: path, type: "variable" })),
+      options: pathOptions().map((path) => ({ label: path, type: "variable" })),
       validFor: /^[\w./]*$/,
     };
   };
 
   return [
     xml({ elements, autoCloseTags: true }),
+    xmlLanguage.data.of({ autocomplete: formulaSource }),
     xmlLanguage.data.of({ autocomplete: fieldPathSource }),
+    formulaColors,
   ];
 }
+
+// The formula the cursor is in, if any.
+function formulaRangeAt(doc: string, pos: number): MarkupFormulaRange | undefined {
+  return markupFormulaRanges(doc).find((range) => range.from <= pos && pos <= range.to);
+}
+
+// Colors built-in functions, the sheet's definitions, and parameters in
+// formulas. Recomputed on edits and when the definitions change.
+const refreshFormulaColors = StateEffect.define<null>();
+const formulaMarks = {
+  builtin: Decoration.mark({ class: "cm-formula-builtin" }),
+  define: Decoration.mark({ class: "cm-formula-define" }),
+  param: Decoration.mark({ class: "cm-formula-param" }),
+};
+function formulaDecorations(view: EditorView): DecorationSet {
+  const doc = view.state.doc.toString();
+  const definitions = new Set((props.formulaDefinitions ?? []).map((item) => item.name));
+  const builder = new RangeSetBuilder<Decoration>();
+  for (const range of markupFormulaRanges(doc)) {
+    const source = doc.slice(range.from, range.to);
+    for (const mark of formulaHighlights(source, range.params, definitions)) {
+      builder.add(range.from + mark.from, range.from + mark.to, formulaMarks[mark.kind]);
+    }
+  }
+  return builder.finish();
+}
+const formulaColors = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet;
+
+    constructor(view: EditorView) {
+      this.decorations = formulaDecorations(view);
+    }
+
+    update(update: ViewUpdate) {
+      const refreshed = update.transactions.some((transaction) =>
+        transaction.effects.some((effect) => effect.is(refreshFormulaColors)),
+      );
+      if (update.docChanged || refreshed) this.decorations = formulaDecorations(update.view);
+    }
+  },
+  { decorations: (plugin) => plugin.decorations },
+);
 
 function toOffset(doc: Text, position: Position) {
   const line = doc.line(Math.min(Math.max(position.line, 1), doc.lines));
@@ -131,6 +243,12 @@ const theme = EditorView.theme({
     color: "var(--ui-text)",
     border: "1px solid var(--ui-border)",
   },
+  // Names in formulas, over the attribute value color. Same text-safe roles
+  // as the syntax colors below; weight and style keep them apart without
+  // relying on color alone.
+  ".cm-formula-builtin, .cm-formula-builtin *": { color: "var(--ui-secondary)", fontWeight: "600" },
+  ".cm-formula-define, .cm-formula-define *": { color: "var(--ui-primary)", fontWeight: "600" },
+  ".cm-formula-param, .cm-formula-param *": { color: "var(--ui-info)", fontStyle: "italic" },
 });
 
 // Syntax colors from the theme's text-safe roles (each at least 4.5:1 on the
@@ -195,6 +313,11 @@ watch(
     if (!view || value === view.state.doc.toString()) return;
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
   },
+);
+
+watch(
+  () => props.formulaDefinitions,
+  () => view?.dispatch({ effects: refreshFormulaColors.of(null) }),
 );
 
 watch(

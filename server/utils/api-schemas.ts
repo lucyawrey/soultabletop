@@ -81,7 +81,12 @@ export const resourcePatchSchema = Type.Partial(
   }),
 );
 
-const fieldKeySchema = Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" });
+// Mirrors `fieldKeyPattern` and `isReservedKey` in shared/content-schema.ts.
+// Type.Record doesn't enforce key patterns (it has no additionalProperties
+// rule), so `assertFieldKeys` checks keys on save with a clearer message.
+const fieldKeySchema = Type.String({
+  pattern: "^(?!(?:__proto__|constructor|prototype)$)[A-Za-z_][A-Za-z0-9_]*$",
+});
 
 const fieldMeta = {
   required: Type.Optional(Type.Boolean()),

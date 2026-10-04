@@ -6,7 +6,7 @@ type Color = "primary" | "secondary" | "success" | "info" | "warning" | "error" 
 const props = defineProps<{ node: ValidatedElement }>();
 
 const attrText = useSheetAttrText();
-const text = useSheetChildText(() => props.node);
+const segments = useSheetChildSegments(() => props.node);
 const title = computed(() => attrText(props.node.attrs.title) || undefined);
 const color = computed(() => (props.node.attrs.color as Color | undefined) ?? "info");
 const icon = computed(() => props.node.attrs.icon as string | undefined);
@@ -19,6 +19,9 @@ const icon = computed(() => props.node.attrs.icon as string | undefined);
     variant="subtle"
     :icon="icon"
     :title="title"
-    :description="text || undefined"
-  />
+  >
+    <template v-if="segments.length" #description>
+      <SheetInlineText :segments="segments" />
+    </template>
+  </UAlert>
 </template>
