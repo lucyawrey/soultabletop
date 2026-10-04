@@ -7,7 +7,7 @@ Quick, rough ideas go here, in any form, without a tier. An agent goes through t
 # In progress
 
 - **Sheet formulas, with conditional display (and Sheet path hardening)** · feature · large
-  Built on branch `sheet-formulas` (worktree `../soultabletop-worktrees/sheet-formulas`) from `.claude/plans/sheet-formulas-build.md`, steps 0–7 committed; PR not opened yet (draft description: `.claude/plans/sheet-formulas-pr.md`). After the PR: the Pathfinder 2e test sheet (step 8 there).
+  Built on branch `sheet-formulas` (worktree `../soultabletop-worktrees/sheet-formulas`) from `.claude/plans/sheet-formulas-build.md`, steps 0–7 committed; PR #71 open (Tier B, awaiting the user's check and merge). After the PR: the Pathfinder 2e test sheet (step 8 there).
 
 # Next up
 
