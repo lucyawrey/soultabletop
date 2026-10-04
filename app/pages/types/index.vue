@@ -8,6 +8,7 @@ import {
 } from "~/utils/api-error";
 import {
   CONTENT_CATEGORY_LABELS,
+  CONTENT_CATEGORY_MENU_ORDER,
   type ContentCategory,
 } from "#shared/content-categories";
 
@@ -31,9 +32,10 @@ interface ContentTypeItem {
   isPubliclyReadable: boolean;
 }
 
-const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
-  ([value, label]) => ({ label, value }),
-);
+const categoryOptions = CONTENT_CATEGORY_MENU_ORDER.map((value) => ({
+  label: CONTENT_CATEGORY_LABELS[value],
+  value,
+}));
 
 const { systemId: currentSystemId } = useCurrentSystem();
 const list = await useResourceList<ContentTypeItem>("/api/content-type", loggedIn, { bySystem: true });
@@ -355,12 +357,6 @@ async function remove() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField
-            v-if="!editingType || editingType.canChangeOwner"
-            v-model="form.ownerGroupId"
-            :original="editingType ? editingType.ownerGroupId : undefined"
-          />
           <UFormField
             name="systemId"
             label="System"
@@ -407,6 +403,12 @@ async function remove() {
           >
             <USwitch v-model="form.showSheetWarnings" />
           </UFormField>
+          <OwnerField
+            v-if="!editingType || editingType.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="editingType ? editingType.ownerGroupId : undefined"
+          />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"

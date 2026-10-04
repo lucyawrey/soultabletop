@@ -285,12 +285,6 @@ async function remove() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField
-            v-if="!editingCampaign || editingCampaign.canChangeOwner"
-            v-model="form.ownerGroupId"
-            :original="editingCampaign ? editingCampaign.ownerGroupId : undefined"
-          />
           <UFormField name="systemId" label="System" required>
             <USelect
               v-model="form.systemId"
@@ -303,6 +297,12 @@ async function remove() {
               </template>
             </USelect>
           </UFormField>
+          <OwnerField
+            v-if="!editingCampaign || editingCampaign.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="editingCampaign ? editingCampaign.ownerGroupId : undefined"
+          />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"
