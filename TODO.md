@@ -4,6 +4,8 @@ Planned work, most important first within each section: reorder items to reprior
 
 Quick, rough ideas go here, in any form, without a tier. An agent goes through them with the user from time to time: asks what each one means, fills in the details, and moves it into a tier with the usual format.
 
+- concider, system grouped id namespaces (2026-10-03)
+
 # In progress
 
 - **Sheet formulas, with conditional display (and Sheet path hardening)** · feature · large
