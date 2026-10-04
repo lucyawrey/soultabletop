@@ -143,7 +143,7 @@ async function submitForm() {
         <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <NuxtLink
             :to="`/groups/${row.original.id}`"
-            class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
+            class="min-w-0 whitespace-normal wrap-anywhere text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
           >
             {{ row.original.name }}
           </NuxtLink>
