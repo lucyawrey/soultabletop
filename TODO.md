@@ -8,16 +8,18 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
-# Next up
-
-The exact order: do these one at a time, top first.
-
 - **Same field order in every create and edit dialog** · feature
+  Branch `dialog-field-order` (worktree `../soultabletop-worktrees/dialog-field-order`), PR #75 (Tier B), in review. User's order decision (2026-10-04): Name, ID, System, Type, kind-specific fields, Owner, Visibility.
   From the user (2026-10-04): reorder the fields of the create and edit dialogs (campaigns, content types, sheets, characters, content, systems, groups; the `UModal` forms in `app/pages/*/index.vue`, `[id].vue`, and `ContentDetail.vue`) so the same fields sit in the same relative positions in every dialog:
   - **System before type** when creating something that has one: pick the system first, then the type (the type list narrows to that system), so the system field no longer has to sit next to the type. Today the Characters form has only a "Character Type" field, preferring a type in the current system (`app/pages/characters/index.vue`).
   - **The header's system picker prefills the system** (`useCurrentSystem`).
   - **The system's most used content type prefills the type**, within the dialog's category: e.g. picking Pathfinder 2e for a new character selects its most used character type, so it rarely needs changing. "Most used" counts all content of each type in the system across the site, whoever owns it (user's decision, 2026-10-04).
   - **Owner, then Visibility, last** in every dialog.
+
+# Next up
+
+The exact order: do these one at a time, top first.
+
 - **Generated IDs start with the system's ID** · feature · small
   From the user (2026-10-04), replacing an earlier idea of separate ID namespaces per system: readable IDs are unique per owner and kind, so the same name in two systems (a "Strength" content in D&D and in Pathfinder) needs a hand-typed ID today. When a form generates the ID from the name (`useReadableIdFromName`, `app/composables/useReadableIdFromName.ts`) for a resource in a system (content types, sheets, content, characters, campaigns), prefix it with the system's readable ID, shortened if long: `pf2e-strength`. Shortening (user's decision, 2026-10-04): a system ID of 8 characters or fewer is used as is; a longer one becomes the first letter of each hyphen-separated part, with parts that contain a digit kept whole (`pathfinder-2e` → `p2e`, `dungeons-and-dragons-5e` → `dad5e`). Systems themselves and groups get no prefix. The prefix follows the selected system until the user edits the ID. Only the generated suggestion changes; IDs stay plain per-owner IDs on the server, and existing ones are left alone. Pairs with the dialog field order item (system picked before the name's ID is final).
 
