@@ -41,6 +41,7 @@ Asking for parallel work makes the session the coordinator: each feature gets it
 
 - Everything for AI agents lives in `.claude/` (this file, `skills/`), except `skills-lock.json`, which the `skills` CLI requires at the repo root. Keep agent files out of the root.
 - Add third-party skills with `npx skills add <owner/repo> -a claude-code` (add `-s <skill>` to pick one). `-a claude-code` copies them into `.claude/skills/` and records them in `skills-lock.json`; without it the CLI also installs into `.agents/` for other agents, which we don't use.
+- The repo root is also an Obsidian vault (README, "Working on the docs in Obsidian"). In Markdown, write relative Markdown links, never `[[wikilinks]]`, so links work on GitHub too. `.obsidian/` holds the shared vault config: don't commit its per-user files (they're gitignored).
 
 ## Data model
 
