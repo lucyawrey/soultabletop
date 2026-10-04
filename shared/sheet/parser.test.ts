@@ -472,10 +472,17 @@ describe("formulas", () => {
 
 describe("unclosed formulas", () => {
   it("parse in linear time", () => {
-    const start = performance.now();
-    const { diagnostics } = parseSheetMarkup(`<Sheet><Section>${"{=".repeat(20_000)}</Section></Sheet>`);
-    expect(performance.now() - start).toBeLessThan(200);
-    expect(diagnostics[0]?.code).toBe("unterminated-formula");
+    const parse = (count: number) => parseSheetMarkup(`<Sheet><Section>${"{=".repeat(count)}</Section></Sheet>`);
+    const time = (count: number) => {
+      const start = performance.now();
+      parse(count);
+      return performance.now() - start;
+    };
+    time(5_000); // Warm up the JIT.
+    // A ratio rather than a fixed limit, so a slow CI runner doesn't fail it:
+    // 4 times the input takes about 4 times as long if linear, 16 if quadratic.
+    expect(time(20_000) / time(5_000)).toBeLessThan(8);
+    expect(parse(20_000).diagnostics[0]?.code).toBe("unterminated-formula");
   });
 
   it("don't swallow the tags after them", () => {

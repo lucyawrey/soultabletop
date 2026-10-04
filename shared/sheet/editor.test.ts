@@ -145,8 +145,14 @@ describe("formulaHighlights", () => {
 
 describe("markupFormulaRanges on unclosed formulas", () => {
   it("runs in linear time", () => {
-    const start = performance.now();
-    markupFormulaRanges(`<Note>${"{=".repeat(20_000)}</Note>`);
-    expect(performance.now() - start).toBeLessThan(200);
+    const time = (count: number) => {
+      const start = performance.now();
+      markupFormulaRanges(`<Note>${"{=".repeat(count)}</Note>`);
+      return performance.now() - start;
+    };
+    time(5_000); // Warm up the JIT.
+    // A ratio rather than a fixed limit, so a slow CI runner doesn't fail it:
+    // 4 times the input takes about 4 times as long if linear, 16 if quadratic.
+    expect(time(20_000) / time(5_000)).toBeLessThan(8);
   });
 });
