@@ -80,7 +80,12 @@ const {
   onSystemChange,
   onTypeChange,
 } = useSystemTypePicker(form, contentTypes);
-const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const systemPrefix = useSystemIdPrefix();
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(
+  form,
+  "readableId",
+  () => systemPrefix(form.systemId),
+);
 const idAvailability = useResourceIdAvailability(form, "sheet");
 
 // Only editors of the ContentType may change its default Sheet (enforced
