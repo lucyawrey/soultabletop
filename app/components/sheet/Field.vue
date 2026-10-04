@@ -165,6 +165,8 @@ const imageSize = computed(
       display === 'stat' && !asInput ? 'text-center' : '',
     ]"
   >
+    <!-- The buttons' negative margin keeps this row at the label's height, so
+      showing one doesn't push the input down. -->
     <div
       v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || canReset"
       class="flex items-center gap-1 text-xs font-medium text-muted"
@@ -178,6 +180,7 @@ const imageSize = computed(
         color="neutral"
         variant="ghost"
         size="xs"
+        class="-my-1"
         aria-label="Use automatic value"
         title="Use automatic value"
         @click="useAutomatic"
@@ -188,6 +191,7 @@ const imageSize = computed(
         color="neutral"
         variant="ghost"
         size="xs"
+        class="-my-1"
         :aria-label="`Edit ${label}`"
         @click="unlock"
       />
