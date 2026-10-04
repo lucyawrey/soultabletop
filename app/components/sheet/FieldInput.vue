@@ -235,6 +235,7 @@ const imageError = computed(() =>
     :aria-label="label"
     :increment="narrow ? false : undefined"
     :decrement="narrow ? false : undefined"
+    :ui="narrow ? { base: 'px-1.5' } : undefined"
     class="w-full"
   />
 
