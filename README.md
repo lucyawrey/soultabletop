@@ -38,8 +38,9 @@ pnpm dev
 | `BETTER_AUTH_SECRET` | Signs sessions and tokens; generate with `openssl rand -base64 32`       |
 | `EMAIL_API_KEY`      | Resend API key (reserved for email features; not read by the code yet)   |
 | `SERVER_TIMING`      | Optional, read at runtime. `1`, `true`, `on`, or `yes` adds a `Server-Timing` response header (database time, query count, total time); `0` turns it off. On in `pnpm dev`, off in production unless set. Error responses and redirects never carry it |
+| `SOUL_TABLETOP_API_KEY` | Optional, local only, and not read by the app: your own API key (create one on `/profile`), for development scripts that call the API as you, sent in the `x-api-key` header. Not in Vercel, so add it to `.env.local` by hand, and again after `vercel env pull`, which rewrites the file |
 
-All are server-only and never sent to the browser. The first three are set in all
+The app's variables are server-only and never sent to the browser. The first three are set in all
 three Vercel environments (Production, Preview, Development). While the app is
 a prototype, every environment, including local development, uses the same
 Neon database.
