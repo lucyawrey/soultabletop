@@ -6,8 +6,6 @@ Each item is `- **Title** · type` (bug, feature, or chore), plus `· needs deci
 
 Quick, rough ideas go here, in any form. Nothing is built from them until they're sorted: when asked (or when the section has grown), an agent goes through them with the user one at a time, asks what each one means and what it's worth, writes it up in the item format, and moves it to the section the user picks. Until then, the user's wording stays as is.
 
-- concider, system grouped id namespaces (2026-10-03)
-
 # In progress
 
 - **Sheet formulas, with conditional display (and Sheet path hardening)** · feature · large
@@ -135,6 +133,8 @@ Playing campaigns online, sharing, and discovery.
   From the user (2026-10-03), on `main` too: in edit mode a `content` field's picker (e.g. an inventory Table's item column) shows the referenced content's UUID instead of its name until you pick something. `app/components/sheet/ContentPicker.vue` loads its options only when it opens (`load` on `update:open`), so before that `USelectMenu` has no item for `modelValue` and shows the raw value. The sheet already has the name (view mode shows it, from the content's refs): pass the current ref's name in and include it in `items` until the list loads.
 - **A content type's first sheet becomes its default** · feature · small · needs decision: the content type's creator only, or anyone who can edit it
   From the user (2026-10-03): when the content type's creator makes the first sheet for it, that sheet should be the default without being asked. Today a new sheet is the default only when the request sets `isDefault: true` (`server/api/sheet/index.post.ts`), so the type keeps its generated sheet. Apply it only when the type has no default sheet row yet (so no replace confirmation is involved); an explicit `isDefault: false` still wins. Check the create dialogs and the authoring flow, and update `.claude/data-model.md` (default Sheet rules) and the sheet create OpenAPI description.
+- **Generated IDs start with the system's ID** · feature · small · needs decision: how a long system ID is shortened (e.g. a length limit, or the first letter of each hyphen-separated part)
+  From the user (2026-10-04), replacing an earlier idea of separate ID namespaces per system: readable IDs are unique per owner and kind, so the same name in two systems (a "Strength" content in D&D and in Pathfinder) needs a hand-typed ID today. When a form generates the ID from the name (`useReadableIdFromName`, `app/composables/useReadableIdFromName.ts`) for a resource in a system (content types, sheets, content, characters, campaigns), prefix it with the system's readable ID, shortened if long: `pf2e-strength`. Systems themselves and groups get no prefix. The prefix follows the selected system until the user edits the ID. Only the generated suggestion changes; IDs stay plain per-owner IDs on the server, and existing ones are left alone. Pairs with the dialog field order item (system picked before the name's ID is final).
 
 # Low priority
 
