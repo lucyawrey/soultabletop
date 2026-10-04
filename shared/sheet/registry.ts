@@ -315,7 +315,14 @@ const tagList: TagSpec[] = [
     name: "Field",
     category: "field",
     description: "Picks the input from the field's schema type",
-    attrs: { ...fieldAttrs },
+    attrs: {
+      ...fieldAttrs,
+      formula: {
+        type: { kind: "formula" },
+        description:
+          "On a text, number, or true/false field only: computes the value like Text, Number, or Checkbox with a formula (needs field)",
+      },
+    },
     children: "none",
     binds: [
       "string",
@@ -327,6 +334,7 @@ const tagList: TagSpec[] = [
       "content",
       "stringArray",
     ],
+    formula: "override",
   },
   {
     name: "Text",
