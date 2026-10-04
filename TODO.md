@@ -80,8 +80,8 @@ Finding things, labels, access fixes, and hardening.
   Placeholder from the UI redesign: the mockup's cards have a summary on the left of their footer (e.g. "12 content types" on a system). Systems have one (#64): `contentTypeCount` on the systems list counts content types the system's own owner (same user or group) made for it that the viewer can read, so community types don't inflate it (`readableContentTypeCount` in `server/api/system/index.get.ts`; cards fill `ResourceCards`'s `#summary` slot). Other kinds show only the updated date. Decide whether they get counts (e.g. sheets or content on a content type) and use the same owner and read rules.
 - **Rate limiting for API keys and sessions** · feature · needs decision: where the limiter lives and the limits
   There is no per-user limit. Better Auth's API key plugin has a per-key limit, but its window only resets after a full window with no requests, so steady scripts get locked out; it's turned off (`server/utils/auth.ts`). Add a real limiter (fixed or sliding window, per user or key, and per IP for anonymous requests), e.g. in the database, in Upstash/Redis, or with Vercel's firewall rate limits, and decide the limits. Also: the 25-keys-per-user cap (`/api/profile/api-keys` POST) counts then creates, so concurrent creates can pass it.
-- **Harden registration cleanup** · chore · small · PR #81 covers the cleanup error, the comment, and the username retry
-  Left after #81: a failure inside Better Auth after it creates the user (`linkAccount`, `createSession`) but before the profile insert (`server/api/register.post.ts`) can still leave a user with no profile (existed before #52); consider one cleanup that covers the whole sign-up.
+- **Harden registration cleanup** · chore · small
+  A failure inside Better Auth after it creates the user (`linkAccount`, `createSession`) but before the profile insert (`server/api/register.post.ts`) can still leave a user with no profile (existed before #52); consider one cleanup that covers the whole sign-up.
 
 # Phase 4: Play and community
 
