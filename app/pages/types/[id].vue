@@ -6,6 +6,7 @@ import {
 } from "~/utils/api-error";
 import {
   CONTENT_CATEGORY_LABELS,
+  CONTENT_CATEGORY_MENU_ORDER,
   type ContentCategory,
 } from "#shared/content-categories";
 import type { ContentTypeSchema } from "#shared/content-schema";
@@ -47,9 +48,10 @@ interface SheetOption {
   isDefault: boolean;
 }
 
-const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
-  ([value, label]) => ({ label, value }),
-);
+const categoryOptions = CONTENT_CATEGORY_MENU_ORDER.map((value) => ({
+  label: CONTENT_CATEGORY_LABELS[value],
+  value,
+}));
 
 const route = useRoute();
 const toast = useToast();
