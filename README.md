@@ -191,6 +191,24 @@ A sheet with the readable ID `edit` and a campaign with `members` keep their ID
 addresses, since those paths belong to the sheet editor and the campaign
 members route.
 
+## Working on the docs in Obsidian
+
+The repo root is also an [Obsidian](https://obsidian.md) vault, for reading and
+editing the Markdown (`TODO.md`, `docs/`, `.claude/`): open it with "Open
+folder as vault". The shared vault config and two community plugins are
+committed, so they're ready after cloning (enable community plugins if Obsidian
+asks):
+
+- **Unhide**: shows dot-folders, so `.claude/` (the agent notes) is visible.
+  `.git`, `.env` files, `.claude/worktrees`, and build and dependency folders
+  stay hidden.
+- **Git**: commit and pull from inside Obsidian.
+
+`node_modules/` and the build folders are under "Excluded files", so they stay
+out of search, the graph, and the quick switcher. New links are written as
+relative Markdown links, not `[[wikilinks]]`, so they also work on GitHub.
+Per-user vault state (open tabs, the Git plugin's settings) is gitignored.
+
 ## Deployment
 
 Vercel builds every push: `main` deploys to production, and every other branch

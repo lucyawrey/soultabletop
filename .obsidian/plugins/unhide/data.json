@@ -1,0 +1,17 @@
+{
+  "errorNoticeTimeout": 0,
+  "language": "",
+  "noticeTimeout": 5,
+  "openChangelogOnUpdate": true,
+  "protectSync": true,
+  "showConfigurationFolder": true,
+  "showHiddenFiles": true,
+  "showingRules": [
+    "+/",
+    "-/(?:^|\\/)\\.git(?:\\/|$)/u",
+    "-/(?:^|\\/)node_modules(?:\\/|$)/u",
+    "-/(?:^|\\/)\\.(?:nuxt|output|nitro|data|cache|vercel|pnpm-store)(?:\\/|$)/u",
+    "-/(?:^|\\/)\\.env/u",
+    "-/^\\.claude\\/worktrees(?:\\/|$)/u"
+  ]
+}

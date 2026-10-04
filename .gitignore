@@ -29,3 +29,11 @@ logs
 # Vercel CLI project link (created by `vercel link`)
 .vercel
 .env*
+
+# Obsidian: share vault config and plugins, ignore per-user state
+.obsidian/workspace*.json
+.obsidian/graph.json
+.obsidian/cache
+.obsidian/plugins/obsidian-git/data.json
+.obsidian/plugins/obsidian-git/obsidian_askpass.sh
+.trash/
