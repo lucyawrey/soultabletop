@@ -3,9 +3,11 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 
 const props = defineProps<{ node: ValidatedElement }>();
 
-const text = useSheetChildText(() => props.node);
+const segments = useSheetChildSegments(() => props.node);
 </script>
 
 <template>
-  <p :class="[sheetClasses(node), 'text-sm text-muted']">{{ text }}</p>
+  <p :class="[sheetClasses(node), 'text-sm text-muted']">
+    <SheetInlineText :segments="segments" />
+  </p>
 </template>

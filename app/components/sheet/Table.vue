@@ -7,7 +7,7 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 // and an expandable row per item when there is a <RowDetails>.
 const props = defineProps<{ node: ValidatedElement }>();
 
-const { items, resolve } = useSheet();
+const { context, items, resolve, condition } = useSheet();
 const attrText = useSheetAttrText();
 
 const label = computed(() => attrText(props.node.attrs.label));
@@ -29,6 +29,12 @@ const details = computed(() =>
       child.type === "element" && child.tag === "RowDetails",
   ),
 );
+
+// RowDetails' `show`, per row: a row whose details are hidden can't expand.
+const rowDetails = (row: SheetScope) =>
+  details.value
+    ? condition(details.value.attrs.show, row, rows.value.length)
+    : { shown: false };
 
 const widths: Record<string, string> = {
   xs: "w-16",
@@ -116,6 +122,7 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
       </template>
       <template #expand-cell="{ row }">
         <UButton
+          v-if="rowDetails(row.original).shown"
           color="neutral"
           variant="ghost"
           size="xs"
@@ -129,13 +136,21 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
         :key="index"
         #[`c${index}-cell`]="{ row }"
       >
-        <SheetScope :scope="row.original">
+        <SheetScope :scope="row.original" :repeat="rows.length">
           <SheetNode :node="column" compact />
         </SheetScope>
       </template>
       <template #expanded="{ row }">
-        <SheetScope v-if="details" :scope="row.original">
+        <SheetScope
+          v-if="details && rowDetails(row.original).shown"
+          :scope="row.original"
+          :repeat="rows.length"
+        >
           <div :class="[sheetClasses(details), 'space-y-3']">
+            <SheetFormulaWarning
+              v-if="rowDetails(row.original).error && context.showInvalid.value"
+              :message="`show: ${rowDetails(row.original).error}`"
+            />
             <SheetNodes :nodes="details.children" />
           </div>
         </SheetScope>

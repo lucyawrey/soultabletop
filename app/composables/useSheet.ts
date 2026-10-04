@@ -1,11 +1,23 @@
 import type { InjectionKey, Ref } from "vue";
+import {
+  formulaLimits,
+  isFormulaError,
+  type FormulaNode,
+  type FormulaValue,
+} from "#shared/sheet/formula";
 import type { Interpolation, TextPart } from "#shared/sheet/parser";
 import type { SheetDisplay } from "#shared/sheet/registry";
 import {
+  evaluateSheetFormula,
+  formatFormulaValue,
+  sheetCondition,
   formatSheetValue,
   interpolateSheetText,
   itemScopes,
   resolveSheetPath,
+  sheetTextSegments,
+  type SheetFormulaDefinitions,
+  type SheetTextSegment,
   type SheetLink,
   type SheetLinks,
   type SheetRef,
@@ -13,6 +25,7 @@ import {
   type SheetScope,
 } from "#shared/sheet/runtime";
 import {
+  isCompiledFormula,
   parseSheetPath,
   type AttrValue,
   type SheetPath,
@@ -28,6 +41,8 @@ export interface SheetContext {
   // Resources linked by `resourceLink` fields that the viewer can read.
   links: Ref<SheetLinks>;
   schemas: Ref<SheetSchemas>;
+  // The sheet's `<Define>`s, with cached values of those without parameters.
+  formulas: Ref<SheetFormulaDefinitions>;
   // Show placeholders for broken tags (users who can edit the Sheet).
   showInvalid: Ref<boolean>;
   // The viewer may edit the Content, and the Edit switch is on.
@@ -61,6 +76,9 @@ const defaultFlags = (): SheetFlags => ({
 const contextKey: InjectionKey<SheetContext> = Symbol("sheet");
 const scopeKey: InjectionKey<Ref<SheetScope>> = Symbol("sheet-scope");
 const flagsKey: InjectionKey<Ref<SheetFlags>> = Symbol("sheet-flags");
+// How many times this part of the sheet is repeated (the item counts of the
+// enclosing Lists and Table rows, multiplied).
+const repeatKey: InjectionKey<Ref<number>> = Symbol("sheet-repeat");
 
 export function provideSheetContext(context: SheetContext) {
   provide(contextKey, context);
@@ -71,8 +89,11 @@ export function provideSheetContext(context: SheetContext) {
   );
 }
 
-export function provideSheetScope(scope: Ref<SheetScope>) {
+// `repeat`: how many siblings this scope has (the List's or Table's items).
+export function provideSheetScope(scope: Ref<SheetScope>, repeat?: () => number) {
   provide(scopeKey, scope);
+  const parent = inject(repeatKey, ref(1));
+  provide(repeatKey, computed(() => parent.value * Math.max(repeat?.() ?? 1, 1)));
 }
 
 // Applies a tag's own live/locked/display attributes on top of the inherited
@@ -132,7 +153,16 @@ export function useSheetEditable(
 export function useSheet() {
   const context = inject(contextKey);
   const scope = inject(scopeKey);
+  const repeat = inject(repeatKey, ref(1));
   if (!context || !scope) throw new Error("Sheet components need a SheetRenderer");
+
+  // A formula repeated for every item of a List shares the sheet's step
+  // budget with its copies, so a long List can't make a render take seconds.
+  const formulas = (times = 1): SheetFormulaDefinitions => {
+    const current = context.formulas.value;
+    const budget = current.stepBudget ?? formulaLimits.maxSteps;
+    return { ...current, stepBudget: Math.max(1, Math.floor(budget / (repeat.value * times))) };
+  };
 
   const resolve = (path: SheetPath | string) =>
     resolveSheetPath(
@@ -142,18 +172,61 @@ export function useSheet() {
       context.refs.value,
     );
 
+  // A formula's value in the current scope (an error value if it fails).
+  const evaluate = (ast: FormulaNode): FormulaValue =>
+    evaluateSheetFormula(
+      ast,
+      context.root.value,
+      scope.value,
+      context.refs.value,
+      formulas(),
+    );
+
   return {
     context,
     scope,
     resolve,
+    evaluate,
     items: (path: SheetPath) => itemScopes(resolve(path)),
     format: (value: unknown, format?: "plain" | "signed") =>
       formatSheetValue(value, context.refs.value, format),
+    // A formula value as text ("" for errors and nothing).
+    formatFormula: (value: FormulaValue, format?: "plain" | "signed") =>
+      formatFormulaValue(value, context.refs.value, format),
     text: (parts: TextPart[]) =>
-      interpolateSheetText(parts, context.root.value, scope.value, context.refs.value),
-    // A number attribute: a literal or a {path} resolved now.
+      interpolateSheetText(
+        parts,
+        context.root.value,
+        scope.value,
+        context.refs.value,
+        formulas(),
+      ),
+    // Text with the formulas that failed marked, to show their message.
+    segments: (parts: TextPart[]): SheetTextSegment[] =>
+      sheetTextSegments(
+        parts,
+        context.root.value,
+        scope.value,
+        context.refs.value,
+        formulas(),
+      ),
+    // A tag's `show` in the current scope, or in `at`, one of `times` rows
+    // (a Table's RowDetails).
+    condition: (show: AttrValue | undefined, at?: SheetScope, times?: number) =>
+      sheetCondition(
+        show,
+        context.root.value,
+        at ?? scope.value,
+        context.refs.value,
+        formulas(times),
+      ),
+    // A number attribute: a literal, a {path}, or a {= formula} computed now.
     number: (value: AttrValue | undefined) => {
       if (typeof value === "number") return value;
+      if (isCompiledFormula(value)) {
+        const result = evaluate(value.ast);
+        return typeof result === "number" && !isFormulaError(result) ? result : undefined;
+      }
       if (value && typeof value === "object" && "path" in value) {
         const resolved = resolve((value as Interpolation).path).value;
         return typeof resolved === "number" ? resolved : undefined;
@@ -163,15 +236,16 @@ export function useSheet() {
   };
 }
 
-// Text of a text-only tag (Heading, Note, ...): its text children joined.
-export function useSheetChildText(node: () => ValidatedElement) {
-  const { text } = useSheet();
-  return computed(() =>
-    node()
-      .children.map((child) => (child.type === "text" ? text(child.parts) : ""))
-      .filter(Boolean)
-      .join(" "),
-  );
+// Text of a text-only tag (Heading, Note, ...): its text children joined, as
+// segments (see SheetInlineText).
+export function useSheetChildSegments(node: () => ValidatedElement) {
+  const { segments } = useSheet();
+  return computed(() => {
+    const texts = node()
+      .children.map((child) => (child.type === "text" ? segments(child.parts) : []))
+      .filter((parts) => parts.some((segment) => segment.text));
+    return texts.flatMap((parts, index) => (index ? [{ text: " " }, ...parts] : parts));
+  });
 }
 
 // Editing the array bound to a List or Table.

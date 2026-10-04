@@ -4,7 +4,8 @@ Each example is a content type schema (`json`), Sheet markup (`xml`, saved as `.
 All three compile with no errors against that schema (checked with `compileSheet` and `processSheetCss`; see
 `checking.md`).
 
-The examples use a made-up rules system: swap in the real field names from your content type's schema.
+Examples 1 to 3 use a made-up rules system and store every number; example 4 is Pathfinder 2e and computes them with
+formulas. Swap in the real field names from your content type's schema.
 Example 1 also needs a second content type, `class`, described under it.
 
 ## 1. Player character sheet
@@ -296,3 +297,255 @@ A compact card. Shows a `Callout` filled from a field with `{path}`, and `List f
   }
 }
 ```
+
+## 4. Pathfinder 2e character sheet (formulas)
+
+A Pathfinder 2e (Remaster) character whose derived numbers are all formulas: attribute modifiers are stored
+directly, proficiency is level + 2/4/6/8 by rank (untrained adds nothing), and `<Define>`s keep that rule in one place.
+It shows an override (`ac`: computed, but a player can type a value and reset it), a computed `Tracker` maximum, a
+`show` on a tab, per-item sums over an inventory, and a formula column. Ranks are stored as text (`untrained`,
+`trained`, `expert`, `master`, `legendary`). `pf2e-item` is a placeholder for the Item content type's UUID. The copy
+the tests compile is `shared/sheet/fixtures/pathfinder2e.ts`; keep this one in sync with it.
+
+Character schema:
+
+```json
+{
+  "level": {
+    "type": "number",
+    "required": true
+  },
+  "keyAttribute": {
+    "type": "string",
+    "label": "Key Attribute"
+  },
+  "attributes": {
+    "type": "struct",
+    "entries": {
+      "str": {
+        "type": "number"
+      },
+      "dex": {
+        "type": "number"
+      },
+      "con": {
+        "type": "number"
+      },
+      "int": {
+        "type": "number"
+      },
+      "wis": {
+        "type": "number"
+      },
+      "cha": {
+        "type": "number"
+      }
+    }
+  },
+  "perceptionRank": {
+    "type": "string"
+  },
+  "classDcRank": {
+    "type": "string"
+  },
+  "saves": {
+    "type": "struct",
+    "entries": {
+      "fortitude": {
+        "type": "struct",
+        "entries": {
+          "rank": {
+            "type": "string"
+          }
+        }
+      },
+      "reflex": {
+        "type": "struct",
+        "entries": {
+          "rank": {
+            "type": "string"
+          }
+        }
+      },
+      "will": {
+        "type": "struct",
+        "entries": {
+          "rank": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "skills": {
+    "type": "struct",
+    "entries": {
+      "athletics": {
+        "type": "struct",
+        "entries": {
+          "rank": {
+            "type": "string"
+          }
+        }
+      },
+      "stealth": {
+        "type": "struct",
+        "entries": {
+          "rank": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "armor": {
+    "type": "struct",
+    "entries": {
+      "rank": {
+        "type": "string"
+      },
+      "dexCap": {
+        "type": "number"
+      },
+      "itemBonus": {
+        "type": "number"
+      },
+      "strength": {
+        "type": "number"
+      }
+    }
+  },
+  "ac": {
+    "type": "number",
+    "label": "AC"
+  },
+  "speed": {
+    "type": "number"
+  },
+  "hp": {
+    "type": "struct",
+    "entries": {
+      "current": {
+        "type": "number"
+      },
+      "ancestry": {
+        "type": "number"
+      },
+      "classPerLevel": {
+        "type": "number"
+      },
+      "bonus": {
+        "type": "number"
+      }
+    }
+  },
+  "spellcasting": {
+    "type": "struct",
+    "entries": {
+      "tradition": {
+        "type": "string"
+      },
+      "attribute": {
+        "type": "string"
+      },
+      "rank": {
+        "type": "string"
+      }
+    }
+  },
+  "inventory": {
+    "type": "array",
+    "itemType": {
+      "type": "struct",
+      "entries": {
+        "item": {
+          "type": "content",
+          "contentTypeId": "pf2e-item",
+          "allow": "both"
+        },
+        "qty": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}
+```
+
+Item schema (`pf2e-item`; light bulk is stored as 0.1, so `floor` turns ten L items into 1 Bulk):
+
+```json
+{
+  "bulk": {
+    "type": "number"
+  }
+}
+```
+
+Markup:
+
+```xml
+<Sheet>
+  <Define name="prof" params="rank"
+          formula="if(rank == 'untrained' or rank == null, 0, level + switch(rank, 'trained', 2, 'expert', 4, 'master', 6, 'legendary', 8, 0))" />
+  <Define name="check" params="attr, rank" formula="get(attributes, attr) + prof(rank)" />
+  <Define name="classDc" formula="10 + get(attributes, keyAttribute) + prof(classDcRank)" />
+
+  <Section title="{name}" description="Level {level}">
+    <Grid cols="6">
+      <Number field="attributes.str" label="Str" format="signed" variant="stat" />
+      <Number field="attributes.dex" label="Dex" format="signed" variant="stat" />
+      <Number field="attributes.con" label="Con" format="signed" variant="stat" />
+      <Number field="attributes.int" label="Int" format="signed" variant="stat" />
+      <Number field="attributes.wis" label="Wis" format="signed" variant="stat" />
+      <Number field="attributes.cha" label="Cha" format="signed" variant="stat" />
+    </Grid>
+  </Section>
+
+  <Grid cols="4">
+    <Number field="ac" label="AC" variant="stat"
+            formula="10 + min(attributes.dex, coalesce(armor.dexCap, 99)) + prof(armor.rank) + coalesce(armor.itemBonus, 0)" />
+    <Value formula="check('wis', perceptionRank)" label="Perception" format="signed" />
+    <Number formula="classDc()" label="Class DC" variant="stat" />
+    <Badge>Speed {= speed - if(armor.strength != null and armor.strength > attributes.str, 5, 0)} ft</Badge>
+  </Grid>
+
+  <Tracker field="hp.current" label="Hit Points" live
+           max="{= hp.ancestry + (hp.classPerLevel + attributes.con) * level + coalesce(hp.bonus, 0)}" />
+
+  <Tabs>
+    <Tab label="Saves and Skills">
+      <Grid cols="3">
+        <Value formula="check('con', saves.fortitude.rank)" label="Fortitude" format="signed" />
+        <Value formula="check('dex', saves.reflex.rank)" label="Reflex" format="signed" />
+        <Value formula="check('wis', saves.will.rank)" label="Will" format="signed" />
+        <Value formula="check('str', skills.athletics.rank)" label="Athletics" format="signed" />
+        <Value formula="check('dex', skills.stealth.rank)" label="Stealth" format="signed" />
+      </Grid>
+    </Tab>
+    <Tab label="Spells" show="{= length(spellcasting.tradition) > 0}">
+      <Number formula="10 + get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell DC" variant="stat" />
+      <Value formula="get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell Attack" format="signed" />
+    </Tab>
+    <Tab label="Inventory">
+      <Table field="inventory">
+        <Column field="item" />
+        <Column field="qty" />
+        <Column formula="qty * coalesce(item.bulk, 0)" label="Bulk" />
+      </Table>
+      <Value formula="floor(sum(inventory, qty * coalesce(item.bulk, 0)))" label="Bulk Carried" />
+      <Note show="{= sum(inventory, qty * coalesce(item.bulk, 0)) > 5 + attributes.str}">Encumbered</Note>
+    </Tab>
+  </Tabs>
+</Sheet>
+```
+
+Notes:
+- `prof(rank)` is called with a value, so it works from anywhere: definitions run against the top level, and `level`
+  inside it is the character's level.
+- `get(attributes, keyAttribute)` reads the attribute a text field names (`'dex'`); `check('wis', perceptionRank)`
+  passes the name in.
+- The Spells tab tests `length(spellcasting.tradition) > 0`, not `!= null`: a cleared text field holds `""`.
+- The Speed badge is written as `armor.strength > attributes.str` rather than with `<`, which in text would break the
+  editor's colors.
+- No CSS: the default look is enough here.

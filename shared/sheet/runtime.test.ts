@@ -3,7 +3,11 @@ import type { ContentFieldSchema } from "../content-schema";
 import { parseSheetMarkup, type SheetText } from "./parser";
 import {
   defaultSheetValue,
+  evaluateSheetFormula,
   setSheetValue,
+  sheetCondition,
+  sheetOverride,
+  sheetTextSegments,
   formatSheetValue,
   interpolateSheetText,
   itemScopes,
@@ -11,7 +15,18 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "./runtime";
-import { parseSheetPath, type SheetSchemas } from "./validate";
+import { FormulaError, formulaLimits, parseFormula, type FormulaValue } from "./formula";
+import { pathfinder2eMarkup, pathfinder2eSchemas } from "./fixtures/pathfinder2e";
+import {
+  compileSheet,
+  isCompiledFormula,
+  parseSheetPath,
+  sheetStepBudget,
+  type CompiledFormula,
+  type SheetSchemas,
+  type ValidatedElement,
+  type ValidatedText,
+} from "./validate";
 
 const refs: SheetRefs = {
   "rope-id": { name: "Rope", contentTypeId: "item", data: { weight: 5 } },
@@ -75,6 +90,13 @@ describe("resolveSheetPath", () => {
     expect(resolve(".", sword)).toBe(sword);
   });
 
+  it("doesn't read inherited properties", () => {
+    expect(resolve("constructor")).toEqual({ value: undefined, path: ["constructor"] });
+    expect(resolve("stats.__proto__")).toEqual({ value: undefined, path: ["stats", "__proto__"] });
+    expect(resolve("stats.toString")).toEqual({ value: undefined, path: ["stats", "toString"] });
+    expect(resolve("class.constructor").value).toBeUndefined();
+  });
+
   it("gives item scopes no path when the list came through a reference", () => {
     const scopes = itemScopes({ value: ["a"], path: null });
     expect(scopes).toEqual([{ value: "a", path: null }]);
@@ -118,6 +140,33 @@ describe("setSheetValue", () => {
       new: { deep: true },
       rows: [undefined, { x: "y" }],
     });
+  });
+
+  it("never writes through reserved keys", () => {
+    const target: Record<string, unknown> = {};
+    try {
+      setSheetValue(target, ["__proto__", "polluted"], 1);
+      setSheetValue(target, ["constructor", "prototype", "polluted"], 1);
+      setSheetValue(target, ["a", "__proto__"], 1);
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect(target).toEqual({});
+    } finally {
+      delete (Object.prototype as Record<string, unknown>).polluted;
+    }
+  });
+
+  it("doesn't walk into inherited objects", () => {
+    const target: Record<string, unknown> = {};
+    setSheetValue(target, ["toString", "x"], 1);
+    expect(Object.hasOwn(target, "toString")).toBe(true);
+    expect((Function.prototype as unknown as Record<string, unknown>).x).toBeUndefined();
+  });
+
+  it("removes the key when the value is undefined", () => {
+    const target: Record<string, unknown> = { stats: { str: 1, dex: 2 } };
+    setSheetValue(target, ["stats", "str"], undefined);
+    expect(target).toEqual({ stats: { dex: 2 } });
+    expect(Object.hasOwn(target.stats as object, "str")).toBe(false);
   });
 
   it("ignores an empty path", () => {
@@ -170,5 +219,299 @@ describe("interpolateSheetText", () => {
   it("fills in {paths}", () => {
     const text = parseSheetMarkup("{name} ({class.name}) has {hp} HP and {missing}.").nodes[0] as SheetText;
     expect(interpolateSheetText(text.parts, root, root, refs)).toBe("Violet (Wizard) has 7 HP and .");
+  });
+});
+
+describe("formulas in text", () => {
+  const compiled = compileSheet(
+    '<Define name="twice" params="x" formula="x * 2" /><Define name="base" formula="hp + 1" />' +
+      "<Note>{name} has {= twice(hp) + base()} HP, {= 1 / 0}, {= 0.1 + 0.2}</Note>",
+    { root: { hasStrictSchema: false, schema: {} }, types: {} },
+  );
+  const note = compiled.nodes.find(
+    (node): node is ValidatedElement => node.type === "element" && node.tag === "Note",
+  )!;
+  const parts = (note.children[0] as ValidatedText).parts;
+  const formulas = { definitions: compiled.definitions };
+
+  it("computes {= } parts, with definitions", () => {
+    expect(interpolateSheetText(parts, root, root, refs, formulas)).toBe("Violet has 22 HP, —, 0.3");
+  });
+
+  it("marks failed formulas in segments", () => {
+    expect(sheetTextSegments(parts, root, root, refs, formulas)[4]).toEqual({
+      text: "—",
+      error: "Division by zero",
+    });
+  });
+
+  it("uses cached values of definitions without parameters", () => {
+    const cached = { definitions: compiled.definitions, cached: () => 100 };
+    expect(interpolateSheetText(parts.slice(2, 3), root, root, refs, cached)).toBe("114");
+  });
+
+  it("shows a broken formula part as —", () => {
+    const broken = compileSheet("<Note>{= nope(}</Note>", { root: { hasStrictSchema: false, schema: {} }, types: {} });
+    const brokenParts = ((broken.nodes[0] as ValidatedElement).children[0] as ValidatedText).parts;
+    expect(sheetTextSegments(brokenParts, root, root, refs)).toEqual([
+      { text: "—", error: "This formula has errors" },
+    ]);
+  });
+
+  it("gives broken definitions an error value", () => {
+    const cyclic = compileSheet('<Define name="a" formula="a()" /><Value formula="1" />', {
+      root: { hasStrictSchema: false, schema: {} },
+      types: {},
+    });
+    const ast = parseFormula("a()", { line: 1, column: 1, offset: 0 }).ast!;
+    expect(evaluateSheetFormula(ast, root, root, refs, { definitions: cyclic.definitions })).toEqual(
+      new FormulaError("definition", "a has errors; fix its <Define>"),
+    );
+  });
+});
+
+describe("sheetCondition", () => {
+  const empty = { root: { hasStrictSchema: false, schema: {} }, types: {} };
+  function show(markup: string, scope: SheetScope = root) {
+    const [node] = compileSheet(markup, empty).nodes;
+    return sheetCondition((node as ValidatedElement).attrs.show, root, scope, refs);
+  }
+
+  it("shows on true and hides on false or nothing", () => {
+    expect(show('<Note show="{= hp > 5}">x</Note>')).toEqual({ shown: true });
+    expect(show('<Note show="{= hp > 10}">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="{missing}">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="{= missing > 1}">x</Note>')).toEqual({ shown: false });
+    expect(show("<Note>x</Note>")).toEqual({ shown: true });
+  });
+
+  it("shows the tag when the formula fails, with the error", () => {
+    expect(show('<Note show="{= 1 / 0 > 1}">x</Note>')).toEqual({ shown: true, error: "Division by zero" });
+    expect(show('<Note show="{= get(stats, \'str\')}">x</Note>')).toEqual({ shown: true, error: "show needs true or false" });
+  });
+
+  it("evaluates in the given scope", () => {
+    const [rope] = itemScopes(resolve("inventory"));
+    expect(show('<Note show="{= qty > 1}">x</Note>', rope)).toEqual({ shown: true });
+  });
+});
+
+describe("sheetOverride", () => {
+  it.each([
+    ["Number", undefined, 5, true, 5],
+    ["Number", null, 5, true, 5],
+    ["Number", 0, 5, false, 0],
+    ["Number", 7, 5, false, 7],
+    ["Text", "", "auto", true, "auto"],
+    ["Text", "mine", "auto", false, "mine"],
+    ["Checkbox", undefined, true, true, true],
+    ["Checkbox", false, true, false, false],
+    // Without a formula, the stored value is all there is.
+    ["Number", undefined, undefined, false, undefined],
+  ])("%s stored %j, computed %j", (tag, stored, computed, automatic, value) => {
+    expect(sheetOverride(tag, stored, computed as FormulaValue | undefined)).toEqual({ automatic, value });
+  });
+
+  it("shows nothing when the automatic value failed", () => {
+    expect(sheetOverride("Number", undefined, new FormulaError("type", "x"))).toEqual({
+      automatic: true,
+      value: undefined,
+    });
+  });
+});
+
+describe("computed fields", () => {
+  const empty = { root: { hasStrictSchema: false, schema: {} }, types: {} };
+  function value(markup: string, source: string, stored: Record<string, unknown> = {}) {
+    const compiled = compileSheet(markup, empty);
+    const scope: SheetScope = { value: stored, path: [] };
+    const ast = parseFormula(source, { line: 1, column: 1, offset: 0 }).ast!;
+    return evaluateSheetFormula(ast, scope, scope, refs, {
+      definitions: compiled.definitions,
+      computedFields: compiled.computedFields,
+    });
+  }
+  const sheet = '<Number field="hp" formula="maxHp" /><Number field="maxHp" formula="floor(maxDex / 2)" />';
+
+  it("reads an override field's computed value when nothing is stored", () => {
+    expect(value(sheet, "hp", { maxDex: 9 })).toBe(4);
+    expect(value(sheet, "maxHp + 1", { maxDex: 9 })).toBe(5);
+  });
+
+  it("reads the stored value when there is one", () => {
+    expect(value(sheet, "hp", { maxDex: 9, maxHp: 20 })).toBe(20);
+    expect(value(sheet, "hp", { maxDex: 9, hp: 0 })).toBe(0);
+  });
+
+  it("counts an empty Text as nothing stored", () => {
+    const text = '<Text field="title" formula="concat(name, \'!\')" />';
+    expect(value(text, "title", { name: "Violet", title: "" })).toBe("Violet!");
+    expect(value(text, "title", { name: "Violet", title: "Hero" })).toBe("Hero");
+  });
+
+  it("cascades Checkbox overrides", () => {
+    const checkbox = '<Checkbox field="trained" formula="level > 1" /><Value formula="trained" />';
+    expect(value(checkbox, "trained", { level: 3 })).toBe(true);
+    expect(value(checkbox, "trained", { level: 3, trained: false })).toBe(false);
+  });
+
+  it("shows the computed value in {= path} text, and the stored one in {path}", () => {
+    const compiled = compileSheet(`${sheet}<Note>{= hp} / {hp}</Note>`, empty);
+    const note = compiled.nodes.find(
+      (node): node is ValidatedElement => node.type === "element" && node.tag === "Note",
+    )!;
+    const parts = (note.children[0] as ValidatedText).parts;
+    const scope: SheetScope = { value: { maxDex: 9 }, path: [] };
+    expect(
+      interpolateSheetText(parts, scope, scope, refs, {
+        definitions: compiled.definitions,
+        computedFields: compiled.computedFields,
+      }),
+    ).toBe("4 / ");
+  });
+
+  it("gives cycles an error", () => {
+    const cycle = '<Number field="a" formula="b + 1" /><Number field="b" formula="a + 1" />';
+    expect(value(cycle, "a")).toEqual(new FormulaError("formula-cycle", "a is computed from itself"));
+    expect(value(cycle, "a", { b: 1 })).toBe(2);
+    expect(value('<Number field="a" formula="a + 1" />', "a")).toEqual(
+      new FormulaError("formula-cycle", "a is computed from itself"),
+    );
+    const throughParams = '<Define name="plus" params="x" formula="x + b" /><Number field="b" formula="plus(1)" />';
+    expect(value(throughParams, "b")).toEqual(new FormulaError("formula-cycle", "b is computed from itself"));
+  });
+
+  it("limits how deep computed fields depend on each other", () => {
+    const depth = formulaLimits.maxCallDepth;
+    const chain = Array.from({ length: depth + 1 }, (_, index) => `<Number field="f${index}" formula="f${index + 1} + 1" />`);
+    expect(value(chain.join(""), "f0")).toEqual(
+      new FormulaError("too-deep", `Computed values depend on each other more than ${depth} levels deep`),
+    );
+    expect(value(chain.slice(1).join(""), "f1", { [`f${depth + 1}`]: 0 })).toBe(depth);
+  });
+
+  it("doesn't use overrides inside List rows", () => {
+    const list = '<List field="rows"><Number field="x" formula="5" /></List>';
+    expect(value(list, "x")).toBeNull();
+    expect(value(list, "sum(rows, x)", { rows: [{}, { x: 2 }] })).toBe(2);
+  });
+
+  it("reaches computed fields through definitions without parameters", () => {
+    const markup = `<Define name="half" formula="hp / 2" />${sheet}`;
+    expect(value(markup, "half()", { maxDex: 9 })).toBe(2);
+    // A cached value isn't used inside a computed field, so this cycle is found.
+    const cyclic = compileSheet('<Define name="m" formula="hp" /><Number field="hp" formula="m()" />', empty);
+    const scope: SheetScope = { value: {}, path: [] };
+    const ast = parseFormula("hp", { line: 1, column: 1, offset: 0 }).ast!;
+    expect(
+      evaluateSheetFormula(ast, scope, scope, refs, {
+        definitions: cyclic.definitions,
+        computedFields: cyclic.computedFields,
+        cached: () => 1,
+      }),
+    ).toEqual(new FormulaError("formula-cycle", "hp is computed from itself"));
+  });
+});
+
+describe("compiled number attributes", () => {
+  it("evaluates {= } in number attributes", () => {
+    const { nodes } = compileSheet('<Tracker field="hp" max="{= hp * 2 + stats.str}" />', {
+      root: { hasStrictSchema: false, schema: {} },
+      types: {},
+    });
+    const max = (nodes[0] as ValidatedElement).attrs.max;
+    expect(isCompiledFormula(max)).toBe(true);
+    expect(evaluateSheetFormula((max as CompiledFormula).ast, root, root, refs)).toBe(26);
+  });
+});
+
+describe("the Pathfinder 2e example", () => {
+  const compiled = compileSheet(pathfinder2eMarkup, pathfinder2eSchemas);
+  const formulas = { definitions: compiled.definitions };
+  const character = {
+    name: "Ezren",
+    level: 5,
+    keyAttribute: "int",
+    attributes: { str: 0, dex: 2, con: 1, int: 4, wis: 1, cha: 0 },
+    perceptionRank: "expert",
+    classDcRank: "trained",
+    saves: { fortitude: { rank: "trained" }, reflex: { rank: "trained" }, will: { rank: "expert" } },
+    skills: { athletics: { rank: "untrained" }, stealth: { rank: "trained" } },
+    armor: { rank: "trained", dexCap: 5, itemBonus: 1, strength: 1 },
+    speed: 25,
+    hp: { current: 30, ancestry: 6, classPerLevel: 6 },
+    spellcasting: { tradition: "arcane", attribute: "int", rank: "trained" },
+    inventory: [
+      { item: "torch-id", qty: 10 },
+      { item: { name: "Staff", bulk: 1 }, qty: 1 },
+    ],
+  };
+  const pc: SheetScope = { value: character, path: [] };
+  const items: SheetRefs = { "torch-id": { name: "Torch", contentTypeId: "pf2e-item", data: { bulk: 0.1 } } };
+  function value(source: string) {
+    const ast = parseFormula(source, { line: 1, column: 1, offset: 0 }).ast!;
+    return evaluateSheetFormula(ast, pc, pc, items, formulas);
+  }
+
+  it("computes the derived numbers", () => {
+    expect(value("10 + min(attributes.dex, coalesce(armor.dexCap, 99)) + prof(armor.rank) + coalesce(armor.itemBonus, 0)")).toBe(20);
+    expect(value("check('wis', perceptionRank)")).toBe(10);
+    expect(value("check('str', skills.athletics.rank)")).toBe(0);
+    expect(value("classDc()")).toBe(21);
+    expect(value("hp.ancestry + (hp.classPerLevel + attributes.con) * level + coalesce(hp.bonus, 0)")).toBe(41);
+    expect(value("speed - if(armor.strength != null and armor.strength > attributes.str, 5, 0)")).toBe(20);
+    expect(value("floor(sum(inventory, qty * coalesce(item.bulk, 0)))")).toBe(2);
+    expect(value("10 + get(attributes, spellcasting.attribute) + prof(spellcasting.rank)")).toBe(21);
+  });
+});
+
+describe("reactivity", () => {
+  // Vue tracks property reads (the `get` trap), not Object.hasOwn: a computed
+  // that found a key missing must have read it, so it reruns when the key is
+  // added (an override's first value). This proxy records the reads.
+  function watched(target: Record<string, unknown>) {
+    const reads: string[] = [];
+    const proxy = new Proxy(target, {
+      get(object, key, receiver) {
+        if (typeof key === "string") reads.push(key);
+        return Reflect.get(object, key, receiver);
+      },
+    });
+    return { proxy, reads };
+  }
+
+  it("reads missing keys of a path through get", () => {
+    const { proxy, reads } = watched({ stats: {} });
+    const scope = { value: proxy, path: [] };
+    expect(resolveSheetPath(parseSheetPath("ac"), scope, scope, refs).value).toBeUndefined();
+    expect(reads).toContain("ac");
+  });
+
+  it("reads missing keys of get() through get", () => {
+    const { proxy, reads } = watched({});
+    const scope = { value: { stats: proxy }, path: [] };
+    const ast = parseFormula("get(stats, 'dex')", { line: 1, column: 1, offset: 0 }).ast!;
+    expect(evaluateSheetFormula(ast, scope, scope, refs)).toBeNull();
+    expect(reads).toContain("dex");
+  });
+});
+
+describe("sheet step budget", () => {
+  it("splits the sheet's budget between its formulas", () => {
+    expect(sheetStepBudget(1)).toBe(formulaLimits.maxSteps);
+    expect(sheetStepBudget(0)).toBe(formulaLimits.maxSteps);
+    expect(sheetStepBudget(2_000)).toBe(formulaLimits.maxSheetSteps / 2_000);
+    const empty = { root: { hasStrictSchema: false, schema: {} }, types: {} };
+    expect(compileSheet('<Value formula="1" /><Note>{= 2} {= 3}</Note>', empty).stepBudget).toBe(formulaLimits.maxSteps);
+  });
+
+  it("gives evaluations the sheet's budget", () => {
+    const list = Array.from({ length: 50 }, (_, index) => index);
+    const scope: SheetScope = { value: { list }, path: [] };
+    const ast = parseFormula("sum(list)", { line: 1, column: 1, offset: 0 }).ast!;
+    expect(evaluateSheetFormula(ast, scope, scope, refs, { definitions: new Map(), stepBudget: 100 })).toBe(1225);
+    expect(evaluateSheetFormula(ast, scope, scope, refs, { definitions: new Map(), stepBudget: 20 })).toEqual(
+      new FormulaError("budget", "This formula takes too many steps to compute"),
+    );
   });
 });
