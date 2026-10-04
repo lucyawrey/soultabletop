@@ -58,7 +58,12 @@ const form = reactive({
 });
 const formBusy = ref(false);
 const formError = ref("");
-const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const systemPrefix = useSystemIdPrefix();
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(
+  form,
+  "readableId",
+  () => systemPrefix(form.systemId),
+);
 const idAvailability = useResourceIdAvailability(form, "campaign", () => editingCampaign.value ?? undefined);
 
 function openCreate() {

@@ -2,6 +2,7 @@ import type { ResourceSource } from "#shared/resource-list";
 
 interface SystemSummary {
   id: string;
+  readableId: string;
   name: string;
   source: ResourceSource;
 }

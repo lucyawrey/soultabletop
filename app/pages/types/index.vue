@@ -71,7 +71,12 @@ const form = reactive({
   hasStrictSchema: false,
   showSheetWarnings: false,
 });
-const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const systemPrefix = useSystemIdPrefix();
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(
+  form,
+  "readableId",
+  () => systemPrefix(form.systemId),
+);
 const idAvailability = useResourceIdAvailability(form, "contentType", () => editingType.value ?? undefined);
 const formBusy = ref(false);
 const formError = ref("");

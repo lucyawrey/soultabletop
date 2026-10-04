@@ -87,7 +87,12 @@ const {
   onSystemChange,
   onTypeChange,
 } = useSystemTypePicker(form, standardContentTypes);
-const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
+const systemPrefix = useSystemIdPrefix();
+const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(
+  form,
+  "readableId",
+  () => systemPrefix(form.systemId),
+);
 const idAvailability = useResourceIdAvailability(form, "content");
 const formBusy = ref(false);
 const formError = ref("");
