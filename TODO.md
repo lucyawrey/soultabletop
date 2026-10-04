@@ -8,13 +8,6 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
-- **Campaign route and access fixes** · bug · branch `campaign-member-access`
-  - **Unsupported methods on campaign `/members` routes run another route's handler** · bug
-    Found by a reviewer (2026-10-01), existing on `main`: when `/api/campaign/:id/members` gets a method it has no handler for, h3's router falls back to another route's handler but keeps the static route's params, so `GET /api/campaign/<uuid>/members` returns the campaign itself, and by the same logic `DELETE /api/campaign/<uuid>/members` would run the campaign delete handler (an editor can already delete the campaign, so it's wrong behavior rather than a privilege gain; the delete case was inferred, not run). Add explicit 405 handlers (or a guard) for unsupported methods on the member routes, and check the other nested routes (`resource/[id]/grants*`, `profile/api-keys`) for the same fallback.
-  - **Campaign players can't read the campaign itself** · bug
-    Found by an agent while building readable-ID addressing: `getResourceAccess` doesn't let a campaign member without a grant read the campaign resource, by UUID or readable ID, although My lists campaigns they belong to and the dashboard shows them. Check whether that is intended (the member routes and My list say otherwise), and if not, make members readers through the access rules in code and in `resource-access-sql.ts` together (see "List pages and search" in `.claude/conventions.md`).
-    Decided by the user (2026-10-04): every member reads the campaign, and GMs who don't own it can also edit it (not delete it).
-
 # Next up
 
 The exact order: do these one at a time, top first.
@@ -73,7 +66,7 @@ Finding things, labels, access fixes, and hardening.
 - **Source badge on detail pages** · feature · small
   Placeholder from the UI redesign: the mockup shows the Official/Community badge in a detail page's header, but single-resource GETs don't return `source` (only list rows do, `getResourceSource`). Return it there too and add `<SourceBadge>` to `DetailHeader`'s meta row on each detail page.
 - **Go over the Source label's priority** · chore · needs decision: which label wins when several apply
-  A resource gets one Source label, and `getResourceSource` (`server/utils/resource-list-filter.ts`) picks the first that applies: You (you own it), Your Groups (a group you're in owns it), Official, Shared (a grant reaches you), then Community. So an official resource owned by a group you belong to shows Your Groups rather than Official (e.g. site admins and members of `soul` see their Official systems as Your Groups), and Official beats Shared. Review the order with the user, and whether some combinations should show two badges (e.g. Official plus Your Groups). Also: a campaign you belong to but don't own, with no grant, shows under My labeled "Community", since membership has no label. Pairs with the Source badge on detail pages, below.
+  A resource gets one Source label, and `getResourceSource` (`server/utils/resource-list-filter.ts`) picks the first that applies: You (you own it), Group (a group you're in owns it), Official, Shared (a grant reaches you, or you're a member of the campaign), then Community; labels are one word (user's rule, 2026-10-04). So an official resource owned by a group you belong to shows Group rather than Official (e.g. site admins and members of `soul` see their Official systems as Group), and Official beats Shared. Review the order with the user, and whether some combinations should show two badges (e.g. Official plus Group). Pairs with the Source badge on detail pages, below.
 - **Site admins count as implicit members of every official group** · feature · depends on: go over the Source label's priority
   Idea from the user (2026-10-02): treat each site admin as if they were in every `system` (official) group, without a `group_membership` row. Today admins can see and manage system groups without being members (`getGroupAccess` / `requireGroupViewer` / `requireGroupAdmin` in `server/utils/group.ts`), but official groups' resources don't count as theirs. Wanted:
   - Official groups' resources show up in admins' My tab (the `mine` scope) and the dashboard, as their own groups' resources do.
