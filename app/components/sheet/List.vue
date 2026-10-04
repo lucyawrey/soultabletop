@@ -44,7 +44,12 @@ const { editable, lockedEditable, unlock, remove, move } = useSheetListEditing(
       />
     </div>
     <div v-if="scopes.length" :class="layout">
-      <SheetScope v-for="(scope, index) in scopes" :key="index" :scope="scope">
+      <SheetScope
+        v-for="(scope, index) in scopes"
+        :key="index"
+        :scope="scope"
+        :repeat="scopes.length"
+      >
         <div class="sheet-list-item flex gap-2">
           <div class="min-w-0 flex-1 space-y-3">
             <SheetNodes :nodes="node.children" />

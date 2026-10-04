@@ -9,14 +9,16 @@ Decisions so far:
 - Syntax: HTML-like component tags from a fixed allowlist, rendered by Nuxt UI components.
 - Sheets both view and edit content data (JSON editor kept as "Advanced").
 - CSS: kept, sanitized + scoped under the sheet root.
-- Computed values: yes, but a later phase (safe expression language, never `eval`).
+- Computed values: formulas, a small expression language of our own (never `eval` or JavaScript), computed when a
+  sheet is shown and **never stored** (see "Formulas"). Values computed at the schema level, which the API could
+  return, may come later.
 - A viewer who can read content but not its selected sheet gets the **generated** sheet (section 4).
 - Add `vitest` (for parser, validator, CSS sanitizer).
 - Remove `localType` from `ContentFieldSchema` (`schema.ts:118`, `content-validation.ts:25`). While there, validate
   content type `schema` bodies against the `ContentFieldSchema` shape — `api-schemas.ts:58` currently accepts any object.
 
 Sections: 1. markup language + parser → 2. tag catalog → 3. validation against schema → 4. generated sheets →
-5. renderer/view+edit → 6. CSS → 7. editor page → 8. implementation phases.
+5. renderer/view+edit → 6. CSS → 7. editor page → 8. implementation phases → Formulas.
 
 ---
 
@@ -35,8 +37,13 @@ Sections: 1. markup language + parser → 2. tag catalog → 3. validation again
 - Tag names: PascalCase canonical (`Section`); matched case-insensitively so `<section>` works. (decided)
 - Attributes: `name="value"` or `name='value'`; bare `name` = boolean true. No unquoted values. Duplicate attr = error.
 - Text: allowed directly inside layout tags; renders as a paragraph. Whitespace collapsed like HTML. (decided)
-- Interpolation: `{path}` in text and in attribute values → field value (path lookup only, no expressions until the
-  formulas phase). Missing value → empty. Literal braces: `\{` `\}`, literal backslash `\\`. (decided)
+- Interpolation: `{path}` in text and in attribute values → field value (a path lookup). Missing value → empty.
+  Literal braces: `\{` `\}`, literal backslash `\\`. (decided)
+- Formulas: `{= expr}` in text and in attribute values is a formula part (see "Formulas"). After an unescaped `{=`,
+  the parser jumps to the matching `}`, skipping quoted text, so `{= a <b}` isn't read as a tag and
+  `{= concat('}', x)}` works; in attribute values the formula still ends at the attribute's closing quote. An
+  attribute named `formula` is raw text: the parser doesn't look for `{…}` or entities in it, and the validator
+  parses it as one expression (inside `formula="…"`, text goes in single quotes).
 - Comments: `<!-- … -->`.
 - Entities: `&lt; &gt; &amp; &quot; &apos;` and numeric `&#123;` / `&#x7B;`.
 - No raw HTML, no `on*`/event attrs, no `style` attr, no URLs (internal `Ref` links only). Everything renders as text
@@ -52,9 +59,9 @@ Sections: 1. markup language + parser → 2. tag catalog → 3. validation again
 type Loc = { start: { line: number; column: number; offset: number }; end: { … } };
 type SheetNode = SheetElement | SheetText;
 interface SheetElement { type: "element"; tag: string; attrs: SheetAttr[]; children: SheetNode[]; selfClosing: boolean; loc: Loc }
-interface SheetAttr    { name: string; value: TextPart[] | true; loc: Loc }
+interface SheetAttr    { name: string; value: TextPart[] | true; loc: Loc; raw?: string; valueLoc?: Loc }
 interface SheetText    { type: "text"; parts: TextPart[]; loc: Loc }
-type TextPart = string | { path: string; loc: Loc };
+type TextPart = string | { path: string; loc: Loc } | { formula: string; loc: Loc; bodyStart: Position; ast? };
 interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc: Loc; code: string }
 ```
 
@@ -81,9 +88,13 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 ## 2. Tag catalog
 
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
-list; required; default), allowed children, and which schema field types it may bind to. Numeric/text attrs accept
-`{path}` interpolation (e.g. `max="{hpMax}"`). Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`) and
-`live`, `locked`, and `display` (section 5; `Tab` and `RowDetails` accept only `class`), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixed hooks inside: `sheet-field-label` on the visible label (for `Number variant="stat"` the small label under the number; not rendered with `hideLabel` or in `Column` cells) and `sheet-field-value` on a wrapper around the value or input. Sheet CSS targets these instead of `:first-child` or component classes.
+list | formula | condition | name; required; default), allowed children, and which schema field types it may bind to.
+Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one `{path}` or one
+`{= formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
+mixed with text.
+Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`), `show` (conditional display; not on `Column`), and
+`live`, `locked`, and `display` (section 5; `Tab` and `RowDetails` accept only `class` and `show`; `Define` accepts
+none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixed hooks inside: `sheet-field-label` on the visible label (for `Number variant="stat"` the small label under the number; not rendered with `hideLabel` or in `Column` cells) and `sheet-field-value` on a wrapper around the value or input. Sheet CSS targets these instead of `:first-child` or component classes.
 
 ### Layout
 | Tag | Attrs | Children | Renders |
@@ -104,8 +115,27 @@ list; required; default), allowed children, and which schema field types it may 
 in `UTable`'s expandable rows.
 
 ### Fields
-Common attrs: `field` (req), `label` (default: humanized last path segment, `hitPoints` → "Hit Points"), `hideLabel` (boolean), `hint`.
+Common attrs: `field`, `label` (default: humanized last path segment, `hitPoints` → "Hit Points"), `hideLabel` (boolean), `hint`.
 View mode renders formatted values, edit mode renders the input.
+
+`field` is required unless the tag has a `formula` (decided):
+- **Read-only formula tags**: `Value`, `Column`, `Tracker` take `field` or `formula`, not both. With `formula` the
+  tag shows the computed value and is never editable (a `Tracker` formula is its current value; its `max` can be a
+  `{= formula}` too). Its label is the `label` attribute, else empty.
+- **Override tags**: `Number`, `Text`, `Checkbox` take `field`, `formula`, or both. With both, the field holds an
+  optional manual value that wins over the computed one; absent, `null`, or (for `Text`) `""` means automatic. While
+  automatic, the input shows the computed value as its placeholder (a `Checkbox` shows the computed state), typing
+  stores a manual value, and a small "Use automatic value" button (`i-lucide-rotate-ccw`) beside the label removes it
+  (the key is deleted, so strict schemas stay valid). With `formula` alone they are read-only like `Value`.
+- **Cascading computed values**: an override at the top level (not inside a `List` or `Table` row) also stands in for
+  its field in other formulas: a formula reading that path while nothing is stored there gets the computed value, so
+  `<Number field="hp" formula="maxHp" />` follows `<Number field="maxHp" formula="…" />` until either is typed in.
+  An override inside a hidden region (`show`) still counts. Fields that compute each other give an error value
+  (`formula-cycle`), and chains deeper than the call depth limit give `too-deep`. Plain `{path}` text and field tags
+  still show the stored value; write `{= path}` for the computed one. A field may carry the same formula (spacing and
+  parentheses aside) on several tags; a different one is an error (`computed-field-conflict`).
+- Every other field tag (`Field`, `Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
+  `Image` never will: a formula could build a URL that sends data the viewer can read to another site.
 
 | Tag | Extra attrs | Binds | Edit input |
 |---|---|---|---|
@@ -116,7 +146,7 @@ View mode renders formatted values, edit mode renders the input.
 | `Tags` | — | array of string | `UInputTags` |
 | `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
 | `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
-| `Value` | `format` | any | read-only in both modes |
+| `Value` | `format`, `formula` | any | read-only in both modes |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string (not a struct or an array of objects) | picks input from schema type (decided); generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
@@ -164,7 +194,18 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
 | `List` | `field` (array), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder; `field="."` = the item itself (arrays of primitives) |
-| `Table` / `Column` | Table: `field`; Column: `field`, `label`, `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type |
+| `Table` / `Column` | Table: `field`; Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row |
+
+### Definitions and conditional display
+- `<Define name="prof" params="rank" formula="…" />`: a reusable formula, called as `prof(x)` (one without
+  parameters as `pb()`) from any formula in the sheet. Only at the top level or directly inside `<Sheet>`; order
+  doesn't matter; renders nothing. See "Formulas".
+- `show="{= expr}"` or `show="{field}"` (exactly one): `true` shows the tag, `false` or nothing hides it and
+  everything in it, in every mode; the data is never cleared. It is evaluated in the tag's scope (a `List` or `Table`
+  row inside one). Hidden tabs leave the tab list (if the selected one hides, the first visible one is selected; with
+  none visible, `Tabs` renders nothing); a `RowDetails` hidden for a row takes away that row's expand button. Not on
+  `Column` ("use show on the Table, or a formula in the column"). A `show` formula that fails **shows** the tag, so
+  a typo never hides content. Hidden tags are still fully validated.
 
 ---
 
@@ -181,6 +222,29 @@ it (server: `resolveShowSheetWarnings` in `shared/content-schema.ts`; the form p
 
 Structural (errors): unknown tag; unknown attr; missing required attr; attr value not coercible (e.g. `cols="abc"`,
 enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Divider`).
+
+Formulas (errors unless noted; codes in parentheses):
+| Case | Result |
+|---|---|
+| Syntax error, with its exact line and column inside the attribute or `{= }` | error (`formula-syntax`) |
+| Unknown function, wrong number of arguments | error (`formula-unknown-function`, `formula-arity`) |
+| Operator or argument type that can never work (`name + 1` on a text field) | error (`formula-type`) |
+| Result doesn't fit the tag (`Number`/`Tracker`: number, `Text`: text, `Checkbox`: true/false, `Column`: a single value, `show`: true/false/nothing, number attrs: number; any tag: a list or group of fields) or, for overrides, the field | error (`formula-result-type`) |
+| Neither `field` nor `formula` on a field tag; both on a tag that doesn't override | error |
+| `live`/`locked` on a field tag with a formula and no field | warning (`flag-no-effect`) |
+| Dice (`2d6`, `roll(…)`) | error (`formula-dice`) |
+| `<Define>`: duplicate name; a built-in or reserved name; invalid params; a cycle (every definition in it) | error (`duplicate-definition`, `formula-reserved-name`, `invalid-attribute`, `formula-cycle`) |
+| `<Define>` named like a built-in added after v1 | warning (`formula-shadows-builtin`); the definition wins in that sheet |
+| `<Define>` name or parameter that looks like dice (`d6`) | error (`formula-reserved-name`, `invalid-attribute`) |
+| Two top-level overrides of the same field with different formulas | error (`computed-field-conflict`) |
+| An override (`field` and `formula`) on a required field | warning (`override-required`): going back to the computed value clears the field, which can't be saved |
+| An unclosed `{=` (no `}` within 1,000 characters or before a closing tag) | error (`unterminated-formula`) |
+| Over a limit (see "Formulas") | error (`formula-too-large`) |
+| Paths in formulas | the same rules as `field` paths above (strictness, free-form objects, `content-too-deep`, `showSheetWarnings`) |
+
+The checker only reports what can never work: a `scalar` field, a path the schema doesn't know, or a free-form
+`object` path has an unknown type and passes. Messages are deterministic, since the "break existing sheets" check
+compares them (`newSheetErrors` in `validate.ts`).
 
 Field paths — resolved through the schema, following `List` scopes (relative to innermost item, `/` = root, `.` =
 the item):
@@ -281,6 +345,11 @@ Per-field attributes (decided), boolean, allowed on any field tag and on `List`/
   `live="false"` / `locked="false"`. Not on `Tab` and `RowDetails` (decided): their parents render them, so the
   attributes would do nothing and the validator reports them as unknown (`noFlagAttrs` in the registry). Put them on
   `Tabs`, `Table`, or a tag inside the panel.
+
+Formula fields (decided): a formula is computed on every render from the current data (the draft while editing), so
+editing a field updates everything computed from it without a reload. Formula-only fields are never editable;
+`display="box"` shows them as their disabled input. Overrides behave as in section 2. A formula that fails shows "—"
+to everyone, and to people who can edit the sheet also a small warning icon whose tooltip is the message.
 
 Display of non-editable fields (decided): `display="text" | "box"`, allowed on any tag except `Tab` and `RowDetails`, and inherited like `live`/`locked`.
 - `text` shows the plain value (good for stat blocks like a spell); `box` shows the field's edit control, disabled, so a
@@ -411,9 +480,110 @@ Each phase ends with `pnpm test && pnpm typecheck && pnpm lint`, template compil
    keyframes); sheet save validation; curated fonts in `nuxt.config.ts`.
 8. **Sheet editor page** — `app/pages/sheets/[id]/edit.vue`, CodeMirror, preview, reference slide-over, "Copy to new
    Sheet" from generated.
-9. **Later** — formulas (safe expression parser), image uploads, dice rolls.
+9. **Formulas and conditional display** — done (see "Formulas"). **Later**: image uploads, dice rolls,
+   schema-level computed fields.
 
 Also update `.claude/data-model.md` (Sheet system bullets, `shared/` code) and `CLAUDE.md` (`pnpm test`) and remove the TODO.md item once done.
+
+## Formulas
+
+Formulas compute values when a sheet is shown; they are **never stored** (decided): not in `content.data`, not in API
+responses. Values computed at the schema level, which the API could return, may come later. The language is our own
+(no JavaScript, no `eval`; see `.claude/plans/sheet-formulas-sandboxed-js.md` for why not sandboxed JS).
+
+Code (framework-free, in `shared/sheet/`): `formula.ts` (lexer, Pratt parser, AST, value and static types,
+`formulaLimits`), `formula-functions.ts` (the built-in functions as data), `formula-eval.ts` (evaluator),
+`formula-check.ts` (static checks; paths are resolved by the validator through the schema). The validator compiles
+every formula once; the renderer evaluates the compiled trees (`evaluateSheetFormula` in `runtime.ts`).
+
+### Where formulas go
+- `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox` (override), and as
+  the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
+- `{= expr}` in text, in text attributes (`title="HP {= hp.max}"`), in the number attributes read when rendering
+  (`Tracker max`, `Number min`/`max`/`step`), and in `show="{= …}"`. In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
+  there, but the editor's XML highlighting reads it as a tag.
+
+### Grammar
+Precedence, low to high: `or`; `and`; `==` `!=`; `<` `<=` `>` `>=` (can't be chained: `a < b < c` is an error);
+`+` `-`; `*` `/` `%`; unary `-` and `not`; then values: numbers (`12`, `1.5`; no leading dot), text in `'…'` or `"…"`
+(escapes `\'` `\"` `\\`), `true`, `false`, `null`, paths, calls `name(args)`, parentheses. `=`, `&&`, `||`, `!`, and
+`?:` are errors that suggest the right form. Entities `&lt; &gt; &amp; &quot; &apos;` are decoded.
+
+Paths are field paths as elsewhere: `stats.str`, `attacks.0.name`; `.` is the current item, `.name` an explicit
+relative path, `/name` the top level. `/` before a value starts a path from the top; after a value it divides.
+Reserved words (`and`, `or`, `not`, `true`, `false`, `null`): a field with one of these names is reached as `/and` or
+`.and`. `__proto__`, `constructor`, and `prototype` are never valid path segments or field keys.
+
+Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
+parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't
+use one. Built-ins added after v1 go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
+(it wins in that sheet, with a warning).
+
+### Functions (v1)
+| Group | Functions |
+|---|---|
+| Math | `floor`, `ceil`, `trunc`, `abs`, `round(x, digits?)` (halves away from zero), `clamp(x, low, high)` |
+| Min/max | `min(…)`, `max(…)`: numbers, or one list of numbers; empty values skipped; nothing if none |
+| Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)` |
+| Nulls | `coalesce(a, b, …)`: the first value that isn't empty (errors aren't skipped) |
+| Text | `concat(…)`, `join(list, separator)`, `signed(n)` ("+3", "0", "-1") |
+| Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
+| Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
+| Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |
+
+In `sum(list, expr)` and the others, `expr` is evaluated once per item, scoped to the item like inside a `List`
+(relative paths are the item's, `/` the top level); these can nest two levels. `roll`, `dice`, `adv`, `dis`, and
+dice like `2d6` are reserved for dice rolls (an error now). Left out on purpose: regular expressions, dates,
+randomness, locale formatting. The editor's reference panel lists every function from the table in
+`formula-functions.ts`.
+
+### Values, types, and nothing
+Values are numbers (always finite), text, true/false, and nothing (`null`); lists and groups of fields only come from
+paths and feed `sum`, `count`, `length`, `get`, `join`, `min`/`max`, or definitions, and are an error as a final
+result. No implicit conversion: arithmetic and ordering take numbers (`+` doesn't join text; use `concat`), `==`
+compares type and value, `if`/`and`/`or`/`not` take true/false with nothing counting as false. A missing value (absent
+key, unloaded reference, a path through a non-object) is nothing; arithmetic or ordering with nothing gives nothing
+(shown empty); aggregates skip nothing; `sum` and `count` of an empty list are 0. A text field that was cleared holds `""`, not
+nothing, so test text with `length(x) > 0` (false for both) rather than `x != null`. Numbers show without floating-point
+noise (`toPrecision(12)`) and without locale formatting, so server and browser render the same text.
+
+### Errors
+Errors are values (`FormulaError { code, message }`): type mismatches, division by zero, results too large, an
+exhausted step budget, text too long, dice. They pass through operators and calls; the evaluator never throws (an
+unexpected exception becomes an "internal" error). A failed formula shows "—" to everyone, plus a warning icon with the
+message for people who can edit the sheet; a failed `show` shows the tag. Statically broken formulas block saving, as
+any error does.
+
+### Definitions
+`<Define name="…" params="a, b" formula="…" />`: at most 8 parameters (identifiers, no duplicates, no reserved words).
+Bodies are checked against the top level with parameters of any type, and run against the top level when called, so a
+definition doesn't depend on where it's called from (pass item values as arguments). Definitions without parameters
+are computed once per render (a Vue `computed` each); those with parameters run at each call. A cycle (`a() → b() →
+a()`) is an error on every definition in it, and calling a broken definition gives an error value.
+
+### Limits (`formulaLimits`)
+1,000 characters and 200 nodes per expression; nesting depth 32; 32 arguments per call; 200 `<Define>`s and 2,000
+formulas per sheet; per-item functions nested 2 levels; definitions calling each other 16 levels deep; text results of
+10,000 characters.
+
+Steps (every node visit and every list item counts, also for `min`, `max`, and `join`, and a list longer than the
+steps left fails at once; definitions share their caller's budget): one evaluation may take
+at most 20,000, and a whole sheet about 2,000,000 (`maxSheetSteps`), shared evenly. The validator gives each formula
+`min(20,000, 2,000,000 / the sheet's formula count)` (`stepBudget`), and the renderer divides that again by the item
+counts of the Lists and Table rows around it, since a formula inside a List runs once per item. Both depend only on
+the markup and the data, so the server and the browser get the same results (no hydration mismatches). A formula out
+of steps shows "—" with "This formula takes too many steps to compute". Measured (2026-10-02, Mac, vitest): about
+70 ns a step; the worst case of 2,000 formulas each summing 500 rows with a nested sum took 1.95 s before the sheet
+budget and 178 ms after it, and 200 formulas in a 500-row List took 7 s before the per-item division. Whole pages that
+large are slow to render anyway (about 3 to 5 s for 2,000 tags with no formulas, in dev and production builds, much of
+it database time from this machine), so the budget keeps formulas from adding to that rather than making big sheets
+fast.
+
+### Security
+Formulas read only the data the viewer already has (the content and its loaded references) and produce text, numbers,
+and true/false that render through Vue as text. They can't write data, make requests, or build URLs: no tag that loads
+or links a URL takes a formula (`Image` never will). Paths and `get` read own properties only, and reserved keys are
+rejected everywhere.
 
 ## Verification
 - `pnpm test` (vitest) for `shared/sheet/*`; `pnpm typecheck && pnpm lint`; compile changed templates with

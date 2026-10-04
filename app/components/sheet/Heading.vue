@@ -3,7 +3,7 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 
 const props = defineProps<{ node: ValidatedElement }>();
 
-const text = useSheetChildText(() => props.node);
+const segments = useSheetChildSegments(() => props.node);
 const level = computed(() => (props.node.attrs.level as number | undefined) ?? 1);
 const sizes: Record<number, string> = {
   1: "text-2xl",
@@ -18,6 +18,6 @@ const sizes: Record<number, string> = {
     :is="`h${level + 1}`"
     :class="[sheetClasses(node), sizes[level], 'font-bold text-highlighted']"
   >
-    {{ text }}
+    <SheetInlineText :segments="segments" />
   </component>
 </template>

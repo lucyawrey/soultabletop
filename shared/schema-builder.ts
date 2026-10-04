@@ -6,6 +6,7 @@
 
 import {
   fieldKeyPattern,
+  isReservedKey,
   NAME_FIELD,
   RESOURCE_LINK_KINDS,
   type ContentFieldAllow,
@@ -175,6 +176,8 @@ export function builderErrors(fields: BuilderField[]): Map<string, string> {
           field.id,
           "Use letters, numbers, and underscores, starting with a letter or underscore",
         );
+      else if (isReservedKey(key))
+        errors.set(field.id, "That name is reserved; choose another key");
       else if (topLevel && key === NAME_FIELD)
         errors.set(field.id, '"name" is built in; choose another key');
       else if (seen.has(key)) errors.set(field.id, `"${key}" is used twice`);

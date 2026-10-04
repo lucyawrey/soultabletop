@@ -5,7 +5,7 @@ type Color = "primary" | "secondary" | "success" | "info" | "warning" | "error" 
 
 const props = defineProps<{ node: ValidatedElement }>();
 
-const text = useSheetChildText(() => props.node);
+const segments = useSheetChildSegments(() => props.node);
 const color = computed(() => (props.node.attrs.color as Color | undefined) ?? "primary");
 </script>
 
@@ -15,7 +15,8 @@ const color = computed(() => (props.node.attrs.color as Color | undefined) ?? "p
       :class="sheetClasses(node)"
       :color="color"
       variant="subtle"
-      :label="text"
-    />
+    >
+      <SheetInlineText :segments="segments" />
+    </UBadge>
   </div>
 </template>

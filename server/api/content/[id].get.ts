@@ -23,7 +23,7 @@ defineRouteMeta({
     tags: ["Content"],
     summary: "Get a content record",
     description:
-      "Includes the sheet to render it with (`sheet`), the schemas that sheet needs (`schemas`), the referenced content the viewer can read (`refs`), and the names and kinds of linked resources the viewer can read (`links`). Without signing in, only public content is returned, with only what is public in `sheet`, `refs`, and `links`.",
+      "Includes the sheet to render it with (`sheet`), the schemas that sheet needs (`schemas`), the referenced content the viewer can read (`refs`), and the names and kinds of linked resources the viewer can read (`links`). Without signing in, only public content is returned, with only what is public in `sheet`, `refs`, and `links`. Values computed by a sheet's formulas aren't part of `data`: they are computed when the sheet is shown.",
     responses: {
       200: { description: "Content record" },
       404: { description: "Not found" },
