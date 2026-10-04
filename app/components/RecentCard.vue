@@ -6,7 +6,7 @@ defineProps<{ to: string; name: string; detail?: string }>();
 
 <template>
   <div
-    class="relative flex items-center gap-3 rounded-lg border border-default bg-default p-3.5 transition-colors focus-within:ring-2 focus-within:ring-primary hover:border-primary/40"
+    class="relative flex h-full items-center gap-3 rounded-lg border border-default bg-default p-3.5 transition-colors focus-within:ring-2 focus-within:ring-primary hover:border-primary/40"
   >
     <span
       aria-hidden="true"
