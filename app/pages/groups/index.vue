@@ -140,18 +140,18 @@ async function submitForm() {
 
     <UTable v-else :data="visibleGroups" :columns="columns" :loading="status === 'pending'">
       <template #name-cell="{ row }">
-        <NuxtLink
-          :to="`/groups/${row.original.id}`"
-          class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
-        >
-          {{ row.original.name }}
-        </NuxtLink>
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <NuxtLink
+            :to="`/groups/${row.original.id}`"
+            class="text-[15px] font-bold text-highlighted hover:text-primary hover:underline"
+          >
+            {{ row.original.name }}
+          </NuxtLink>
+          <LabelChip v-if="row.original.kind === 'system'" tone="primary">Official</LabelChip>
+        </div>
         <span class="mt-0.5 block font-mono text-xs text-muted">
           {{ row.original.readableId }}
         </span>
-        <LabelChip v-if="row.original.kind === 'system'" tone="primary" class="ms-2">
-          Official
-        </LabelChip>
       </template>
 
       <template #role-cell="{ row }">
