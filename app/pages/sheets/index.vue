@@ -78,6 +78,7 @@ const {
   selectStartingSystem,
   selectType,
   onSystemChange,
+  onTypeChange,
 } = useSystemTypePicker(form, contentTypes);
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const idAvailability = useResourceIdAvailability(form, "sheet");
@@ -360,9 +361,10 @@ async function remove() {
             required
           >
             <USelect
-              v-model="form.contentTypeId"
+              :model-value="form.contentTypeId"
               :items="typeOptions"
               class="w-full"
+              @update:model-value="onTypeChange"
             >
               <template #item-label="{ item }">
                 <ResourceOption :option="item as ResourceOptionItem" />

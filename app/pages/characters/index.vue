@@ -95,8 +95,13 @@ const form = reactive({
   systemId: "",
   contentTypeId: "",
 });
-const { systemOptions, typeOptions, selectStartingSystem, onSystemChange } =
-  useSystemTypePicker(form, characterTypes);
+const {
+  systemOptions,
+  typeOptions,
+  selectStartingSystem,
+  onSystemChange,
+  onTypeChange,
+} = useSystemTypePicker(form, characterTypes);
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const idAvailability = useResourceIdAvailability(form, "content");
 const formBusy = ref(false);
@@ -360,9 +365,10 @@ async function remove() {
           </UFormField>
           <UFormField name="contentTypeId" label="Character Type" required>
             <USelect
-              v-model="form.contentTypeId"
+              :model-value="form.contentTypeId"
               :items="typeOptions"
               class="w-full"
+              @update:model-value="onTypeChange"
             >
               <template #item-label="{ item }">
                 <ResourceOption :option="item as ResourceOptionItem" />

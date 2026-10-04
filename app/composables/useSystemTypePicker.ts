@@ -36,7 +36,7 @@ export function useSystemTypePicker(
     ),
   );
 
-  // Answers that arrive after the system changed again are dropped.
+  // Answers that arrive after the system or type changed again are dropped.
   let request = 0;
   async function selectMostUsedType() {
     const systemId = form.systemId;
@@ -58,19 +58,32 @@ export function useSystemTypePicker(
   }
 
   // Starts on the header's system when it has types here, else the first
-  // system that does.
+  // system that does. If the systems list is still loading, it picks one
+  // once the list arrives.
+  let waitingForSystems = false;
   function selectStartingSystem() {
     const offered = systemOptions.value;
+    waitingForSystems = offered.length === 0;
     form.systemId =
       offered.find((option) => option.value === currentSystemId.value)?.value ??
       offered[0]?.value ??
       "";
     return selectMostUsedType();
   }
+  watch(systemOptions, (offered) => {
+    if (waitingForSystems && offered.length > 0) selectStartingSystem();
+  });
 
   function onSystemChange(systemId: string) {
+    waitingForSystems = false;
     form.systemId = systemId;
     return selectMostUsedType();
+  }
+
+  // A type the user picked wins over a preselection still on its way.
+  function onTypeChange(contentTypeId: string) {
+    request++;
+    form.contentTypeId = contentTypeId;
   }
 
   // A given type and its system, instead of the preselection.
@@ -78,6 +91,7 @@ export function useSystemTypePicker(
     const type = types.value.find((item) => item.id === contentTypeId);
     if (!type) return false;
     request++;
+    waitingForSystems = false;
     form.systemId = type.systemId;
     form.contentTypeId = type.id;
     return true;
@@ -89,5 +103,6 @@ export function useSystemTypePicker(
     selectStartingSystem,
     selectType,
     onSystemChange,
+    onTypeChange,
   };
 }
