@@ -528,9 +528,9 @@ use one. Built-ins added after v1 (so far `list`) go in `formulaLaterBuiltins`; 
 |---|---|
 | Math | `floor`, `ceil`, `trunc`, `abs`, `round(x, digits?)` (halves away from zero), `clamp(x, low, high)` |
 | Min/max | `min(…)`, `max(…)`: numbers, or one list of numbers; empty values skipped; nothing if none |
-| Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)`, `list(a, b, …)` (builds a list from separate values: `join(list(speed, flySpeed), ", ")`, `max(list(a, b))`; empty values stay in it and the functions reading it skip them; single values only) |
+| Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)`, `list(a, b, …)` (builds a list from separate values: `join(list(speed, flySpeed), ", ")`, `max(list(a, b))`; empty values stay in it and `join`, `sum`, `min`, and `max` skip them; single values only) |
 | Nulls | `coalesce(a, b, …)`: the first value that isn't empty (errors aren't skipped) |
-| Text | `concat(…)`, `join(list, separator)`, `signed(n)` ("+3", "0", "-1") |
+| Text | `concat(…)`, `join(list, separator)` (skips nothing and empty text `""`), `signed(n)` ("+3", "0", "-1") |
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |

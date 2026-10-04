@@ -398,7 +398,7 @@ const functionList: FormulaFunction[] = [
     maxArgs: formulaLimits.maxArgs,
     signature: "list(a, b, …)",
     description:
-      "The values as a list, to combine separate fields: join(list(a, b), ', '), sum(list(a, b)); empty values stay in the list and are skipped by the functions that read it",
+      "The values as a list, to combine separate fields: join(list(a, b), ', '), sum(list(a, b)); empty values stay in the list; join skips them, and so do sum, min and max",
     result: (types) => arrayOf(types.length ? unionOf(...types) : formulaTypes.any),
     check: (types, problems) =>
       expect(types, problems, "list", ["number", "string", "boolean"], "single values"),
@@ -467,7 +467,7 @@ const functionList: FormulaFunction[] = [
     maxArgs: 2,
     walksLists: true,
     signature: "join(list, separator)",
-    description: "Joins a list of text or numbers with separator between them, skipping empty items",
+    description: "Joins a list of text or numbers with separator between them, skipping empty items (nothing and empty text)",
     result: () => formulaTypes.string,
     check: (types, problems) => {
       const [list, separator] = types;
@@ -485,7 +485,7 @@ const functionList: FormulaFunction[] = [
       let first = true;
       for (const item of list as unknown[]) {
         const value = toFormulaValue(item);
-        if (value === null) continue;
+        if (value === null || value === "") continue;
         const part = textOf("join", value, false);
         if (isFormulaError(part)) return part;
         text += first ? part : (separator ?? "") + part;
