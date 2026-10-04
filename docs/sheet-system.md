@@ -122,7 +122,7 @@ View mode renders formatted values, edit mode renders the input.
 - **Read-only formula tags**: `Value`, `Column`, `Tracker` take `field` or `formula`, not both. With `formula` the
   tag shows the computed value and is never editable (a `Tracker` formula is its current value; its `max` can be a
   `{= formula}` too). Its label is the `label` attribute, else empty.
-- **Override tags**: `Number`, `Text`, `Checkbox` take `field`, `formula`, or both. With both, the field holds an
+- **Override tags**: `Number`, `Text`, `Checkbox` (and `Field`, see below) take `field`, `formula`, or both. With both, the field holds an
   optional manual value that wins over the computed one; absent, `null`, or (for `Text`) `""` means automatic. While
   automatic, the input shows the computed value as its placeholder (a `Checkbox` shows the computed state), typing
   stores a manual value, and a small "Use automatic value" button (`i-lucide-rotate-ccw`) beside the label removes it
@@ -134,7 +134,11 @@ View mode renders formatted values, edit mode renders the input.
   (`formula-cycle`), and chains deeper than the call depth limit give `too-deep`. Plain `{path}` text and field tags
   still show the stored value; write `{= path}` for the computed one. A field may carry the same formula (spacing and
   parentheses aside) on several tags; a different one is an error (`computed-field-conflict`).
-- Every other field tag (`Field`, `Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
+- **`Field` with a formula**: `Field` takes `formula` (with `field`, required) on a `string`, `number`, or `boolean`
+  schema field only, and then acts exactly like `Text`, `Number`, or `Checkbox` (override, reset button, cascading);
+  any other schema type is an error (`invalid-attribute`), and `Field` with
+  `formula` alone is a `missing-attribute` error (use `Value`).
+- Every other field tag (`Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
   `Image` never will: a formula could build a URL that sends data the viewer can read to another site.
 
 | Tag | Extra attrs | Binds | Edit input |
@@ -497,7 +501,7 @@ Code (framework-free, in `shared/sheet/`): `formula.ts` (lexer, Pratt parser, AS
 every formula once; the renderer evaluates the compiled trees (`evaluateSheetFormula` in `runtime.ts`).
 
 ### Where formulas go
-- `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox` (override), and as
+- `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox`, `Field` (override), and as
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
 - `{= expr}` in text, in text attributes (`title="HP {= hp.max}"`), in the number attributes read when rendering
   (`Tracker max`, `Number min`/`max`/`step`), and in `show="{= …}"`. In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
@@ -516,7 +520,7 @@ Reserved words (`and`, `or`, `not`, `true`, `false`, `null`): a field with one o
 
 Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
 parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't
-use one. Built-ins added after v1 go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
+use one. Built-ins added after v1 (so far `list`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
 (it wins in that sheet, with a warning).
 
 ### Functions (v1)
@@ -524,9 +528,9 @@ use one. Built-ins added after v1 go in `formulaLaterBuiltins`; a sheet's defini
 |---|---|
 | Math | `floor`, `ceil`, `trunc`, `abs`, `round(x, digits?)` (halves away from zero), `clamp(x, low, high)` |
 | Min/max | `min(…)`, `max(…)`: numbers, or one list of numbers; empty values skipped; nothing if none |
-| Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)` |
+| Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)`, `list(a, b, …)` (builds a list from separate values: `join(list(speed, flySpeed), ", ")`, `max(list(a, b))`; empty values stay in it and `join`, `sum`, `min`, and `max` skip them; single values only) |
 | Nulls | `coalesce(a, b, …)`: the first value that isn't empty (errors aren't skipped) |
-| Text | `concat(…)`, `join(list, separator)`, `signed(n)` ("+3", "0", "-1") |
+| Text | `concat(…)`, `join(list, separator)` (skips nothing and empty text `""`), `signed(n)` ("+3", "0", "-1") |
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |
@@ -539,7 +543,7 @@ randomness, locale formatting. The editor's reference panel lists every function
 
 ### Values, types, and nothing
 Values are numbers (always finite), text, true/false, and nothing (`null`); lists and groups of fields only come from
-paths and feed `sum`, `count`, `length`, `get`, `join`, `min`/`max`, or definitions, and are an error as a final
+paths (or `list(…)`) and feed `sum`, `count`, `length`, `get`, `join`, `min`/`max`, or definitions, and are an error as a final
 result. No implicit conversion: arithmetic and ordering take numbers (`+` doesn't join text; use `concat`), `==`
 compares type and value, `if`/`and`/`or`/`not` take true/false with nothing counting as false. A missing value (absent
 key, unloaded reference, a path through a non-object) is nothing; arithmetic or ordering with nothing gives nothing
@@ -566,8 +570,8 @@ a()`) is an error on every definition in it, and calling a broken definition giv
 formulas per sheet; per-item functions nested 2 levels; definitions calling each other 16 levels deep; text results of
 10,000 characters.
 
-Steps (every node visit and every list item counts, also for `min`, `max`, and `join`, and a list longer than the
-steps left fails at once; definitions share their caller's budget): one evaluation may take
+Steps (every node visit and every list item counts, also for `min`, `max`, and `join`; the items of `list(…)` are node visits and at most 32, like any call's
+arguments, and a list longer than the steps left fails at once; definitions share their caller's budget): one evaluation may take
 at most 20,000, and a whole sheet about 2,000,000 (`maxSheetSteps`), shared evenly. The validator gives each formula
 `min(20,000, 2,000,000 / the sheet's formula count)` (`stepBudget`), and the renderer divides that again by the item
 counts of the Lists and Table rows around it, since a formula inside a List runs once per item. Both depend only on

@@ -45,7 +45,7 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 
 | Tag | Extra attributes | Binds | Notes |
 |---|---|---|---|
-| `Field` | none | string, number, boolean, scalar, object, resourceLink, content, array of strings | Input chosen from the schema type |
+| `Field` | `formula` (only on a string, number, or boolean field; needs `field`) | string, number, boolean, scalar, object, resourceLink, content, array of strings | Input chosen from the schema type; with `formula` it acts like `Text`/`Number`/`Checkbox` (an override) |
 | `Text` | `formula`, `multiline`, `placeholder` | string | `formula` overrides (see below) |
 | `Number` | `formula`, `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric); `formula` overrides |
 | `Checkbox` | `formula` | boolean | `formula` overrides |
@@ -63,7 +63,7 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 `Checkbox` it may stand alone (read-only) or go with `field` (an override: the field's value wins when it has one; the
 computed value is the input's placeholder; a reset button clears the field). Outside `List`/`Table` rows, other
 formulas reading an override's field with nothing stored get its computed value; `{path}` doesn't, `{= path}` does. `live`/`locked` on a tag with a formula
-and no field do nothing (a warning). Other field tags take no `formula`.
+and no field do nothing (a warning). `Field` takes `formula` with `field` on a string, number, or boolean schema field and then acts as the matching tag; any other schema type is an error. Other field tags take no `formula`.
 
 Paths the schema does not know (a non-strict content type, or below a free-form `object`) are accepted by every
 field tag, with a warning.
