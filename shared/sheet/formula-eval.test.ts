@@ -24,6 +24,7 @@ const data = {
   stats: { str: 2, dex: 3 },
   tags: ["brave", "tired"],
   nums: [1, null, 3],
+  blanks: ["a", "", "b"],
   empty: [],
   class: "class-id",
   gone: "gone-id",
@@ -237,6 +238,15 @@ describe("functions", () => {
     ["join(tags, ', ')", "brave, tired"],
     ["join(nums, '+')", "1+3"],
     ["join(missing, ', ')", null],
+    ["join(list(name, missing, level), ', ')", "Violet, 3"],
+    ["join(list('', name, null, missing), ',')", "Violet"],
+    ["join(list(name, '', level), ',')", "Violet,3"],
+    ["join(blanks, ',')", "a,b"],
+    ["sum(list(level, missing, 4))", 7],
+    ["max(list(level, 9, zero))", 9],
+    ["length(list())", 0],
+    ["length(list(missing))", 1],
+    ["count(list(level, missing))", 1],
     ["signed(3)", "+3"],
     ["signed(0)", "0"],
     ["signed(-1)", "-1"],
@@ -366,6 +376,24 @@ describe("limits and safety", () => {
     expect(evaluate("sum(list)", { root: scope, scope, budget: { steps: formulaLimits.maxSteps * 2 } })).toBe(
       (list.length * (list.length - 1)) / 2,
     );
+  });
+
+  it("evaluates a call's arguments once, even for later built-ins", () => {
+    const budget = { steps: 100 };
+    expect(evaluate("list(1, 2, 3)", { budget }) instanceof FormulaError).toBe(true);
+    // list(1, 2, 3) is a call and three literals: 4 steps.
+    expect(100 - budget.steps).toBe(4);
+    const nested = { steps: 1000 };
+    evaluate("length(list(length(list(1, 2)), 3))", { budget: nested });
+    expect(1000 - nested.steps).toBe(7);
+  });
+
+  it("lets a sheet's own definition win over a later built-in", () => {
+    const own = parseFormula("42", { line: 1, column: 1, offset: 0 }).ast!;
+    const call: FormulaEnv["call"] = (name, args) =>
+      name === "list" ? callFormulaDefinition({ params: ["a"], ast: own }, args, env()) : undefined;
+    expect(evaluate("list(1)", { call })).toBe(42);
+    expect(evaluate("length(list(1, 2))", { call: () => undefined })).toBe(2);
   });
 
   it("shares the budget with definitions", () => {
