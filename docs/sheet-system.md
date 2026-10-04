@@ -122,7 +122,7 @@ View mode renders formatted values, edit mode renders the input.
 - **Read-only formula tags**: `Value`, `Column`, `Tracker` take `field` or `formula`, not both. With `formula` the
   tag shows the computed value and is never editable (a `Tracker` formula is its current value; its `max` can be a
   `{= formula}` too). Its label is the `label` attribute, else empty.
-- **Override tags**: `Number`, `Text`, `Checkbox` take `field`, `formula`, or both. With both, the field holds an
+- **Override tags**: `Number`, `Text`, `Checkbox` (and `Field`, see below) take `field`, `formula`, or both. With both, the field holds an
   optional manual value that wins over the computed one; absent, `null`, or (for `Text`) `""` means automatic. While
   automatic, the input shows the computed value as its placeholder (a `Checkbox` shows the computed state), typing
   stores a manual value, and a small "Use automatic value" button (`i-lucide-rotate-ccw`) beside the label removes it
@@ -136,7 +136,7 @@ View mode renders formatted values, edit mode renders the input.
   parentheses aside) on several tags; a different one is an error (`computed-field-conflict`).
 - **`Field` with a formula**: `Field` takes `formula` (with `field`, required) on a `string`, `number`, or `boolean`
   schema field only, and then acts exactly like `Text`, `Number`, or `Checkbox` (override, reset button, cascading);
-  any other schema type, is an error (`invalid-attribute`), and `Field` with
+  any other schema type is an error (`invalid-attribute`), and `Field` with
   `formula` alone is a `missing-attribute` error (use `Value`).
 - Every other field tag (`Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
   `Image` never will: a formula could build a URL that sends data the viewer can read to another site.
@@ -501,7 +501,7 @@ Code (framework-free, in `shared/sheet/`): `formula.ts` (lexer, Pratt parser, AS
 every formula once; the renderer evaluates the compiled trees (`evaluateSheetFormula` in `runtime.ts`).
 
 ### Where formulas go
-- `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox` (override), and as
+- `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox`, `Field` (override), and as
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
 - `{= expr}` in text, in text attributes (`title="HP {= hp.max}"`), in the number attributes read when rendering
   (`Tracker max`, `Number min`/`max`/`step`), and in `show="{= …}"`. In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
@@ -570,8 +570,8 @@ a()`) is an error on every definition in it, and calling a broken definition giv
 formulas per sheet; per-item functions nested 2 levels; definitions calling each other 16 levels deep; text results of
 10,000 characters.
 
-Steps (every node visit and every list item counts, also for `min`, `max`, and `join`; the items of `list(…)` are node visits and at most 32, like any call's arguments, and a list longer than the
-steps left fails at once; definitions share their caller's budget): one evaluation may take
+Steps (every node visit and every list item counts, also for `min`, `max`, and `join`; the items of `list(…)` are node visits and at most 32, like any call's
+arguments, and a list longer than the steps left fails at once; definitions share their caller's budget): one evaluation may take
 at most 20,000, and a whole sheet about 2,000,000 (`maxSheetSteps`), shared evenly. The validator gives each formula
 `min(20,000, 2,000,000 / the sheet's formula count)` (`stepBudget`), and the renderer divides that again by the item
 counts of the Lists and Table rows around it, since a formula inside a List runs once per item. Both depend only on

@@ -30,12 +30,15 @@ const formulaError = computed(() =>
 );
 // An override with nothing stored (or empty text) shows the computed value.
 const stored = computed(() => resolved.value.value);
+// `Field` with a formula acts as the tag matching its field's type.
+const overrideTag = computed(() => {
+  if (props.node.tag !== "Field") return props.node.tag;
+  const type = props.node.binding?.field?.type;
+  return type === "string" ? "Text" : type === "boolean" ? "Checkbox" : type === "number" ? "Number" : "Field";
+});
 const override = computed(() =>
   sheetOverride(
-    // `Field` with a formula acts as Text on a text field (cleared means automatic).
-    props.node.tag === "Field" && props.node.binding?.field?.type === "string"
-      ? "Text"
-      : props.node.tag,
+    overrideTag.value,
     stored.value,
     computedValue.value,
   ),
@@ -211,7 +214,7 @@ const imageSize = computed(
     <template v-if="editable && resolved.path">
       <SheetFieldInput
         :node="node"
-        :value="node.tag === 'Checkbox' ? value : stored"
+        :value="overrideTag === 'Checkbox' ? value : stored"
         :path="resolved.path"
         :label="label"
         :automatic="automatic ? computedText : undefined"

@@ -278,6 +278,9 @@ const imageError = computed(() =>
       v-model="numberValue"
       :disabled="disabled"
       :min="0"
+      :increment="narrow ? false : undefined"
+      :decrement="narrow ? false : undefined"
+      :ui="narrow ? { base: 'px-1.5' } : undefined"
       :max="trackerMax"
       :aria-label="label"
       class="w-full"
@@ -307,7 +310,7 @@ const imageError = computed(() =>
       v-if="allow !== 'local'"
       :content-type-id="contentField!.contentTypeId"
       :model-value="typeof value === 'string' ? value : undefined"
-      :current-name="referenced?.name"
+      :current-name="referenced?.name ?? (typeof value === 'string' ? 'Unavailable' : undefined)"
       :placeholder="referenced?.name ?? (isLocal ? 'Use existing…' : 'Choose…')"
       @pick="pick"
     />
@@ -357,6 +360,9 @@ const imageError = computed(() =>
       v-else-if="scalarType === 'number'"
       v-model="scalarNumber"
       :disabled="disabled"
+      :increment="narrow ? false : undefined"
+      :decrement="narrow ? false : undefined"
+      :ui="narrow ? { base: 'px-1.5' } : undefined"
       :aria-label="label"
       class="min-w-0 flex-1"
     />
