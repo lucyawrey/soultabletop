@@ -804,6 +804,22 @@ describe("review follow-ups", () => {
     expect(messages('<Number field="hp" formula="10" />', required)).toEqual([]);
   });
 
+  it("registers top-level override fields as computed fields", () => {
+    const { computedFields } = compile(
+      '<Number field="hpMax" formula="10 + stats.str" /><Value field="hp" formula="1" />' +
+        '<Table field="attacks"><Number field="bonus" formula="2" /></Table>',
+    );
+    expect([...computedFields.keys()]).toEqual(["hpMax"]);
+    expect(computedFields.get("hpMax")).toMatchObject({ tag: "Number", source: "10 + stats.str" });
+  });
+
+  it("allows the same formula on a field twice, but not two different ones", () => {
+    expect(messages('<Number field="hp" formula="hpMax" /><Number field="hp" formula=" hpMax " />')).toEqual([]);
+    expect(messages('<Number field="hp" formula="hpMax" />\n<Number field="hp" formula="hpMax + 1" />')).toEqual([
+      'error computed-field-conflict: "hp" already has a different formula on line 1; give a field one formula',
+    ]);
+  });
+
   it("explains a quote that cuts a {= } attribute short", () => {
     expect(messages('<Section title="{= concat("a", hp)}">x</Section>')).toContain(
       "error formula-syntax: The formula ends at this \"; inside title=\"…\", write text in single quotes, like 'expert'",

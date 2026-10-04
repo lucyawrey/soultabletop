@@ -320,6 +320,76 @@ describe("sheetOverride", () => {
   });
 });
 
+describe("computed fields", () => {
+  const empty = { root: { hasStrictSchema: false, schema: {} }, types: {} };
+  function value(markup: string, source: string, stored: Record<string, unknown> = {}) {
+    const compiled = compileSheet(markup, empty);
+    const scope: SheetScope = { value: stored, path: [] };
+    const ast = parseFormula(source, { line: 1, column: 1, offset: 0 }).ast!;
+    return evaluateSheetFormula(ast, scope, scope, refs, {
+      definitions: compiled.definitions,
+      computedFields: compiled.computedFields,
+    });
+  }
+  const sheet = '<Number field="hp" formula="maxHp" /><Number field="maxHp" formula="floor(maxDex / 2)" />';
+
+  it("reads an override field's computed value when nothing is stored", () => {
+    expect(value(sheet, "hp", { maxDex: 9 })).toBe(4);
+    expect(value(sheet, "maxHp + 1", { maxDex: 9 })).toBe(5);
+  });
+
+  it("reads the stored value when there is one", () => {
+    expect(value(sheet, "hp", { maxDex: 9, maxHp: 20 })).toBe(20);
+    expect(value(sheet, "hp", { maxDex: 9, hp: 0 })).toBe(0);
+  });
+
+  it("counts an empty Text as nothing stored", () => {
+    const text = '<Text field="title" formula="concat(name, \'!\')" />';
+    expect(value(text, "title", { name: "Violet", title: "" })).toBe("Violet!");
+    expect(value(text, "title", { name: "Violet", title: "Hero" })).toBe("Hero");
+  });
+
+  it("gives cycles an error", () => {
+    const cycle = '<Number field="a" formula="b + 1" /><Number field="b" formula="a + 1" />';
+    expect(value(cycle, "a")).toEqual(new FormulaError("formula-cycle", "a is computed from itself"));
+    expect(value(cycle, "a", { b: 1 })).toBe(2);
+    expect(value('<Number field="a" formula="a + 1" />', "a")).toEqual(
+      new FormulaError("formula-cycle", "a is computed from itself"),
+    );
+  });
+
+  it("limits how deep computed fields depend on each other", () => {
+    const depth = formulaLimits.maxCallDepth;
+    const chain = Array.from({ length: depth + 1 }, (_, index) => `<Number field="f${index}" formula="f${index + 1} + 1" />`);
+    expect(value(chain.join(""), "f0")).toEqual(
+      new FormulaError("too-deep", `Computed values depend on each other more than ${depth} levels deep`),
+    );
+    expect(value(chain.slice(1).join(""), "f1", { [`f${depth + 1}`]: 0 })).toBe(depth);
+  });
+
+  it("doesn't use overrides inside List rows", () => {
+    const list = '<List field="rows"><Number field="x" formula="5" /></List>';
+    expect(value(list, "x")).toBeNull();
+    expect(value(list, "sum(rows, x)", { rows: [{}, { x: 2 }] })).toBe(2);
+  });
+
+  it("reaches computed fields through definitions without parameters", () => {
+    const markup = `<Define name="half" formula="hp / 2" />${sheet}`;
+    expect(value(markup, "half()", { maxDex: 9 })).toBe(2);
+    // A cached value isn't used inside a computed field, so this cycle is found.
+    const cyclic = compileSheet('<Define name="m" formula="hp" /><Number field="hp" formula="m()" />', empty);
+    const scope: SheetScope = { value: {}, path: [] };
+    const ast = parseFormula("hp", { line: 1, column: 1, offset: 0 }).ast!;
+    expect(
+      evaluateSheetFormula(ast, scope, scope, refs, {
+        definitions: cyclic.definitions,
+        computedFields: cyclic.computedFields,
+        cached: () => 1,
+      }),
+    ).toEqual(new FormulaError("formula-cycle", "hp is computed from itself"));
+  });
+});
+
 describe("compiled number attributes", () => {
   it("evaluates {= } in number attributes", () => {
     const { nodes } = compileSheet('<Tracker field="hp" max="{= hp * 2 + stats.str}" />', {

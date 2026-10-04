@@ -61,7 +61,8 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 
 `formula`: read-only on `Value`, `Column`, `Tracker` (instead of `field`; never both). On `Number`, `Text`, and
 `Checkbox` it may stand alone (read-only) or go with `field` (an override: the field's value wins when it has one; the
-computed value is the input's placeholder; a reset button clears the field). `live`/`locked` on a tag with a formula
+computed value is the input's placeholder; a reset button clears the field). Outside `List`/`Table` rows, other
+formulas reading an override's field with nothing stored get its computed value; `{path}` doesn't, `{= path}` does. `live`/`locked` on a tag with a formula
 and no field do nothing (a warning). Other field tags take no `formula`.
 
 Paths the schema does not know (a non-strict content type, or below a free-form `object`) are accepted by every

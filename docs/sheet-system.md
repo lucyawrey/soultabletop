@@ -127,6 +127,12 @@ View mode renders formatted values, edit mode renders the input.
   automatic, the input shows the computed value as its placeholder (a `Checkbox` shows the computed state), typing
   stores a manual value, and a small "Use automatic value" button (`i-lucide-rotate-ccw`) beside the label removes it
   (the key is deleted, so strict schemas stay valid). With `formula` alone they are read-only like `Value`.
+- **Cascading computed values**: an override at the top level (not inside a `List` or `Table` row) also stands in for
+  its field in other formulas: a formula reading that path while nothing is stored there gets the computed value, so
+  `<Number field="hp" formula="maxHp" />` follows `<Number field="maxHp" formula="…" />` until either is typed in.
+  Fields that compute each other give an error value (`formula-cycle`), and chains deeper than the call depth limit
+  give `too-deep`. Plain `{path}` text and field tags still show the stored value; write `{= path}` for the computed
+  one. A field may carry the same formula on several tags; a different one is an error (`computed-field-conflict`).
 - Every other field tag (`Field`, `Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
   `Image` never will: a formula could build a URL that sends data the viewer can read to another site.
 
@@ -229,6 +235,7 @@ Formulas (errors unless noted; codes in parentheses):
 | `<Define>`: duplicate name; a built-in or reserved name; invalid params; a cycle (every definition in it) | error (`duplicate-definition`, `formula-reserved-name`, `invalid-attribute`, `formula-cycle`) |
 | `<Define>` named like a built-in added after v1 | warning (`formula-shadows-builtin`); the definition wins in that sheet |
 | `<Define>` name or parameter that looks like dice (`d6`) | error (`formula-reserved-name`, `invalid-attribute`) |
+| Two top-level overrides of the same field with different formulas | error (`computed-field-conflict`) |
 | An override (`field` and `formula`) on a required field | warning (`override-required`): going back to the computed value clears the field, which can't be saved |
 | An unclosed `{=` (no `}` within 1,000 characters or before a closing tag) | error (`unterminated-formula`) |
 | Over a limit (see "Formulas") | error (`formula-too-large`) |
