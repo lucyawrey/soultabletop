@@ -21,6 +21,13 @@ const props = defineProps<{
 const { context, number } = useSheet();
 const attrText = useSheetAttrText();
 
+// An xs or sm Column is too narrow for the − and + buttons beside the value.
+const narrow = computed(
+  () =>
+    props.node.tag === "Column" &&
+    (props.node.attrs.width === "xs" || props.node.attrs.width === "sm"),
+);
+
 const display = computed(() => sheetFieldDisplay(props.node));
 const field = computed(() => props.node.binding?.field);
 
@@ -226,6 +233,8 @@ const imageError = computed(() =>
     :format-options="numberFormat"
     :placeholder="automatic"
     :aria-label="label"
+    :increment="narrow ? false : undefined"
+    :decrement="narrow ? false : undefined"
     class="w-full"
   />
 
@@ -297,6 +306,7 @@ const imageError = computed(() =>
       v-if="allow !== 'local'"
       :content-type-id="contentField!.contentTypeId"
       :model-value="typeof value === 'string' ? value : undefined"
+      :current-name="referenced?.name"
       :placeholder="referenced?.name ?? (isLocal ? 'Use existing…' : 'Choose…')"
       @pick="pick"
     />
