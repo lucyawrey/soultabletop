@@ -118,6 +118,8 @@ Playing campaigns online, sharing, and discovery.
   Resources are now addressable by owner + readable ID (`/sheets/lucy/fighter`), and a URL copied from the address bar breaks when the owner or the resource's readable ID is renamed (internal links use UUIDs and don't). Keep the old owner/readable ID pairs (a table of previous addresses) and redirect them to the current one, for the API and the pages. Decide how long old IDs are kept, and whether someone else may take a released ID, which would turn the redirect into someone else's resource.
 - **Blocking and reporting users** · feature · needs decision: what blocking hides or prevents (content, friend requests, invites), and who handles reports
   Beyond the library's "hide this creator": block a user (pairs with the friends list and group invites), and report content or users for moderation.
+- **Hide a field's label but keep its space in Sheets** · feature · small · needs decision: the attribute (e.g. `hideLabel="keep"`, or a separate boolean)
+  From the user (2026-10-03), found while building sheets: an unlabeled field should line up with labeled fields beside it in a `Grid`. Today `hideLabel` (`app/components/sheet/Field.vue`) drops the label element entirely, so the input moves up and sits out of line. Wanted: an option that keeps the label's space (rendered invisibly, still naming the input for screen readers) while hiding its text. Update the validator, `docs/sheet-system.md` (§2, "Hiding a label"), and the Sheets skill's `references/tags.md`.
 
 # Low priority
 
