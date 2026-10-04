@@ -6,6 +6,7 @@ import {
 } from "~/utils/api-error";
 import {
   CONTENT_CATEGORY_LABELS,
+  CONTENT_CATEGORY_MENU_ORDER,
   type ContentCategory,
 } from "#shared/content-categories";
 import type { ContentTypeSchema } from "#shared/content-schema";
@@ -47,9 +48,10 @@ interface SheetOption {
   isDefault: boolean;
 }
 
-const categoryOptions = Object.entries(CONTENT_CATEGORY_LABELS).map(
-  ([value, label]) => ({ label, value }),
-);
+const categoryOptions = CONTENT_CATEGORY_MENU_ORDER.map((value) => ({
+  label: CONTENT_CATEGORY_LABELS[value],
+  value,
+}));
 
 const route = useRoute();
 const toast = useToast();
@@ -486,12 +488,6 @@ async function remove() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField
-            v-if="contentType?.canChangeOwner"
-            v-model="form.ownerGroupId"
-            :original="contentType?.ownerGroupId ?? null"
-          />
           <UFormField name="contentCategory" label="Category" required>
             <USelect
               v-model="form.contentCategory"
@@ -517,6 +513,12 @@ async function remove() {
           >
             <USwitch v-model="form.showSheetWarnings" />
           </UFormField>
+          <OwnerField
+            v-if="contentType?.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="contentType?.ownerGroupId ?? null"
+          />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"

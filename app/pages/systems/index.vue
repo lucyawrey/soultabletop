@@ -256,12 +256,12 @@ async function remove() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
           <OwnerField
             v-if="!editingSystem || editingSystem.canChangeOwner"
             v-model="form.ownerGroupId"
             :original="editingSystem ? editingSystem.ownerGroupId : undefined"
           />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"

@@ -488,12 +488,6 @@ function printPage() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField
-            v-if="item?.canChangeOwner"
-            v-model="form.ownerGroupId"
-            :original="item?.ownerGroupId ?? null"
-          />
           <UFormField
             name="sheetId"
             label="Sheet"
@@ -509,6 +503,12 @@ function printPage() {
               </template>
             </USelect>
           </UFormField>
+          <OwnerField
+            v-if="item?.canChangeOwner"
+            v-model="form.ownerGroupId"
+            :original="item?.ownerGroupId ?? null"
+          />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UFormField
             name="data"
             label="Data (JSON)"

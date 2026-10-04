@@ -46,7 +46,6 @@ const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySy
 const { items: characters, status, refresh } = list;
 watch(categoryFilter, () => list.setPage(1));
 
-const { systemId: currentSystemId } = useCurrentSystem();
 const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
@@ -56,17 +55,6 @@ const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<Co
 
 const characterTypes = computed(() =>
   contentTypes.value.filter((item) => isCharacterCategory(item.contentCategory)),
-);
-
-const { systemLabel } = useSystems();
-const characterTypeOptions = computed(() =>
-  characterTypes.value.map((item) =>
-    resourceOption(item.id, {
-      name: item.name,
-      systemName: systemLabel(item.systemId),
-      source: item.source,
-    }),
-  ),
 );
 
 
@@ -104,25 +92,30 @@ const form = reactive({
   name: "",
   isPubliclyReadable: false,
   ownerGroupId: null as string | null,
+  systemId: "",
   contentTypeId: "",
 });
+const {
+  systemOptions,
+  typeOptions,
+  selectStartingSystem,
+  onSystemChange,
+  onTypeChange,
+} = useSystemTypePicker(form, characterTypes);
 const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadableIdFromName(form);
 const idAvailability = useResourceIdAvailability(form, "content");
 const formBusy = ref(false);
 const formError = ref("");
 
 function openCreate() {
-  const firstCharacterType =
-    characterTypes.value.find((item) => item.systemId === currentSystemId.value) ??
-    characterTypes.value[0];
-  if (!firstCharacterType) return;
+  if (!characterTypes.value.length) return;
 
   formError.value = "";
   form.readableId = "";
   form.name = "";
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
-  form.contentTypeId = firstCharacterType.id;
+  selectStartingSystem();
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }
@@ -358,19 +351,32 @@ async function remove() {
             :error="readableIdError"
             @update:model-value="onReadableIdInput"
           />
-          <VisibilityField v-model="form.isPubliclyReadable" />
-          <OwnerField v-model="form.ownerGroupId" />
-          <UFormField name="contentTypeId" label="Character Type" required>
+          <UFormField name="systemId" label="System" required>
             <USelect
-              v-model="form.contentTypeId"
-              :items="characterTypeOptions"
+              :model-value="form.systemId"
+              :items="systemOptions"
               class="w-full"
+              @update:model-value="onSystemChange"
             >
               <template #item-label="{ item }">
                 <ResourceOption :option="item as ResourceOptionItem" />
               </template>
             </USelect>
           </UFormField>
+          <UFormField name="contentTypeId" label="Character Type" required>
+            <USelect
+              :model-value="form.contentTypeId"
+              :items="typeOptions"
+              class="w-full"
+              @update:model-value="onTypeChange"
+            >
+              <template #item-label="{ item }">
+                <ResourceOption :option="item as ResourceOptionItem" />
+              </template>
+            </USelect>
+          </UFormField>
+          <OwnerField v-model="form.ownerGroupId" />
+          <VisibilityField v-model="form.isPubliclyReadable" />
           <UAlert
             v-if="formError"
             color="error"
