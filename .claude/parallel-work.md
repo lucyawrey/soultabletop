@@ -13,7 +13,7 @@ Setup, the same for both modes, run by the coordinator from the main checkout. M
 
 1. Pick a branch name per feature (see "Git workflow"). `git fetch origin`, then for each: `git worktree add ../soultabletop-worktrees/<branch> -b <branch> origin/main`. All worktrees live in that one container folder beside the repo, not inside it, so lint, format, and typecheck in one checkout never crawl another.
 2. Copy the gitignored local files into each worktree: `cp .env.local ../soultabletop-worktrees/<branch>/` (copy, never move), plus `.vercel/` and `.claude/settings.local.json` if they exist.
-3. Run `pnpm install` in each worktree (fast; pnpm links from its store, and `postinstall` runs `nuxt prepare`).
+3. Run `pnpm install` in each worktree through that worktree's own `scripts/agent-run.sh` (it `cd`s to the checkout it lives in, so the main checkout's copy would install there instead). It's fast: pnpm links from its store, and `postinstall` runs `nuxt prepare`.
 4. Write a brief per feature: the goal, the relevant `TODO.md` entry, files likely involved, the worktree path and branch, and the rules below.
 5. Subagent mode: start one background subagent per feature with its brief, telling it to work only inside its worktree's absolute path. Tab mode (one at a time): write the brief to `../soultabletop-worktrees/briefs/<branch>.md` (outside every repo, so it can't be committed) and give the user one line to run in a new terminal tab: `cd <absolute worktree path> && claude "Read <absolute path to the brief> and follow it."` Long pasted briefs are slow and unreliable; the file is the brief. Put the coordinator's session name (the "This session is …" line from `ListAgents`) at the top of the brief.
 

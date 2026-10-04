@@ -8,39 +8,46 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
+- **Campaign route and access fixes** · bug · branch `campaign-member-access`
+  - **Unsupported methods on campaign `/members` routes run another route's handler** · bug
+    Found by a reviewer (2026-10-01), existing on `main`: when `/api/campaign/:id/members` gets a method it has no handler for, h3's router falls back to another route's handler but keeps the static route's params, so `GET /api/campaign/<uuid>/members` returns the campaign itself, and by the same logic `DELETE /api/campaign/<uuid>/members` would run the campaign delete handler (an editor can already delete the campaign, so it's wrong behavior rather than a privilege gain; the delete case was inferred, not run). Add explicit 405 handlers (or a guard) for unsupported methods on the member routes, and check the other nested routes (`resource/[id]/grants*`, `profile/api-keys`) for the same fallback.
+  - **Campaign players can't read the campaign itself** · bug
+    Found by an agent while building readable-ID addressing: `getResourceAccess` doesn't let a campaign member without a grant read the campaign resource, by UUID or readable ID, although My lists campaigns they belong to and the dashboard shows them. Check whether that is intended (the member routes and My list say otherwise), and if not, make members readers through the access rules in code and in `resource-access-sql.ts` together (see "List pages and search" in `.claude/conventions.md`).
+    Decided by the user (2026-10-04): every member reads the campaign, and GMs who don't own it can also edit it (not delete it).
+- **Formula additions and Sheet edit-mode fixes** · feature · branch `sheet-formulas-and-fixes`
+  - **A formula function that builds a list** · feature · small
+    From the user (2026-10-04): formulas can't build a list today (no list syntax and no function; lists come only from array fields), so `join` and the list functions can't combine separate fields. Add `list(…)` (named to match the `List` tag and the formula docs' "list" wording rather than the schema's `array`; user's decision, 2026-10-04), taking any number of values and returning them as a list: `join(list(speed, flySpeed, swimSpeed), ", ")` gives "30 ft, 20 ft" with the empty one skipped, and `max(list(a, b))`, `sum(list(a, b, c))` work over separate fields. Its items count against the step budget and list limits like other lists. Update `shared/sheet/formula-functions.ts` (reserved name; it's a post-v1 built-in, so `formulaLaterBuiltins`), the checker's types, `docs/sheet-system.md` (Functions), and the Sheets skill.
+  - **`Field` takes a formula** · feature · small
+    From the user (2026-10-04): `Field` picks its input from the schema type and takes no `formula` today (`docs/sheet-system.md`, "Fields"), so a generated sheet needs its tags rewritten to `Number`/`Text`/`Checkbox` to get a computed value. Let `Field` take `formula` on a number, string, or boolean field and act exactly like the matching override tag (manual value wins, reset button, cascading); any other schema type is a validator error. Update the validator's tag specs, `app/components/sheet/Field.vue`, the docs, and the Sheets skill's `references/tags.md`.
+  - **Narrow number columns in Sheet tables** · bug · small
+    From the Pathfinder 2e test sheet (2026-10-04): a `Column` on a number field with `width="xs"` or `"sm"` shows an empty input (the − and + buttons take all the room); the sheet leaves those columns at auto width.
+  - **Sheet content pickers show the content's ID until opened** · bug · small
+    From the user (2026-10-03), on `main` too: in edit mode a `content` field's picker (e.g. an inventory Table's item column) shows the referenced content's UUID instead of its name until you pick something. `app/components/sheet/ContentPicker.vue` loads its options only when it opens (`load` on `update:open`), so before that `USelectMenu` has no item for `modelValue` and shows the raw value. The sheet already has the name (view mode shows it, from the content's refs): pass the current ref's name in and include it in `items` until the list loads.
+- **UI polish: groups badge and dashboard cards** · bug · small · branch `ui-polish`
+  - **Group "Official" badge looks off in the groups table** · bug · small
+    The Official `LabelChip` beside the name in the groups table (`app/pages/groups/index.vue`, desktop row and the mobile card) has its layout or spacing wrong (margin, alignment, or wrapping beside the name; user report 2026-10-02, no screenshot yet). Check it at desktop and phone widths against the Official badge in other lists (`SourceBadge`) and fix it to match.
+  - **Dashboard cards aren't all the same height** · bug · small
+    From the user (2026-10-04): cards in a row on the dashboard (`app/pages/index.vue`, `app/components/RecentCard.vue`, and the loading `CardSkeleton.vue`) end at different heights, presumably because their text runs to different lengths. Make each card fill its row's height (e.g. `h-full` on the card, with its footer pushed to the bottom), and check the skeletons match.
+
 # Next up
 
 The exact order: do these one at a time, top first.
 
-- **Unsupported methods on campaign `/members` routes run another route's handler** · bug
-  Found by a reviewer (2026-10-01), existing on `main`: when `/api/campaign/:id/members` gets a method it has no handler for, h3's router falls back to another route's handler but keeps the static route's params, so `GET /api/campaign/<uuid>/members` returns the campaign itself, and by the same logic `DELETE /api/campaign/<uuid>/members` would run the campaign delete handler (an editor can already delete the campaign, so it's wrong behavior rather than a privilege gain; the delete case was inferred, not run). Add explicit 405 handlers (or a guard) for unsupported methods on the member routes, and check the other nested routes (`resource/[id]/grants*`, `profile/api-keys`) for the same fallback.
-- **Campaign players can't read the campaign itself** · bug · needs decision: verify, then whether members should read it
-  Found by an agent while building readable-ID addressing: `getResourceAccess` doesn't let a campaign member without a grant read the campaign resource, by UUID or readable ID, although My lists campaigns they belong to and the dashboard shows them. Check whether that is intended (the member routes and My list say otherwise), and if not, make members readers through the access rules in code and in `resource-access-sql.ts` together (see "List pages and search" in `.claude/conventions.md`).
-- **A formula function that builds a list** · feature · small
-  From the user (2026-10-04): formulas can't build a list today (no list syntax and no function; lists come only from array fields), so `join` and the list functions can't combine separate fields. Add `list(…)` (named to match the `List` tag and the formula docs' "list" wording rather than the schema's `array`; user's decision, 2026-10-04), taking any number of values and returning them as a list: `join(list(speed, flySpeed, swimSpeed), ", ")` gives "30 ft, 20 ft" with the empty one skipped, and `max(list(a, b))`, `sum(list(a, b, c))` work over separate fields. Its items count against the step budget and list limits like other lists. Update `shared/sheet/formula-functions.ts` (reserved name; it's a post-v1 built-in, so `formulaLaterBuiltins`), the checker's types, `docs/sheet-system.md` (Functions), and the Sheets skill.
-- **`Field` takes a formula** · feature · small
-  From the user (2026-10-04): `Field` picks its input from the schema type and takes no `formula` today (`docs/sheet-system.md`, "Fields"), so a generated sheet needs its tags rewritten to `Number`/`Text`/`Checkbox` to get a computed value. Let `Field` take `formula` on a number, string, or boolean field and act exactly like the matching override tag (manual value wins, reset button, cascading); any other schema type is a validator error. Update the validator's tag specs, `app/components/sheet/Field.vue`, the docs, and the Sheets skill's `references/tags.md`.
-- **Narrow number columns in Sheet tables** · bug · small
-  From the Pathfinder 2e test sheet (2026-10-04): a `Column` on a number field with `width="xs"` or `"sm"` shows an empty input (the − and + buttons take all the room); the sheet leaves those columns at auto width.
-- **Choice fields in schemas** · feature · needs decision: the design (how options and their labels live in the schema, and what generated sheets and `Column` show)
-  Split out of "Sheet features found missing" (2026-10-04). D&D 2024 sheet: a string limited to listed options (size, alignment, skill training, spellcasting ability). Today the options live only in the markup's `Select`, so saved data isn't checked, and the generated sheet shows a plain text input.
-  Pathfinder 2e sheet: every proficiency rank, attribute, and tradition is a `Select` storing lowercase text (`expert`, `wis`), with no way to show a different label (`Expert`, `Wis`) than the stored value; in a `Table` the Lores rank column is a plain text input, since a `Column` can't be a `Select`.
-- **Tables over fixed rows in Sheets** · feature · needs decision: the design
-  Split out of "Sheet features found missing" (2026-10-04). D&D 2024 sheet: `Table` binds only arrays, so a fixed set like the 18 skills (a `struct` of structs) needs one small `Grid` each. E.g. let `Table`/`List` iterate a struct's entries.
-  Pathfinder 2e sheet: the 16 skills and 3 saves are hand-written rows (`Stack` of a `Value` and a `Select` each).
-- **Group "Official" badge looks off in the groups table** · bug · small
-  The Official `LabelChip` beside the name in the groups table (`app/pages/groups/index.vue`, desktop row and the mobile card) has its layout or spacing wrong (margin, alignment, or wrapping beside the name; user report 2026-10-02, no screenshot yet). Check it at desktop and phone widths against the Official badge in other lists (`SourceBadge`) and fix it to match.
-- **Dashboard cards aren't all the same height** · bug · small
-  From the user (2026-10-04): cards in a row on the dashboard (`app/pages/index.vue`, `app/components/RecentCard.vue`, and the loading `CardSkeleton.vue`) end at different heights, presumably because their text runs to different lengths. Make each card fill its row's height (e.g. `h-full` on the card, with its footer pushed to the bottom), and check the skeletons match.
-- **Sheet content pickers show the content's ID until opened** · bug · small
-  From the user (2026-10-03), on `main` too: in edit mode a `content` field's picker (e.g. an inventory Table's item column) shows the referenced content's UUID instead of its name until you pick something. `app/components/sheet/ContentPicker.vue` loads its options only when it opens (`load` on `update:open`), so before that `USelectMenu` has no item for `modelValue` and shows the raw value. The sheet already has the name (view mode shows it, from the content's refs): pass the current ref's name in and include it in `items` until the list loads.
+- **Sheet schema design: choice fields and tables over fixed rows** · feature · needs decision: the design · after: formula additions and Sheet edit-mode fixes
+  Design both together (choice fields decide what a `Column` can show, which tables over fixed rows depends on), with Opus, then likely build them as two PRs.
+  - **Choice fields in schemas** · feature · needs decision: the design (how options and their labels live in the schema, and what generated sheets and `Column` show)
+    Split out of "Sheet features found missing" (2026-10-04). D&D 2024 sheet: a string limited to listed options (size, alignment, skill training, spellcasting ability). Today the options live only in the markup's `Select`, so saved data isn't checked, and the generated sheet shows a plain text input.
+    Pathfinder 2e sheet: every proficiency rank, attribute, and tradition is a `Select` storing lowercase text (`expert`, `wis`), with no way to show a different label (`Expert`, `Wis`) than the stored value; in a `Table` the Lores rank column is a plain text input, since a `Column` can't be a `Select`.
+  - **Tables over fixed rows in Sheets** · feature · needs decision: the design
+    Split out of "Sheet features found missing" (2026-10-04). D&D 2024 sheet: `Table` binds only arrays, so a fixed set like the 18 skills (a `struct` of structs) needs one small `Grid` each. E.g. let `Table`/`List` iterate a struct's entries.
+    Pathfinder 2e sheet: the 16 skills and 3 saves are hand-written rows (`Stack` of a `Value` and a `Select` each).
 
 # Phase 1: Sheets ready for real systems
 
 What official systems like Pathfinder 2e and D&D 2024 need from the Sheet system.
 
 - **Sheet features found missing while building the D&D 2024 and Pathfinder 2e sheets** · feature
-  Choice fields, tables over fixed rows, and the narrow number columns bug moved to Next up as their own items (2026-10-04).
+  Choice fields and tables over fixed rows moved to "Sheet schema design" (Next up), and the narrow number columns bug to "Sheet edit-mode fixes" (In progress), 2026-10-04.
   Found while building the D&D 2024 character sheet (2026-09-30; the test sheet's files are local only):
   - **Formulas matter most** (built in #71; rebuild the sheet with them to check): every ability modifier, skill bonus, saving throw, passive Perception, spell save DC, and spell attack bonus is typed in by hand. Formulas should cover these cases: a modifier from a score, a bonus from modifier + proficiency bonus by training, and values shown with a sign.
   - **Default values in schemas**: e.g. size "Medium", or arrays that start with rows. `defaultContentData` only fills empty values for required fields.
