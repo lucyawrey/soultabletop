@@ -132,10 +132,21 @@ export interface SheetDefinition {
   loc: Loc;
 }
 
+// An override field (`field` and `formula`) at the top level: formulas that
+// read its path while nothing is stored there get this formula's value.
+export interface SheetComputedField {
+  tag: string;
+  ast: FormulaNode;
+  source: string;
+  loc: Loc;
+}
+
 export interface ValidationResult {
   nodes: ValidatedNode[];
   diagnostics: SheetDiagnostic[];
   definitions: ReadonlyMap<string, SheetDefinition>;
+  // By path (segments joined with ".").
+  computedFields: ReadonlyMap<string, SheetComputedField>;
   // Steps each evaluation of one of this sheet's formulas may take (see
   // formulaLimits.maxSheetSteps).
   stepBudget: number;
@@ -272,6 +283,7 @@ interface DefinitionState extends SheetDefinition {
 class Validator {
   readonly diagnostics: SheetDiagnostic[] = [];
   readonly definitions = new Map<string, DefinitionState>();
+  readonly computedFields = new Map<string, SheetComputedField>();
   private readonly rootShape: Shape;
   formulaSites = 0;
 
@@ -884,6 +896,21 @@ class Validator {
     if (formula && !this.formulaResultFits(spec, formula, binding)) {
       return broken(`<${spec.name}> has errors`);
     }
+    // Inside a List or Table row the formula reads the row, so only top-level
+    // overrides can stand in for their field elsewhere.
+    if (formula && binding && spec.formula === "override" && scope === this.rootShape) {
+      const key = binding.path.segments.join(".");
+      const existing = this.computedFields.get(key);
+      if (!existing) {
+        this.computedFields.set(key, { tag: spec.name, ast: formula.ast, source: formula.source, loc: node.loc });
+      } else if (existing.source.trim() !== formula.source.trim()) {
+        this.error(
+          "computed-field-conflict",
+          `"${key}" already has a different formula on line ${existing.loc.start.line}; give a field one formula`,
+          formula.loc,
+        );
+      }
+    }
     if (formula && binding?.field?.required) {
       this.warn(
         "override-required",
@@ -1129,6 +1156,7 @@ export function validateSheet(nodes: SheetNode[], schemas: SheetSchemas): Valida
     nodes: validated,
     diagnostics: validator.diagnostics,
     definitions: publicDefinitions(validator.definitions),
+    computedFields: validator.computedFields,
     stepBudget: sheetStepBudget(validator.formulaSites),
   };
 }

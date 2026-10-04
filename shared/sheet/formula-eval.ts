@@ -43,8 +43,14 @@ export interface FormulaEnv {
   call(name: string, args: FormulaValue[]): FormulaValue | undefined;
   // Shared by everything one evaluation computes, definitions included.
   budget: FormulaBudget;
-  // Definitions entered so far.
+  // Definitions and computed fields entered so far.
   depth?: number;
+  // A field's computed value when a path reaches a field in the Content's own
+  // data that nothing is stored in and that has an override formula, else
+  // undefined. See SheetFormulaDefinitions.computedFields.
+  computedField?(path: (string | number)[], stored: unknown, env: FormulaEnv): FormulaValue | undefined;
+  // The computed fields being computed, to stop cycles.
+  computing?: ReadonlySet<string>;
 }
 
 export interface FormulaDefinition {
@@ -256,7 +262,12 @@ export function evaluateFormulaNode(node: FormulaNode, env: FormulaEnv): Formula
         : null;
     case "path": {
       const resolved = resolveSheetPath(node.path, env.root, env.scope, env.refs);
-      return resolved.unavailable ? null : toFormulaValue(resolved.value);
+      if (resolved.unavailable) return null;
+      if (resolved.path && env.computedField) {
+        const computed = env.computedField(resolved.path, resolved.value, env);
+        if (computed !== undefined) return computed;
+      }
+      return toFormulaValue(resolved.value);
     }
     case "unary": {
       const value = evaluateNode(node.operand, env);

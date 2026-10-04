@@ -86,6 +86,7 @@ const formulas = computed<SheetFormulaDefinitions>(() => {
   return {
     definitions: compiled.value.definitions,
     stepBudget: compiled.value.stepBudget,
+    computedFields: compiled.value.computedFields,
     cached: (name) => values.get(name)?.value,
   };
 });

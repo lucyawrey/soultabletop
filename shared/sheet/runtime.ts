@@ -9,6 +9,7 @@ import {
 } from "../content-schema";
 import {
   FormulaError,
+  formulaLimits,
   isFormulaError,
   type FormulaNode,
   type FormulaValue,
@@ -16,6 +17,7 @@ import {
 import {
   callFormulaDefinition,
   evaluateFormula,
+  evaluateFormulaNode,
   formulaBudget,
   type FormulaEnv,
 } from "./formula-eval";
@@ -31,6 +33,7 @@ import {
 import {
   isCompiledFormula,
   type AttrValue,
+  type SheetComputedField,
   type SheetDefinition,
   type SheetSchemas,
 } from "./validate";
@@ -161,6 +164,9 @@ export interface SheetFormulaDefinitions {
   // The value of a definition without parameters, if it is cached (the
   // renderer computes each once).
   cached?: (name: string) => FormulaValue | undefined;
+  // Override fields at the top level by path (ValidationResult.computedFields):
+  // a formula that reads one with nothing stored gets its computed value.
+  computedFields?: ReadonlyMap<string, SheetComputedField>;
 }
 
 const noDefinitions: SheetFormulaDefinitions = { definitions: new Map() };
@@ -182,11 +188,35 @@ function formulaEnv(
       if (definition.broken || !definition.ast) {
         return new FormulaError("definition", `${name} has errors; fix its <Define>`);
       }
-      if (!definition.params.length) {
+      // Not inside a computed field: a cached value computed from that field
+      // could be the one being computed, and the cycle would go unnoticed.
+      if (!definition.params.length && !this.computing?.size) {
         const cached = formulas.cached?.(name);
         if (cached !== undefined) return cached;
       }
       return callFormulaDefinition({ params: definition.params, ast: definition.ast }, args, this);
+    },
+    computedField(path, stored, env) {
+      const field = formulas.computedFields?.get(path.join("."));
+      if (!field || !sheetOverride(field.tag, stored, null).automatic) return undefined;
+      const key = path.join(".");
+      if (env.computing?.has(key)) {
+        return new FormulaError("formula-cycle", `${key} is computed from itself`);
+      }
+      const depth = env.depth ?? 0;
+      if (depth >= formulaLimits.maxCallDepth) {
+        return new FormulaError(
+          "too-deep",
+          `Computed values depend on each other more than ${formulaLimits.maxCallDepth} levels deep`,
+        );
+      }
+      return evaluateFormulaNode(field.ast, {
+        ...env,
+        scope: root,
+        params: undefined,
+        depth: depth + 1,
+        computing: new Set([...(env.computing ?? []), key]),
+      });
     },
   };
 }
@@ -213,6 +243,7 @@ export function evaluateSheetDefinition(
   const env = formulaEnv(root, root, refs, {
     definitions: formulas.definitions,
     stepBudget: formulas.stepBudget,
+    computedFields: formulas.computedFields,
   });
   try {
     return env.call(name, []) ?? null;
