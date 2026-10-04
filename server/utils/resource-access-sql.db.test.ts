@@ -103,6 +103,8 @@ describe.skipIf(!runDbTests)(
         [{ ownerUserId: otherId }, null, true, false],
         [{ ownerUserId: otherId }, "player", false, false],
         [{ ownerUserId: otherId }, "player", true, true],
+        // A GM who is a plain member of the owning group.
+        [{ ownerGroupId: groupIds.G3 }, "gm", false, false],
       ];
       for (const [owner, role, isPubliclyReadable, isAdminHidden] of campaigns) {
         const [row] = await database
@@ -282,6 +284,91 @@ describe.skipIf(!runDbTests)(
           mismatches.push(`readableBy (alias): ${item.id}`);
 
       expect(mismatches.slice(0, 20)).toEqual([]);
+    }, 300_000);
+
+    it("lets campaign members read limited campaigns, by ID and by owner + readable ID", async () => {
+      const database = await db();
+      const { readableBy } = await import("./resource-access-sql");
+      const { findReadableResourceId } = await import("./resource-address");
+      // campaignIds[3]: limited, viewer is GM; [6]: limited, viewer is a
+      // player; [7]: viewer is a player, but hidden by a site admin.
+      const member = [campaignIds[3]!, campaignIds[6]!];
+      const hidden = campaignIds[7]!;
+      const items = await database
+        .select()
+        .from(resource)
+        .where(inArray(resource.id, [...member, hidden]));
+      const readable = new Set(
+        (
+          await database
+            .select({ id: resource.id })
+            .from(resource)
+            .where(
+              and(
+                inArray(resource.id, [...member, hidden]),
+                readableBy(resource, { userId: viewerId, isSiteAdmin: false }),
+              ),
+            )
+        ).map((row) => row.id),
+      );
+      expect([...readable].sort()).toEqual([...member].sort());
+      for (const item of items) {
+        const found = await findReadableResourceId(
+          { id: viewerId },
+          "campaign",
+          otherId,
+          item.readableId,
+        );
+        expect(found).toBe(item.id === hidden ? undefined : item.id);
+      }
+    }, 300_000);
+
+    it("gives a GM who is a member of the owning group edit access", async () => {
+      const database = await db();
+      const { getResourceAccess, canDeleteCampaign, loadResourceAccessContext } = await import(
+        "./resource-access"
+      );
+      const id = campaignIds[8]!;
+      const [item] = await database.select().from(resource).where(eq(resource.id, id));
+      const context = await loadResourceAccessContext({ id: viewerId, name: viewerId } as User, [id]);
+      expect(getResourceAccess(item!, context)).toEqual({ canRead: true, canEdit: true, canDelete: false });
+      expect(canDeleteCampaign(item!, context)).toBe(false);
+    }, 300_000);
+
+    it("keeps a GM's member change from overwriting a newer one", async () => {
+      const database = await db();
+      const { writeMembership, removeMembership } = await import("./campaign-members");
+      const id = campaignIds[8]!;
+      const role = async () =>
+        (
+          await database
+            .select({ role: campaignMembership.role })
+            .from(campaignMembership)
+            .where(and(eq(campaignMembership.campaignId, id), eq(campaignMembership.userId, otherId)))
+        )[0]?.role;
+      // The GM's check saw no membership, but the owner has meanwhile made
+      // the user a GM: the GM's "add as player" must not demote them.
+      await writeMembership(id, otherId, "gm");
+      await expect(writeMembership(id, otherId, "player", null)).rejects.toMatchObject({ statusCode: 409 });
+      expect(await role()).toBe("gm");
+      // Saw a player, but they're a GM now: no removal either.
+      await expect(removeMembership(id, otherId, "player")).rejects.toMatchObject({ statusCode: 409 });
+      expect(await role()).toBe("gm");
+      // Saw a GM (stepping down), but the owner removed them meanwhile: the
+      // GM must not be written back as a player.
+      await database
+        .delete(campaignMembership)
+        .where(and(eq(campaignMembership.campaignId, id), eq(campaignMembership.userId, otherId)));
+      await expect(writeMembership(id, otherId, "player", "gm")).rejects.toMatchObject({ statusCode: 409 });
+      expect(await role()).toBeUndefined();
+      // Two GMs adding the same player at once: the second succeeds too.
+      await writeMembership(id, otherId, "player", null);
+      expect((await writeMembership(id, otherId, "player", null)).role).toBe("player");
+      await removeMembership(id, otherId, "player");
+      // While unchanged, the GM's change goes through.
+      await writeMembership(id, otherId, "player");
+      await removeMembership(id, otherId, "player");
+      expect(await role()).toBeUndefined();
     }, 300_000);
 
     it("listResources counts and pages in SQL", async () => {

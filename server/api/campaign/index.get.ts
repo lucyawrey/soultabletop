@@ -14,6 +14,7 @@ import {
   systemIdParameter,
 } from "../../utils/resource-list";
 import { canChangeResourceOwner } from "../../utils/resource-management";
+import { canDeleteCampaign } from "../../utils/resource-access";
 
 defineRouteMeta({
   openAPI: {
@@ -21,7 +22,7 @@ defineRouteMeta({
     summary: "List accessible campaigns",
     parameters: [...listQueryParameters, systemIdParameter],
     responses: {
-      200: { description: "Campaign list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
+      200: { description: "Campaign list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address, plus `canEdit` and `canDelete` (GMs can edit a campaign but not delete it)" },
       401: { description: "Authentication required" },
     },
   },
@@ -63,6 +64,7 @@ export default defineEventHandler(async (event) => {
       ownerReadableId,
       source,
       canEdit: access.canEdit,
+      canDelete: !!context && canDeleteCampaign(owner, context),
       canChangeOwner: !!context && canChangeResourceOwner(owner, user, context),
     })),
     page,

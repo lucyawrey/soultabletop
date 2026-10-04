@@ -12,6 +12,7 @@ interface CampaignDetail {
   updatedAt: string;
   systemId?: string;
   canEdit: boolean;
+  canDelete: boolean;
   ownerGroupId: string | null;
   canChangeOwner: boolean;
 }
@@ -132,6 +133,7 @@ async function remove() {
             Edit
           </UButton>
           <UButton
+            v-if="campaign.canDelete"
             icon="i-lucide-trash"
             color="error"
             variant="outline"

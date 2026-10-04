@@ -16,6 +16,7 @@ interface CampaignItem {
   isPubliclyReadable: boolean;
   updatedAt: string;
   canEdit: boolean;
+  canDelete: boolean;
   ownerGroupId: string | null;
   canChangeOwner: boolean;
 }
@@ -239,6 +240,7 @@ async function remove() {
       <template #actions-cell="{ row }">
         <ResourceActionsMenu
           :can-edit="row.original.canEdit"
+          :can-delete="row.original.canDelete"
           :view-to="`/campaigns/${row.original.id}`"
           :name="row.original.name" @edit="openEdit(row.original)"
           @delete="confirmDelete(row.original)"
@@ -254,6 +256,7 @@ async function remove() {
           <template #actions="{ item }">
             <ResourceActionsMenu
               :can-edit="item.canEdit"
+              :can-delete="item.canDelete"
               :view-to="`/campaigns/${item.id}`"
               :name="item.name" @edit="openEdit(item)"
               @delete="confirmDelete(item)"

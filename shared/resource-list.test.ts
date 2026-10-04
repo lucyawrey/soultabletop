@@ -5,6 +5,7 @@ import {
   MAX_SEARCH_LENGTH,
   paginate,
   parseListQuery,
+  RESOURCE_SOURCE_LABELS,
 } from "./resource-list";
 
 describe("parseListQuery", () => {
@@ -98,5 +99,17 @@ describe("clampPage", () => {
     expect(clampPage(3, 60)).toBe(3);
     expect(clampPage(2, 25)).toBe(1);
     expect(clampPage(5, 0)).toBe(1);
+  });
+});
+
+describe("RESOURCE_SOURCE_LABELS", () => {
+  it("are one word each", () => {
+    expect(Object.values(RESOURCE_SOURCE_LABELS)).toEqual([
+      "You",
+      "Group",
+      "Shared",
+      "Official",
+      "Community",
+    ]);
   });
 });
