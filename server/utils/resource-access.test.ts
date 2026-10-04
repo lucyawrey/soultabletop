@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Resource } from "../database/schema";
 import {
   canCreateForGroup,
+  canDeleteCampaign,
   getResourceAccess,
   type ResourceAccessContext,
 } from "./resource-access";
@@ -85,6 +86,55 @@ describe("getResourceAccess", () => {
         ).canEdit,
       ).toBe(true);
     });
+  });
+});
+
+describe("campaign members", () => {
+  const campaign = resource({ kind: "campaign", ownerUserId: "someone" });
+  const as = (role: "gm" | "player", overrides: Partial<ResourceAccessContext> = {}) =>
+    context({ campaignRoles: new Map([[campaign.id, role]]), ...overrides });
+
+  it("lets players read the campaign, nothing more", () => {
+    expect(getResourceAccess(campaign, as("player"))).toEqual({
+      canRead: true,
+      canEdit: false,
+      canDelete: false,
+    });
+    expect(canDeleteCampaign(campaign, as("player"))).toBe(false);
+  });
+
+  it("lets GMs read and edit the campaign, not delete it", () => {
+    expect(getResourceAccess(campaign, as("gm"))).toEqual({
+      canRead: true,
+      canEdit: true,
+      canDelete: false,
+    });
+    expect(canDeleteCampaign(campaign, as("gm"))).toBe(false);
+  });
+
+  it("leaves GM edit out with gmEdit: false, keeping read", () => {
+    expect(getResourceAccess(campaign, as("gm"), { gmEdit: false })).toEqual({
+      canRead: true,
+      canEdit: false,
+      canDelete: false,
+    });
+  });
+
+  it("still lets a GM delete when they have edit access another way", () => {
+    const grant = { resourceId: campaign.id, userId: "me", permission: "edit" } as never;
+    expect(canDeleteCampaign(campaign, as("gm", { grants: [grant] }))).toBe(true);
+    const owned = resource({ kind: "campaign", ownerUserId: "me" });
+    expect(canDeleteCampaign(owned, context({ campaignRoles: new Map([[owned.id, "gm"]]) }))).toBe(true);
+  });
+
+  it("doesn't let members read a campaign hidden by a site admin", () => {
+    const hidden = { ...campaign, isAdminHidden: true };
+    expect(getResourceAccess(hidden, as("gm")).canRead).toBe(false);
+  });
+
+  it("applies only to the campaign itself", () => {
+    const other = resource({ kind: "campaign", id: "00000000-0000-4000-8000-000000000002" });
+    expect(getResourceAccess(other, as("gm")).canRead).toBe(false);
   });
 });
 

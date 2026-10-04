@@ -284,6 +284,43 @@ describe.skipIf(!runDbTests)(
       expect(mismatches.slice(0, 20)).toEqual([]);
     }, 300_000);
 
+    it("lets campaign members read limited campaigns, by ID and by owner + readable ID", async () => {
+      const database = await db();
+      const { readableBy } = await import("./resource-access-sql");
+      const { findReadableResourceId } = await import("./resource-address");
+      // campaignIds[3]: limited, viewer is GM; [6]: limited, viewer is a
+      // player; [7]: viewer is a player, but hidden by a site admin.
+      const member = [campaignIds[3]!, campaignIds[6]!];
+      const hidden = campaignIds[7]!;
+      const items = await database
+        .select()
+        .from(resource)
+        .where(inArray(resource.id, [...member, hidden]));
+      const readable = new Set(
+        (
+          await database
+            .select({ id: resource.id })
+            .from(resource)
+            .where(
+              and(
+                inArray(resource.id, [...member, hidden]),
+                readableBy(resource, { userId: viewerId, isSiteAdmin: false }),
+              ),
+            )
+        ).map((row) => row.id),
+      );
+      expect([...readable].sort()).toEqual([...member].sort());
+      for (const item of items) {
+        const found = await findReadableResourceId(
+          { id: viewerId },
+          "campaign",
+          otherId,
+          item.readableId,
+        );
+        expect(found).toBe(item.id === hidden ? undefined : item.id);
+      }
+    }, 300_000);
+
     it("listResources counts and pages in SQL", async () => {
       const database = await db();
       const { listOrder, listResources, officialColumn } = await import("./resource-list");

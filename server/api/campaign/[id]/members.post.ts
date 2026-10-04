@@ -38,7 +38,8 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const campaignId = await resolveResourceRouteId(event, "campaign", user);
-  await requireResourceEditor(user, campaignId);
+  // A GM's edit access to the campaign doesn't extend to its members.
+  await requireResourceEditor(user, campaignId, { gmEdit: false });
   const body = await parseBody(event, campaignMembershipSchema);
   if (
     typeof body.userId !== "string" ||

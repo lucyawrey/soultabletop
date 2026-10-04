@@ -11,6 +11,7 @@ import {
   getResourceAccessOrPublic,
   loadResourceAccessContext,
   type ResourceAccessContext,
+  type ResourceAccessOptions,
 } from "./resource-access";
 
 export const uuidPattern =
@@ -51,6 +52,7 @@ export function requireName(value: unknown) {
 export async function requireResourceEditor(
   user: Pick<User, "id" | "name">,
   resourceId: string,
+  options?: ResourceAccessOptions,
 ) {
   const database = useDatabase();
   const [item] = await database
@@ -62,7 +64,7 @@ export async function requireResourceEditor(
     throw createError({ statusCode: 404, statusMessage: "Resource not found" });
 
   const context = await loadResourceAccessContext(user, [resourceId]);
-  if (!getResourceAccess(item, context).canEdit) {
+  if (!getResourceAccess(item, context, options).canEdit) {
     throw createError({
       statusCode: 403,
       statusMessage: "Resource is not editable",

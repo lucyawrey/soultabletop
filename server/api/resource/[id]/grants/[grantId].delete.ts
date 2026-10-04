@@ -24,7 +24,8 @@ export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const resourceId = requireUuid(getRouterParam(event, "id"), "resourceId");
   const grantId = requireUuid(getRouterParam(event, "grantId"), "grantId");
-  await requireResourceEditor(user, resourceId);
+  // A GM's edit access to a campaign doesn't extend to its grants.
+  await requireResourceEditor(user, resourceId, { gmEdit: false });
   const deleted = await useDatabase()
     .delete(resourceGrant)
     .where(

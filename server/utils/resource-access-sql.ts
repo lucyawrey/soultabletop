@@ -128,7 +128,7 @@ export function publiclyListed(table: ResourceTable) {
 }
 
 // `getResourceAccessOrPublic(...).canRead`. `undefined` (no condition) for a
-// site admin, who can read everything.
+// site admin, who can read everything. Campaign members read the campaign.
 export function readableBy(table: ResourceTable, viewer: ListViewer | null) {
   if (!viewer) return publiclyListed(table);
   if (viewer.isSiteAdmin) return undefined;
@@ -138,6 +138,7 @@ export function readableBy(table: ResourceTable, viewer: ListViewer | null) {
       eq(table.isAdminHidden, false),
       or(
         eq(table.isPubliclyReadable, true),
+        inArray(table.id, viewerCampaignIds(viewer.userId)),
         grantReachesViewer(table, viewer.userId, "read"),
       ),
     ),
@@ -146,7 +147,8 @@ export function readableBy(table: ResourceTable, viewer: ListViewer | null) {
 
 // The viewer's stake in a resource for their My list (`isListed` with scope
 // "mine"): owned by them or their groups, shared with them to edit, or a
-// campaign they're a member of. Readability is checked separately.
+// campaign they're a member of (which also covers a GM's edit access).
+// Readability is checked separately.
 function viewerStake(table: ResourceTable, userId: string) {
   return or(
     ownedByViewer(table, userId),

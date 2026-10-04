@@ -190,15 +190,23 @@ export function getGrantEffect(
   return { applies, canEdit };
 }
 
+export interface ResourceAccessOptions {
+  // Whether a campaign's GMs get edit access to it from their role (default
+  // true). Off where that edit access doesn't reach: deleting the campaign,
+  // and managing its members and grants.
+  gmEdit?: boolean;
+}
+
 export function getResourceAccess(
   resource: Resource,
   context: ResourceAccessContext,
+  options: ResourceAccessOptions = {},
 ): ResourceAccess {
   // Site admins can read and delete (moderate) anything and edit official
   // resources (owned by system groups), on top of the access every user has
   // to their own and their groups' resources.
   if (context.isSiteAdmin) {
-    const own = getResourceAccess(resource, { ...context, isSiteAdmin: false });
+    const own = getResourceAccess(resource, { ...context, isSiteAdmin: false }, options);
     return {
       canRead: true,
       canEdit:
@@ -236,8 +244,12 @@ export function getResourceAccess(
     };
   }
 
-  let canRead = resource.isPubliclyReadable;
-  let canEdit = false;
+  // Members of a campaign (any role) read it, and its GMs edit it, but only
+  // its owners delete it. `campaignRoles` holds campaign IDs, so this applies
+  // only to the campaigns themselves.
+  const campaignRole = context.campaignRoles.get(resource.id);
+  let canRead = resource.isPubliclyReadable || campaignRole !== undefined;
+  let canEdit = campaignRole === "gm" && options.gmEdit !== false;
 
   for (const grant of context.grants) {
     if (grant.resourceId !== resource.id) continue;
@@ -247,6 +259,13 @@ export function getResourceAccess(
   }
 
   return { canRead, canEdit, canDelete: false };
+}
+
+// Whether the user may delete a campaign: its editors may, as for systems,
+// sheets, and content types, except GMs whose edit access comes from their
+// role.
+export function canDeleteCampaign(resource: Resource, context: ResourceAccessContext) {
+  return getResourceAccess(resource, context, { gmEdit: false }).canEdit;
 }
 
 // Whether the user may create resources owned by a group, or move resources

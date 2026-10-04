@@ -99,6 +99,15 @@ describe("isListed", () => {
       expect(listed(item, edit, "mine")).toBe(true);
     });
 
+    it("includes a limited campaign the user is a member of, in every list", () => {
+      const item = resource({ kind: "campaign" });
+      for (const role of ["player", "gm"] as const) {
+        const ctx = context({ campaignRoles: new Map([[item.id, role]]) });
+        expect(listed(item, ctx, "mine")).toBe(true);
+        expect(listed(item, ctx, undefined)).toBe(true);
+      }
+    });
+
     it("includes a public campaign the user is a member of", () => {
       const item = resource({ kind: "campaign", isPubliclyReadable: true });
       const ctx = context({ campaignRoles: new Map([[item.id, "player"]]) });
@@ -293,7 +302,8 @@ function sqlListed(
   const readable =
     viewer.isSiteAdmin ||
     ownedByViewer ||
-    (!item.isAdminHidden && (item.isPubliclyReadable || grantReaches("read")));
+    (!item.isAdminHidden &&
+      (item.isPubliclyReadable || campaignIds().includes(item.id) || grantReaches("read")));
   const stake =
     ownedByViewer ||
     (!item.isAdminHidden && grantReaches("edit")) ||

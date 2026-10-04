@@ -23,7 +23,8 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const campaignId = await resolveResourceRouteId(event, "campaign", user);
-  await requireResourceEditor(user, campaignId);
+  // A GM's edit access to the campaign doesn't extend to its members.
+  await requireResourceEditor(user, campaignId, { gmEdit: false });
   const userId = getRouterParam(event, "userId");
   if (!userId)
     throw createError({ statusCode: 400, statusMessage: "userId is required" });
