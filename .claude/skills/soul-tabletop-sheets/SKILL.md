@@ -102,7 +102,7 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 
 ## Checking your work
 
-`references/checking.md` has a script that compiles markup with `compileSheet` and CSS with `processSheetCss` against a schema file and prints the diagnostics; run it with vitest through the project's zsh/nvm wrapper. The Sheet editor's Problems list shows the same diagnostics. Treat every error as blocking (a Sheet with errors cannot be saved) and read each warning.
+`references/checking.md` has a script that compiles markup with `compileSheet` and CSS with `processSheetCss` against a schema file and prints the diagnostics; run it with vitest through `scripts/agent-run.sh`. The Sheet editor's Problems list shows the same diagnostics. Treat every error as blocking (a Sheet with errors cannot be saved) and read each warning.
 
 ## Worked examples
 
