@@ -41,8 +41,8 @@ export function requiresReadableType(categories: unknown) {
 
 // Where a resource comes from, relative to the viewer. Precedence: yours, your
 // groups' (including a system group you belong to), Official, shared with you
-// through a grant, then Community. Logged-out viewers only get Official and
-// Community.
+// (through a grant, or a campaign you're a member of), then Community.
+// Logged-out viewers only get Official and Community.
 export function getResourceSource(
   item: Resource,
   official: boolean,
@@ -55,6 +55,7 @@ export function getResourceSource(
   }
   if (official) return "official";
   if (
+    context?.campaignRoles.has(item.id) ||
     context?.grants.some(
       (grant) =>
         grant.resourceId === item.id && getGrantEffect(grant, context).applies,
