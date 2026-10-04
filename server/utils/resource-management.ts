@@ -77,6 +77,15 @@ export async function requireResourceReader(
   user: Pick<User, "id" | "name"> | null,
   resourceId: string,
 ) {
+  return (await loadReadableResource(user, resourceId)).item;
+}
+
+// `requireResourceReader`, also returning the access context it loaded (null
+// for an anonymous visitor), for routes that check more than `canEdit`.
+export async function loadReadableResource(
+  user: Pick<User, "id" | "name"> | null,
+  resourceId: string,
+) {
   const database = useDatabase();
   const [item] = await database
     .select()
@@ -94,11 +103,14 @@ export async function requireResourceReader(
     throw createError({ statusCode: 404, statusMessage: "Resource not found" });
   }
   return {
-    ...item,
-    // With `readableId`, the resource's owner + readable ID address.
-    ownerReadableId: await loadOwnerReadableId(item),
-    canEdit: access.canEdit,
-    canChangeOwner: !!context && canChangeResourceOwner(item, user!, context),
+    item: {
+      ...item,
+      // With `readableId`, the resource's owner + readable ID address.
+      ownerReadableId: await loadOwnerReadableId(item),
+      canEdit: access.canEdit,
+      canChangeOwner: !!context && canChangeResourceOwner(item, user!, context),
+    },
+    context,
   };
 }
 

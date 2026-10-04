@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { User } from "better-auth";
 import { createError } from "h3";
 import { campaignMembership, groupMembership, resource, type Resource } from "../database/schema";
@@ -49,7 +49,9 @@ async function isCampaignOwner(item: Resource, userId: string) {
 
 // For the member routes: allows the change for the campaign's editors, and
 // for its GMs when `gmMemberChangeError` allows it; throws 403 otherwise (404
-// when the resource isn't a campaign).
+// when the resource isn't a campaign). For a GM, returns the role the check
+// saw (null for no membership), which the write must still find
+// (`writeMembership`, `removeMembership`); for an editor, undefined.
 export async function requireCampaignMemberManager(
   user: Pick<User, "id" | "name">,
   campaignId: string,
@@ -61,7 +63,7 @@ export async function requireCampaignMemberManager(
   if (!item || item.kind !== "campaign")
     throw createError({ statusCode: 404, statusMessage: "Campaign not found" });
   const context = await loadResourceAccessContext(user, [campaignId]);
-  if (getResourceAccess(item, context, { gmEdit: false }).canEdit) return;
+  if (getResourceAccess(item, context, { gmEdit: false }).canEdit) return undefined;
   if (!getResourceAccess(item, context).canEdit)
     throw createError({ statusCode: 403, statusMessage: "Resource is not editable" });
 
@@ -78,4 +80,59 @@ export async function requireCampaignMemberManager(
     targetIsOwner: await isCampaignOwner(item, targetId),
   });
   if (error) throw createError({ statusCode: 403, statusMessage: error });
+  return current?.role ?? null;
+}
+
+function membershipChanged() {
+  return createError({
+    statusCode: 409,
+    statusMessage: "The membership changed meanwhile; try again",
+  });
+}
+
+// Adds a member or changes their role. With `expected` (a GM's change), only
+// while the membership is still what the check saw: the role it had, or none
+// (null). Otherwise 409, so a GM can't overwrite a change an owner made
+// between the check and the write.
+export async function writeMembership(
+  campaignId: string,
+  userId: string,
+  role: CampaignRole,
+  expected?: CampaignRole | null,
+) {
+  const [membership] = await useDatabase()
+    .insert(campaignMembership)
+    .values({ campaignId, userId, role })
+    .onConflictDoUpdate({
+      target: [campaignMembership.campaignId, campaignMembership.userId],
+      set: { role },
+      ...(expected === undefined
+        ? {}
+        : { setWhere: expected === null ? sql`false` : eq(campaignMembership.role, expected) }),
+    })
+    .returning();
+  if (!membership) throw membershipChanged();
+  return membership;
+}
+
+// Removes a member. With `expected` (a GM's change), only while their role is
+// still the one the check saw; 409 if it changed. Removing someone who isn't
+// a member (or, for a GM, wasn't when checked) does nothing.
+export async function removeMembership(
+  campaignId: string,
+  userId: string,
+  expected?: CampaignRole | null,
+) {
+  if (expected === null) return;
+  const removed = await useDatabase()
+    .delete(campaignMembership)
+    .where(
+      and(
+        eq(campaignMembership.campaignId, campaignId),
+        eq(campaignMembership.userId, userId),
+        expected ? eq(campaignMembership.role, expected) : undefined,
+      ),
+    )
+    .returning({ userId: campaignMembership.userId });
+  if (expected && removed.length === 0) throw membershipChanged();
 }

@@ -236,20 +236,16 @@ export function getResourceAccess(
   }
 
   if (isUserOwner) return { canRead: true, canEdit: true, canDelete: true };
-  if (isGroupOwner) {
-    return {
-      canRead: true,
-      canEdit: ownerGroupRole !== "member",
-      canDelete: ownerGroupRole === "admin",
-    };
-  }
 
   // Members of a campaign (any role) read it, and its GMs edit it, but only
   // its owners delete it. `campaignRoles` holds campaign IDs, so this applies
-  // only to the campaigns themselves.
+  // only to the campaigns themselves. Like grants, this adds to what a
+  // `member` of the owning group has.
   const campaignRole = context.campaignRoles.get(resource.id);
-  let canRead = resource.isPubliclyReadable || campaignRole !== undefined;
-  let canEdit = campaignRole === "gm" && options.gmEdit !== false;
+  let canRead = isGroupOwner || resource.isPubliclyReadable || campaignRole !== undefined;
+  let canEdit =
+    (isGroupOwner && ownerGroupRole !== "member") ||
+    (campaignRole === "gm" && options.gmEdit !== false);
 
   for (const grant of context.grants) {
     if (grant.resourceId !== resource.id) continue;
@@ -258,7 +254,7 @@ export function getResourceAccess(
     canEdit ||= effect.canEdit;
   }
 
-  return { canRead, canEdit, canDelete: false };
+  return { canRead, canEdit, canDelete: ownerGroupRole === "admin" };
 }
 
 // Whether the user may delete a campaign: its editors may, as for systems,

@@ -127,6 +127,27 @@ describe("campaign members", () => {
     expect(canDeleteCampaign(owned, context({ campaignRoles: new Map([[owned.id, "gm"]]) }))).toBe(true);
   });
 
+  it("adds GM edit, not delete, to a member of the owning group", () => {
+    const grouped = resource({ kind: "campaign", ownerGroupId: PARTY });
+    const ctx = context({
+      groupRoles: new Map([[PARTY, "member"]]),
+      campaignRoles: new Map([[grouped.id, "gm"]]),
+    });
+    expect(getResourceAccess(grouped, ctx)).toEqual({ canRead: true, canEdit: true, canDelete: false });
+    expect(getResourceAccess(grouped, ctx, { gmEdit: false }).canEdit).toBe(false);
+    expect(canDeleteCampaign(grouped, ctx)).toBe(false);
+  });
+
+  it("adds an edit grant to a member of the owning group", () => {
+    const grouped = resource({ ownerGroupId: PARTY });
+    const grant = { resourceId: grouped.id, userId: "me", permission: "edit" } as never;
+    const ctx = context({ groupRoles: new Map([[PARTY, "member"]]), grants: [grant] });
+    expect(getResourceAccess(grouped, ctx)).toEqual({ canRead: true, canEdit: true, canDelete: false });
+    expect(
+      getResourceAccess(grouped, context({ groupRoles: new Map([[PARTY, "member"]]) })).canEdit,
+    ).toBe(false);
+  });
+
   it("doesn't let members read a campaign hidden by a site admin", () => {
     const hidden = { ...campaign, isAdminHidden: true };
     expect(getResourceAccess(hidden, as("gm")).canRead).toBe(false);

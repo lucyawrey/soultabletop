@@ -103,6 +103,8 @@ describe.skipIf(!runDbTests)(
         [{ ownerUserId: otherId }, null, true, false],
         [{ ownerUserId: otherId }, "player", false, false],
         [{ ownerUserId: otherId }, "player", true, true],
+        // A GM who is a plain member of the owning group.
+        [{ ownerGroupId: groupIds.G3 }, "gm", false, false],
       ];
       for (const [owner, role, isPubliclyReadable, isAdminHidden] of campaigns) {
         const [row] = await database
@@ -319,6 +321,43 @@ describe.skipIf(!runDbTests)(
         );
         expect(found).toBe(item.id === hidden ? undefined : item.id);
       }
+    }, 300_000);
+
+    it("gives a GM who is a member of the owning group edit access", async () => {
+      const database = await db();
+      const { getResourceAccess, canDeleteCampaign, loadResourceAccessContext } = await import(
+        "./resource-access"
+      );
+      const id = campaignIds[8]!;
+      const [item] = await database.select().from(resource).where(eq(resource.id, id));
+      const context = await loadResourceAccessContext({ id: viewerId, name: viewerId } as User, [id]);
+      expect(getResourceAccess(item!, context)).toEqual({ canRead: true, canEdit: true, canDelete: false });
+      expect(canDeleteCampaign(item!, context)).toBe(false);
+    }, 300_000);
+
+    it("keeps a GM's member change from overwriting a newer one", async () => {
+      const database = await db();
+      const { writeMembership, removeMembership } = await import("./campaign-members");
+      const id = campaignIds[8]!;
+      const role = async () =>
+        (
+          await database
+            .select({ role: campaignMembership.role })
+            .from(campaignMembership)
+            .where(and(eq(campaignMembership.campaignId, id), eq(campaignMembership.userId, otherId)))
+        )[0]?.role;
+      // The GM's check saw no membership, but the owner has meanwhile made
+      // the user a GM: the GM's "add as player" must not demote them.
+      await writeMembership(id, otherId, "gm");
+      await expect(writeMembership(id, otherId, "player", null)).rejects.toMatchObject({ statusCode: 409 });
+      expect(await role()).toBe("gm");
+      // Saw a player, but they're a GM now: no removal either.
+      await expect(removeMembership(id, otherId, "player")).rejects.toMatchObject({ statusCode: 409 });
+      expect(await role()).toBe("gm");
+      // While unchanged, the GM's change goes through.
+      await writeMembership(id, otherId, "player");
+      await removeMembership(id, otherId, "player");
+      expect(await role()).toBeUndefined();
     }, 300_000);
 
     it("listResources counts and pages in SQL", async () => {

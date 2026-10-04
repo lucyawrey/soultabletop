@@ -1,10 +1,7 @@
 import { createError, getRouterParam } from "h3";
-import { and, eq } from "drizzle-orm";
-import { campaignMembership } from "../../../../database/schema";
 import { requireAuthenticatedUser } from "../../../../utils/auth";
-import { requireCampaignMemberManager } from "../../../../utils/campaign-members";
+import { removeMembership, requireCampaignMemberManager } from "../../../../utils/campaign-members";
 import { resolveResourceRouteId } from "../../../../utils/resource-address";
-import { useDatabase } from "../../../../utils/database";
 
 defineRouteMeta({
   openAPI: {
@@ -16,6 +13,7 @@ defineRouteMeta({
       204: { description: "Removed" },
       401: { description: "Authentication required" },
       403: { description: "Not allowed" },
+      409: { description: "The membership changed meanwhile" },
     },
   },
 });
@@ -26,11 +24,7 @@ export default defineEventHandler(async (event) => {
   const userId = getRouterParam(event, "userId");
   if (!userId)
     throw createError({ statusCode: 400, statusMessage: "userId is required" });
-  await requireCampaignMemberManager(user, campaignId, userId, undefined);
-  await useDatabase()
-    .delete(campaignMembership)
-    .where(
-      and(eq(campaignMembership.campaignId, campaignId), eq(campaignMembership.userId, userId)),
-    );
+  const expected = await requireCampaignMemberManager(user, campaignId, userId, undefined);
+  await removeMembership(campaignId, userId, expected);
   setResponseStatus(event, 204);
 });
