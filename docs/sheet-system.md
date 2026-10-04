@@ -134,7 +134,11 @@ View mode renders formatted values, edit mode renders the input.
   (`formula-cycle`), and chains deeper than the call depth limit give `too-deep`. Plain `{path}` text and field tags
   still show the stored value; write `{= path}` for the computed one. A field may carry the same formula (spacing and
   parentheses aside) on several tags; a different one is an error (`computed-field-conflict`).
-- Every other field tag (`Field`, `Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
+- **`Field` with a formula**: `Field` takes `formula` (with `field`, required) on a `string`, `number`, or `boolean`
+  schema field only, and then acts exactly like `Text`, `Number`, or `Checkbox` (override, reset button, cascading);
+  any other schema type, is an error (`invalid-attribute`), and `Field` with
+  `formula` alone is a `missing-attribute` error (use `Value`).
+- Every other field tag (`Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
   `Image` never will: a formula could build a URL that sends data the viewer can read to another site.
 
 | Tag | Extra attrs | Binds | Edit input |
@@ -516,7 +520,7 @@ Reserved words (`and`, `or`, `not`, `true`, `false`, `null`): a field with one o
 
 Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
 parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't
-use one. Built-ins added after v1 go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
+use one. Built-ins added after v1 (so far `list`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
 (it wins in that sheet, with a warning).
 
 ### Functions (v1)
@@ -524,7 +528,7 @@ use one. Built-ins added after v1 go in `formulaLaterBuiltins`; a sheet's defini
 |---|---|
 | Math | `floor`, `ceil`, `trunc`, `abs`, `round(x, digits?)` (halves away from zero), `clamp(x, low, high)` |
 | Min/max | `min(…)`, `max(…)`: numbers, or one list of numbers; empty values skipped; nothing if none |
-| Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)` |
+| Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)`, `list(a, b, …)` (builds a list from separate values: `join(list(speed, flySpeed), ", ")`, `max(list(a, b))`; empty values stay in it and the functions reading it skip them; single values only) |
 | Nulls | `coalesce(a, b, …)`: the first value that isn't empty (errors aren't skipped) |
 | Text | `concat(…)`, `join(list, separator)`, `signed(n)` ("+3", "0", "-1") |
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
@@ -539,7 +543,7 @@ randomness, locale formatting. The editor's reference panel lists every function
 
 ### Values, types, and nothing
 Values are numbers (always finite), text, true/false, and nothing (`null`); lists and groups of fields only come from
-paths and feed `sum`, `count`, `length`, `get`, `join`, `min`/`max`, or definitions, and are an error as a final
+paths (or `list(…)`) and feed `sum`, `count`, `length`, `get`, `join`, `min`/`max`, or definitions, and are an error as a final
 result. No implicit conversion: arithmetic and ordering take numbers (`+` doesn't join text; use `concat`), `==`
 compares type and value, `if`/`and`/`or`/`not` take true/false with nothing counting as false. A missing value (absent
 key, unloaded reference, a path through a non-object) is nothing; arithmetic or ordering with nothing gives nothing
@@ -566,7 +570,7 @@ a()`) is an error on every definition in it, and calling a broken definition giv
 formulas per sheet; per-item functions nested 2 levels; definitions calling each other 16 levels deep; text results of
 10,000 characters.
 
-Steps (every node visit and every list item counts, also for `min`, `max`, and `join`, and a list longer than the
+Steps (every node visit and every list item counts, also for `min`, `max`, and `join`; the items of `list(…)` are node visits and at most 32, like any call's arguments, and a list longer than the
 steps left fails at once; definitions share their caller's budget): one evaluation may take
 at most 20,000, and a whole sheet about 2,000,000 (`maxSheetSteps`), shared evenly. The validator gives each formula
 `min(20,000, 2,000,000 / the sheet's formula count)` (`stepBudget`), and the renderer divides that again by the item

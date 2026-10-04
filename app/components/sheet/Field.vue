@@ -31,7 +31,14 @@ const formulaError = computed(() =>
 // An override with nothing stored (or empty text) shows the computed value.
 const stored = computed(() => resolved.value.value);
 const override = computed(() =>
-  sheetOverride(props.node.tag, stored.value, computedValue.value),
+  sheetOverride(
+    // `Field` with a formula acts as Text on a text field (cleared means automatic).
+    props.node.tag === "Field" && props.node.binding?.field?.type === "string"
+      ? "Text"
+      : props.node.tag,
+    stored.value,
+    computedValue.value,
+  ),
 );
 const automatic = computed(() => override.value.automatic);
 const value = computed(() => override.value.value);

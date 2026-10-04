@@ -181,6 +181,22 @@ describe("calls", () => {
     expect(check("concat(rank)", "root", ["rank"]).type).toEqual(formulaTypes.string);
   });
 
+  it("types list(...) by its items", () => {
+    expect(check("list(level, 2)").type).toEqual(arrayOf(formulaTypes.number));
+    expect(check("list(level, name)").type).toEqual(
+      arrayOf(unionOf(formulaTypes.number, formulaTypes.string)),
+    );
+    expect(messages("join(list(name, level), ', ')")).toEqual([]);
+    expect(messages("sum(list(level, 1))")).toEqual([]);
+    expect(messages("sum(list(name, 1))")).toEqual([]);
+    expect(messages("list(stats)")).toEqual([
+      "formula-type: list needs single values, not a group of fields",
+    ]);
+    expect(messages("max(list(name))")).toEqual([
+      "formula-type: max needs numbers, not text",
+    ]);
+  });
+
   it("points at the argument that's wrong", () => {
     const [diagnostic] = check("max(1, name)").diagnostics;
     expect(diagnostic!.loc).toEqual({

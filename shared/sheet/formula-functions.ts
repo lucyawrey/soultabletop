@@ -3,6 +3,7 @@
 // implementation, and the text the editor shows. See formula.ts.
 
 import {
+  arrayOf,
   couldBe,
   describeType,
   describeValue,
@@ -392,6 +393,24 @@ const functionList: FormulaFunction[] = [
     reduce: (values) => values.every((value) => value === true),
   }),
   {
+    name: "list",
+    minArgs: 0,
+    maxArgs: formulaLimits.maxArgs,
+    signature: "list(a, b, …)",
+    description:
+      "The values as a list, to combine separate fields: join(list(a, b), ', '), sum(list(a, b)); empty values stay in the list and are skipped by the functions that read it",
+    result: (types) => arrayOf(types.length ? unionOf(...types) : formulaTypes.any),
+    check: (types, problems) =>
+      expect(types, problems, "list", ["number", "string", "boolean"], "single values"),
+    eager: (args) => {
+      for (const value of args) {
+        if (value !== null && (Array.isArray(value) || typeof value === "object"))
+          return typeError("list", "single values", value);
+      }
+      return args;
+    },
+  },
+  {
     name: "length",
     minArgs: 1,
     maxArgs: 1,
@@ -597,7 +616,7 @@ export const diceNotAvailable = "Dice rolls aren't available here yet";
 // Built-in functions added after the first version. A sheet's `<Define>` with
 // one of these names keeps working (it wins in that sheet, with a warning);
 // add new built-ins here, never to formulaReservedNames.
-export const formulaLaterBuiltins: readonly string[] = [];
+export const formulaLaterBuiltins: readonly string[] = ["list"];
 
 // Names a `<Define>` can't use.
 export const formulaReservedNames: ReadonlySet<string> = new Set([
