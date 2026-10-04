@@ -15,7 +15,11 @@
       "Bash(git log*)",
       "Bash(git fetch origin)",
       "Bash(gh pr view *)",
-      "Bash(gh pr list*)"
+      "Bash(gh pr list*)",
+      "Bash(scripts/check-secrets.sh)",
+      "Bash(scripts/check-secrets.sh *)",
+      "Bash(git worktree list*)",
+      "Bash(gh pr checks *)"
     ]
   },
   "hooks": {

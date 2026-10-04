@@ -62,10 +62,10 @@ test("sheet compiles", () => {
 });
 ```
 
-Run it from the repo root with output shown (the project's Node and pnpm only work through a zsh login shell):
+Run it from the repo root with output shown (`scripts/agent-run.sh` loads the project's Node and pnpm):
 
 ```sh
-zsh -ilc 'nvm use >/dev/null 2>&1 && SHEET_DIR=/path/to/folder pnpm exec vitest run shared/sheet/check-sheet.tmp.test.ts --disableConsoleIntercept' 2>&1 | grep -v "command not found"
+SHEET_DIR=/path/to/folder scripts/agent-run.sh pnpm exec vitest run shared/sheet/check-sheet.tmp.test.ts --disableConsoleIntercept
 rm shared/sheet/check-sheet.tmp.test.ts
 ```
 

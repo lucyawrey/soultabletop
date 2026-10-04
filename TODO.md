@@ -1,8 +1,10 @@
-Planned work, most important first within each section: reorder items to reprioritize. Each item is a bold title with its type (bug, feature, chore) and, where they apply, _needs decision_ (blocked on a choice, with the open question) and _depends on_ (items to do first), then the details. Work is grouped into phases that build on each other; Next up is the exact order of what is built first.
+Planned work, most important first within each section: reorder items to reprioritize. Sections, in order: Unsorted, In progress (with its branch or PR), Next up (the exact order of what is built first), Phase 1 to Phase 4 (groups of work that build on each other), Low priority, Before launch, After launch.
+
+Each item is `- **Title** · type` (bug, feature, or chore), plus `· needs decision: <the open question>` and `· depends on: <items to do first>` where they apply, then the details indented below. A new item goes in the section the user names, else at the end of Phase 4 (and the agent says so). An item moves to In progress when work starts and is deleted when its PR merges.
 
 # Unsorted
 
-Quick, rough ideas go here, in any form, without a tier. An agent goes through them with the user from time to time: asks what each one means, fills in the details, and moves it into a tier with the usual format.
+Quick, rough ideas go here, in any form. Nothing is built from them until they're sorted: when asked (or when the section has grown), an agent goes through them with the user one at a time, asks what each one means and what it's worth, writes it up in the item format, and moves it to the section the user picks. Until then, the user's wording stays as is.
 
 - concider, system grouped id namespaces (2026-10-03)
 
