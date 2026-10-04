@@ -269,6 +269,13 @@ function plainText(parts: TextPart[]) {
   return parts.join("");
 }
 
+// Whether two parsed formulas are the same, ignoring spacing and parentheses
+// (their locations differ, nothing else).
+function sameFormula(a: unknown, b: unknown) {
+  const withoutLocations = (key: string, value: unknown) => (key === "loc" || key === "nameLoc" ? undefined : value);
+  return JSON.stringify(a, withoutLocations) === JSON.stringify(b, withoutLocations);
+}
+
 function attrNamed(node: SheetElement, name: string) {
   return node.attrs.find((attr) => attr.name.toLowerCase() === name.toLowerCase());
 }
@@ -903,7 +910,7 @@ class Validator {
       const existing = this.computedFields.get(key);
       if (!existing) {
         this.computedFields.set(key, { tag: spec.name, ast: formula.ast, source: formula.source, loc: node.loc });
-      } else if (existing.source.trim() !== formula.source.trim()) {
+      } else if (!sameFormula(existing.ast, formula.ast)) {
         this.error(
           "computed-field-conflict",
           `"${key}" already has a different formula on line ${existing.loc.start.line}; give a field one formula`,

@@ -99,9 +99,10 @@ const text = computed(() => {
 // Shown instead of the value when the formula failed.
 const showsError = computed(() => automatic.value && !!formulaError.value);
 // An override that holds a manual value can go back to the computed one.
-const canReset = computed(
-  () => !!props.node.formula && !!props.node.binding && !automatic.value && editable.value,
+const isEditableOverride = computed(
+  () => !!props.node.formula && !!props.node.binding && editable.value,
 );
+const canReset = computed(() => isEditableOverride.value && !automatic.value);
 function useAutomatic() {
   if (resolved.value.path) context.update(resolved.value.path, undefined);
 }
@@ -166,10 +167,12 @@ const imageSize = computed(
     ]"
   >
     <!-- The buttons' negative margin keeps this row at the label's height, so
-      showing one doesn't push the input down. -->
+      showing one doesn't push the input down. An editable override keeps the
+      row even without a label, so the reset button coming and going doesn't
+      move the input either. -->
     <div
-      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || canReset"
-      class="flex items-center gap-1 text-xs font-medium text-muted"
+      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || isEditableOverride"
+      class="flex min-h-4 items-center gap-1 text-xs font-medium text-muted"
     >
       <span v-if="shownLabel && !compact" class="sheet-field-label">{{
         shownLabel

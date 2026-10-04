@@ -815,6 +815,7 @@ describe("review follow-ups", () => {
 
   it("allows the same formula on a field twice, but not two different ones", () => {
     expect(messages('<Number field="hp" formula="hpMax" /><Number field="hp" formula=" hpMax " />')).toEqual([]);
+    expect(messages('<Number field="hp" formula="hpMax+1" /><Number field="hp" formula="(hpMax) + 1" />')).toEqual([]);
     expect(messages('<Number field="hp" formula="hpMax" />\n<Number field="hp" formula="hpMax + 1" />')).toEqual([
       'error computed-field-conflict: "hp" already has a different formula on line 1; give a field one formula',
     ]);

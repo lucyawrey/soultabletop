@@ -349,6 +349,27 @@ describe("computed fields", () => {
     expect(value(text, "title", { name: "Violet", title: "Hero" })).toBe("Hero");
   });
 
+  it("cascades Checkbox overrides", () => {
+    const checkbox = '<Checkbox field="trained" formula="level > 1" /><Value formula="trained" />';
+    expect(value(checkbox, "trained", { level: 3 })).toBe(true);
+    expect(value(checkbox, "trained", { level: 3, trained: false })).toBe(false);
+  });
+
+  it("shows the computed value in {= path} text, and the stored one in {path}", () => {
+    const compiled = compileSheet(`${sheet}<Note>{= hp} / {hp}</Note>`, empty);
+    const note = compiled.nodes.find(
+      (node): node is ValidatedElement => node.type === "element" && node.tag === "Note",
+    )!;
+    const parts = (note.children[0] as ValidatedText).parts;
+    const scope: SheetScope = { value: { maxDex: 9 }, path: [] };
+    expect(
+      interpolateSheetText(parts, scope, scope, refs, {
+        definitions: compiled.definitions,
+        computedFields: compiled.computedFields,
+      }),
+    ).toBe("4 / ");
+  });
+
   it("gives cycles an error", () => {
     const cycle = '<Number field="a" formula="b + 1" /><Number field="b" formula="a + 1" />';
     expect(value(cycle, "a")).toEqual(new FormulaError("formula-cycle", "a is computed from itself"));
@@ -356,6 +377,8 @@ describe("computed fields", () => {
     expect(value('<Number field="a" formula="a + 1" />', "a")).toEqual(
       new FormulaError("formula-cycle", "a is computed from itself"),
     );
+    const throughParams = '<Define name="plus" params="x" formula="x + b" /><Number field="b" formula="plus(1)" />';
+    expect(value(throughParams, "b")).toEqual(new FormulaError("formula-cycle", "b is computed from itself"));
   });
 
   it("limits how deep computed fields depend on each other", () => {

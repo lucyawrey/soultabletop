@@ -130,9 +130,10 @@ View mode renders formatted values, edit mode renders the input.
 - **Cascading computed values**: an override at the top level (not inside a `List` or `Table` row) also stands in for
   its field in other formulas: a formula reading that path while nothing is stored there gets the computed value, so
   `<Number field="hp" formula="maxHp" />` follows `<Number field="maxHp" formula="…" />` until either is typed in.
-  Fields that compute each other give an error value (`formula-cycle`), and chains deeper than the call depth limit
-  give `too-deep`. Plain `{path}` text and field tags still show the stored value; write `{= path}` for the computed
-  one. A field may carry the same formula on several tags; a different one is an error (`computed-field-conflict`).
+  An override inside a hidden region (`show`) still counts. Fields that compute each other give an error value
+  (`formula-cycle`), and chains deeper than the call depth limit give `too-deep`. Plain `{path}` text and field tags
+  still show the stored value; write `{= path}` for the computed one. A field may carry the same formula (spacing and
+  parentheses aside) on several tags; a different one is an error (`computed-field-conflict`).
 - Every other field tag (`Field`, `Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
   `Image` never will: a formula could build a URL that sends data the viewer can read to another site.
 
