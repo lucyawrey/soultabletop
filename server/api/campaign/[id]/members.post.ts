@@ -1,9 +1,7 @@
 import { createError } from "h3";
 import { campaignMembership } from "../../../database/schema";
 import { requireAuthenticatedUser } from "../../../utils/auth";
-import {
-  requireResourceEditor,
-} from "../../../utils/resource-management";
+import { requireCampaignMemberManager } from "../../../utils/campaign-members";
 import { resolveResourceRouteId } from "../../../utils/resource-address";
 import { useDatabase } from "../../../utils/database";
 import { parseBody, campaignMembershipSchema } from "../../../utils/api-schemas";
@@ -12,6 +10,8 @@ defineRouteMeta({
   openAPI: {
     tags: ["Campaign Membership"],
     summary: "Add or update a campaign member",
+    description:
+      "Allowed for the campaign's editors. Its GMs may also add and remove players and change or remove their own membership, but not make anyone a GM, change another GM, or change an owner's membership.",
     requestBody: {
       required: true,
       content: {
@@ -38,8 +38,6 @@ defineRouteMeta({
 export default defineEventHandler(async (event) => {
   const user = await requireAuthenticatedUser(event);
   const campaignId = await resolveResourceRouteId(event, "campaign", user);
-  // A GM's edit access to the campaign doesn't extend to its members.
-  await requireResourceEditor(user, campaignId, { gmEdit: false });
   const body = await parseBody(event, campaignMembershipSchema);
   if (
     typeof body.userId !== "string" ||
@@ -49,6 +47,7 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: "userId and role are required",
     });
+  await requireCampaignMemberManager(user, campaignId, body.userId, body.role);
   const [membership] = await useDatabase()
     .insert(campaignMembership)
     .values({ campaignId, userId: body.userId, role: body.role })

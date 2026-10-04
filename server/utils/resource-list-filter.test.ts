@@ -181,7 +181,7 @@ describe("getResourceSource", () => {
     expect(getResourceSource(resource({ ownerUserId: "me" }), false, context())).toBe("you");
   });
 
-  it("says Your Groups for any role, including a system group the viewer is in", () => {
+  it("says Group (yourGroups) for any role, including a system group the viewer is in", () => {
     const ctx = context({ groupRoles: new Map([[PARTY, "member"]]) });
     const owned = resource({ ownerUserId: null, ownerGroupId: PARTY });
     expect(getResourceSource(owned, false, ctx)).toBe("yourGroups");
@@ -219,6 +219,17 @@ describe("getResourceSource", () => {
     const member = context({ campaignRoles: new Map([["camp", "player"]]), grants: [grant] });
     expect(getResourceSource(item, false, member)).toBe("shared");
     expect(getResourceSource(item, false, context({ grants: [grant] }))).toBe("community");
+  });
+
+  it("says Shared for a campaign the viewer is a member of, below Official", () => {
+    const item = resource({ kind: "campaign" });
+    for (const role of ["player", "gm"] as const) {
+      const ctx = context({ campaignRoles: new Map([[item.id, role]]) });
+      expect(getResourceSource(item, false, ctx)).toBe("shared");
+      expect(getResourceSource(item, true, ctx)).toBe("official");
+    }
+    expect(getResourceSource(resource({ kind: "campaign", ownerUserId: "me" }), false,
+      context({ campaignRoles: new Map([[item.id, "gm"]]) }))).toBe("you");
   });
 
   it("gives logged-out viewers only Official and Community", () => {

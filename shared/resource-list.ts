@@ -14,10 +14,11 @@ export const RESOURCE_SOURCES = [
 ] as const;
 export type ResourceSource = (typeof RESOURCE_SOURCES)[number];
 
+// One word each, so the badges stay short.
 export const RESOURCE_SOURCE_LABELS: Record<ResourceSource, string> = {
   you: "You",
-  yourGroups: "Your Groups",
-  shared: "Shared with you",
+  yourGroups: "Group",
+  shared: "Shared",
   official: "Official",
   community: "Community",
 };
