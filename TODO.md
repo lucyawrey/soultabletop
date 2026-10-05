@@ -10,16 +10,14 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 - **Reset the database and squash the migrations** · chore · PR #90 (`squash-migrations`)
   Dropped and rebuilt from `0000_baseline` on 2026-10-05 (Neon backup branch taken first; `pf2e-test` exported to `.claude/pf2e/legacy/`). Done: the user re-registered as `lucy` and is site admin. Left: a new API key from `/profile` on each machine; merge #90.
+- **Game icons in sheets** · feature · PR #91 (`game-icons`)
+  Built: Lucide and game-icons only in sheet `icon` attributes, no Iconify API fallback, a `/credits` page linked from the sidebar. Waiting for the user's review and merge.
 
 # Next up
 
 The exact order: do these one at a time, top first.
 
 Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The items below, in this order.
-
-- **Game icons in sheets** · feature
-  Moved to Next up by the user (2026-10-05): wanted during the demo and PF2e phase.
-  From the user (2026-10-05), decided: sheets' existing `icon` attributes (Section, Tab, Callout, Collapsible) accept game-icons.net icons (`i-game-icons-*`, Iconify's `@iconify-json/game-icons`, CC BY 3.0 by Lorc, Delapouite & contributors) as well as Lucide. Only bundled, allowlisted collections (Lucide and game-icons) are valid, served from our app: today `iconPattern` (`shared/sheet/validate.ts`) accepts any collection prefix, and `@nuxt/icon` falls back to Iconify's public API for collections that aren't installed, so a sheet can make browsers fetch from it; close that (validator allowlist, `icon.fallbackToApi: false` or the equivalent) in the same change. The credit goes on a new site credits page linked from the footer, listing game-icons.net and other bundled assets. Not decided: a standalone `Icon` tag, icons stored in content data, and an icon picker (the user chose only the existing attributes for now). Check the bundle size the collection adds (about 4,000 icons) and whether server-side bundling keeps it out of the client.
 
 - **Pathfinder 2e demo system** · feature
   Plan: [.claude/plans/pf2e-demo.md](.claude/plans/pf2e-demo.md) (decisions, references and their rules, density, steps).

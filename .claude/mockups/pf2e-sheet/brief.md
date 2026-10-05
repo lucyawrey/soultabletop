@@ -52,3 +52,9 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - **Skills:** untrained skills dimmed (the U badge stays, so it isn't color alone); both columns share one row grid; Lore last.
 - **Class tab:** a new first tab with class features by level, the deity for a Cleric (domains, favored weapon, sanctification, edicts and anathema, font), and the racket for a Rogue. The Feats tab holds only feats and empty slots.
 - **Proficiencies:** two labeled rows, Attacks (unarmed, simple, martial, advanced) and Defenses (unarmored, light, medium, heavy), each with its rank badge, plus class DC in the same block.
+
+## Next for the mockup (user, 2026-10-05)
+
+- v3 changes after review: the tabs are full width below the columns, with a fixed height so switching tabs doesn't move the page; the contrast table opens from a Contrast button in the bar.
+- **To try next:** skills and proficiencies on the left, and the tabs on the right (instead of the full-width tabs below).
+- Icons: action glyphs drawn as our own SVGs; other icons from game-icons.net (see "Game icons in sheets", PR #91).
