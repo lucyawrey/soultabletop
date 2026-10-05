@@ -4,9 +4,10 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-10-05
 
-- **PR #86 open: Schema default values** (branch `schema-defaults`, worktree `../soultabletop-worktrees/schema-defaults`). Tier B; an Opus review was running when this was written. After the merge: delete its In progress item in `TODO.md`, remove the worktree and branch.
-- **The user plans a demo soon.** Suggested before it: database reset (Phase 2), a hand-made demo system via the API (and fix `pf2e-test`'s old syntax), small polish items, dice buttons if time. Waiting on the user's choice and the demo date.
-- **After it: sheet feature planning** continues with the user: the rest of "Sheet features found missing…" (Phase 1 in `TODO.md`), one feature at a time, designed and ordered into Next up.
+- **PR #86 open: Schema default values** (branch and worktree `schema-defaults`). Reviewed; fixes pushed. Waiting for the user's merge; then remove its worktree and branch and its In progress item.
+- **In progress: Resource descriptions** (branch and worktree `resource-descriptions`): column, migration `0015` (not applied yet), and list columns done; system PATCH, the system page panel, tests, docs, and the PR still to do.
+- **Then the demo prep list in Next up (`TODO.md`)**, in order: database reset, PF2e demo system, onboarding structure, one polish PR, dice buttons. Demo in about a week.
+- **Sheet feature planning** continues after the demo: the rest of "Sheet features found missing…" (Phase 1).
 - The Obsidian docs review is done; the user hasn't reported yet on how the vault performs with `node_modules/` (hidden by Unhide and excluded from search).
-- The live `pf2e-test` sheet still uses the old `{= }` / braced `show` syntax and fails validation until edited.
+- The live `pf2e-test` sheet still uses the old `{= }` / braced `show` syntax; the database reset removes it, and the PF2e demo system replaces it.
 - **Unverified on the Mac:** that `code` is on the PATH. **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70).

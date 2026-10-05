@@ -8,12 +8,27 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
-- **Schema default values** · feature · PR #86 (Tier B, waiting for review)
-  Decided with the user (2026-10-05): `default` on string, number, boolean, scalar, and array fields, stored on create (never a read-time fallback); array defaults edited as JSON in the builder. See "Default values" in `docs/sheet-system.md`.
+- **Schema default values** · feature · PR #86 (Tier B, waiting for the user's merge)
+  Decided with the user (2026-10-05): `default` on string, number, boolean, scalar, and array fields, stored on create (never a read-time fallback); array defaults edited as JSON in the builder. See "Default values" in `docs/sheet-system.md`. Reviewed by an Opus agent; its three findings are fixed.
+- **Resource descriptions** · feature · branch `resource-descriptions`
+  From the user (2026-10-05), needed for the demo system's credits: a Markdown `description` on every resource (nullable column on `resource`, at most 20,000 characters, left out of list endpoints like other heavy columns). Systems get the API (PATCH) and UI now: a Description panel on the system page, shown and edited with Nuxt UI's Markdown editor (`UEditor`, as sheets use it), hidden from viewers when empty. Other kinds can add the UI later without a schema change. Must merge before the database reset, so the squashed baseline includes the column.
 
 # Next up
 
 The exact order: do these one at a time, top first.
+
+Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The items below, in this order, after #86 and resource descriptions merge.
+
+- **Reset the database and squash the migrations** (the Phase 2 item, done early for the demo) · chore
+  User's decisions: a full drop, all user accounts included, with a Neon backup branch taken first; confirm with the user right before dropping. Squash the migrations into one baseline in a PR, re-seed the `soul` group, and make the user site admin after they re-register (`pnpm admin:set`). Add a note to the agent docs (`.claude/running-commands.md` or `deployment.md`) that every machine's `SOUL_TABLETOP_API_KEY` stops working after the reset and needs a new key from `/profile`. Reword the CLAUDE.md notes that cite migrations `0004` and `0005`.
+- **Pathfinder 2e demo system** · feature
+  A small slice of the Pathfinder 2e system for the demo, and a head start on the official one (Phase 2): content types (character, ancestry, background, class, feat, spell, item) and a polished character sheet using formulas, choice fields, struct tables, list functions, and defaults. Agents design the types and sheets, reading the Foundry pf2e data for reference (`~/Developer/foundry-pf2e`); an import script loads a small ORC Remaster slice of content through the API with the user's API key, never agent-written content (see "Data sources and import scripts for official content"). Keep a copy of the schemas, sheets, and script in `.claude/` until the authoring CLI exists. The system's description credits the data source and states the ORC license notice from the start. Replaces the old `pf2e-test` system, which the reset removes.
+- **Onboarding structure** · feature
+  The structure part of "Onboarding for new users" (Phase 4): a Getting Started panel explaining systems, content types, sheets, content, and campaigns, with links, and next-step suggestions in empty states and after creating something. All explanations and welcome text are placeholders in `content/copy.yml` for the team to write.
+- **Demo polish, one PR** · feature
+  In one PR, not in parallel (user's decision): source badge on detail pages; counts on resource cards (needs decision: which count each kind shows); the category dropdown on Content (becoming a content type dropdown when a system is selected); a content type's first sheet becomes its default, for anyone who can edit the type (user's decision); "working as" a group prefills the owner; and the small sheet display fixes from Phase 1 (an icon-only or dot checkbox, a Tracker without a maximum, text-input Tables at phone width). Each has its own item elsewhere in this file with the details; delete them when this merges.
+- **Sheet dice buttons** · feature · large · needs decision: how a roll looks
+  The dice half of "Sheet dice buttons and image uploads" (Phase 1), if time allows before the demo. User's decisions: a roll's result shows in a toast with each die, and a "Recent rolls" list on the sheet page keeps this visit's rolls, until campaign dice logs exist. Still to design with the user: the visual element for rolling (e.g. an animated die, a rolling number, or a result card), plus the markup (a roll button tag and formula dice syntax).
 
 # Phase 1: Sheets ready for real systems
 
