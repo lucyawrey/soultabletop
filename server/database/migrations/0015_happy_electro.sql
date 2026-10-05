@@ -1,1 +1,0 @@
-ALTER TABLE "resource" ADD COLUMN "description" text;

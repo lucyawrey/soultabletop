@@ -215,7 +215,7 @@ export const group = pgTable(
 // ID alone says whose resource a URL like `/sheets/lucy/fighter` means. This
 // table holds every one of them (lowercase), and its primary key is the
 // guarantee: database triggers on `user_profile` and `group` (migration
-// `0012_owner_readable_id_namespace`) keep it in step on insert and rename, so
+// `0000_baseline`) keep it in step on insert and rename, so
 // taking a name the other table has fails with a unique violation (23505),
 // race-free, whatever code writes the row. Rows go away with their user
 // profile or group. Don't write it directly. Read by availability checks
