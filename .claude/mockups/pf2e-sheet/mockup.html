@@ -108,6 +108,10 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .inv .row { grid-template-columns: 1fr 40px 40px 66px 30px; }
 .mid { display: grid; grid-template-columns: 1.35fr 1fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: start; }
 .mid > div { display: grid; gap: calc(var(--d-gap) + 10px); }
+/* Tabs right: skills keep one column of rows; the tabs take the wider side. */
+.mid.right { grid-template-columns: minmax(300px, 1fr) 1.5fr; }
+.mid.right .skills .cols2 { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
+.mid.right .tabpanel { min-height: 640px; }
 .feats { display: grid; gap: var(--d-gap); grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
 .feat { border-left: 3px solid var(--st-accent); padding-left: 6px; }
 .feat .small { color: var(--st-ink-muted); display: block; }
@@ -123,7 +127,7 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .tabpanel { background: var(--st-panel); border: 1px solid var(--st-border-strong); border-radius: 0 var(--st-radius) var(--st-radius) var(--st-radius); padding: calc(var(--d-pad) * 1.5); min-height: 420px; }
 /* Full-width tabs: wide panels split into columns. */
 .tabcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: calc(var(--d-gap) * 2) calc(var(--d-gap) * 4); align-items: start; }
-@media (max-width: 900px) { .tabpanel { min-height: 0; } }
+@media (max-width: 900px) { .tabpanel, .mid.right .tabpanel { min-height: 0; } .mid.right { grid-template-columns: 1fr; } }
 
 /* Reference preview */
 .preview { position: fixed; right: 16px; bottom: 16px; width: min(340px, calc(100vw - 32px)); background: var(--st-panel); border: 1px solid var(--st-border-strong); border-radius: var(--st-radius); box-shadow: 0 8px 24px rgb(0 0 0 / .15); padding: 12px; z-index: 6; }
@@ -151,6 +155,7 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
   <b>PF2e demo sheet</b><small>mockup v3 · draft</small>
   <div class="ctl" role="group" aria-label="Mode" data-ctl="mode"><button data-v="play">Play</button><button data-v="edit">Edit</button></div>
   <div class="ctl" role="group" aria-label="Density" data-ctl="density"><button data-v="compact">Compact</button><button data-v="roomy">Roomy</button></div>
+  <div class="ctl" role="group" aria-label="Layout" data-ctl="layout"><button data-v="below">Tabs below</button><button data-v="right">Tabs right</button></div>
   <div class="ctl" role="group" aria-label="Character" data-ctl="pc"><button data-v="cleric">Cleric</button><button data-v="rogue">Rogue</button></div>
   <div class="ctl" role="group" aria-label="Gap outlines" data-ctl="gaps"><button data-v="on">Gaps</button><button data-v="off">Hide gaps</button></div>
   <div class="ctl"><button data-contrast aria-expanded="false" aria-controls="contrastbox">Contrast</button></div>
@@ -160,7 +165,7 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 <div class="contrast" id="contrastbox" hidden><table id="contrast"></table></div>
 
 <script>
-const S = { mode: "play", density: "compact", pc: "cleric", gaps: "on", tab: "Class", open: null, preview: null };
+const S = { mode: "play", density: "compact", layout: "right", pc: "cleric", gaps: "on", tab: "Class", open: null, preview: null };
 const ATTR = ["Str", "Dex", "Con", "Int", "Wis", "Cha"];
 const RANKS = { u: ["U", "Untrained", 0], t: ["T", "Trained", 2], e: ["E", "Expert", 4], m: ["M", "Master", 6], l: ["L", "Legendary", 8] };
 const SKILLS = [["Acrobatics","Dex"],["Arcana","Int"],["Athletics","Str"],["Crafting","Int"],["Deception","Cha"],["Diplomacy","Cha"],["Intimidation","Cha"],["Medicine","Wis"],["Nature","Wis"],["Occultism","Int"],["Performance","Cha"],["Religion","Wis"],["Society","Int"],["Stealth","Dex"],["Survival","Wis"],["Thievery","Dex"]];
@@ -314,7 +319,11 @@ function render() {
 
   const el = document.getElementById("sheet");
   el.dataset.density = S.density;
-  el.innerHTML = head + top + `<div class="mid"><div>${strikes}${skills}</div><div>${actions}${profs}</div></div>` + tabs;
+  el.innerHTML = head + top + (S.layout === "below"
+    ? `<div class="mid"><div>${strikes}${skills}</div><div>${actions}${profs}</div></div>` + tabs
+    // Tabs right: Strikes and actions side by side, then skills and
+    // proficiencies beside the tabs.
+    : `<div class="mid"><div>${strikes}</div><div>${actions}</div></div><div class="mid right"><div>${skills}${profs}</div><div>${tabs}</div></div>`);
   document.getElementById("preview").innerHTML = S.preview ? `<div class="preview" role="dialog" aria-label="${S.preview}"${tag("Ref", 'preview', "reference preview doesn't exist yet")}>
     <div style="display:flex;justify-content:space-between;gap:8px"><h3>${S.preview}</h3><button class="link" data-close>Close</button></div>
     <p class="small dim">Rules text from the imported content goes here: traits, actions, and the full description, read from the referenced resource.</p></div>` : "";

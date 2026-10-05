@@ -56,5 +56,5 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 ## Next for the mockup (user, 2026-10-05)
 
 - v3 changes after review: the tabs are full width below the columns, with a fixed height so switching tabs doesn't move the page; the contrast table opens from a Contrast button in the bar.
-- **To try next:** skills and proficiencies on the left, and the tabs on the right (instead of the full-width tabs below).
+- **Layout toggle (added after v3):** Tabs right (default: Strikes and Actions side by side, then skills and proficiencies on the left and the tabs on the right, filling that column's height) or Tabs below (the v3 layout). Phones stack both the same way.
 - Icons: action glyphs drawn as our own SVGs; other icons from game-icons.net (see "Game icons in sheets", PR #91).
