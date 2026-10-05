@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ContentTypeRules } from "../content-schema";
 import { pathfinder2eMarkup, pathfinder2eSchemas } from "./fixtures/pathfinder2e";
+import type { FormulaNode } from "./formula";
 import { parseSheetMarkup } from "./parser";
 import { humanizeFieldName } from "./registry";
 import {
@@ -195,7 +196,7 @@ describe("bindings", () => {
       "error wrong-field-type: <Text> can't show \"attacks\": it's an array; use <List> or <Table>",
     ]);
     expect(messages(`<Field field="stats" />`)).toEqual([
-      "error wrong-field-type: <Field> can't show \"stats\": it's a struct; use a <Section> with fields inside",
+      "error wrong-field-type: <Field> can't show \"stats\": it's a struct; use a <Section> with fields inside, or a <List> over its entries",
     ]);
     expect(errorCodes(`<Table field="tags"><Column field="." /></Table>`)).toEqual(["wrong-field-type"]);
     expect(errorCodes(`<Tags field="attacks" />`)).toEqual(["wrong-field-type"]);
@@ -923,6 +924,101 @@ describe("choice fields", () => {
       undefined,
       null,
       undefined,
+    ]);
+  });
+});
+
+describe("repeating over a struct's entries", () => {
+  const rank = { type: "struct" as const, entries: { rank: { type: "number" as const } } };
+  const structSchemas: SheetSchemas = {
+    root: {
+      hasStrictSchema: true,
+      schema: {
+        skills: {
+          type: "struct",
+          entries: { acrobatics: rank, arcana: { ...rank, label: "Arcana Lore" } },
+        },
+        attributes: {
+          type: "struct",
+          entries: { str: { type: "number", label: "Str" }, dex: { type: "number", required: true } },
+        },
+        mixed: { type: "struct", entries: { a: { type: "number" }, b: { type: "string" } } },
+        attacks: { type: "array", itemType: { type: "struct", entries: { bonus: { type: "number" } } } },
+      },
+    },
+    types: {},
+  };
+  const structMessages = (markup: string) => messages(markup, structSchemas);
+  const structErrors = (markup: string) => errorCodes(markup, structSchemas);
+
+  it("binds Table and List to structs of alike entries, listing the entries", () => {
+    const { nodes, diagnostics } = compile(
+      `<Table field="skills">
+        <Column formula="itemLabel()" label="Skill" />
+        <Column field="rank" />
+        <Column formula="concat(itemKey(), ': ', text(rank))" />
+      </Table>
+      <List field="attributes"><Number field="." /></List>`,
+      structSchemas,
+    );
+    expect(diagnostics).toEqual([]);
+    const [table, list] = nodes.filter((node): node is ValidatedElement => node.type === "element");
+    expect(table!.entries).toEqual([
+      { key: "acrobatics", label: "Acrobatics" },
+      { key: "arcana", label: "Arcana Lore" },
+    ]);
+    expect(list!.entries).toEqual([
+      { key: "str", label: "Str" },
+      { key: "dex", label: "Dex" },
+    ]);
+    // `.` takes each row's label when rendered, not the first entry's.
+    expect((list!.children[0] as ValidatedElement).binding?.label).toBe("");
+  });
+
+  it("explains structs that can't be repeated over", () => {
+    expect(structMessages(`<Table field="attributes"><Column field="." /></Table>`)).toEqual([
+      'error wrong-field-type: <Table> can\'t show "attributes": its entries aren\'t structs; use <List>',
+    ]);
+    expect(structMessages(`<List field="mixed"><Value field="." /></List>`)).toEqual([
+      'error wrong-field-type: <List> can\'t repeat over "mixed": a struct\'s entries must all be alike (the same type and fields) and each a struct or a single value',
+    ]);
+    expect(structMessages(`<Field field="skills" />`)).toEqual([
+      'error wrong-field-type: <Field> can\'t show "skills": it\'s a struct; use a <Section> with fields inside, or a <List> or <Table> over its entries',
+    ]);
+  });
+
+  it("warns that addLabel does nothing on a struct List", () => {
+    expect(structMessages(`<List field="attributes" addLabel="Add"><Value field="." /></List>`)).toEqual([
+      "warning flag-no-effect: addLabel has no effect on a <List> of a struct's entries: its rows come from the schema",
+    ]);
+  });
+
+  it("types itemKey() and itemLabel() by the row, and rejects them outside one", () => {
+    // In a struct row the key is text; in an array row, a number.
+    expect(structErrors(`<Table field="skills"><Column formula="itemKey() + 1" /></Table>`)).toEqual(["formula-type"]);
+    expect(structErrors(`<Table field="attacks"><Column formula="itemKey() + 1" /></Table>`)).toEqual([]);
+    expect(structErrors(`<Value formula="sum(attacks, bonus + itemKey())" />`)).toEqual([]);
+    expect(structMessages(`<Value formula="itemKey()" />`)).toEqual([
+      "error formula-no-item: itemKey() works only in a List or Table row, or inside sum, count, any, or all",
+    ]);
+    expect(structErrors(`<Table field="skills"><Column field="rank" /></Table><Define name="k" formula="itemLabel()" /><Value formula="k()" />`)).toContain("formula-no-item");
+  });
+
+  it("lets per-item functions repeat over a struct's entries", () => {
+    const { nodes, diagnostics } = compile(
+      `<Value formula="count(skills, rank > 0)" /><Value formula="sum(attributes)" /><Value formula="sum(skills, length(itemLabel()))" />`,
+      structSchemas,
+    );
+    expect(diagnostics).toEqual([]);
+    const first = nodes[0] as ValidatedElement;
+    const call = first.formula!.ast as Extract<FormulaNode, { type: "call" }>;
+    expect(call.args[0]).toMatchObject({ type: "path", entries: [{ key: "acrobatics" }, { key: "arcana" }] });
+    expect(structErrors(`<Value formula="sum(mixed)" />`)).toEqual(["formula-type"]);
+  });
+
+  it("lets a definition named like the new functions keep working, with a warning", () => {
+    expect(structMessages(`<Define name="itemKey" formula="1" /><Value formula="itemKey()" />`)).toEqual([
+      expect.stringMatching(/^warning formula-shadows-builtin/),
     ]);
   });
 });
