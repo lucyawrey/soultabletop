@@ -128,7 +128,7 @@ Playing campaigns online, sharing, and discovery.
   From the user (2026-10-05): once the mockup process has been run for real, check whether the Tailwind theme kit (`.claude/scripts/mockup-kit.mjs`, `.claude/mockups/_kit/app-theme.js`) and the comparison script (`.claude/scripts/compare-mockup.mjs`, #89) were actually useful, and update or drop them and the process doc to match what was learned.
 
 - **Landing page drift from the frozen redesign** · bug
-  Found by comparing the signed-out landing page with `.claude/mockups/ui-redesign/frozen.html` (2026-10-05): the sidebar nav lists Content before Characters; the sign-in tabs' text is smaller than in the mockup; the Sign in button looks disabled until the form is filled. Fix each to match the frozen page, or record it as a decision in `.claude/mockups/ui-redesign/spec.md` ("Decided after the mockup"); compare with `.claude/scripts/compare-mockup.mjs`.
+  Found by comparing the signed-out landing page with `.claude/mockups/ui-redesign/frozen.html` (2026-10-05): the sidebar nav lists Content before Characters; the sign-in tabs' text is smaller than in the mockup; the Sign in button looks disabled until the form is filled. Some of these may be intentional changes by the user: ask about each one before changing anything. Then fix it to match the frozen page, or record it as a decision in `.claude/mockups/ui-redesign/spec.md` ("Decided after the mockup"); compare with `.claude/scripts/compare-mockup.mjs`.
 
 # Low priority
 
