@@ -6,6 +6,7 @@ import {
   choiceLabel,
   fieldKeyPattern,
   fieldOptions,
+  fieldDefaultError,
   fieldOptionsError,
   isReservedKey,
   MAX_CONTENT_DEPTH,
@@ -344,8 +345,8 @@ export function extractDataName(data: Record<string, unknown>) {
 }
 
 // Rejects field keys that aren't identifiers or are reserved (TypeBox's Record
-// ignores key patterns), and choice fields with bad `options`, at every
-// nesting level.
+// ignores key patterns), choice fields with bad `options`, and bad defaults,
+// at every nesting level.
 export function assertFieldKeys(schema: ContentTypeSchema) {
   const visit = (field: ContentFieldSchema, key: string) => {
     const options = fieldOptions(field);
@@ -354,6 +355,13 @@ export function assertFieldKeys(schema: ContentTypeSchema) {
       throw createError({
         statusCode: 400,
         statusMessage: `Field "${key}" ${optionsError}`,
+      });
+    }
+    const defaultError = fieldDefaultError(field);
+    if (defaultError) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Field "${key}" ${defaultError}`,
       });
     }
     if (field.type === "array") visit(field.itemType, key);
