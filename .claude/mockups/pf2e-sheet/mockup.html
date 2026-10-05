@@ -120,7 +120,10 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .tabs { display: flex; gap: 2px; flex-wrap: wrap; margin-bottom: -1px; position: relative; }
 .tabs button { padding: 4px 12px; border: 1px solid transparent; border-bottom: 0; background: transparent; color: var(--st-ink-muted); cursor: pointer; font-family: var(--st-font-display); font-size: var(--d-h2); font-weight: 700; border-radius: calc(var(--st-radius) * .8) calc(var(--st-radius) * .8) 0 0; }
 .tabs button[aria-selected="true"] { background: var(--st-panel); border-color: var(--st-border-strong); color: var(--st-ink); }
-.tabpanel { background: var(--st-panel); border: 1px solid var(--st-border-strong); border-radius: 0 var(--st-radius) var(--st-radius) var(--st-radius); padding: var(--d-pad); }
+.tabpanel { background: var(--st-panel); border: 1px solid var(--st-border-strong); border-radius: 0 var(--st-radius) var(--st-radius) var(--st-radius); padding: calc(var(--d-pad) * 1.5); min-height: 420px; }
+/* Full-width tabs: wide panels split into columns. */
+.tabcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: calc(var(--d-gap) * 2) calc(var(--d-gap) * 4); align-items: start; }
+@media (max-width: 900px) { .tabpanel { min-height: 0; } }
 
 /* Reference preview */
 .preview { position: fixed; right: 16px; bottom: 16px; width: min(340px, calc(100vw - 32px)); background: var(--st-panel); border: 1px solid var(--st-border-strong); border-radius: var(--st-radius); box-shadow: 0 8px 24px rgb(0 0 0 / .15); padding: 12px; z-index: 6; }
@@ -138,7 +141,8 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
   .strikes .row { grid-template-columns: 22px 1fr auto; row-gap: 0; }
   .strikes .dt { display: flex; flex-wrap: wrap; gap: 0 6px; align-items: baseline; grid-column: 2 / -1; font-size: var(--d-lfs); }
 }
-.contrast { max-width: 1180px; margin: 16px auto; padding: 0 16px; font-size: 12px; color: var(--st-ink-muted); }
+.contrast { position: fixed; top: 52px; right: 16px; z-index: 6; font-size: 12px; color: var(--st-ink-muted); background: var(--st-panel); border: 1px solid var(--st-border-strong); border-radius: 6px; padding: 8px 10px; box-shadow: 0 8px 24px rgb(0 0 0 / .15); }
+.contrast[hidden] { display: none; }
 .contrast td { padding: 1px 8px 1px 0; }
 </style>
 </head>
@@ -149,10 +153,11 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
   <div class="ctl" role="group" aria-label="Density" data-ctl="density"><button data-v="compact">Compact</button><button data-v="roomy">Roomy</button></div>
   <div class="ctl" role="group" aria-label="Character" data-ctl="pc"><button data-v="cleric">Cleric</button><button data-v="rogue">Rogue</button></div>
   <div class="ctl" role="group" aria-label="Gap outlines" data-ctl="gaps"><button data-v="on">Gaps</button><button data-v="off">Hide gaps</button></div>
+  <div class="ctl"><button data-contrast aria-expanded="false" aria-controls="contrastbox">Contrast</button></div>
 </div>
 <main id="sheet" class="sheet" data-tag="Sheet" data-attrs='density="compact"' data-gap="density attribute doesn't exist yet"></main>
 <div id="preview"></div>
-<div class="contrast"><table id="contrast"></table></div>
+<div class="contrast" id="contrastbox" hidden><table id="contrast"></table></div>
 
 <script>
 const S = { mode: "play", density: "compact", pc: "cleric", gaps: "on", tab: "Class", open: null, preview: null };
@@ -281,11 +286,11 @@ function render() {
   const feats = `<div class="feats"${tag("List", 'field="feats" item="Ref"')}>${c.feats.map(([ty, n, src, g]) => `<div class="feat"><button class="link plain" data-prev="${n}">${n}</button> ${g ? `<span class="act">${g}</span>` : ""}<span class="small">${ty} · ${src === "Background" ? "from background" : "level " + src}</span></div>`).join("")}
     ${E() ? c.upcoming.map(([lv, ty]) => `<div class="feat empty"${tag("Section", 'show="{editing}"', "editing isn't visible to formulas yet")}><button class="pick">Choose ${ty.toLowerCase()}</button><span class="small">level ${lv}</span></div>`).join("") : ""}</div>`;
   const dz = c.deity;
-  const klass = `<div class="rows"${tag("List", 'field="class.features" item="Ref"', "a list read from the referenced class")}><div class="row th" style="grid-template-columns:52px 1fr"><span>Level</span><span>Class feature</span></div>
+  const klass = `<div class="tabcols"><div class="rows"${tag("List", 'field="class.features" item="Ref"', "a list read from the referenced class")}><div class="row th" style="grid-template-columns:52px 1fr"><span>Level</span><span>Class feature</span></div>
       ${c.features.map(([lv, n]) => `<div class="row ${+lv > L ? "untrained" : ""}" style="grid-template-columns:52px 1fr"><span class="small">${lv}</span><button class="link plain" data-prev="${n}">${n}</button></div>`).join("")}</div>
-    ${dz ? `<div style="margin-top:calc(var(--d-gap) * 2)"${tag("Section", 'field="deity"')}><div class="kv small"><span class="sheet-field-label">Deity</span><span>${ref(dz.name, "deity")}</span>
+    ${dz ? `<div${tag("Section", 'field="deity"')}><div class="kv small"><span class="sheet-field-label">Deity</span><span>${ref(dz.name, "deity")}</span>
         ${[["Divine font", dz.font], ["Sanctification", dz.sanct], ["Divine skill", dz.skill], ["Favored weapon", dz.weapon], ["Domains", dz.domains], ["Divine attributes", dz.attrs]].map(([k, v]) => `<span class="sheet-field-label">${k}</span><span>${v}</span>`).join("")}
-        <span class="sheet-field-label">Edicts</span><span class="dim">From the imported deity's text.</span><span class="sheet-field-label">Anathema</span><span class="dim">From the imported deity's text.</span></div></div>` : ""}`;
+        <span class="sheet-field-label">Edicts</span><span class="dim">From the imported deity's text.</span><span class="sheet-field-label">Anathema</span><span class="dim">From the imported deity's text.</span></div></div>` : ""}</div>`;
   const sp = c.spells;
   const spells = sp ? (() => { const dc = 10 + a[sp.attr] + P("t", L), atk = a[sp.attr] + P("t", L);
     return `<div class="strip small" style="margin:0 0 var(--d-gap)"><b>${sp.trad} prepared</b><span><span class="sheet-field-label">Spell DC</span> <b>${dc}</b></span><span><span class="sheet-field-label">Attack</span> <b>${sg(atk)}</b></span></div>
@@ -301,7 +306,7 @@ function render() {
     <div class="rows inv"${tag("Table", 'field="inventory" item="Ref"')}><div class="row th"><span>Item</span><span>Qty</span><span>Bulk</span><span>State</span><span title="Invested">Inv</span></div>
     ${c.inv.map(([n, b, q, st, invd]) => `<div class="row"><button class="link plain" data-prev="${n}">${n}</button><span>${q}</span><span class="dim">${b === 0.1 ? "L" : b}</span><span class="small">${E() ? `<select aria-label="State" style="height:20px"><option>${st}</option></select>` : st}</span><span>${invd ? "✓" : ""}</span></div>`).join("")}
     ${E() ? `<div class="row"><button class="pick" style="justify-self:start">+ Add item</button></div>` : ""}</div>`;
-  const bio = `<div class="kv"${tag("Grid", 'columns="2"')}>${["Pronouns", "Age", "Appearance", "Personality", "Notes"].map(k => `<span class="sheet-field-label">${k}</span>${E() ? `<input aria-label="${k}" style="width:100%">` : `<span class="dim">—</span>`}`).join("")}</div>`;
+  const bio = `<div class="kv" style="max-width:760px"${tag("Grid", 'columns="2"')}>${["Pronouns", "Age", "Appearance", "Personality", "Notes"].map(k => `<span class="sheet-field-label">${k}</span>${E() ? `<input aria-label="${k}" style="width:100%">` : `<span class="dim">—</span>`}`).join("")}</div>`;
   const T = { Class: klass, Feats: feats, ...(sp ? { Spells: spells } : {}), Inventory: inv, Biography: bio };
   if (!T[S.tab]) S.tab = "Class";
   const tabs = `<div${tag("Tabs")}><div class="tabs" role="tablist">${Object.keys(T).map(k => `<button role="tab" aria-selected="${k === S.tab}" data-tab="${k}">${k}</button>`).join("")}</div>
@@ -309,7 +314,7 @@ function render() {
 
   const el = document.getElementById("sheet");
   el.dataset.density = S.density;
-  el.innerHTML = head + top + `<div class="mid"><div>${strikes}${skills}</div><div>${actions}${profs}${tabs}</div></div>`;
+  el.innerHTML = head + top + `<div class="mid"><div>${strikes}${skills}</div><div>${actions}${profs}</div></div>` + tabs;
   document.getElementById("preview").innerHTML = S.preview ? `<div class="preview" role="dialog" aria-label="${S.preview}"${tag("Ref", 'preview', "reference preview doesn't exist yet")}>
     <div style="display:flex;justify-content:space-between;gap:8px"><h3>${S.preview}</h3><button class="link" data-close>Close</button></div>
     <p class="small dim">Rules text from the imported content goes here: traits, actions, and the full description, read from the referenced resource.</p></div>` : "";
@@ -327,6 +332,7 @@ document.addEventListener("click", e => {
   else if (b.dataset.open) S.open = S.open === b.dataset.open ? null : b.dataset.open;
   else if (b.dataset.prev) S.preview = b.dataset.prev;
   else if ("close" in b.dataset) S.preview = null;
+  else if ("contrast" in b.dataset) { const box = document.getElementById("contrastbox"); box.hidden = !box.hidden; b.setAttribute("aria-expanded", !box.hidden); b.setAttribute("aria-pressed", !box.hidden); return; }
   else if (b.closest(".pips")) { b.classList.toggle("on"); return; }
   else return;
   render();
