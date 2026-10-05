@@ -381,7 +381,14 @@ const tagList: TagSpec[] = [
     name: "Checkbox",
     category: "field",
     description: "A checkbox",
-    attrs: { ...fieldAttrs, formula: overrideFormula },
+    attrs: {
+      ...fieldAttrs,
+      formula: overrideFormula,
+      style: oneOf(
+        ["check", "dot"],
+        "check (default) or dot: a filled or empty circle, with no Yes/No text",
+      ),
+    },
     children: "none",
     binds: ["boolean"],
     formula: "override",
@@ -424,9 +431,9 @@ const tagList: TagSpec[] = [
       ...fieldAttrs,
       formula: readOnlyFormula,
       max: {
-        type: { kind: "number", min: 1, dynamic: true },
-        required: true,
-        description: "Maximum: a number or a {formula}",
+        type: { kind: "number", min: 0, dynamic: true },
+        description:
+          "Maximum: a number or a {formula}; without one (or at 0), only the value shows",
       },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
     },

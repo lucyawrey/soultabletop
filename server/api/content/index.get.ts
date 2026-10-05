@@ -47,7 +47,7 @@ defineRouteMeta({
       },
     ],
     responses: {
-      200: { description: "Content list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
+      200: { description: "Content list. Each row has `source` (official, you, yourGroups, shared, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
     },
   },
 });
