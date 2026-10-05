@@ -30,12 +30,15 @@ export interface ContentFieldOption<V extends string | number = string | number>
 export type ContentFieldSchema = ContentFieldBase &
   (
     // `options` makes a choice field: only the listed values are valid.
-    | { type: "string"; options?: ContentFieldOption<string>[] }
-    | { type: "number"; options?: ContentFieldOption<number>[] }
-    | { type: "boolean" }
+    // `default` is the starting value of new Content and new List items (see
+    // `fieldDefaultError` for what it may hold).
+    | { type: "string"; options?: ContentFieldOption<string>[]; default?: string }
+    | { type: "number"; options?: ContentFieldOption<number>[]; default?: number }
+    | { type: "boolean"; default?: boolean }
     // One string, number, boolean, or null (never an object or array).
-    | { type: "scalar" }
-    | { type: "array"; itemType: ContentFieldSchema }
+    | { type: "scalar"; default?: string | number | boolean | null }
+    // `default`: starting items (rows), each a value of `itemType`.
+    | { type: "array"; itemType: ContentFieldSchema; default?: unknown[] }
     // Structured: exactly its `entries`, each checked like a top-level field.
     | { type: "struct"; entries: ContentTypeSchema }
     // Free-form: any keys (identifiers) and any nested values, unchecked.
@@ -51,6 +54,8 @@ export type ContentFieldSchema = ContentFieldBase &
 export type ContentTypeSchema = Record<string, ContentFieldSchema>;
 
 export const MAX_FIELD_OPTIONS = 200;
+// Starting items in an array field's `default`.
+export const MAX_DEFAULT_ITEMS = 100;
 export const MAX_OPTION_LABEL_LENGTH = 100;
 
 // A choice field's options, or undefined for any other field.
@@ -87,6 +92,106 @@ export function fieldOptionsError(options: ContentFieldOption[]): string | undef
       return `has an option label that is empty or longer than ${MAX_OPTION_LABEL_LENGTH} characters`;
   }
   return undefined;
+}
+
+// Field types that can have a `default`. Free-form objects, references, and
+// links can't: a default is checked once, when the schema is saved, and
+// references would need the saving user's access.
+export const DEFAULT_FIELD_TYPES: readonly ContentFieldSchema["type"][] = [
+  "string",
+  "number",
+  "boolean",
+  "scalar",
+  "array",
+];
+
+// A copy of a field's `default` to store (JSON values only; works on Vue's
+// reactive schemas, which structuredClone rejects).
+export function copyDefault(value: unknown): unknown {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+// A field's `default`, or undefined if it has none.
+export function fieldDefault(field: ContentFieldSchema | undefined): unknown {
+  if (!field || !(DEFAULT_FIELD_TYPES as readonly string[]).includes(field.type)) return undefined;
+  return (field as { default?: unknown }).default;
+}
+
+// Problems with a field's `default`: it must be a valid value of the field
+// (one of a choice field's options; an array's items valid items, structs with
+// their required entries and no others), hold no object, content, or
+// resourceLink values, and have at most MAX_DEFAULT_ITEMS items per array.
+export function fieldDefaultError(field: ContentFieldSchema): string | undefined {
+  if (!("default" in field) || field.default === undefined) return undefined;
+  if (!(DEFAULT_FIELD_TYPES as readonly string[]).includes(field.type))
+    return `can't have a default: only ${DEFAULT_FIELD_TYPES.join(", ")} fields can`;
+  const error = fieldDefaultProblem(field);
+  return error && `has a default that ${error}`;
+}
+
+// What's wrong with a field's `default` value ("isn't one of the options"),
+// for messages that name the default themselves.
+export function fieldDefaultProblem(field: ContentFieldSchema): string | undefined {
+  const value = fieldDefault(field);
+  return value === undefined ? undefined : defaultValueError(value, field, "", 0);
+}
+
+function defaultValueError(
+  value: unknown,
+  field: ContentFieldSchema,
+  path: string,
+  depth: number,
+): string | undefined {
+  const at = path ? ` at ${path}` : "";
+  const options = fieldOptions(field);
+  switch (field.type) {
+    case "string":
+    case "number":
+      if (field.type === "string" ? typeof value !== "string" : typeof value !== "number" || !Number.isFinite(value))
+        return `isn't a ${field.type}${at}`;
+      if (options && choiceLabel(options, value) === undefined) return `isn't one of the options${at}`;
+      return undefined;
+    case "boolean":
+      return typeof value === "boolean" ? undefined : `isn't true or false${at}`;
+    case "scalar":
+      return value === null ||
+        typeof value === "string" ||
+        typeof value === "boolean" ||
+        (typeof value === "number" && Number.isFinite(value))
+        ? undefined
+        : `isn't a string, number, boolean, or null${at}`;
+    case "array": {
+      if (!Array.isArray(value)) return `isn't an array${at}`;
+      if (value.length > MAX_DEFAULT_ITEMS) return `has more than ${MAX_DEFAULT_ITEMS} items${at}`;
+      if (depth > 8) return `is nested too deeply${at}`;
+      for (let index = 0; index < value.length; index += 1) {
+        const error = defaultValueError(value[index], field.itemType, `${path}[${index}]`, depth + 1);
+        if (error) return error;
+      }
+      return undefined;
+    }
+    case "struct": {
+      if (typeof value !== "object" || value === null || Array.isArray(value)) return `isn't an object${at}`;
+      if (depth > 8) return `is nested too deeply${at}`;
+      const record = value as Record<string, unknown>;
+      for (const key of Object.keys(record)) {
+        if (!Object.hasOwn(field.entries, key) || isReservedKey(key))
+          return `has a key "${key}" the schema doesn't define${at}`;
+      }
+      for (const [key, entry] of Object.entries(field.entries)) {
+        const entryPath = path ? `${path}.${key}` : key;
+        if (!Object.hasOwn(record, key)) {
+          if (entry.required) return `is missing the required ${entryPath}`;
+          continue;
+        }
+        const error = defaultValueError(record[key], entry, entryPath, depth + 1);
+        if (error) return error;
+      }
+      return undefined;
+    }
+    default:
+      return `holds a ${field.type} value${at}; defaults can't hold object, content, or resourceLink values`;
+  }
 }
 
 export const NAME_FIELD = "name";
@@ -141,16 +246,48 @@ export function referencedContentTypeIds(
   return ids;
 }
 
-// Starting data for new Content created without data: required fields get
-// empty values ("", 0, false, null, [], {}; a choice field its first option; a
-// struct with its own required entries filled the same way). Resource links and content fields have no
-// valid empty value, so they are left out for the user to fill in.
+// Whether an optional struct with these entries starts filled in: some entry
+// (or a nested struct's entry) has a `default`, and every required entry can
+// get a starting value. A required resourceLink or content entry without a
+// default can't, so the struct is left out rather than stored without it,
+// which would fail the next save.
+export function hasFieldDefaults(schema: ContentTypeSchema, depth = 0): boolean {
+  return canFillRequired(schema, depth) && Object.values(schema).some(
+    (field) =>
+      fieldDefault(field) !== undefined ||
+      (field.type === "struct" && depth < 8 && hasFieldDefaults(field.entries, depth + 1)),
+  );
+}
+
+function canFillRequired(schema: ContentTypeSchema, depth: number): boolean {
+  return Object.values(schema).every((field) => {
+    if (!field.required || fieldDefault(field) !== undefined) return true;
+    if (field.type === "resourceLink" || field.type === "content") return false;
+    return field.type !== "struct" || (depth < 8 && canFillRequired(field.entries, depth + 1));
+  });
+}
+
+// Starting data for new Content created without data: every field with a
+// `default` gets a copy of it, and other required fields get empty values
+// ("", 0, false, null, [], {}; a choice field its first option). A struct is
+// filled the same way when it's required or has entries with defaults.
+// Resource links and content fields have no valid empty value, so they are
+// left out for the user to fill in.
 export function defaultContentData(
   schema: ContentTypeSchema,
   depth = 0,
 ): Record<string, unknown> {
   const data: Record<string, unknown> = {};
   for (const [key, field] of Object.entries(schema)) {
+    const fallback = fieldDefault(field);
+    if (fallback !== undefined) {
+      data[key] = copyDefault(fallback);
+      continue;
+    }
+    if (field.type === "struct" && depth <= 8 && hasFieldDefaults(field.entries, depth + 1)) {
+      data[key] = defaultContentData(field.entries, depth + 1);
+      continue;
+    }
     if (!field.required) continue;
     const options = fieldOptions(field);
     if (options?.length) {

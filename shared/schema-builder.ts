@@ -5,6 +5,9 @@
 // every setting the builder knows about.
 
 import {
+  DEFAULT_FIELD_TYPES,
+  fieldDefault,
+  fieldDefaultProblem,
   fieldKeyPattern,
   isReservedKey,
   MAX_FIELD_OPTIONS,
@@ -42,6 +45,10 @@ export interface BuilderNode {
   // `string` and `number`: whether it's a choice field, and its options.
   hasOptions: boolean;
   options: BuilderOption[];
+  // The `default` as typed, "" for none: text for `string`, a number for
+  // `number`, "true" or "false" for `boolean`, an option's value for a choice
+  // field, and JSON for `scalar` and `array`.
+  defaultText: string;
 }
 
 // One option of a choice field. `value` is text as typed; a `number` field's
@@ -77,6 +84,9 @@ export const BUILDER_FIELD_TYPES: BuilderFieldType[] = [
   "content",
 ];
 
+// Field types the builder offers a `default` for.
+export const DEFAULT_BUILDER_TYPES: readonly BuilderFieldType[] = DEFAULT_FIELD_TYPES;
+
 let nextId = 0;
 export function newBuilderId() {
   nextId += 1;
@@ -97,6 +107,7 @@ export function newBuilderNode(type: BuilderFieldType = "string"): BuilderNode {
     kind: "",
     hasOptions: false,
     options: [],
+    defaultText: "",
   };
 }
 
@@ -126,7 +137,55 @@ function toNode(field: ContentFieldSchema): BuilderNode {
       newBuilderOption(String(option.value), option.label ?? ""),
     );
   }
+  const value = fieldDefault(field);
+  if (value !== undefined) {
+    node.defaultText =
+      field.type === "array"
+        ? JSON.stringify(value, null, 2)
+        : field.type === "scalar"
+          ? JSON.stringify(value)
+          : String(value);
+  }
   return node;
+}
+
+// A node's `default` from its text: undefined for none (or a type without
+// defaults), else the value or why it can't be read.
+export function builderDefault(
+  node: BuilderNode,
+): { value: unknown } | { error: string } | undefined {
+  const text = node.defaultText;
+  // Text keeps its spaces; only an empty box means no default.
+  if ((node.type === "string" ? !text : !text.trim()) || !(DEFAULT_FIELD_TYPES as readonly string[]).includes(node.type))
+    return undefined;
+  switch (node.type) {
+    case "string":
+      return { value: text };
+    case "number": {
+      const value = parseNumberOption(text);
+      return value === undefined ? { error: "Enter a number" } : { value };
+    }
+    case "boolean":
+      return text === "true" || text === "false"
+        ? { value: text === "true" }
+        : { error: "Choose true or false" };
+    default:
+      try {
+        return { value: JSON.parse(text) };
+      } catch {
+        return {
+          error:
+            node.type === "array"
+              ? 'Enter a JSON array, like ["a", "b"] or [{ "name": "Unarmed" }]'
+              : 'Enter JSON: text in quotes ("Medium"), a number, true, false, or null',
+        };
+      }
+  }
+}
+
+function withDefault(node: BuilderNode) {
+  const parsed = builderDefault(node);
+  return parsed && "value" in parsed ? { default: parsed.value } : {};
 }
 
 export function schemaToBuilder(schema: ContentTypeSchema): BuilderField[] {
@@ -149,6 +208,7 @@ function fromNode(node: BuilderNode): ContentFieldSchema {
       return {
         type: "array",
         itemType: fromNode(node.item ?? newBuilderNode()),
+        ...(withDefault(node) as { default?: unknown[] }),
         ...base,
       };
     case "struct":
@@ -170,16 +230,24 @@ function fromNode(node: BuilderNode): ContentFieldSchema {
       return {
         type: "string",
         ...(node.hasOptions ? { options: builderOptions(node, (value) => value) } : {}),
+        ...(withDefault(node) as { default?: string }),
         ...base,
       };
     case "number":
       return {
         type: "number",
         ...(node.hasOptions ? { options: builderOptions(node, (value) => Number(value.trim())) } : {}),
+        ...(withDefault(node) as { default?: number }),
         ...base,
       };
     case "boolean":
+      return { type: "boolean", ...(withDefault(node) as { default?: boolean }), ...base };
     case "scalar":
+      return {
+        type: "scalar",
+        ...(withDefault(node) as { default?: string | number | boolean | null }),
+        ...base,
+      };
     case "object":
       return { type: node.type, ...base };
   }
@@ -210,7 +278,8 @@ export function builderToSchema(fields: BuilderField[]): ContentTypeSchema {
 // Problems that block saving: bad or duplicate keys and the reserved
 // top-level `name` (by node id), content fields without a content type (by
 // `contentTypeErrorId(node id)`), choice fields without options (by
-// `optionsErrorId(node id)`), and bad option values or labels (by option id).
+// `optionsErrorId(node id)`), bad option values or labels (by option id), and
+// bad defaults (by `defaultErrorId(node id)`).
 export function builderErrors(fields: BuilderField[]): Map<string, string> {
   const errors = new Map<string, string>();
   const visitNode = (node: BuilderNode) => {
@@ -218,6 +287,12 @@ export function builderErrors(fields: BuilderField[]): Map<string, string> {
       errors.set(contentTypeErrorId(node.id), "Choose a content type");
     if ((node.type === "string" || node.type === "number") && node.hasOptions)
       visitOptions(node);
+    const parsed = builderDefault(node);
+    if (parsed && "error" in parsed) errors.set(defaultErrorId(node.id), parsed.error);
+    else if (parsed) {
+      const problem = fieldDefaultProblem(fromNode(node));
+      if (problem) errors.set(defaultErrorId(node.id), `This default ${problem}`);
+    }
     if (node.type === "array") visitNode(node.item ?? newBuilderNode());
     if (node.type === "struct") visitList(node.fields, false);
   };
@@ -270,6 +345,10 @@ export function optionsErrorId(nodeId: string) {
   return `${nodeId}:options`;
 }
 
+export function defaultErrorId(nodeId: string) {
+  return `${nodeId}:default`;
+}
+
 // Moves an item within one list (drag and drop).
 export function moveBuilderItem<T>(list: T[], from: number, to: number) {
   if (from === to || from < 0 || from >= list.length) return;
@@ -284,6 +363,9 @@ function isFieldShape(value: unknown, depth: number): boolean {
   const field = value as Record<string, unknown>;
   if (typeof field.type !== "string" || !FIELD_TYPES.has(field.type)) return false;
   if (depth > 32) return false;
+  // Other types would lose their default in the builder, and a default of
+  // another type would be turned into this one.
+  if (field.default !== undefined && !defaultShapeFits(field.type, field.default)) return false;
   if (field.type === "array") return isFieldShape(field.itemType, depth + 1);
   if (field.type === "struct") return isSchemaShape(field.entries, depth + 1);
   if (field.type === "resourceLink")
@@ -312,6 +394,21 @@ function isFieldShape(value: unknown, depth: number): boolean {
   return true;
 }
 
+function defaultShapeFits(type: string, value: unknown) {
+  switch (type) {
+    case "string":
+    case "number":
+    case "boolean":
+      return typeof value === type;
+    case "scalar":
+      return value === null || ["string", "number", "boolean"].includes(typeof value);
+    case "array":
+      return Array.isArray(value);
+    default:
+      return false;
+  }
+}
+
 function isSchemaShape(value: unknown, depth: number): boolean {
   return (
     !!value &&
@@ -335,7 +432,7 @@ export function parseSchemaJson(
   if (!isSchemaShape(value, 0))
     return {
       error:
-        "The schema must be an object of fields, each with a known type (and itemType, entries, contentTypeId and allow, a known kind, or options of the field's type where needed).",
+        "The schema must be an object of fields, each with a known type (and itemType, entries, contentTypeId and allow, a known kind, or options of the field's type where needed; a default only on string, number, boolean, scalar, and array fields).",
     };
   return { schema: value as ContentTypeSchema };
 }

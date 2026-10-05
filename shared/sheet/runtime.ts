@@ -4,7 +4,10 @@
 
 import {
   choiceLabel,
+  copyDefault,
+  fieldDefault,
   fieldOptions,
+  hasFieldDefaults,
   isReservedKey,
   type ContentFieldSchema,
   type ResourceLinkKind,
@@ -121,9 +124,10 @@ export function setSheetValue(
   else container[last] = value;
 }
 
-// A starting value for a new field or List item: empty values, with required
-// entries of structs and local Content filled in, and choice fields at their
-// first option.
+// A starting value for a new field or List item: the field's `default` if it
+// has one, else an empty value, with struct and local Content entries that are
+// required or have defaults filled in, and choice fields at their first
+// option.
 export function defaultSheetValue(
   field: ContentFieldSchema | undefined,
   schemas: SheetSchemas,
@@ -132,9 +136,16 @@ export function defaultSheetValue(
   const fill = (entries: Record<string, ContentFieldSchema>) =>
     Object.fromEntries(
       Object.entries(entries)
-        .filter(([, entry]) => entry.required)
+        .filter(
+          ([, entry]) =>
+            entry.required ||
+            fieldDefault(entry) !== undefined ||
+            (entry.type === "struct" && depth < 8 && hasFieldDefaults(entry.entries)),
+        )
         .map(([key, entry]) => [key, defaultSheetValue(entry, schemas, depth + 1)]),
     );
+  const fallback = fieldDefault(field);
+  if (fallback !== undefined) return copyDefault(fallback);
   const options = fieldOptions(field);
   if (options?.length) return options[0]!.value;
   switch (field?.type) {

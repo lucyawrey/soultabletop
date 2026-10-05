@@ -113,6 +113,7 @@ export const contentFieldSchema = Type.Recursive((Self) =>
       {
         type: Type.Literal("string"),
         options: fieldOptionsSchema(Type.String()),
+        default: Type.Optional(Type.String()),
         ...fieldMeta,
       },
       { additionalProperties: false },
@@ -121,23 +122,41 @@ export const contentFieldSchema = Type.Recursive((Self) =>
       {
         type: Type.Literal("number"),
         options: fieldOptionsSchema(Type.Number()),
+        default: Type.Optional(Type.Number()),
         ...fieldMeta,
       },
       { additionalProperties: false },
     ),
     Type.Object(
       {
-        type: Type.Union([
-          Type.Literal("boolean"),
-          Type.Literal("scalar"),
-          Type.Literal("object"),
-        ]),
+        type: Type.Literal("boolean"),
+        default: Type.Optional(Type.Boolean()),
         ...fieldMeta,
       },
       { additionalProperties: false },
     ),
     Type.Object(
-      { type: Type.Literal("array"), itemType: Self, ...fieldMeta },
+      {
+        type: Type.Literal("scalar"),
+        default: Type.Optional(
+          Type.Union([Type.String(), Type.Number(), Type.Boolean(), Type.Null()]),
+        ),
+        ...fieldMeta,
+      },
+      { additionalProperties: false },
+    ),
+    Type.Object(
+      { type: Type.Literal("object"), ...fieldMeta },
+      { additionalProperties: false },
+    ),
+    // `default`'s items are checked against `itemType` by `fieldDefaultError`.
+    Type.Object(
+      {
+        type: Type.Literal("array"),
+        itemType: Self,
+        default: Type.Optional(Type.Array(Type.Unknown())),
+        ...fieldMeta,
+      },
       { additionalProperties: false },
     ),
     Type.Object(
