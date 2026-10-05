@@ -3,6 +3,8 @@
 // are in markup (for completion and highlighting).
 
 import {
+  copyDefault,
+  fieldDefault,
   fieldOptions,
   MAX_CONTENT_DEPTH,
   type ContentFieldSchema,
@@ -59,6 +61,11 @@ export function sheetFieldPaths(schemas: SheetSchemas): SheetFieldPath[] {
 export function sampleSheetData(schemas: SheetSchemas): Record<string, unknown> {
   const sample = (field: ContentFieldSchema, key: string, depth: number): unknown => {
     const label = field.label ?? humanizeFieldName(key);
+    // A default shows as it would on new Content (an empty array still gets
+    // sample items).
+    const fallback = fieldDefault(field);
+    if (fallback !== undefined && !(Array.isArray(fallback) && !fallback.length))
+      return copyDefault(fallback);
     const options = fieldOptions(field);
     if (options?.length) return options[0]!.value;
     switch (field.type) {

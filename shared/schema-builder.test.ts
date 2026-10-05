@@ -4,6 +4,7 @@ import {
   builderErrors,
   builderToSchema,
   contentTypeErrorId,
+  defaultErrorId,
   moveBuilderItem,
   newBuilderField,
   newBuilderOption,
@@ -242,5 +243,60 @@ describe("options", () => {
     expect(parseSchemaJson('{"a": {"type": "number", "options": [{"value": "1"}]}}')).toHaveProperty("error");
     expect(parseSchemaJson('{"a": {"type": "boolean", "options": [{"value": true}]}}')).toHaveProperty("error");
     expect(parseSchemaJson('{"a": {"type": "string", "options": "a, b"}}')).toHaveProperty("error");
+  });
+});
+
+describe("defaults", () => {
+  const withDefaults: ContentTypeSchema = {
+    name2: { type: "string", default: "Human" },
+    size: { type: "string", options: [{ value: "s" }, { value: "m" }], default: "m" },
+    level: { type: "number", default: 1 },
+    alive: { type: "boolean", default: false },
+    extra: { type: "scalar", default: "Medium" },
+    tags: { type: "array", itemType: { type: "string", default: "new" }, default: ["a", "b"] },
+  };
+
+  it("round-trips defaults", () => {
+    expect(builderToSchema(schemaToBuilder(withDefaults))).toEqual(withDefaults);
+    expect(parseSchemaJson(JSON.stringify(withDefaults))).toEqual({ schema: withDefaults });
+  });
+
+  it("reads defaults from their text, and saves none for empty text", () => {
+    const field = newBuilderField("level");
+    field.type = "number";
+    field.defaultText = " 2.5 ";
+    expect(builderToSchema([field]).level).toEqual({ type: "number", default: 2.5 });
+    field.defaultText = " ";
+    expect(builderToSchema([field]).level).toEqual({ type: "number" });
+    // Text keeps its spaces; only an empty box is no default.
+    field.type = "string";
+    expect(builderToSchema([field]).level).toEqual({ type: "string", default: " " });
+    field.type = "number";
+    // Only types that take a default save one.
+    field.type = "object";
+    field.defaultText = "{}";
+    expect(builderToSchema([field]).level).toEqual({ type: "object" });
+  });
+
+  it("flags defaults that don't parse or don't fit", () => {
+    const fields = schemaToBuilder(withDefaults);
+    expect(builderErrors(fields).size).toBe(0);
+    const [, size, level, , extra, tags] = fields;
+    size!.defaultText = "xl";
+    level!.defaultText = "one";
+    extra!.defaultText = "Medium";
+    tags!.defaultText = '["a", 1]';
+    const errors = builderErrors(fields);
+    expect(errors.get(defaultErrorId(size!.id))).toBe("This default isn't one of the options");
+    expect(errors.get(defaultErrorId(level!.id))).toBe("Enter a number");
+    expect(errors.get(defaultErrorId(extra!.id))).toMatch(/^Enter JSON/);
+    expect(errors.get(defaultErrorId(tags!.id))).toBe("This default isn't a string at [1]");
+  });
+
+  it("rejects defaults on types that can't have one in JSON", () => {
+    expect(parseSchemaJson('{"a": {"type": "object", "default": {}}}')).toHaveProperty("error");
+    expect(parseSchemaJson('{"a": {"type": "string", "default": 5}}')).toHaveProperty("error");
+    expect(parseSchemaJson('{"a": {"type": "number", "default": "3"}}')).toHaveProperty("error");
+    expect(parseSchemaJson('{"a": {"type": "scalar", "default": {}}}')).toHaveProperty("error");
   });
 });
