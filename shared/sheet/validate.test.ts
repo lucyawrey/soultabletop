@@ -841,3 +841,88 @@ describe("review follow-ups", () => {
     );
   });
 });
+
+describe("choice fields", () => {
+  const ranks = [{ value: 0, label: "Untrained" }, { value: 2, label: "Expert" }];
+  const choiceSchemas: SheetSchemas = {
+    root: {
+      hasStrictSchema: true,
+      schema: {
+        size: { type: "string", options: [{ value: "s", label: "Small" }, { value: "m" }] },
+        rank: { type: "number", options: ranks },
+        level: { type: "number" },
+        notes: { type: "string" },
+        traits: { type: "array", itemType: { type: "string", options: [{ value: "brave" }] } },
+        lores: {
+          type: "array",
+          itemType: { type: "struct", entries: { name: { type: "string" }, rank: { type: "number", options: ranks } } },
+        },
+      },
+    },
+    types: {},
+  };
+  const choiceErrors = (markup: string) => errorCodes(markup, choiceSchemas);
+  const choiceMessages = (markup: string) => messages(markup, choiceSchemas);
+
+  it("takes a Select's options from the schema, also on number fields", () => {
+    expect(
+      choiceMessages(`
+        <Select field="size" />
+        <Select field="rank" />
+        <Field field="rank" />
+        <Field field="traits" />
+        <Value field="rank" />
+        <Table field="lores"><Column field="name" /><Column field="rank" /></Table>
+        <Value formula="rank * 2" />
+        <Number formula="rank + level" />
+      `),
+    ).toEqual([]);
+  });
+
+  it("ignores a Select's own list on a field with options, with a warning", () => {
+    expect(choiceMessages(`<Select field="size" options="a, b" />`)).toEqual([
+      'warning options-ignored: "size" has options in the schema, so this options list is ignored; remove it',
+    ]);
+  });
+
+  it("keeps a Select's own list on a text field without options, and needs one there", () => {
+    expect(choiceMessages(`<Select field="notes" options="a, b" />`)).toEqual([]);
+    expect(choiceMessages(`<Select field="notes" />`)).toEqual([
+      'error missing-attribute: <Select> needs an options attribute: "notes" has no options in the schema',
+    ]);
+    expect(choiceErrors(`<Select field="level" options="1, 2" />`)).toEqual(["wrong-field-type"]);
+  });
+
+  it("rejects free inputs on fields with options", () => {
+    for (const markup of [
+      `<Text field="size" />`,
+      `<Number field="rank" />`,
+      `<Number field="rank" formula="2" />`,
+      `<Tracker field="rank" max="4" />`,
+      `<Markdown field="size" />`,
+      `<Image field="size" />`,
+      `<Tags field="traits" />`,
+    ]) {
+      expect(choiceErrors(markup), markup).toEqual(["wrong-field-type"]);
+    }
+    expect(choiceMessages(`<Text field="size" />`)).toEqual([
+      'error wrong-field-type: <Text> can\'t show "size": it has options; use <Select> or <Field>',
+    ]);
+    expect(choiceErrors(`<Field field="rank" formula="2" />`)).toEqual(["invalid-attribute"]);
+  });
+
+  it("marks {path} text that shows a choice field's label", () => {
+    const { nodes } = compileSheet(`<Note>{size} {rank} {rank + 1} {level}</Note>`, choiceSchemas);
+    const parts = (first(nodes).children[0] as { parts: unknown[] }).parts;
+    const options = parts.map((part) => (typeof part === "object" ? (part as { options?: unknown }).options : null));
+    expect(options).toEqual([
+      choiceSchemas.root.schema.size!.type === "string" && choiceSchemas.root.schema.size!.options,
+      null,
+      ranks,
+      null,
+      undefined,
+      null,
+      undefined,
+    ]);
+  });
+});

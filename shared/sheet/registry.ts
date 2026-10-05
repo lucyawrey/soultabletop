@@ -46,6 +46,8 @@ export type BindKind =
   | "content"
   | "array"
   | "stringArray"
+  // An array of choice values (items with schema options).
+  | "choiceArray"
   | "objectArray"
   | "anyValue";
 
@@ -333,6 +335,7 @@ const tagList: TagSpec[] = [
       "resourceLink",
       "content",
       "stringArray",
+      "choiceArray",
     ],
     formula: "override",
   },
@@ -390,17 +393,16 @@ const tagList: TagSpec[] = [
   {
     name: "Select",
     category: "field",
-    description: "A choice from a list",
+    description: "A choice from a list: the field's options, or its own list",
     attrs: {
       ...fieldAttrs,
       options: {
         type: { kind: "list" },
-        required: true,
-        description: "Comma-separated choices",
+        description: "Comma-separated choices, for a text field without options in the schema",
       },
     },
     children: "none",
-    binds: ["string"],
+    binds: ["string", "number"],
   },
   {
     name: "Tags",

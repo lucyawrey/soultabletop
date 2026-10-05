@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { optionLabel } from "#shared/content-schema";
 import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
 import { defaultSheetValue, findRef, ownProperty, refRecord } from "#shared/sheet/runtime";
@@ -123,7 +124,39 @@ function updateJson(text: string) {
 const placeholder = computed(
   () => props.automatic || attrText(props.node.attrs.placeholder) || undefined,
 );
-const options = computed(() => (props.node.attrs.options as string[] | undefined) ?? []);
+// Select items from the schema's options (or a Select's own list). A stored
+// value that isn't one of them stays visible as an extra item until changed.
+const choiceOptions = computed(() => sheetChoiceOptions(props.node) ?? []);
+function choiceItems(current: unknown[]) {
+  const items: { label: string; value: string | number }[] = choiceOptions.value.map(
+    (option) => ({ label: optionLabel(option), value: option.value }),
+  );
+  for (const value of current) {
+    if ((typeof value === "string" || typeof value === "number") && !items.some((item) => item.value === value))
+      items.push({ label: `${value} (not an option)`, value });
+  }
+  return items;
+}
+const choice = computed({
+  get: () =>
+    typeof props.value === "string" || typeof props.value === "number"
+      ? props.value
+      : undefined,
+  set,
+});
+const choiceList = computed({
+  get: () =>
+    Array.isArray(props.value)
+      ? props.value.filter(
+          (item): item is string | number =>
+            typeof item === "string" || typeof item === "number",
+        )
+      : [],
+  set,
+});
+const selectItems = computed(() =>
+  choiceItems(display.value === "choices" ? choiceList.value : [props.value]),
+);
 const min = computed(() => number(props.node.attrs.min));
 const max = computed(() => number(props.node.attrs.max));
 const step = computed(() => number(props.node.attrs.step));
@@ -216,9 +249,20 @@ const imageError = computed(() =>
 
   <USelect
     v-else-if="display === 'select'"
-    v-model="text"
+    v-model="choice"
     :disabled="disabled"
-    :items="options"
+    :items="selectItems"
+    :aria-label="label"
+    class="w-full"
+  />
+  <USelectMenu
+    v-else-if="display === 'choices'"
+    v-model="choiceList"
+    multiple
+    value-key="value"
+    :search-input="false"
+    :disabled="disabled"
+    :items="selectItems"
     :aria-label="label"
     class="w-full"
   />

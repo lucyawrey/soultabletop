@@ -1,5 +1,10 @@
 import type { InjectionKey, Ref } from "vue";
 import {
+  choiceLabel,
+  fieldOptions,
+  type ContentFieldOption,
+} from "#shared/content-schema";
+import {
   formulaLimits,
   isFormulaError,
   type FormulaNode,
@@ -277,6 +282,8 @@ export type SheetFieldDisplay =
   | "stat"
   | "boolean"
   | "tags"
+  // An array of choice values: a multiple select.
+  | "choices"
   | "tracker"
   | "ref"
   | "scalar"
@@ -310,6 +317,7 @@ export function sheetFieldDisplay(node: ValidatedElement): SheetFieldDisplay {
     case "Value":
       return "value";
   }
+  if (fieldOptions(binding?.field)) return "select";
   switch (binding?.field?.type) {
     case "string":
       return "text";
@@ -325,10 +333,27 @@ export function sheetFieldDisplay(node: ValidatedElement): SheetFieldDisplay {
     case "object":
       return "json";
     case "array":
-      return "tags";
+      return fieldOptions(binding!.field!.itemType) ? "choices" : "tags";
     default:
       return "value";
   }
+}
+
+// The options of a field with schema options (or of an array of them), or a
+// Select's own `options` list on a field without.
+export function sheetChoiceOptions(node: ValidatedElement): ContentFieldOption[] | undefined {
+  const field = node.binding?.field;
+  const options =
+    fieldOptions(field) ?? (field?.type === "array" ? fieldOptions(field.itemType) : undefined);
+  if (options) return options;
+  if (node.tag === "Select")
+    return ((node.attrs.options as string[] | undefined) ?? []).map((value) => ({ value }));
+  return undefined;
+}
+
+// A stored value as its option's label; other values as they are.
+export function sheetChoiceText(options: ContentFieldOption[] | undefined, value: unknown) {
+  return options ? choiceLabel(options, value) : undefined;
 }
 
 // Hook class plus the author's classes, for a tag's root element.

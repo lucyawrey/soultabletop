@@ -94,14 +94,40 @@ const fieldMeta = {
   description: Type.Optional(Type.String()),
 };
 
+// A choice field's options; `fieldOptionsError` checks count, labels, and
+// duplicates on save with clearer messages.
+const fieldOptionsSchema = <T extends TSchema>(value: T) =>
+  Type.Optional(
+    Type.Array(
+      Type.Object(
+        { value, label: Type.Optional(Type.String()) },
+        { additionalProperties: false },
+      ),
+    ),
+  );
+
 // Mirrors `ContentFieldSchema` in shared/content-schema.ts.
 export const contentFieldSchema = Type.Recursive((Self) =>
   Type.Union([
     Type.Object(
       {
+        type: Type.Literal("string"),
+        options: fieldOptionsSchema(Type.String()),
+        ...fieldMeta,
+      },
+      { additionalProperties: false },
+    ),
+    Type.Object(
+      {
+        type: Type.Literal("number"),
+        options: fieldOptionsSchema(Type.Number()),
+        ...fieldMeta,
+      },
+      { additionalProperties: false },
+    ),
+    Type.Object(
+      {
         type: Type.Union([
-          Type.Literal("string"),
-          Type.Literal("number"),
           Type.Literal("boolean"),
           Type.Literal("scalar"),
           Type.Literal("object"),

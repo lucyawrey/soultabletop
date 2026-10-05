@@ -4,7 +4,7 @@
 // with a location, and parsing carries on so the editor can show all of them.
 // See docs/sheet-system.md, section 1.
 
-import { isReservedKey, RESERVED_KEYS } from "../content-schema";
+import { isReservedKey, RESERVED_KEYS, type ContentFieldOption } from "../content-schema";
 import { formulaLimits, type FormulaNode } from "./formula";
 
 export interface Position {
@@ -26,6 +26,9 @@ export interface FormulaPart {
   // Where the expression starts, after `{`.
   bodyStart: Position;
   ast?: FormulaNode;
+  // Set by the validator when the formula is just a path to a choice field,
+  // so the text shows the option's label.
+  options?: ContentFieldOption[];
 }
 
 export type TextPart = string | FormulaPart;

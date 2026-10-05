@@ -6,6 +6,8 @@ import {
   contentTypeErrorId,
   moveBuilderItem,
   newBuilderField,
+  newBuilderOption,
+  optionsErrorId,
   parseSchemaJson,
   schemaDisplayName,
   schemaToBuilder,
@@ -181,5 +183,64 @@ describe("moveBuilderItem", () => {
     expect(list).toEqual(["b", "c", "a", "d"]);
     moveBuilderItem(list, 3, 0);
     expect(list).toEqual(["d", "b", "c", "a"]);
+  });
+});
+
+describe("options", () => {
+  const choices: ContentTypeSchema = {
+    size: { type: "string", options: [{ value: "s", label: "Small" }, { value: "m" }] },
+    ranks: {
+      type: "array",
+      itemType: { type: "number", options: [{ value: 0, label: "Untrained" }, { value: 2 }] },
+    },
+  };
+
+  it("round-trips options and their order", () => {
+    expect(builderToSchema(schemaToBuilder(choices))).toEqual(choices);
+    expect(parseSchemaJson(JSON.stringify(choices))).toEqual({ schema: choices });
+  });
+
+  it("drops options when turned off, and keeps them for turning back on", () => {
+    const [field] = schemaToBuilder(choices);
+    field!.hasOptions = false;
+    expect(builderToSchema([field!])).toEqual({ size: { type: "string" } });
+    field!.hasOptions = true;
+    field!.options[1]!.label = "  Medium ";
+    expect(builderToSchema([field!]).size).toEqual({
+      type: "string",
+      options: [{ value: "s", label: "Small" }, { value: "m", label: "Medium" }],
+    });
+  });
+
+  it("parses number values", () => {
+    const field = newBuilderField("rank");
+    field.type = "number";
+    field.hasOptions = true;
+    field.options = [newBuilderOption(" 1 "), newBuilderOption("2.5", "Half")];
+    expect(builderToSchema([field])).toEqual({
+      rank: { type: "number", options: [{ value: 1 }, { value: 2.5, label: "Half" }] },
+    });
+  });
+
+  it("flags empty lists, empty or duplicate values, and numbers that don't parse", () => {
+    const fields = schemaToBuilder(choices);
+    expect(builderErrors(fields).size).toBe(0);
+    const size = fields[0]!;
+    size.options.push(newBuilderOption("s"), newBuilderOption(""));
+    const item = fields[1]!.item!;
+    item.options.push(newBuilderOption("two"));
+    const empty = newBuilderField("empty");
+    empty.hasOptions = true;
+    const errors = builderErrors([...fields, empty]);
+    expect(errors.get(size.options[2]!.id)).toBe("This value is listed twice");
+    expect(errors.get(size.options[3]!.id)).toBe("Enter a value");
+    expect(errors.get(item.options[2]!.id)).toBe("Enter a number");
+    expect(errors.get(optionsErrorId(empty.id))).toBe("Add at least one option");
+  });
+
+  it("rejects options of the wrong type in JSON", () => {
+    expect(parseSchemaJson('{"a": {"type": "number", "options": [{"value": "1"}]}}')).toHaveProperty("error");
+    expect(parseSchemaJson('{"a": {"type": "boolean", "options": [{"value": true}]}}')).toHaveProperty("error");
+    expect(parseSchemaJson('{"a": {"type": "string", "options": "a, b"}}')).toHaveProperty("error");
   });
 });

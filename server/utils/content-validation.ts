@@ -3,12 +3,16 @@ import type { User } from "better-auth";
 import { createError } from "h3";
 import { content, contentType, resource } from "../database/schema";
 import {
+  choiceLabel,
   fieldKeyPattern,
+  fieldOptions,
+  fieldOptionsError,
   isReservedKey,
   MAX_CONTENT_DEPTH,
   MAX_CONTENT_REFS,
   NAME_FIELD,
   referencedContentTypeIds,
+  type ContentFieldOption,
   type ContentFieldSchema,
   type ContentTypeRules,
   type ContentTypeSchema,
@@ -51,11 +55,12 @@ function validateField(
 ): string | undefined {
   switch (field.type) {
     case "string":
-      return typeof value === "string" ? undefined : `${path} must be a string`;
+      if (typeof value !== "string") return `${path} must be a string`;
+      return optionError(value, field.options, path);
     case "number":
-      return typeof value === "number" && Number.isFinite(value)
-        ? undefined
-        : `${path} must be a number`;
+      if (typeof value !== "number" || !Number.isFinite(value))
+        return `${path} must be a number`;
+      return optionError(value, field.options, path);
     case "boolean":
       return typeof value === "boolean"
         ? undefined
@@ -118,6 +123,20 @@ function validateField(
       // Field types from older schemas are accepted as-is.
       return undefined;
   }
+}
+
+// A choice field's value must be one of its options, whatever the strictness.
+function optionError(
+  value: string | number,
+  options: ContentFieldOption[] | undefined,
+  path: string,
+) {
+  if (!options || choiceLabel(options, value) !== undefined) return undefined;
+  const listed = options
+    .slice(0, 10)
+    .map((option) => JSON.stringify(option.value))
+    .join(", ");
+  return `${path} must be one of ${listed}${options.length > 10 ? ", …" : ""}`;
 }
 
 // Free-form `object` values: anything goes, but keys at every level must be
@@ -325,10 +344,19 @@ export function extractDataName(data: Record<string, unknown>) {
 }
 
 // Rejects field keys that aren't identifiers or are reserved (TypeBox's Record
-// ignores key patterns), at every nesting level.
+// ignores key patterns), and choice fields with bad `options`, at every
+// nesting level.
 export function assertFieldKeys(schema: ContentTypeSchema) {
-  const visit = (field: ContentFieldSchema) => {
-    if (field.type === "array") visit(field.itemType);
+  const visit = (field: ContentFieldSchema, key: string) => {
+    const options = fieldOptions(field);
+    const optionsError = options && fieldOptionsError(options);
+    if (optionsError) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Field "${key}" ${optionsError}`,
+      });
+    }
+    if (field.type === "array") visit(field.itemType, key);
     else if (field.type === "struct") assertFieldKeys(field.entries);
   };
   for (const [key, field] of Object.entries(schema)) {
@@ -344,12 +372,12 @@ export function assertFieldKeys(schema: ContentTypeSchema) {
         statusMessage: `Field key "${key}" is reserved; choose another key`,
       });
     }
-    visit(field);
+    visit(field, key);
   }
 }
 
 // Checks a ContentType schema beyond its shape (see `contentTypeSchemaSchema`):
-// field keys are identifiers, `name` is reserved, and `content` fields must
+// field keys are identifiers, options are valid, `name` is reserved, and `content` fields must
 // point at ContentTypes the user can read.
 export async function assertContentTypeSchema(
   user: Pick<User, "id" | "name">,

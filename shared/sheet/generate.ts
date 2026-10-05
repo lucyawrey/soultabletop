@@ -4,9 +4,10 @@
 // validation and rendering as hand-written Sheets. See docs/sheet-system.md,
 // section 4.
 
-import type {
-  ContentFieldSchema,
-  ContentTypeSchema,
+import {
+  fieldOptions,
+  type ContentFieldSchema,
+  type ContentTypeSchema,
 } from "../content-schema";
 import { humanizeFieldName, type SheetDisplay } from "./registry";
 import type { SheetSchemas } from "./validate";
@@ -52,7 +53,7 @@ function isSimple(field: ContentFieldSchema) {
     case "resourceLink":
       return true;
     case "array":
-      return field.itemType.type === "string";
+      return field.itemType.type === "string" || !!fieldOptions(field.itemType);
     default:
       return false;
   }

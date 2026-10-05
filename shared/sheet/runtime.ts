@@ -3,6 +3,8 @@
 // values as text. Framework-free so it can be unit-tested.
 
 import {
+  choiceLabel,
+  fieldOptions,
   isReservedKey,
   type ContentFieldSchema,
   type ResourceLinkKind,
@@ -118,7 +120,8 @@ export function setSheetValue(
 }
 
 // A starting value for a new field or List item: empty values, with required
-// entries of structs and local Content filled in.
+// entries of structs and local Content filled in, and choice fields at their
+// first option.
 export function defaultSheetValue(
   field: ContentFieldSchema | undefined,
   schemas: SheetSchemas,
@@ -130,6 +133,8 @@ export function defaultSheetValue(
         .filter(([, entry]) => entry.required)
         .map(([key, entry]) => [key, defaultSheetValue(entry, schemas, depth + 1)]),
     );
+  const options = fieldOptions(field);
+  if (options?.length) return options[0]!.value;
   switch (field?.type) {
     case "string":
       return "";
@@ -270,7 +275,9 @@ export function sheetTextSegments(
     if (!part.ast) return { text: "—", error: "This formula has errors" };
     const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas);
     if (isFormulaError(value)) return { text: "—", error: value.message };
-    return { text: formatFormulaValue(value, refs) };
+    // `{path}` to a choice field shows the option's label.
+    const label = part.options && choiceLabel(part.options, value);
+    return { text: label ?? formatFormulaValue(value, refs) };
   });
 }
 
