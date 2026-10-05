@@ -28,3 +28,10 @@ One folder per mockup, `.claude/mockups/<name>/`, on the `docs` branch (the user
 4. **Freeze.** Make `frozen.html` (the chosen options, the option controls removed, view controls kept) and write `spec.md`: chosen options, tokens, measurements in px from the mockup's CSS, states (empty, loading, error, phone), and the map from each tagged element to its component, props, and classes (site) or tag and attributes (sheets). Later decisions go in its "Decided after the mockup" list; the frozen page isn't edited to show them.
 5. **Build.** Opus builds the shared pieces first (headers, cards, layout components) from the frozen page and the spec; smaller models only apply pieces that already exist. Sheets: the author turns the tagged blocks into Sheet markup and checks it with the sheets skill.
 6. **Compare.** Screenshot `frozen.html` and the built page at the same sizes (desktop and phone), and put the pairs side by side; the author shows them in the PR and the reviewer checks them. A difference is either fixed or written into the spec as a decision. Drift found later is measured against `frozen.html` the same way.
+
+## Tools
+
+From PR #89 (`scripts/`; run node through `scripts/agent-run.sh`):
+
+- **Site mockup kit:** `.claude/mockups/_kit/app-theme.js`, built by `node scripts/mockup-kit.mjs` from the app's theme. In a mockup, load `<script src="../_kit/app-theme.js"></script>` and then `<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>`; the app's classes and tokens then work as on the site. Rerun the script after a theme change (`--check` reports a stale kit).
+- **Comparison:** `scripts/compare-mockup.mjs` screenshots a mockup and the built page at the same sizes and writes each pair side by side (usage in its header comment; needs `playwright-core` on `NODE_PATH`, see `.claude/running-commands.md`). The redesign's frozen `.frame` is about 50px narrower than the viewport, so compare its proportions rather than exact pixel positions.
