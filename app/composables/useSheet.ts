@@ -5,7 +5,7 @@ import {
   type FormulaNode,
   type FormulaValue,
 } from "#shared/sheet/formula";
-import type { Interpolation, TextPart } from "#shared/sheet/parser";
+import type { TextPart } from "#shared/sheet/parser";
 import type { SheetDisplay } from "#shared/sheet/registry";
 import {
   evaluateSheetFormula,
@@ -220,16 +220,12 @@ export function useSheet() {
         context.refs.value,
         formulas(times),
       ),
-    // A number attribute: a literal, a {path}, or a {= formula} computed now.
+    // A number attribute: a literal, or a {formula} computed now.
     number: (value: AttrValue | undefined) => {
       if (typeof value === "number") return value;
       if (isCompiledFormula(value)) {
         const result = evaluate(value.ast);
         return typeof result === "number" && !isFormulaError(result) ? result : undefined;
-      }
-      if (value && typeof value === "object" && "path" in value) {
-        const resolved = resolve((value as Interpolation).path).value;
-        return typeof resolved === "number" ? resolved : undefined;
       }
       return undefined;
     },

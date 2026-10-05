@@ -37,13 +37,14 @@ Sections: 1. markup language + parser → 2. tag catalog → 3. validation again
 - Tag names: PascalCase canonical (`Section`); matched case-insensitively so `<section>` works. (decided)
 - Attributes: `name="value"` or `name='value'`; bare `name` = boolean true. No unquoted values. Duplicate attr = error.
 - Text: allowed directly inside layout tags; renders as a paragraph. Whitespace collapsed like HTML. (decided)
-- Interpolation: `{path}` in text and in attribute values → field value (a path lookup). Missing value → empty.
-  Literal braces: `\{` `\}`, literal backslash `\\`. (decided)
-- Formulas: `{= expr}` in text and in attribute values is a formula part (see "Formulas"). After an unescaped `{=`,
-  the parser jumps to the matching `}`, skipping quoted text, so `{= a <b}` isn't read as a tag and
-  `{= concat('}', x)}` works; in attribute values the formula still ends at the attribute's closing quote. An
-  attribute named `formula` is raw text: the parser doesn't look for `{…}` or entities in it, and the validator
-  parses it as one expression (inside `formula="…"`, text goes in single quotes).
+- Formulas: every `{…}` in text and in attribute values is a formula (see "Formulas"); `{hp}` is the formula `hp`, and
+  shows what the `hp` field displays, computed value included (decided 2026-10-04: there is no separate `{path}`
+  lookup, and `{= expr}` is gone). A missing value is empty. After an unescaped `{`, the parser jumps to the
+  matching `}`, skipping quoted text, so `{a <b}` isn't read as a tag and `{concat('}', x)}` works; in attribute
+  values the formula still ends at the attribute's closing quote. `{}` is an error, and so is `{= …}`. Literal
+  braces: `\{` `\}`, literal backslash `\\`. The attributes `formula` and `show` are bare formulas: the parser
+  doesn't look for `{…}` or entities in them, and the validator parses each as one expression (inside them, text
+  goes in single quotes).
 - Comments: `<!-- … -->`.
 - Entities: `&lt; &gt; &amp; &quot; &apos;` and numeric `&#123;` / `&#x7B;`.
 - No raw HTML, no `on*`/event attrs, no `style` attr, no URLs (internal `Ref` links only). Everything renders as text
@@ -89,8 +90,8 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list | formula | condition | name; required; default), allowed children, and which schema field types it may bind to.
-Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one `{path}` or one
-`{= formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
+Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one
+`{formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
 mixed with text.
 Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`), `show` (conditional display; not on `Column`), and
 `live`, `locked`, and `display` (section 5; `Tab` and `RowDetails` accept only `class` and `show`; `Define` accepts
@@ -121,7 +122,7 @@ View mode renders formatted values, edit mode renders the input.
 `field` is required unless the tag has a `formula` (decided):
 - **Read-only formula tags**: `Value`, `Column`, `Tracker` take `field` or `formula`, not both. With `formula` the
   tag shows the computed value and is never editable (a `Tracker` formula is its current value; its `max` can be a
-  `{= formula}` too). Its label is the `label` attribute, else empty.
+  `{formula}` too). Its label is the `label` attribute, else empty.
 - **Override tags**: `Number`, `Text`, `Checkbox` (and `Field`, see below) take `field`, `formula`, or both. With both, the field holds an
   optional manual value that wins over the computed one; absent, `null`, or (for `Text`) `""` means automatic. While
   automatic, the input shows the computed value as its placeholder (a `Checkbox` shows the computed state), typing
@@ -131,8 +132,8 @@ View mode renders formatted values, edit mode renders the input.
   its field in other formulas: a formula reading that path while nothing is stored there gets the computed value, so
   `<Number field="hp" formula="maxHp" />` follows `<Number field="maxHp" formula="…" />` until either is typed in.
   An override inside a hidden region (`show`) still counts. Fields that compute each other give an error value
-  (`formula-cycle`), and chains deeper than the call depth limit give `too-deep`. Plain `{path}` text and field tags
-  still show the stored value; write `{= path}` for the computed one. A field may carry the same formula (spacing and
+  (`formula-cycle`), and chains deeper than the call depth limit give `too-deep`. `{hp}` text shows the computed value too, while field
+  tags show the stored one. A field may carry the same formula (spacing and
   parentheses aside) on several tags; a different one is an error (`computed-field-conflict`).
 - **`Field` with a formula**: `Field` takes `formula` (with `field`, required) on a `string`, `number`, or `boolean`
   schema field only, and then acts exactly like `Text`, `Number`, or `Checkbox` (override, reset button, cascading);
@@ -204,7 +205,7 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 - `<Define name="prof" params="rank" formula="…" />`: a reusable formula, called as `prof(x)` (one without
   parameters as `pb()`) from any formula in the sheet. Only at the top level or directly inside `<Sheet>`; order
   doesn't matter; renders nothing. See "Formulas".
-- `show="{= expr}"` or `show="{field}"` (exactly one): `true` shows the tag, `false` or nothing hides it and
+- `show="expr"`, a bare formula like `formula=` (`show="hp > 0"`, `show="hasShield"`; no braces): `true` shows the tag, `false` or nothing hides it and
   everything in it, in every mode; the data is never cleared. It is evaluated in the tag's scope (a `List` or `Table`
   row inside one). Hidden tabs leave the tab list (if the selected one hides, the first visible one is selected; with
   none visible, `Tabs` renders nothing); a `RowDetails` hidden for a row takes away that row's expand button. Not on
@@ -217,7 +218,7 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 
 `validate()` in `shared/sheet/validate.ts`. Errors block sheet save; warnings are shown in the editor only.
 
-Schema-related warnings (the three "warning" rows marked \* below: a path or `{path}` interpolation not in a non-strict schema, and a path into a free-form `object`) are hidden unless
+Schema-related warnings (the three "warning" rows marked \* below: a path or `{…}` formula path not in a non-strict schema, and a path into a free-form `object`) are hidden unless
 the Sheet's own content type has `showSheetWarnings` on (`content_type.show_sheet_warnings`, default off; the switch
 is shown only while Strict schema is off). Referenced content types' flags are not consulted. Errors, and other warnings
 (e.g. a content type that could not be loaded), are never affected, and the "break existing sheets" check on content type
@@ -230,7 +231,7 @@ enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Di
 Formulas (errors unless noted; codes in parentheses):
 | Case | Result |
 |---|---|
-| Syntax error, with its exact line and column inside the attribute or `{= }` | error (`formula-syntax`) |
+| Syntax error, with its exact line and column inside the attribute or `{ }` | error (`formula-syntax`) |
 | Unknown function, wrong number of arguments | error (`formula-unknown-function`, `formula-arity`) |
 | Operator or argument type that can never work (`name + 1` on a text field) | error (`formula-type`) |
 | Result doesn't fit the tag (`Number`/`Tracker`: number, `Text`: text, `Checkbox`: true/false, `Column`: a single value, `show`: true/false/nothing, number attrs: number; any tag: a list or group of fields) or, for overrides, the field | error (`formula-result-type`) |
@@ -242,7 +243,7 @@ Formulas (errors unless noted; codes in parentheses):
 | `<Define>` name or parameter that looks like dice (`d6`) | error (`formula-reserved-name`, `invalid-attribute`) |
 | Two top-level overrides of the same field with different formulas | error (`computed-field-conflict`) |
 | An override (`field` and `formula`) on a required field | warning (`override-required`): going back to the computed value clears the field, which can't be saved |
-| An unclosed `{=` (no `}` within 1,000 characters or before a closing tag) | error (`unterminated-formula`) |
+| An unclosed `{` (no `}` within 1,000 characters or before a closing tag) | error (`unterminated-formula`) |
 | Over a limit (see "Formulas") | error (`formula-too-large`) |
 | Paths in formulas | the same rules as `field` paths above (strictness, free-form objects, `content-too-deep`, `showSheetWarnings`) |
 
@@ -260,7 +261,7 @@ the item):
 | Path goes into a free-form `object` | warning\* (not checked; shows whatever the data holds) | same |
 | `List`/`Table` on a non-array | error | error |
 | Relative path inside a `List` of primitives (other than `.`) | error | error |
-| `{path}` interpolation not in schema | error | warning\* |
+| `{…}` formula path not in schema | error | warning\* |
 | Path crosses > 3 `content` fields | error | error |
 | Path continues into a `content` field | resolved against the referenced content type's schema (its strictness applies) | same |
 
@@ -503,8 +504,9 @@ every formula once; the renderer evaluates the compiled trees (`evaluateSheetFor
 ### Where formulas go
 - `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox`, `Field` (override), and as
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
-- `{= expr}` in text, in text attributes (`title="HP {= hp.max}"`), in the number attributes read when rendering
-  (`Tracker max`, `Number min`/`max`/`step`), and in `show="{= …}"`. In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
+- `show="expr"`: a bare formula, like `formula=`.
+- `{expr}` in text, in text attributes (`title="HP {hp.max}"`), and in the number attributes read when rendering
+  (`Tracker max`, `Number min`/`max`/`step`). In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
   there, but the editor's XML highlighting reads it as a tag.
 
 ### Grammar
@@ -516,7 +518,8 @@ Precedence, low to high: `or`; `and`; `==` `!=`; `<` `<=` `>` `>=` (can't be cha
 Paths are field paths as elsewhere: `stats.str`, `attacks.0.name`; `.` is the current item, `.name` an explicit
 relative path, `/name` the top level. `/` before a value starts a path from the top; after a value it divides.
 Reserved words (`and`, `or`, `not`, `true`, `false`, `null`): a field with one of these names is reached as `/and` or
-`.and`. `__proto__`, `constructor`, and `prototype` are never valid path segments or field keys.
+`.and`. Field names that read as dice (`d6`, `d20`, also as a path's first segment) are likewise reached as `/d6`.
+`__proto__`, `constructor`, and `prototype` are never valid path segments or field keys.
 
 Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
 parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't

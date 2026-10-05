@@ -31,11 +31,9 @@ import { checkFormula, type FormulaCheckHost } from "./formula-check";
 import { formulaLaterBuiltins, formulaReservedNames } from "./formula-functions";
 import {
   invalidPathMessage,
-  isFormulaPart,
   isValidSheetPath,
   parseSheetMarkup,
   parseSheetPath,
-  type Interpolation,
   type Loc,
   type Position,
   type SheetAttr,
@@ -72,8 +70,8 @@ export interface Binding {
   description?: string;
 }
 
-// A valid formula from an attribute: `formula="…"`, a number attribute given
-// as `{= …}`, or `show="{= …}"`.
+// A valid formula from an attribute: `formula="…"` or `show="…"`, or a number
+// attribute given as `{…}`.
 export interface CompiledFormula {
   source: string;
   loc: Loc;
@@ -91,8 +89,7 @@ export type AttrValue =
   | string
   | string[]
   | TextPart[] // text attributes
-  | Interpolation // number and `show` attributes given as {path}
-  | CompiledFormula; // `formula`, and number and `show` attributes given as {= …}
+  | CompiledFormula; // `formula` and `show`, and number attributes given as {…}
 
 export interface ValidatedElement {
   type: "element";
@@ -270,7 +267,7 @@ const fieldOverrideTags: Record<string, string> = {
   boolean: "Checkbox",
 };
 
-// Plain attribute text, or undefined if it contains {path} interpolation.
+// Plain attribute text, or undefined if it contains a {…} formula.
 function plainText(parts: TextPart[]) {
   if (parts.some((part) => typeof part !== "string")) return undefined;
   return parts.join("");
@@ -544,37 +541,21 @@ class Validator {
     return { source, loc, ast: parsed.ast, type: checked.type };
   }
 
-  // Text parts with `{path}` checked and `{= …}` compiled (`ast` set on valid
-  // ones).
+  // Text parts with their `{…}` formulas compiled (`ast` set on valid ones).
   private compileParts(parts: TextPart[], scope: Shape): TextPart[] {
     return parts.map((part) => {
       if (typeof part === "string") return part;
-      if (isFormulaPart(part)) {
-        const compiled = this.compileFormula(part.formula, part.bodyStart, scope, part.loc);
-        if (!compiled) return part;
-        if (isCollection(compiled.type)) {
-          this.error(
-            "formula-result-type",
-            `{= ${part.formula.trim()}} gives ${describeType(compiled.type)}; text needs a single value`,
-            part.loc,
-          );
-          return part;
-        }
-        return { ...part, ast: compiled.ast };
-      }
-      const shape = this.resolve(part.path, scope, part.loc);
-      if (
-        shape?.kind === "record" ||
-        (shape?.kind === "field" &&
-          (shape.field.type === "struct" || shape.field.type === "object"))
-      ) {
-        this.warn(
-          "interpolates-object",
-          `{${part.path}} is an object and will show as raw data`,
+      const compiled = this.compileFormula(part.formula, part.bodyStart, scope, part.loc);
+      if (!compiled) return part;
+      if (isCollection(compiled.type)) {
+        this.error(
+          "formula-result-type",
+          `{${part.formula.trim()}} gives ${describeType(compiled.type)}; text needs a single value`,
           part.loc,
         );
+        return part;
       }
-      return part;
+      return { ...part, ast: compiled.ast };
     });
   }
 
@@ -1068,31 +1049,17 @@ class Validator {
     }
 
     if (type.kind === "condition") {
-      const parts = attr.value.filter((part) => typeof part !== "string" || part.trim());
-      const [only] = parts;
-      if (parts.length !== 1 || typeof only === "string" || !only) {
-        return fail(`${name} must be one {= formula} or one {field}, like ${name}="{= level >= 5}"`);
-      }
-      if (isFormulaPart(only)) {
-        const compiled = this.compileFormula(only.formula, only.bodyStart, scope, only.loc);
-        if (!compiled) return undefined;
-        if (!couldBe(compiled.type, ["boolean"])) {
-          return fail(
-            `${name} must give true or false, but {= ${only.formula.trim()}} gives ${describeType(compiled.type)}`,
-            "formula-result-type",
-          );
-        }
-        return compiled;
-      }
-      const shape = this.resolve(only.path, scope, only.loc);
-      if (!shape) return undefined;
-      if (!couldBe(shapeType(shape), ["boolean"])) {
+      const raw = attr.raw ?? "";
+      if (!raw.trim() || !attr.valueLoc) return fail(`${name} needs a formula, like ${name}="level >= 5"`);
+      const compiled = this.compileFormula(raw, attr.valueLoc.start, scope, attr.valueLoc);
+      if (!compiled) return undefined;
+      if (!couldBe(compiled.type, ["boolean"])) {
         return fail(
-          `${name}="{${only.path}}" must point at a boolean field, but it's ${describeShape(shape)}; compare it in a formula, like ${name}="{= ${only.path} != null}"`,
+          `${name} must give true or false, but ${raw.trim()} gives ${describeType(compiled.type)}`,
           "formula-result-type",
         );
       }
-      return only;
+      return compiled;
     }
 
     if (type.kind === "number") {
@@ -1101,28 +1068,22 @@ class Validator {
         return fail(`${name} on <${spec.name}> must be a plain number, not {…}`);
       }
       if (attr.value.length === 1 && typeof only === "object") {
-        if (isFormulaPart(only)) {
-          const compiled = this.compileFormula(only.formula, only.bodyStart, scope, only.loc);
-          if (!compiled) return undefined;
-          if (!couldBe(compiled.type, ["number"])) {
-            return fail(
-              `${name} must be a number, but {= ${only.formula.trim()}} gives ${describeType(compiled.type)}`,
-              "formula-result-type",
-            );
-          }
-          return compiled;
+        const compiled = this.compileFormula(only.formula, only.bodyStart, scope, only.loc);
+        if (!compiled) return undefined;
+        if (!couldBe(compiled.type, ["number"])) {
+          return fail(
+            `${name} must be a number, but {${only.formula.trim()}} gives ${describeType(compiled.type)}`,
+            "formula-result-type",
+          );
         }
-        const shape = this.resolve(only.path, scope, only.loc);
-        if (shape?.kind === "field" && shape.field.type !== "number" && shape.field.type !== "scalar")
-          return fail(`${name}="{${only.path}}" must point at a number field, but it's ${describeField(shape.field)}`);
-        return shape ? only : undefined;
+        return compiled;
       }
       const raw = plainText(attr.value)?.trim();
       const number = raw ? Number(raw) : Number.NaN;
       if (raw === undefined || !Number.isFinite(number))
         return fail(
           type.dynamic
-            ? `${name} on <${spec.name}> must be a number, a single {field}, or a single {= formula}`
+            ? `${name} on <${spec.name}> must be a number or a single {formula}`
             : `${name} on <${spec.name}> must be a number`,
         );
       if (type.integer && !Number.isInteger(number))
