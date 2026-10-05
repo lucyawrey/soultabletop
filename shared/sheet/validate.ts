@@ -29,6 +29,7 @@ import {
   type FormulaType,
 } from "./formula";
 import { checkFormula, type FormulaCheckHost } from "./formula-check";
+import type { SheetEntry } from "./scope";
 import { formulaLaterBuiltins, formulaReservedNames } from "./formula-functions";
 import {
   invalidPathMessage,
@@ -100,6 +101,8 @@ export interface ValidatedElement {
   binding?: Binding;
   // The tag's `formula`, when it has a valid one.
   formula?: { ast: FormulaNode; type: FormulaType };
+  // A List or Table bound to a struct: the struct's entries, one row each.
+  entries?: SheetEntry[];
   children: ValidatedNode[];
   loc: Loc;
 }
@@ -160,8 +163,10 @@ export function sheetStepBudget(formulaCount: number) {
 
 // What a path points at. `record` is a set of named fields: the top level, an
 // `object` field's entries, or a ContentType reached through a `content` field.
-// `depth` counts the `content` fields crossed to get here.
-type Shape =
+// `depth` counts the `content` fields crossed to get here. `item` marks the
+// scope of a row (a List or Table row, or a per-item function's item): of an
+// array, of a struct's entries, or of a list of unknown type.
+type Shape = (
   | {
       kind: "record";
       fields: ContentTypeSchema;
@@ -170,7 +175,32 @@ type Shape =
       depth: number;
     }
   | { kind: "field"; field: ContentFieldSchema; strict: boolean; depth: number }
-  | { kind: "unknown"; depth: number };
+  | { kind: "unknown"; depth: number }
+) & { item?: "array" | "struct" | "unknown" };
+
+// Field types a struct's entries can have for a List, Table, or per-item
+// function to repeat over them.
+const repeatableEntryTypes = new Set(["struct", "string", "number", "boolean", "scalar"]);
+
+// A struct's entries as rows: when they are all alike (the same type and
+// fields; labels, descriptions, and `required` may differ) and each a struct
+// or a single value. `item` is the first entry, which stands for all of them.
+export function structRows(
+  field: ContentFieldSchema,
+): { entries: SheetEntry[]; item: ContentFieldSchema } | undefined {
+  if (field.type !== "struct") return undefined;
+  const list = Object.entries(field.entries);
+  const first = list[0]?.[1];
+  if (!first || !repeatableEntryTypes.has(first.type)) return undefined;
+  const shape = ({ label: _label, description: _description, required: _required, ...rest }: ContentFieldSchema) =>
+    JSON.stringify(rest);
+  const firstShape = shape(first);
+  if (!list.every(([, entry]) => shape(entry) === firstShape)) return undefined;
+  return {
+    entries: list.map(([key, entry]) => ({ key, label: entry.label ?? humanizeFieldName(key) })),
+    item: first,
+  };
+}
 
 const nameField: ContentFieldSchema = {
   type: "string",
@@ -478,6 +508,12 @@ class Validator {
       case "content":
         kinds.add(field.type);
         break;
+      case "struct": {
+        const rows = structRows(field);
+        if (rows) kinds.add("entries");
+        if (rows?.item.type === "struct") kinds.add("objectEntries");
+        break;
+      }
       case "array": {
         kinds.add("array");
         const item = field.itemType.type;
@@ -491,12 +527,15 @@ class Validator {
     return kinds;
   }
 
-  // The shape of one item of the array a List or Table is bound to.
+  // The shape of one row of the array or struct a List or Table (or a
+  // per-item function) repeats over.
   private itemShape(shape: Shape): Shape {
     if (shape.kind === "field" && shape.field.type === "array") {
-      return { ...shape, field: shape.field.itemType };
+      return { ...shape, field: shape.field.itemType, item: "array" };
     }
-    return { kind: "unknown", depth: shape.depth };
+    const rows = shape.kind === "field" ? structRows(shape.field) : undefined;
+    if (shape.kind === "field" && rows) return { ...shape, field: rows.item, item: "struct" };
+    return { kind: "unknown", depth: shape.depth, item: "unknown" };
   }
 
   // Formulas
@@ -508,7 +547,12 @@ class Validator {
         if (shape) this.pathShapes.set(path, shape);
         return shape && { type: shapeType(shape), scope: shape };
       },
-      itemScope: (list) => (list ? this.itemShape(list) : { kind: "unknown", depth: 0 }),
+      itemScope: (list) => (list ? this.itemShape(list) : { kind: "unknown", depth: 0, item: "unknown" }),
+      structEntries: (list) => {
+        const rows = list.kind === "field" ? structRows(list.field) : undefined;
+        return rows && { entries: rows.entries, type: fieldType(rows.item) };
+      },
+      itemKind: (scope) => scope.item,
       definition: (name) => {
         const definition = this.definitions.get(name);
         return definition && { params: definition.params, type: this.definitionType(definition) };
@@ -876,16 +920,30 @@ class Validator {
 
     let binding: Binding | undefined;
     let childScope = scope;
+    let entries: SheetEntry[] | undefined;
     if (typeof attrs.field === "string") {
       const path = attrs.field;
       const shape = this.resolve(path, scope, node.loc);
       if (!shape) return broken(`Can't find field "${path}"`);
       const kinds = this.bindKinds(shape);
       if (kinds !== "all" && !spec.binds?.some((kind) => kinds.has(kind))) {
+        const isStruct = shape.kind === "field" && shape.field.type === "struct";
+        if (spec.itemScope && isStruct) {
+          return invalid(
+            "wrong-field-type",
+            kinds.has("entries")
+              ? `<${spec.name}> can't show "${path}": its entries aren't structs; use <List>`
+              : `<${spec.name}> can't repeat over "${path}": a struct's entries must all be alike (the same type and fields) and each a struct or a single value`,
+          );
+        }
         const suggestion =
           kinds.has("array") ? "; use <List> or <Table>" :
-          shape.kind === "record" || (shape.kind === "field" && shape.field.type === "struct")
-            ? "; use a <Section> with fields inside"
+          shape.kind === "record" || isStruct
+            ? `; use a <Section> with fields inside${
+                kinds.has("objectEntries")
+                  ? ", or a <List> or <Table> over its entries"
+                  : kinds.has("entries") ? ", or a <List> over its entries" : ""
+              }`
             : "";
         return invalid(
           "wrong-field-type",
@@ -895,17 +953,35 @@ class Validator {
       const field = shape.kind === "field" ? shape.field : undefined;
       const parsed = parseSheetPath(path);
       const lastSegment = parsed.segments.at(-1);
+      // `.` in a struct entry row is that row's entry, whose label and
+      // description differ by row (the renderer uses the row's label); the
+      // shape's field is only the first entry, standing for all of them.
+      const isEntry = scope.item === "struct" && !parsed.absolute && !parsed.segments.length;
       binding = {
         path: parsed,
         field,
         label:
-          field?.label ??
+          (isEntry ? undefined : field?.label) ??
           (lastSegment && !indexPattern.test(lastSegment)
             ? humanizeFieldName(lastSegment)
             : ""),
-        description: field?.description,
+        description: isEntry ? undefined : field?.description,
       };
-      if (spec.itemScope) childScope = this.itemShape(shape);
+      if (spec.itemScope) {
+        childScope = this.itemShape(shape);
+        const rows = field && structRows(field);
+        if (rows) {
+          entries = rows.entries;
+          const addLabel = attrNamed(node, "addLabel");
+          if (addLabel) {
+            this.warn(
+              "flag-no-effect",
+              `addLabel has no effect on a <List> of a struct's entries: its rows come from the schema`,
+              addLabel.loc,
+            );
+          }
+        }
+      }
     }
 
     const choiceError = binding && this.checkChoice(node, spec, binding, attrs, formula);
@@ -956,6 +1032,7 @@ class Validator {
       attrs,
       binding,
       ...(formula ? { formula: { ast: formula.ast, type: formula.type } } : {}),
+      ...(entries ? { entries } : {}),
       children: this.children(node.children, spec, childScope),
       loc: node.loc,
     };

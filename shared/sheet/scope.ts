@@ -20,6 +20,17 @@ export interface SheetScope {
   path: (string | number)[] | null;
   // A reference on the way was not loaded (missing, or not readable).
   unavailable?: boolean;
+  // A List or Table row (or the item of a per-item function): its index in an
+  // array, or its entry key in a struct, and a struct entry's label. Read by
+  // `itemKey()` and `itemLabel()`.
+  item?: { key: string | number; label?: string };
+}
+
+// One entry of a struct that a List, Table, or per-item function repeats
+// over, in schema order (see ValidatedElement.entries).
+export interface SheetEntry {
+  key: string;
+  label: string;
 }
 
 const indexPattern = /^\d+$/;
@@ -84,6 +95,20 @@ export function itemScopes(list: SheetScope): SheetScope[] {
   return list.value.map((value, index) => ({
     value,
     path: list.path ? [...list.path, index] : null,
+    item: { key: index },
+  }));
+}
+
+// Each entry of a struct value, in schema order, as the scope for a row. The
+// rows come from the schema, so an entry with nothing stored still gets one
+// (writing into it creates the objects on the way).
+export function entryScopes(struct: SheetScope, entries: readonly SheetEntry[]): SheetScope[] {
+  if (struct.unavailable) return [];
+  const container = isRecord(struct.value) ? struct.value : undefined;
+  return entries.map(({ key, label }) => ({
+    value: container ? ownProperty(container, key) : undefined,
+    path: struct.path ? [...struct.path, key] : null,
+    item: { key, label },
   }));
 }
 

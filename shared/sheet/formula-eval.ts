@@ -22,7 +22,13 @@ import {
   type FormulaCallContext,
   type FormulaFunction,
 } from "./formula-functions";
-import { resolveSheetPath, type SheetRefs, type SheetScope } from "./scope";
+import {
+  entryScopes,
+  itemScopes,
+  resolveSheetPath,
+  type SheetRefs,
+  type SheetScope,
+} from "./scope";
 
 export interface FormulaBudget {
   steps: number;
@@ -162,6 +168,22 @@ function listScope(node: FormulaNode, env: FormulaEnv): SheetScope | FormulaErro
   return { value, path: null };
 }
 
+// The items of a per-item function's list argument, as scopes: an array's
+// items, or a struct's schema entries (see the `entries` on paths).
+function listItems(node: FormulaNode, env: FormulaEnv, name: string): SheetScope[] | FormulaError {
+  const list = listScope(node, env);
+  if (isFormulaError(list)) return list;
+  if (node.type === "path" && node.entries) return entryScopes(list, node.entries);
+  if (list.value === null || list.value === undefined) return [];
+  if (!Array.isArray(list.value)) return typeError(name, "a list", toFormulaValue(list.value));
+  // A list longer than the steps left fails before anything is built for it.
+  if (list.value.length > env.budget.steps) {
+    env.budget.steps = -1;
+    return budgetError();
+  }
+  return itemScopes(list);
+}
+
 function callBuiltin(
   fn: FormulaFunction,
   node: Extract<FormulaNode, { type: "call" }>,
@@ -191,29 +213,18 @@ function callBuiltin(
     argCount: node.args.length,
     refs: env.refs,
     value: (index) => evaluateNode(node.args[index]!, env),
+    item: () => env.scope.item,
     items: (listIndex, exprIndex) => {
-      const list = listScope(node.args[listIndex]!, env);
-      if (isFormulaError(list)) return list;
-      if (list.value === null || list.value === undefined) return [];
-      if (!Array.isArray(list.value))
-        return typeError(fn.name, "a list", toFormulaValue(list.value));
-      // Each item costs a step: a list longer than what's left fails before
-      // anything is built for it.
-      const items = list.value as unknown[];
-      if (items.length > env.budget.steps) {
-        env.budget.steps = -1;
-        return budgetError();
-      }
+      // Each item costs a step.
+      const items = listItems(node.args[listIndex]!, env, fn.name);
+      if (isFormulaError(items)) return items;
       const values: FormulaValue[] = [];
-      for (let index = 0; index < items.length; index += 1) {
+      for (const item of items) {
         if (!step(env)) return budgetError();
         const value =
           exprIndex === undefined
-            ? toFormulaValue(items[index])
-            : evaluateNode(node.args[exprIndex]!, {
-                ...env,
-                scope: { value: items[index], path: list.path ? [...list.path, index] : null },
-              });
+            ? toFormulaValue(item.value)
+            : evaluateNode(node.args[exprIndex]!, { ...env, scope: item });
         if (isFormulaError(value)) return value;
         values.push(value);
       }

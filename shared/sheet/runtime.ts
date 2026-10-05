@@ -40,11 +40,13 @@ import {
 } from "./validate";
 
 export {
+  entryScopes,
   findRef,
   itemScopes,
   ownProperty,
   refRecord,
   resolveSheetPath,
+  type SheetEntry,
   type SheetRef,
   type SheetRefs,
   type SheetScope,
