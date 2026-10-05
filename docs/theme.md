@@ -118,7 +118,7 @@ Published sheets refer to these names, so **never rename or remove one**; when t
 ## Changing the theme
 
 1. Adjust the palettes and semantic tokens in `app/assets/css/main.css`. Keep colors as `#rrggbb` hex values or `var()` aliases of them, since the test reads only those. To use another palette name, rename it in `app.config.ts` too.
-2. Run `scripts/agent-run.sh pnpm vitest run shared/theme.test.ts`. Each failure names the pair and its ratio.
+2. Run `.claude/scripts/agent-run.sh pnpm vitest run shared/theme.test.ts`. Each failure names the pair and its ratio.
 3. Check the app in a browser: a list page, a detail page, a form in a modal, the sheet editor (its colors come from `--ui-*` tokens, in `CodeEditor.client.vue`), and a rendered sheet that uses `--st-*` tokens.
 4. If the direction itself changed, update the mockup page in `.claude/plans/ui-directions.html` so the reference matches.
 5. Fonts: change `--font-sans` / `--font-display` in `main.css` and the font list in `shared/fonts.ts` (with weights), plus its row in the font table above. Keep the old fonts in the list if published sheets may use them.
