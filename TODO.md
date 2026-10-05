@@ -131,6 +131,9 @@ Playing campaigns online, sharing, and discovery.
 - **Re-evaluate the mockup tools after the first mockup** · chore · depends on: the first mockup made with `.claude/ui-mockups.md`
   From the user (2026-10-05): once the mockup process has been run for real, check whether the Tailwind theme kit (`.claude/scripts/mockup-kit.mjs`, `.claude/mockups/_kit/app-theme.js`) and the comparison script (`.claude/scripts/compare-mockup.mjs`, #89) were actually useful, and update or drop them and the process doc to match what was learned.
 
+- **Game icons in sheets** · feature
+  From the user (2026-10-05), decided: sheets' existing `icon` attributes (Section, Tab, Callout, Collapsible) accept game-icons.net icons (`i-game-icons-*`, Iconify's `@iconify-json/game-icons`, CC BY 3.0 by Lorc, Delapouite & contributors) as well as Lucide. Only bundled, allowlisted collections (Lucide and game-icons) are valid, served from our app: today `iconPattern` (`shared/sheet/validate.ts`) accepts any collection prefix, and `@nuxt/icon` falls back to Iconify's public API for collections that aren't installed, so a sheet can make browsers fetch from it; close that (validator allowlist, `icon.fallbackToApi: false` or the equivalent) in the same change. The credit goes on a new site credits page linked from the footer, listing game-icons.net and other bundled assets. Not decided: a standalone `Icon` tag, icons stored in content data, and an icon picker (the user chose only the existing attributes for now). Check the bundle size the collection adds (about 4,000 icons) and whether server-side bundling keeps it out of the client.
+
 # Low priority
 
 - **Document Better Auth's built-in endpoints in the API reference** · chore · needs decision: which approach
