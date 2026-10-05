@@ -3,7 +3,7 @@
 // `.claude/ui-mockups.md`, step 6). Needs `playwright-core` on NODE_PATH and a
 // cached Chromium (`.claude/running-commands.md`, "Browser checks"):
 //
-//   NODE_PATH=<scratchpad>/node_modules node scripts/compare-mockup.mjs \
+//   NODE_PATH=<scratchpad>/node_modules node .claude/scripts/compare-mockup.mjs \
 //     --mockup .claude/mockups/ui-redesign/frozen.html \
 //     --mockup-click '[data-ctl="page"] [data-v="detail"]' --mockup-target .frame \
 //     --site http://localhost:3005/systems/<id> --cookie "<Cookie header>" \
