@@ -4,7 +4,7 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-10-05
 
-- **In progress: Formula list functions** (TODO.md, In progress), branch `formula-list-functions` in `../soultabletop-worktrees/formula-list-functions`. Working through to a Tier B PR while the user is at lunch.
+- **PR #85 open: Formula list functions** (branch `formula-list-functions`, worktree `../soultabletop-worktrees/formula-list-functions`). Tier B: waiting for the user's review and merge. After the merge, delete its item from In progress in `TODO.md`, remove the worktree and branch.
 - **After it: sheet feature planning** continues with the user: the rest of "Sheet features found missing…" (Phase 1 in `TODO.md`), one feature at a time, designed and ordered into Next up.
 - The Obsidian docs review is done; the user hasn't reported yet on how the vault performs with `node_modules/` (hidden by Unhide and excluded from search).
 - The live `pf2e-test` sheet still uses the old `{= }` / braced `show` syntax and fails validation until edited.

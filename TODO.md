@@ -8,7 +8,7 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
-- **Formula list functions** · feature · branch `formula-list-functions`
+- **Formula list functions** · feature · PR #85 (Tier B, waiting for the user's review)
   Decided with the user (2026-10-05): `map(list, expr)`, `filter(list, cond)`, `sort(list, expr?, descending?)` (numbers by value, text case-insensitive by code point with no locale, empty values last, stable, mixing numbers and text is an error), `first(list, cond?)`, `at(list, n)` (from 0, negative from the end, out of range is nothing), and paths on call results (`first(filter(inventory, equipped)).ac`; fall back to `get()` if impractical). Lists take arrays and structs of alike entries, like `sum`. Document comparing against the outer row with a `<Define>` called with `itemKey()` (spells known per rank vs slots) in `docs/sheet-system.md`.
 
 # Next up
