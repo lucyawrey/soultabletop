@@ -12,7 +12,10 @@ import {
   loadSheetSchemas,
   resolveContentSheet,
 } from "../../utils/sheet-schemas";
-import { canChangeResourceOwner } from "../../utils/resource-management";
+import {
+  canChangeResourceOwner,
+  loadResourceSource,
+} from "../../utils/resource-management";
 import {
   loadOwnerReadableId,
   resolveResourceRouteId,
@@ -65,7 +68,7 @@ export default defineEventHandler(async (event) => {
   if (!schemas) {
     throw createError({ statusCode: 404, statusMessage: "Content type not found" });
   }
-  const [sheet, { refs, links }, ownerReadableId] = await Promise.all([
+  const [sheet, { refs, links }, ownerReadableId, source] = await Promise.all([
     resolveContentSheet(
       user,
       record.item.sheetId,
@@ -75,6 +78,7 @@ export default defineEventHandler(async (event) => {
     ),
     loadContentRefs(user, record.item.data, schemas),
     loadOwnerReadableId(record.resource),
+    loadResourceSource(record.resource, context),
   ]);
 
   return {
@@ -85,6 +89,7 @@ export default defineEventHandler(async (event) => {
     ownerUserId: record.resource.ownerUserId,
     ownerGroupId: record.resource.ownerGroupId,
     ownerReadableId,
+    source,
     canChangeOwner:
       !!user && !!context && canChangeResourceOwner(record.resource, user, context),
     createdAt: record.resource.createdAt,

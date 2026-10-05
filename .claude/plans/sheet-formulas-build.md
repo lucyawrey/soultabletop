@@ -59,7 +59,7 @@ Pathfinder 2e is the first target system (see `TODO.md`), so the examples, fixtu
 - Review: before opening the PR, start one fresh reviewer subagent (Opus, clean context: the PR diff and "what it's meant to do" from this file's summary, not the session's notes) and fix what it finds (one round; a second only if a fix touches the evaluator's limits or path access).
 - Then update `TODO.md` (the "Sheet formulas" item → In progress with the branch and PR) and `.claude/HANDOFF.md` on `docs`, and tell the user the PR is ready, with the preview URL.
 
-Verification for every step: the step's tests, `scripts/agent-run.sh pnpm check` at the end of each step, and `pnpm check:templates` after any `.vue` change. Browser checks in step 7.
+Verification for every step: the step's tests, `.claude/scripts/agent-run.sh pnpm check` at the end of each step, and `pnpm check:templates` after any `.vue` change. Browser checks in step 7.
 
 ---
 
@@ -190,7 +190,7 @@ The table entry per function: name, min/max arity, which arguments are per-item 
 
 ## Step 7: verify in the browser and measure
 
-- Dev server from the worktree on a spare port (3005): `scripts/agent-run.sh pnpm nuxt dev --dotenv /Users/lucy/Developer/games/soultabletop/.env.local --port 3005` (adjust the path on the other machine). Check `lsof` first; never kill a server you didn't start; stop yours at the end.
+- Dev server from the worktree on a spare port (3005): `.claude/scripts/agent-run.sh pnpm nuxt dev --dotenv /Users/lucy/Developer/games/soultabletop/.env.local --port 3005` (adjust the path on the other machine). Check `lsof` first; never kill a server you didn't start; stop yours at the end.
 - Playwright from the scratchpad (`channel: "chrome"` on the Mac; the cached headless shell on CachyOS) with `withSmokeUser`: create a content type (a small Pathfinder 2e-like schema), a sheet using every feature above, and content, through the API; delete them before the callback ends (the helper deletes only the user).
 - Check: edit mode, change level or Dex → proficiency, AC, skills, saves, and DCs update without reload; `display="box"` shows computed values as disabled inputs; override: placeholder shows the computed value, typing overrides, the reset button returns to automatic (Number and Checkbox); `show` hides the Spells tab and brings it back; a division-by-zero formula shows the warning to the owner and "—" to a second smoke user given read access; the sheet editor's Problems list jumps to the right column inside `formula="…"`; completion offers `floor` and `prof`, colored differently; no console errors and **no hydration warnings** (SSR determinism).
 - Measure: a pathological sheet (the limits' worst case: 2,000 sites, a 500-row list, nested aggregates) rendered by the dev server (SSR) and in the browser. If a page render is over 200 ms, lower `formulaLimits` steps and record the numbers in the PR.

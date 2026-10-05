@@ -30,6 +30,9 @@ interface ContentTypeItem {
   ownerGroupId: string | null;
   canChangeOwner: boolean;
   isPubliclyReadable: boolean;
+  updatedAt: string;
+  sheetCount: number;
+  contentCount: number;
 }
 
 const categoryOptions = CONTENT_CATEGORY_MENU_ORDER.map((value) => ({
@@ -314,6 +317,10 @@ async function remove() {
     </UTable>
           <template #cards>
         <ResourceCards :items="contentTypes" :to="(item) => `/types/${item.id}`">
+          <template #summary="{ item }">
+            {{ item.sheetCount }} {{ item.sheetCount === 1 ? "sheet" : "sheets" }}
+            · {{ item.contentCount }} content
+          </template>
           <template #actions="{ item }">
             <ResourceActionsMenu
               :can-edit="item.canEdit"

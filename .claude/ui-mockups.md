@@ -31,7 +31,7 @@ One folder per mockup, `.claude/mockups/<name>/`, on the `docs` branch (the user
 
 ## Tools
 
-From PR #89 (`.claude/scripts/`; run node through `scripts/agent-run.sh`). To be re-evaluated after the first real mockup (`TODO.md`).
+From PR #89 (`.claude/scripts/`; run node through `.claude/scripts/agent-run.sh`). To be re-evaluated after the first real mockup (`TODO.md`).
 
 - **Site mockup kit:** `.claude/mockups/_kit/app-theme.js`, built by `node .claude/scripts/mockup-kit.mjs` from the app's theme. In a mockup, load `<script src="../_kit/app-theme.js"></script>` and then `<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>`; the app's classes and tokens then work as on the site. Rerun the script after a theme change (`--check` reports a stale kit).
 - **Comparison:** `.claude/scripts/compare-mockup.mjs` screenshots a mockup and the built page at the same sizes and writes each pair side by side (usage in its header comment; needs `playwright-core` on `NODE_PATH`, see `.claude/running-commands.md`). The redesign's frozen `.frame` is about 50px narrower than the viewport, so compare its proportions rather than exact pixel positions.

@@ -5,7 +5,10 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 
 // <Table>: one row per item of the bound array (or entry of the bound
 // struct, with no add, remove, or reorder controls), one column per <Column>,
-// and an expandable row per item when there is a <RowDetails>.
+// and an expandable row per item when there is a <RowDetails>. On phones,
+// each row stacks its cells, each with its column's label, instead of
+// squeezing the inputs and scrolling sideways. (A viewport breakpoint, not a
+// container query: containment would collapse a Table inside a row Stack.)
 const props = defineProps<{ node: ValidatedElement }>();
 
 const { context, rows: tableRows, resolve, condition } = useSheet();
@@ -44,10 +47,35 @@ const widths: Record<string, string> = {
   lg: "w-64",
 };
 
+const columnLabels = computed(() =>
+  columnNodes.value.map(
+    (column) => attrText(column.attrs.label) || column.binding?.label || "",
+  ),
+);
+
+// On phones (below the `sm` breakpoint), rows become blocks whose cells wrap side by
+// side (at least 7rem each) with their labels above them, and the header row
+// is hidden. The cells' fixed widths only apply to the wide layout.
+const narrowUi = {
+  base: "max-sm:block",
+  thead: "max-sm:hidden",
+  tbody: "max-sm:block",
+  tr: "max-sm:flex max-sm:flex-wrap max-sm:px-3 max-sm:gap-x-3 max-sm:gap-y-2 max-sm:py-3",
+  td: "max-sm:block max-sm:w-auto max-sm:min-w-28 max-sm:flex-1 max-sm:p-0 max-sm:whitespace-normal",
+};
+
 const columns = computed<TableColumn<SheetScope>[]>(() => [
-  ...(details.value ? [{ id: "expand", header: srOnlyHeader("Details") }] : []),
+  ...(details.value
+    ? [
+        {
+          id: "expand",
+          header: srOnlyHeader("Details"),
+          meta: { class: { td: "max-sm:min-w-0 max-sm:flex-none" } },
+        },
+      ]
+    : []),
   ...columnNodes.value.map((column, index) => {
-    const text = attrText(column.attrs.label) || column.binding?.label || "";
+    const text = columnLabels.value[index] ?? "";
     return {
       id: `c${index}`,
       // A hidden label is still read out, so the column keeps its name.
@@ -61,7 +89,11 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
     };
   }),
   ...(editable.value
-    ? [actionsColumn<SheetScope>({ meta: { class: { td: "w-28 text-right" } } })]
+    ? [
+        actionsColumn<SheetScope>({
+          meta: { class: { td: "w-28 text-right max-sm:basis-full" } },
+        }),
+      ]
     : []),
 ]);
 </script>
@@ -90,6 +122,7 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
       class="w-full"
       tabindex="0"
       :aria-label="label || undefined"
+      :ui="narrowUi"
     >
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
@@ -137,6 +170,13 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
         :key="index"
         #[`c${index}-cell`]="{ row }"
       >
+        <!-- The column's label, shown only in the narrow layout. -->
+        <span
+          class="hidden text-xs font-medium text-muted max-sm:block"
+          :class="column.attrs.hideLabel === true ? 'max-sm:sr-only' : ''"
+        >
+          {{ columnLabels[index] }}
+        </span>
         <SheetScope :scope="row.original" :repeat="rows.length">
           <SheetNode :node="column" compact />
         </SheetScope>

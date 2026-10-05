@@ -1,5 +1,5 @@
 // Throwaway-user helper for browser and API checks against a running dev server:
-//   import { withSmokeUser } from "./scripts/smoke-session.mjs";
+//   import { withSmokeUser } from "./.claude/scripts/smoke-session.mjs";
 //   await withSmokeUser("http://localhost:3000", async ({ cookie, request }) => { ... });
 // Registers a `claude-smoke-*@example.invalid` user, signs in, runs the callback
 // with the session cookie (a `Cookie` header value; for Playwright, split it

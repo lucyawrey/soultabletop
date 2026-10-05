@@ -1,15 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(scripts/agent-run.sh pnpm check)",
-      "Bash(scripts/agent-run.sh pnpm check *)",
-      "Bash(scripts/agent-run.sh pnpm typecheck)",
-      "Bash(scripts/agent-run.sh pnpm lint)",
-      "Bash(scripts/agent-run.sh pnpm test)",
-      "Bash(scripts/agent-run.sh pnpm test *)",
-      "Bash(scripts/agent-run.sh pnpm check:templates*)",
-      "Bash(scripts/agent-run.sh pnpm exec eslint *)",
-      "Bash(scripts/agent-run.sh pnpm exec vitest run *)",
+      "Bash(.claude/scripts/agent-run.sh pnpm check)",
+      "Bash(.claude/scripts/agent-run.sh pnpm check *)",
+      "Bash(.claude/scripts/agent-run.sh pnpm typecheck)",
+      "Bash(.claude/scripts/agent-run.sh pnpm lint)",
+      "Bash(.claude/scripts/agent-run.sh pnpm test)",
+      "Bash(.claude/scripts/agent-run.sh pnpm test *)",
+      "Bash(.claude/scripts/agent-run.sh pnpm check:templates*)",
+      "Bash(.claude/scripts/agent-run.sh pnpm exec eslint *)",
+      "Bash(.claude/scripts/agent-run.sh pnpm exec vitest run *)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/scripts/agent-run.sh\" node \"$CLAUDE_PROJECT_DIR/scripts/check-templates.mjs\" --hook 1>&2"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/scripts/agent-run.sh\" node \"$CLAUDE_PROJECT_DIR/scripts/check-templates.mjs\" --hook 1>&2"
           }
         ]
       }
