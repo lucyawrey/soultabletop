@@ -8,12 +8,12 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
+- **Choice fields in schemas** · feature · PR #83 (branch `choice-fields`)
+  Design decided (2026-10-04): [sheet-schema-design.md](.claude/plans/sheet-schema-design.md), part A. `options` (value + label) on `string` and `number` fields, checked on save; `Select`, `Field`, `Column`, and generated sheets show them as a dropdown, and sheets show labels while formulas see values.
 # Next up
 
 The exact order: do these one at a time, top first.
 
-- **Choice fields in schemas** · feature
-  Design decided (2026-10-04): [sheet-schema-design.md](.claude/plans/sheet-schema-design.md), part A. `options` (value + label) on `string` and `number` fields, checked on save; `Select`, `Field`, `Column`, and generated sheets show them as a dropdown, and sheets show labels while formulas see values.
 - **Tables over fixed rows in Sheets** · feature · depends on: choice fields in schemas
   Design decided (2026-10-04): [sheet-schema-design.md](.claude/plans/sheet-schema-design.md), part B. `List`/`Table` repeat over a struct's schema entries (the 16 PF2e skills, 3 saves, 18 D&D skills), with `itemKey()`/`itemLabel()` in formulas and aggregates over structs.
 
