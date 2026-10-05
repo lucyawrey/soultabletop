@@ -77,6 +77,8 @@ export type FormulaNode =
       loc: Loc;
     }
   | { type: "call"; name: string; args: FormulaNode[]; nameLoc: Loc; loc: Loc }
+  // A path on a call's result: `first(weapons).bonus` (`path` is relative).
+  | { type: "member"; target: FormulaNode; path: SheetPath; text: string; loc: Loc }
   | { type: "dice"; count: number; sides: number; loc: Loc };
 
 export interface FormulaParseOptions {
@@ -248,6 +250,13 @@ class Lexer {
         return this.path(start);
       }
       if (isDigit(this.peek(1))) {
+        if (this.previous?.type === ")" && this.previous.end === start) {
+          throw new FormulaSyntaxError(
+            "A number can't start with a dot; to pick an item by its index, use at, like at(attacks, 0)",
+            start,
+            start + 2,
+          );
+        }
         throw new FormulaSyntaxError(
           "A number can't start with a dot; write 0.5 instead of .5",
           start,
@@ -670,12 +679,37 @@ class FormulaParser {
       }
     }
     const close = this.advance();
-    return this.node({
+    const call = this.node<FormulaNode>({
       type: "call",
       name,
       args,
       nameLoc: this.loc(nameToken.start, nameToken.end),
       loc: this.loc(nameToken.start, close.end),
+    });
+    return this.member(call, close.end);
+  }
+
+  // A path right after a call's closing parenthesis reads a field of its
+  // result: `first(weapons).bonus`.
+  private member(target: FormulaNode, end: number): FormulaNode {
+    const token = this.token;
+    if (token.type !== "path" || token.start !== end || token.text === "." || !token.text.startsWith("."))
+      return target;
+    this.advance();
+    if (this.at("(")) {
+      throw new FormulaSyntaxError(
+        `"${token.text}" isn't a function name; functions are called by a plain name, like floor(x)`,
+        token.start,
+        this.token.end,
+      );
+    }
+    const text = token.value as string;
+    return this.node({
+      type: "member",
+      target,
+      path: parsePathText(text),
+      text,
+      loc: { start: target.loc.start, end: this.positions[token.end]! },
     });
   }
 }
@@ -793,6 +827,8 @@ export function printFormula(node: FormulaNode): string {
       return `(${printFormula(node.left)} ${node.op} ${printFormula(node.right)})`;
     case "call":
       return `${node.name}(${node.args.map(printFormula).join(", ")})`;
+    case "member":
+      return `${printFormula(node.target)}${node.text}`;
     case "dice":
       return `${printNumber(node.count)}d${printNumber(node.sides)}`;
   }
@@ -811,6 +847,9 @@ export function walkFormula(node: FormulaNode, visit: (node: FormulaNode) => voi
       break;
     case "call":
       for (const arg of node.args) walkFormula(arg, visit);
+      break;
+    case "member":
+      walkFormula(node.target, visit);
       break;
   }
 }

@@ -342,6 +342,29 @@ describe("computed fields", () => {
     expect(value(sheet, "maxHp + 1", { maxDex: 9 })).toBe(5);
   });
 
+  it("keeps computed fields on items that list functions pick", () => {
+    const score = { type: "struct" as const, entries: { score: { type: "number" as const }, mod: { type: "number" as const } } };
+    const compiled = compileSheet(
+      `<Number field="ab.str.mod" formula="floor((ab.str.score - 10) / 2)" />
+       <Number field="ab.dex.mod" formula="floor((ab.dex.score - 10) / 2)" />
+       <Value formula="first(ab).mod" />
+       <Value formula="join(map(filter(ab, mod > 0), text(mod)), ',')" />
+       <Value formula="at(sort(ab, mod, true), 0).mod" />`,
+      { root: { hasStrictSchema: true, schema: { ab: { type: "struct", entries: { str: score, dex: score } } } }, types: {} },
+    );
+    expect(compiled.diagnostics.filter((item) => item.severity === "error")).toEqual([]);
+    const scope: SheetScope = { value: { ab: { str: { score: 14 }, dex: { score: 16 } } }, path: [] };
+    const values = compiled.nodes
+      .filter((node): node is ValidatedElement => node.type === "element" && node.tag === "Value")
+      .map((node) =>
+        evaluateSheetFormula(node.formula!.ast, scope, scope, refs, {
+          definitions: compiled.definitions,
+          computedFields: compiled.computedFields,
+        }),
+      );
+    expect(values).toEqual([2, "2,3", 3]);
+  });
+
   it("reads the stored value when there is one", () => {
     expect(value(sheet, "hp", { maxDex: 9, maxHp: 20 })).toBe(20);
     expect(value(sheet, "hp", { maxDex: 9, hp: 0 })).toBe(0);
@@ -596,6 +619,21 @@ describe("struct entry rows", () => {
     );
     expect(texts).toEqual(["Acrobatics (acrobatics) 0", "Arcana Lore (arcana) 2"]);
     expect(values.slice(0, 2).map((node) => evaluateSheetFormula(node.formula!.ast, sheetRoot, sheetRoot, refs))).toEqual([1, 2]);
+  });
+
+  it("lets the list functions repeat over structs", () => {
+    const compiled = compileSheet(
+      `<Value formula="first(skills, rank > 0).rank" />
+       <Value formula="sum(filter(attributes, . > 0))" />
+       <Value formula="at(attributes, -1)" />
+       <Value formula="join(map(sort(attributes, ., true), text(.)), ',')" />`,
+      structSchemas,
+    );
+    expect(compiled.diagnostics.filter((item) => item.severity === "error")).toEqual([]);
+    const values = compiled.nodes.filter((node): node is ValidatedElement => node.type === "element");
+    expect(values.map((node) => evaluateSheetFormula(node.formula!.ast, sheetRoot, sheetRoot, refs))).toEqual([
+      2, 3, -1, "3,-1",
+    ]);
   });
 
   it("gives array rows their index as itemKey()", () => {

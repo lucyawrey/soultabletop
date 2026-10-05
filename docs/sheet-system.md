@@ -558,11 +558,17 @@ Paths are field paths as elsewhere: `stats.str`, `attacks.0.name`; `.` is the cu
 relative path, `/name` the top level. `/` before a value starts a path from the top; after a value it divides.
 Reserved words (`and`, `or`, `not`, `true`, `false`, `null`): a field with one of these names is reached as `/and` or
 `.and`. Field names that read as dice (`d6`, `d20`, also as a path's first segment) are likewise reached as `/d6`.
+A path written right after a call's `)`, with no space, reads a field of the call's result:
+`first(weapons, equipped).bonus`, `at(attacks, 0).name` (decided: paths on call results rather than only `get`). It
+follows references like any path, and reaches computed fields (overrides) like any path, since the items `filter`,
+`sort`, `first`, and `at` pass on keep where they came from; the validator checks it against the schema when the call's result is items of a
+known list (`filter`, `sort`, `first`, `at`), so `first(inventory).item.weight` is checked like `.item.weight` in a
+`List` row of `inventory`. Indexes aren't allowed there (`first(x).0` is an error that points to `at`).
 `__proto__`, `constructor`, and `prototype` are never valid path segments or field keys.
 
 Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
 parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't
-use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
+use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`, `filter`, `sort`, `first`, `at`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
 (it wins in that sheet, with a warning).
 
 ### Functions (v1)
@@ -576,23 +582,33 @@ use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`) go in 
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |
+| List items | `map(list, expr)` (the list of `expr` for each item; each a single value, empty ones kept), `filter(list, cond)` (the items that make `cond` true, in order), `sort(list, expr?, descending?)` (the items in order of `expr`, or of the items themselves; `sort(list, ., true)` sorts high to low), `first(list, cond?)` (the first item, or the first that makes `cond` true; nothing if none), `at(list, n)` (the item at index `n` from 0, `-1` the last; nothing out of range) |
 | Rows | `itemKey()`: the current row's entry key in a struct (`'acrobatics'`), or its index in an array (from 0); `itemLabel()`: a struct entry's schema label, else its humanized key, and nothing in an array row. Only in a `List` or `Table` row or inside a per-item function (else `formula-no-item`; a `<Define>` body is checked at the top level, so pass them in as arguments) |
 
 In `sum(list, expr)` and the others, `expr` is evaluated once per item, scoped to the item like inside a `List`
-(relative paths are the item's, `/` the top level); these can nest two levels. `sum`, `count`, `any`, and `all` also
-take a path to a struct whose entries are alike, repeating over its schema entries like a struct `Table`
-(`count(skills, rank > 0)`, `sum(attributes)`); the evaluator doesn't know the schema, so the validator puts the
-entries on the path node (`entries`). Per-row constants, like each skill's attribute, come from a definition:
-`<Define name="skillAttr" params="s" formula="switch(s, 'acrobatics', 'dex', …)" />` called as
-`skillAttr(itemKey())`. `roll`, `dice`, `adv`, `dis`, and
+(relative paths are the item's, `/` the top level); these can nest two levels. Every function that takes a list
+(`sum`, `count`, `any`, `all`, `map`, `filter`, `sort`, `first`, `at`) also takes a path to a struct whose entries are
+alike, repeating over its schema entries like a struct `Table` (`count(skills, rank > 0)`, `sum(attributes)`); the
+evaluator doesn't know the schema, so the validator puts the entries on the path node (`entries`). `filter` and `sort`
+give back an array, so `itemKey()` over their result is the index in it. Per-row constants, like each skill's
+attribute, come from a definition: `<Define name="skillAttr" params="s" formula="switch(s, 'acrobatics', 'dex', …)" />`
+called as `skillAttr(itemKey())`. `roll`, `dice`, `adv`, `dis`, and
 dice like `2d6` are reserved for dice rolls (an error now). Left out on purpose: regular expressions, dates,
 randomness, locale formatting. The editor's reference panel lists every function from the table in
 `formula-functions.ts`.
 
+Combined: `join(map(filter(feats, level <= 5), name), ', ')` lists the names of the feats up to level 5;
+`first(sort(weapons, bonus, true)).name` names the best weapon. `sort` compares numbers by value and text by character
+code ignoring case (no locale, so the server and the browser agree); empty values go last in both directions, ties keep
+the list's order, and mixing numbers and text is an error. To compare against the row outside a per-item expression
+(inside `count(spells, …)`, paths and `itemKey()` are the spell's), pass the row's value to a definition, whose body
+runs at the top level: `<Define name="knownAt" params="r" formula="count(spells, rank == r)" />`, then in a `Table`
+over the slots, whose rows have `rank` and `max`, `<Column formula="concat(knownAt(rank), ' / ', text(max))" />`.
+
 ### Values, types, and nothing
 Values are numbers (always finite), text, true/false, and nothing (`null`); lists and groups of fields only come from
-paths (or `list(…)`) and feed `sum`, `count`, `length`, `get`, `join`, `min`/`max`, or definitions, and are an error as a final
-result. No implicit conversion: arithmetic and ordering take numbers (`+` doesn't join text; use `concat`), `==`
+paths and the list functions (`list(…)`, `map`, `filter`, `sort`, and the items `first` and `at` pick) and feed other
+functions, paths on call results, or definitions, and are an error as a final result. No implicit conversion: arithmetic and ordering take numbers (`+` doesn't join text; use `concat`), `==`
 compares type and value, `if`/`and`/`or`/`not` take true/false with nothing counting as false. A missing value (absent
 key, unloaded reference, a path through a non-object) is nothing; arithmetic or ordering with nothing gives nothing
 (shown empty); aggregates skip nothing; `sum` and `count` of an empty list are 0. A text field that was cleared holds `""`, not
@@ -618,7 +634,8 @@ a()`) is an error on every definition in it, and calling a broken definition giv
 formulas per sheet; per-item functions nested 2 levels; definitions calling each other 16 levels deep; text results of
 10,000 characters.
 
-Steps (every node visit and every list item counts, also for `min`, `max`, and `join`; the items of `list(…)` are node visits and at most 32, like any call's
+Steps (every node visit and every list item counts, also for `min`, `max`, `join`, and the list functions; `first`
+stops at its first match; the items of `list(…)` are node visits and at most 32, like any call's
 arguments, and a list longer than the steps left fails at once; definitions share their caller's budget): one evaluation may take
 at most 20,000, and a whole sheet about 2,000,000 (`maxSheetSteps`), shared evenly. The validator gives each formula
 `min(20,000, 2,000,000 / the sheet's formula count)` (`stepBudget`), and the renderer divides that again by the item

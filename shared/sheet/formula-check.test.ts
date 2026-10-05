@@ -44,6 +44,8 @@ const host: FormulaCheckHost<string> = {
     return { type, scope: list };
   },
   itemScope: (list) => list ?? "unknown",
+  // A list's items and the list share a name here.
+  listScope: (item) => item,
   definition: (name) => definitions[name],
 };
 
@@ -195,6 +197,41 @@ describe("calls", () => {
     expect(messages("max(list(name))")).toEqual([
       "formula-type: max needs numbers, not text",
     ]);
+  });
+
+  it("types map, filter, sort, first, and at", () => {
+    expect(check("map(inventory, qty)").type).toEqual(arrayOf(formulaTypes.number));
+    expect(check("filter(tags, . != 'x')").type).toEqual(arrayOf(formulaTypes.string));
+    expect(check("sort(nums, ., true)").type).toEqual(arrayOf(formulaTypes.number));
+    expect(check("first(tags)").type).toEqual(unionOf(formulaTypes.string, formulaTypes.null));
+    expect(check("at(nums, -1)").type).toEqual(unionOf(formulaTypes.number, formulaTypes.null));
+    expect(messages("join(map(inventory, label), ', ')")).toEqual([]);
+    expect(messages("sum(filter(inventory, qty > 1), qty)")).toEqual([]);
+  });
+
+  it("checks paths on call results against the items", () => {
+    expect(check("first(inventory).qty").type).toEqual(formulaTypes.number);
+    expect(check("first(filter(inventory, qty > 1), qty < 5).label").type).toEqual(formulaTypes.string);
+    expect(check("at(sort(inventory, qty), 0).qty").type).toEqual(formulaTypes.number);
+    // Without a scope (a definition's result), nothing is known about it.
+    expect(check("title().x").type).toEqual(formulaTypes.any);
+  });
+
+  it.each([
+    ["map(groups, members)", "formula-type: map needs a single value for each item, not a list"],
+    ["map(level, 1)", "formula-type: map needs a list, not a number"],
+    ["filter(inventory, qty)", "formula-type: filter needs true or false for each item, not a number"],
+    ["sort(inventory)", "formula-type: sort needs a list of numbers or text, not of a group of fields; add a second argument, like sort(list, field)"],
+    ["sort(inventory, qty > 1)", "formula-type: sort needs numbers or text for each item, not true or false"],
+    ["sort(tags, ., 1)", "formula-type: sort needs true or false as descending, not a number"],
+    ["first(level)", "formula-type: first needs a list, not a number"],
+    ["first(inventory, qty)", "formula-type: first needs true or false for each item, not a number"],
+    ["at(tags, name)", "formula-type: at needs a number as its index, not text"],
+    ["pb().x", "formula-type: .x needs a group of fields, not a number"],
+    ["filter(inventory, true).qty", "formula-type: .qty needs one item, not a list; pick one with first or at"],
+    ["map(sort(inventory, qty), qty).x", "formula-type: .x needs one item, not a list; pick one with first or at"],
+  ])("%s", (source, message) => {
+    expect(messages(source)).toEqual([message]);
   });
 
   it("points at the argument that's wrong", () => {
