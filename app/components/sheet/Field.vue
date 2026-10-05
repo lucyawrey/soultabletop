@@ -101,10 +101,15 @@ const showStatLabel = computed(
     !props.compact,
 );
 
+// A choice field shows its option's label; formulas still see the value.
+const choiceOptions = computed(() => sheetChoiceOptions(props.node));
 const text = computed(() => {
   const signed = props.node.attrs.format === "signed";
   if (automatic.value) return formatFormula(computedValue.value ?? null, signed ? "signed" : "plain");
-  return format(value.value, signed ? "signed" : "plain");
+  return (
+    sheetChoiceText(choiceOptions.value, value.value) ??
+    format(value.value, signed ? "signed" : "plain")
+  );
 });
 // Shown instead of the value when the formula failed.
 const showsError = computed(() => automatic.value && !!formulaError.value);
@@ -119,7 +124,9 @@ function useAutomatic() {
 
 const tags = computed(() =>
   Array.isArray(value.value)
-    ? value.value.map((item) => format(item)).filter(Boolean)
+    ? value.value
+        .map((item) => sheetChoiceText(choiceOptions.value, item) ?? format(item))
+        .filter(Boolean)
     : [],
 );
 
@@ -264,7 +271,7 @@ const imageSize = computed(
       {{ value === true ? "Yes" : "No" }}
     </span>
 
-    <div v-else-if="display === 'tags'" class="flex flex-wrap gap-1">
+    <div v-else-if="display === 'tags' || display === 'choices'" class="flex flex-wrap gap-1">
       <UBadge
         v-for="(tag, index) in tags"
         :key="index"

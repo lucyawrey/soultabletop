@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { defaultContentData, resolveShowSheetWarnings, type ContentTypeSchema } from "./content-schema";
+import {
+  choiceLabel,
+  defaultContentData,
+  fieldOptions,
+  fieldOptionsError,
+  resolveShowSheetWarnings,
+  type ContentTypeSchema,
+} from "./content-schema";
 
 describe("defaultContentData", () => {
   it("fills required fields with empty values and skips optional ones", () => {
@@ -63,5 +70,42 @@ describe("resolveShowSheetWarnings", () => {
     expect(resolveShowSheetWarnings(strictOff, {})).toBe(false);
     expect(resolveShowSheetWarnings(strictOff, { hasStrictSchema: true })).toBe(false);
     expect(resolveShowSheetWarnings({ hasStrictSchema: false, showSheetWarnings: true }, { hasStrictSchema: true })).toBe(true);
+  });
+});
+
+describe("choice fields", () => {
+  const options = [{ value: "s", label: "Small" }, { value: "m" }];
+
+  it("starts a required choice field at its first option", () => {
+    expect(
+      defaultContentData({
+        size: { type: "string", required: true, options },
+        rank: { type: "number", required: true, options: [{ value: 2 }, { value: 4 }] },
+        optional: { type: "string", options },
+      }),
+    ).toEqual({ size: "s", rank: 2 });
+  });
+
+  it("finds labels, defaulting to the value as text", () => {
+    expect(choiceLabel(options, "s")).toBe("Small");
+    expect(choiceLabel(options, "m")).toBe("m");
+    expect(choiceLabel(options, "x")).toBeUndefined();
+    expect(choiceLabel([{ value: 1 }], "1")).toBeUndefined();
+  });
+
+  it("reads options only from string and number fields", () => {
+    expect(fieldOptions({ type: "string", options })).toBe(options);
+    expect(fieldOptions({ type: "string" })).toBeUndefined();
+    expect(fieldOptions({ type: "boolean" })).toBeUndefined();
+    expect(fieldOptions(undefined)).toBeUndefined();
+  });
+
+  it("checks option lists", () => {
+    expect(fieldOptionsError(options)).toBeUndefined();
+    expect(fieldOptionsError([])).toBe("needs at least one option");
+    expect(fieldOptionsError([{ value: 1 }, { value: 1 }])).toBe("lists the option 1 twice");
+    expect(fieldOptionsError([{ value: Number.NaN }])).toMatch(/finite/);
+    expect(fieldOptionsError([{ value: "a", label: "x".repeat(101) }])).toMatch(/label/);
+    expect(fieldOptionsError(Array.from({ length: 201 }, (_, value) => ({ value })))).toMatch(/200/);
   });
 });

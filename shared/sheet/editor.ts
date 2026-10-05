@@ -3,6 +3,7 @@
 // are in markup (for completion and highlighting).
 
 import {
+  fieldOptions,
   MAX_CONTENT_DEPTH,
   type ContentFieldSchema,
   type ContentTypeSchema,
@@ -58,6 +59,8 @@ export function sheetFieldPaths(schemas: SheetSchemas): SheetFieldPath[] {
 export function sampleSheetData(schemas: SheetSchemas): Record<string, unknown> {
   const sample = (field: ContentFieldSchema, key: string, depth: number): unknown => {
     const label = field.label ?? humanizeFieldName(key);
+    const options = fieldOptions(field);
+    if (options?.length) return options[0]!.value;
     switch (field.type) {
       case "string":
         return `Sample ${label.toLowerCase()}`;

@@ -5,6 +5,7 @@
 // docs/sheet-system.md, section 3.
 
 import {
+  fieldOptions,
   isReservedKey,
   MAX_CONTENT_DEPTH,
   NAME_FIELD,
@@ -267,6 +268,10 @@ const fieldOverrideTags: Record<string, string> = {
   boolean: "Checkbox",
 };
 
+// Tags whose input takes any value, so they can't edit a field limited to
+// options (or an array of them).
+const freeInputTags = new Set(["Text", "Number", "Markdown", "Image", "Tracker", "Tags"]);
+
 // Plain attribute text, or undefined if it contains a {…} formula.
 function plainText(parts: TextPart[]) {
   if (parts.some((part) => typeof part !== "string")) return undefined;
@@ -295,6 +300,8 @@ class Validator {
   readonly diagnostics: SheetDiagnostic[] = [];
   readonly definitions = new Map<string, DefinitionState>();
   readonly computedFields = new Map<string, SheetComputedField>();
+  // What each formula path resolved to, for `{path}` text showing labels.
+  private pathShapes = new WeakMap<SheetPath, Shape>();
   private readonly rootShape: Shape;
   formulaSites = 0;
 
@@ -475,6 +482,7 @@ class Validator {
         kinds.add("array");
         const item = field.itemType.type;
         if (item === "string") kinds.add("stringArray");
+        if (fieldOptions(field.itemType)) kinds.add("choiceArray");
         if (item === "struct" || item === "content" || item === "object")
           kinds.add("objectArray");
         break;
@@ -497,6 +505,7 @@ class Validator {
     return {
       resolve: (path, text, scope, loc) => {
         const shape = this.resolvePath(path, text, scope, loc);
+        if (shape) this.pathShapes.set(path, shape);
         return shape && { type: shapeType(shape), scope: shape };
       },
       itemScope: (list) => (list ? this.itemShape(list) : { kind: "unknown", depth: 0 }),
@@ -555,7 +564,9 @@ class Validator {
         );
         return part;
       }
-      return { ...part, ast: compiled.ast };
+      const shape = compiled.ast.type === "path" ? this.pathShapes.get(compiled.ast.path) : undefined;
+      const options = shape?.kind === "field" ? fieldOptions(shape.field) : undefined;
+      return { ...part, ast: compiled.ast, ...(options ? { options } : {}) };
     });
   }
 
@@ -897,6 +908,9 @@ class Validator {
       if (spec.itemScope) childScope = this.itemShape(shape);
     }
 
+    const choiceError = binding && this.checkChoice(node, spec, binding, attrs, formula);
+    if (choiceError) return invalid(choiceError.code, choiceError.message);
+
     // `Field` with a formula acts as the tag matching its field's type.
     let overrideTag = spec.name;
     if (spec.name === "Field" && formula) {
@@ -945,6 +959,52 @@ class Validator {
       children: this.children(node.children, spec, childScope),
       loc: node.loc,
     };
+  }
+
+  // Choice fields (schema `options`): only Select, Field, Column, Value, and
+  // formula-only tags show them. Returns an error message, or reports a
+  // Select's own list being ignored as a warning.
+  private checkChoice(
+    node: SheetElement,
+    spec: TagSpec,
+    binding: Binding,
+    attrs: Record<string, AttrValue>,
+    formula: CompiledFormula | undefined,
+  ): { code: string; message: string } | undefined {
+    const wrongType = (message: string) => ({ code: "wrong-field-type", message });
+    const { field } = binding;
+    const path = binding.path.segments.join(".");
+    const options =
+      fieldOptions(field) ?? (field?.type === "array" ? fieldOptions(field.itemType) : undefined);
+    if (spec.name === "Select") {
+      const listAttr = attrNamed(node, "options");
+      if (fieldOptions(field)) {
+        if (listAttr) {
+          this.warn(
+            "options-ignored",
+            `"${path}" has options in the schema, so this options list is ignored; remove it`,
+            listAttr.loc,
+          );
+        }
+        return undefined;
+      }
+      if (field?.type === "number")
+        return wrongType(`<Select> can't show "${path}": it's a number field without options in the schema`);
+      // A list that was written but is invalid is reported already.
+      if (!attrs.options && !listAttr) {
+        return {
+          code: "missing-attribute",
+          message: `<Select> needs an options attribute: "${path}" has no options in the schema`,
+        };
+      }
+      return undefined;
+    }
+    if (!options) return undefined;
+    if (freeInputTags.has(spec.name))
+      return wrongType(`<${spec.name}> can't show "${path}": it has options; use <Select> or <Field>`);
+    if (spec.name === "Field" && formula)
+      return { code: "invalid-attribute", message: `<Field> takes no formula on "${path}": it has options` };
+    return undefined;
   }
 
   // Whether a field tag's formula gives what the tag (and its field, for

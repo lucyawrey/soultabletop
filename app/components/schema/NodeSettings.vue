@@ -14,7 +14,8 @@ import {
 
 // Settings for a node's type: a `struct`'s entries, an `array`'s itemType
 // (itself a node, so arrays of structs or of arrays work), a `content` field's
-// contentTypeId and allow, or a `resourceLink`'s kind.
+// contentTypeId and allow, a `resourceLink`'s kind, or a `string` or
+// `number` field's options.
 const node = defineModel<BuilderNode>({ required: true });
 const { errors, contentTypeOptions, readonly } = useSchemaBuilder();
 
@@ -84,7 +85,9 @@ watch(
     </UFormField>
     <div
       v-if="
-        ['struct', 'array', 'content', 'resourceLink'].includes(node.item.type)
+        ['struct', 'array', 'content', 'resourceLink', 'string', 'number'].includes(
+          node.item.type,
+        )
       "
       class="border-s-2 border-default ps-3"
     >
@@ -130,4 +133,9 @@ watch(
       :disabled="readonly"
     />
   </UFormField>
+
+  <SchemaOptions
+    v-else-if="node.type === 'string' || node.type === 'number'"
+    v-model="node"
+  />
 </template>
