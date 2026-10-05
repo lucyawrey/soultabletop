@@ -1,0 +1,22 @@
+{
+  "id": "681d589d-b3b7-44fd-a91a-e63e2ed0c600",
+  "kind": "system",
+  "ownerUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "ownerGroupId": null,
+  "readableId": "pf2e-test",
+  "name": "Pathfinder 2e (Formula Test)",
+  "description": null,
+  "isPubliclyReadable": false,
+  "createdByUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "updatedByUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "isAdminHidden": false,
+  "moderationReason": null,
+  "moderatedAt": null,
+  "moderatedByUserId": null,
+  "createdAt": "2026-10-04T00:48:49.220Z",
+  "updatedAt": "2026-10-04T00:48:49.220Z",
+  "ownerReadableId": "lucyawrey",
+  "source": "you",
+  "canEdit": true,
+  "canChangeOwner": true
+}

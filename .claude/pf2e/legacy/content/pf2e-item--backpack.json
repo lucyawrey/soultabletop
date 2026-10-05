@@ -1,0 +1,24 @@
+{
+  "id": "3e229543-5710-4cb6-a6f6-2c62132d1c71",
+  "readableId": "backpack",
+  "isPubliclyReadable": false,
+  "name": "Backpack",
+  "ownerUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "ownerGroupId": null,
+  "ownerReadableId": "lucyawrey",
+  "source": "you",
+  "canChangeOwner": true,
+  "createdAt": "2026-10-04T00:48:52.038Z",
+  "updatedAt": "2026-10-04T00:48:52.038Z",
+  "resourceId": "3e229543-5710-4cb6-a6f6-2c62132d1c71",
+  "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+  "sheetId": null,
+  "data": {
+    "bulk": 0.1
+  },
+  "contentCategory": "general",
+  "systemId": "681d589d-b3b7-44fd-a91a-e63e2ed0c600",
+  "canEdit": true,
+  "refs": {},
+  "links": {}
+}

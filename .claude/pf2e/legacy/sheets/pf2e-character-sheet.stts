@@ -1,0 +1,272 @@
+<Sheet>
+  <!-- Proficiency: level + 2/4/6/8 by rank; untrained (or no rank) adds nothing. -->
+  <Define name="rankBonus" params="rank" formula="switch(rank, 'trained', 2, 'expert', 4, 'master', 6, 'legendary', 8, null)" />
+  <Define name="prof" params="rank" formula="if(rankBonus(rank) == null, 0, level + rankBonus(rank))" />
+  <Define name="check" params="attr, rank" formula="coalesce(get(attributes, attr), 0) + prof(rank)" />
+  <Define name="classDc" formula="10 + check(keyAttribute, classDcRank)" />
+  <!-- Armor's check penalty applies unless the character meets its Strength. -->
+  <Define name="meetsStrength" formula="armor.strength == null or coalesce(attributes.str, 0) >= armor.strength" />
+  <Define name="acp" formula="if(meetsStrength(), 0, coalesce(armor.checkPenalty, 0))" />
+  <Define name="hpMax" formula="coalesce(hp.ancestry, 0) + (coalesce(hp.classPerLevel, 0) + coalesce(attributes.con, 0)) * level + coalesce(hp.bonus, 0)" />
+  <Define name="attack" params="attr, rank, bonus" formula="check(attr, rank) + coalesce(bonus, 0)" />
+  <Define name="damageMod" params="attr" formula="if(length(coalesce(attr, '')) > 0, coalesce(get(attributes, attr), 0), 0)" />
+  <Define name="bulk" formula="sum(inventory, coalesce(qty, 1) * coalesce(item.bulk, 0))" />
+
+  <Section title="{name}" description="{= concat('Level ', level, ' ', ancestry, ' ', class)}">
+    <Grid cols="4">
+      <Text field="ancestry" />
+      <Text field="heritage" />
+      <Text field="background" />
+      <Text field="class" />
+      <Number field="level" />
+      <Number field="xp" live />
+      <Select field="keyAttribute" options="str, dex, con, int, wis, cha" />
+      <Tracker field="heroPoints" max="3" style="pips" live />
+    </Grid>
+    <Grid cols="6">
+      <Number field="attributes.str" label="Str" format="signed" variant="stat" />
+      <Number field="attributes.dex" label="Dex" format="signed" variant="stat" />
+      <Number field="attributes.con" label="Con" format="signed" variant="stat" />
+      <Number field="attributes.int" label="Int" format="signed" variant="stat" />
+      <Number field="attributes.wis" label="Wis" format="signed" variant="stat" />
+      <Number field="attributes.cha" label="Cha" format="signed" variant="stat" />
+    </Grid>
+  </Section>
+
+  <Grid cols="4">
+    <Number field="ac" label="AC" variant="stat"
+            formula="10 + min(coalesce(attributes.dex, 0), coalesce(armor.dexCap, 99)) + prof(armor.rank) + coalesce(armor.itemBonus, 0) + if(shield.raised, coalesce(shield.bonus, 0), 0)" />
+    <Value formula="check('wis', perceptionRank)" label="Perception" format="signed" />
+    <Number formula="classDc()" label="Class DC" variant="stat" />
+    <Value formula="concat(text(max(5, coalesce(speed, 25) + if(meetsStrength(), min(0, coalesce(armor.speedPenalty, 0) + 5), coalesce(armor.speedPenalty, 0)))), ' ft')" label="Speed" />
+  </Grid>
+
+  <Section title="Hit Points">
+    <Grid cols="2">
+      <Tracker field="hp.current" label="Hit Points" live max="{= max(1, hpMax())}" />
+      <Number field="hp.temp" live />
+    </Grid>
+    <Grid cols="3">
+      <Tracker field="hp.dying" label="Dying" max="4" style="pips" live />
+      <Number field="hp.wounded" min="0" live />
+      <Toggle field="shield.raised" label="Shield Raised" live />
+    </Grid>
+    <Tags field="conditions" live />
+    <Collapsible title="Hit point parts" subtitle="{= concat('Max ', text(hpMax()))}">
+      <Grid cols="3">
+        <Number field="hp.ancestry" label="Ancestry HP" />
+        <Number field="hp.classPerLevel" label="Class HP per Level" />
+        <Number field="hp.bonus" label="Other Bonus" />
+      </Grid>
+    </Collapsible>
+  </Section>
+
+  <Tabs>
+    <Tab label="Skills">
+      <Grid cols="2">
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('wis', perceptionRank)" label="Perception" format="signed" />
+          <Select field="perceptionRank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('dex', skills.acrobatics.rank) + acp()" label="Acrobatics" format="signed" />
+          <Select field="skills.acrobatics.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('int', skills.arcana.rank)" label="Arcana" format="signed" />
+          <Select field="skills.arcana.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('str', skills.athletics.rank) + acp()" label="Athletics" format="signed" />
+          <Select field="skills.athletics.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('int', skills.crafting.rank)" label="Crafting" format="signed" />
+          <Select field="skills.crafting.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('cha', skills.deception.rank)" label="Deception" format="signed" />
+          <Select field="skills.deception.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('cha', skills.diplomacy.rank)" label="Diplomacy" format="signed" />
+          <Select field="skills.diplomacy.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('cha', skills.intimidation.rank)" label="Intimidation" format="signed" />
+          <Select field="skills.intimidation.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('wis', skills.medicine.rank)" label="Medicine" format="signed" />
+          <Select field="skills.medicine.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('wis', skills.nature.rank)" label="Nature" format="signed" />
+          <Select field="skills.nature.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('int', skills.occultism.rank)" label="Occultism" format="signed" />
+          <Select field="skills.occultism.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('cha', skills.performance.rank)" label="Performance" format="signed" />
+          <Select field="skills.performance.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('wis', skills.religion.rank)" label="Religion" format="signed" />
+          <Select field="skills.religion.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('int', skills.society.rank)" label="Society" format="signed" />
+          <Select field="skills.society.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('dex', skills.stealth.rank) + acp()" label="Stealth" format="signed" />
+          <Select field="skills.stealth.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('wis', skills.survival.rank)" label="Survival" format="signed" />
+          <Select field="skills.survival.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('dex', skills.thievery.rank) + acp()" label="Thievery" format="signed" />
+          <Select field="skills.thievery.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+      </Grid>
+      <Table field="lores" label="Lores">
+        <Column field="name" />
+        <Column field="rank" />
+        <Column formula="check('int', rank)" label="Bonus" format="signed" />
+      </Table>
+    </Tab>
+
+    <Tab label="Defense">
+      <Grid cols="3">
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('con', saves.fortitude.rank)" label="Fortitude" format="signed" />
+          <Select field="saves.fortitude.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('dex', saves.reflex.rank)" label="Reflex" format="signed" />
+          <Select field="saves.reflex.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+        <Stack direction="row" align="center" gap="sm">
+          <Value formula="check('wis', saves.will.rank)" label="Will" format="signed" />
+          <Select field="saves.will.rank" options="untrained, trained, expert, master, legendary" hideLabel />
+        </Stack>
+      </Grid>
+      <Grid cols="2">
+        <Section title="Armor">
+          <Grid cols="2">
+            <Text field="armor.name" label="Armor" />
+            <Select field="armor.rank" label="Proficiency" options="untrained, trained, expert, master, legendary" />
+            <Number field="armor.itemBonus" label="AC Bonus" />
+            <Number field="armor.dexCap" label="Dex Cap" />
+            <Number field="armor.strength" label="Strength" />
+            <Number field="armor.checkPenalty" />
+            <Number field="armor.speedPenalty" />
+            <Number field="speed" label="Base Speed" />
+          </Grid>
+          <Note show="{= not meetsStrength()}">Strength below the armor's: check and speed penalties apply.</Note>
+        </Section>
+        <Section title="Shield">
+          <Grid cols="2">
+            <Text field="shield.name" label="Shield" />
+            <Number field="shield.bonus" label="AC Bonus" />
+            <Number field="shield.hardness" />
+            <Number field="shield.maxHp" />
+          </Grid>
+          <Tracker field="shield.hp" label="Shield HP" live max="{= max(1, coalesce(shield.maxHp, 1))}" />
+        </Section>
+      </Grid>
+      <Grid cols="2">
+        <Select field="classDcRank" label="Class DC Proficiency" options="untrained, trained, expert, master, legendary" />
+      </Grid>
+    </Tab>
+
+    <Tab label="Strikes">
+      <Table field="strikes">
+        <Column field="name" />
+        <Column formula="concat(signed(attack(attribute, rank, itemBonus)), ' / ', signed(attack(attribute, rank, itemBonus) - if(agile, 4, 5)), ' / ', signed(attack(attribute, rank, itemBonus) - if(agile, 8, 10)))" label="Attack" />
+        <Column formula="concat(damageDice, if(damageMod(damageAttribute) != 0, signed(damageMod(damageAttribute)), ''), ' ', damageType)" label="Damage" />
+        <Column field="traits" />
+        <RowDetails>
+          <Grid cols="4">
+            <Select field="attribute" label="Attack Attribute" options="str, dex" />
+            <Select field="rank" label="Proficiency" options="untrained, trained, expert, master, legendary" />
+            <Number field="itemBonus" label="Item Bonus" />
+            <Checkbox field="agile" />
+            <Text field="damageDice" label="Damage Dice" placeholder="1d8" />
+            <Select field="damageAttribute" label="Damage Attribute" options="str, dex" />
+            <Text field="damageType" label="Damage Type" placeholder="S" />
+          </Grid>
+        </RowDetails>
+      </Table>
+      <Note>Attack shows the first, second, and third attack (multiple attack penalty).</Note>
+    </Tab>
+
+    <Tab label="Spells">
+      <Grid cols="4">
+        <Select field="spellcasting.tradition" options="arcane, divine, occult, primal" />
+        <Select field="spellcasting.attribute" label="Attribute" options="int, wis, cha" />
+        <Select field="spellcasting.rank" label="Proficiency" options="untrained, trained, expert, master, legendary" />
+        <Number field="spellcasting.focusMax" />
+      </Grid>
+      <Grid cols="3" show="{= length(coalesce(spellcasting.tradition, '')) > 0}">
+        <Number formula="10 + check(spellcasting.attribute, spellcasting.rank)" label="Spell DC" variant="stat" />
+        <Value formula="check(spellcasting.attribute, spellcasting.rank)" label="Spell Attack" format="signed" />
+        <Tracker field="spellcasting.focusPoints" label="Focus Points" style="pips" live max="{= max(1, coalesce(spellcasting.focusMax, 1))}" />
+      </Grid>
+      <List field="spellSlots" label="Spell Slots" layout="grid" cols="3" addLabel="Add rank">
+        <Grid cols="2">
+          <Number field="rank" />
+          <Number field="total" />
+        </Grid>
+        <Tracker field="left" label="Slots Left" style="pips" live max="{= max(1, coalesce(total, 1))}" />
+      </List>
+      <Table field="spells">
+        <Column field="rank" />
+        <Column field="name" />
+        <Column field="actions" width="sm" />
+        <RowDetails>
+          <Markdown field="notes" />
+        </RowDetails>
+      </Table>
+    </Tab>
+
+    <Tab label="Feats">
+      <Table field="feats">
+        <Column field="level" />
+        <Column field="name" />
+        <Column field="type" width="sm" />
+        <RowDetails>
+          <Markdown field="notes" />
+        </RowDetails>
+      </Table>
+    </Tab>
+
+    <Tab label="Inventory">
+      <Grid cols="4">
+        <Number field="currency.pp" live />
+        <Number field="currency.gp" live />
+        <Number field="currency.sp" live />
+        <Number field="currency.cp" live />
+      </Grid>
+      <Table field="inventory">
+        <Column field="item" />
+        <Column field="qty" />
+        <Column formula="coalesce(qty, 1) * coalesce(item.bulk, 0)" label="Bulk" width="xs" />
+      </Table>
+      <Grid cols="3">
+        <Value formula="floor(bulk())" label="Bulk Carried" />
+        <Value formula="5 + coalesce(attributes.str, 0)" label="Encumbered Above" />
+        <Value formula="10 + coalesce(attributes.str, 0)" label="Maximum" />
+      </Grid>
+      <Callout color="warning" title="Encumbered" show="{= floor(bulk()) > 5 + coalesce(attributes.str, 0)}">Clumsy 1 and a 10-foot penalty to all Speeds.</Callout>
+    </Tab>
+
+    <Tab label="Notes">
+      <Markdown field="notes" live />
+    </Tab>
+  </Tabs>
+</Sheet>

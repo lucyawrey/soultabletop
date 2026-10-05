@@ -1,0 +1,240 @@
+{
+  "id": "793ae4a2-60b9-40d7-b099-139c5704d706",
+  "readableId": "test-fighter",
+  "isPubliclyReadable": false,
+  "name": "Test Fighter",
+  "ownerUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "ownerGroupId": null,
+  "ownerReadableId": "lucyawrey",
+  "source": "you",
+  "canChangeOwner": true,
+  "createdAt": "2026-10-04T00:48:52.464Z",
+  "updatedAt": "2026-10-04T19:31:15.029Z",
+  "resourceId": "793ae4a2-60b9-40d7-b099-139c5704d706",
+  "contentTypeId": "c52ca66a-8403-42fa-abe8-010499870fd3",
+  "sheetId": "42aef140-569f-47ef-a31b-d403305a7d62",
+  "data": {
+    "hp": {
+      "temp": 0,
+      "bonus": 5,
+      "dying": 0,
+      "current": 55,
+      "wounded": 0,
+      "ancestry": 8,
+      "classPerLevel": 10
+    },
+    "xp": 400,
+    "armor": {
+      "name": "Chain Mail",
+      "rank": "trained",
+      "dexCap": 1,
+      "strength": 3,
+      "itemBonus": 4,
+      "checkPenalty": -2,
+      "speedPenalty": -5
+    },
+    "class": "Fighter",
+    "feats": [
+      {
+        "name": "Natural Ambition",
+        "type": "ancestry",
+        "level": 1,
+        "notes": "Gained **Sudden Charge**."
+      },
+      {
+        "name": "Sudden Charge",
+        "type": "class",
+        "level": 1,
+        "notes": "Stride twice, then Strike."
+      },
+      {
+        "name": "Intimidating Strike",
+        "type": "class",
+        "level": 2,
+        "notes": ""
+      },
+      {
+        "name": "Intimidating Glare",
+        "type": "skill",
+        "level": 2,
+        "notes": ""
+      },
+      {
+        "name": "Toughness",
+        "type": "general",
+        "level": 3,
+        "notes": "Max HP + level (in Other Bonus)."
+      },
+      {
+        "name": "Power Attack",
+        "type": "class",
+        "level": 4,
+        "notes": ""
+      }
+    ],
+    "level": 5,
+    "lores": [
+      {
+        "name": "Warfare Lore",
+        "rank": "trained"
+      }
+    ],
+    "notes": "## Goals\n\n- Find the bandit camp.\n- Repay the blacksmith.\n\n",
+    "saves": {
+      "will": {
+        "rank": "trained"
+      },
+      "reflex": {
+        "rank": "expert"
+      },
+      "fortitude": {
+        "rank": "expert"
+      }
+    },
+    "speed": 25,
+    "shield": {
+      "hp": 20,
+      "name": "Steel Shield",
+      "bonus": 2,
+      "maxHp": 20,
+      "raised": false,
+      "hardness": 5
+    },
+    "skills": {
+      "stealth": {
+        "rank": "trained"
+      },
+      "medicine": {
+        "rank": "trained"
+      },
+      "survival": {
+        "rank": "trained"
+      },
+      "athletics": {
+        "rank": "expert"
+      },
+      "acrobatics": {
+        "rank": "trained"
+      },
+      "intimidation": {
+        "rank": "trained"
+      }
+    },
+    "spells": [],
+    "strikes": [
+      {
+        "name": "Longsword",
+        "rank": "expert",
+        "agile": false,
+        "traits": "versatile P",
+        "attribute": "str",
+        "itemBonus": 1,
+        "damageDice": "1d8",
+        "damageType": "S",
+        "damageAttribute": "str"
+      },
+      {
+        "name": "Dagger",
+        "rank": "expert",
+        "agile": true,
+        "traits": "agile, finesse, thrown 10 ft",
+        "attribute": "str",
+        "itemBonus": 0,
+        "damageDice": "1d4",
+        "damageType": "P",
+        "damageAttribute": "str"
+      },
+      {
+        "name": "Shortbow",
+        "rank": "expert",
+        "agile": false,
+        "traits": "deadly d10, range 60 ft",
+        "attribute": "dex",
+        "itemBonus": 0,
+        "damageDice": "1d6",
+        "damageType": "P",
+        "damageAttribute": ""
+      }
+    ],
+    "ancestry": "Human",
+    "currency": {
+      "cp": 0,
+      "gp": 15,
+      "pp": 0,
+      "sp": 4
+    },
+    "heritage": "Versatile Human",
+    "inventory": [
+      {
+        "qty": 1,
+        "item": "d1821775-ccd7-4029-8b63-7d836808fbfc"
+      },
+      {
+        "qty": 1,
+        "item": "21a2a35c-c868-4cb3-b07b-c36b14460487"
+      },
+      {
+        "qty": 1,
+        "item": "3e229543-5710-4cb6-a6f6-2c62132d1c71"
+      },
+      {
+        "qty": 3,
+        "item": "427d8975-0375-4dbb-a733-76db98c52ea4"
+      }
+    ],
+    "attributes": {
+      "cha": 0,
+      "con": 2,
+      "dex": 2,
+      "int": 0,
+      "str": 4,
+      "wis": 1
+    },
+    "background": "Warrior",
+    "conditions": [],
+    "heroPoints": 1,
+    "spellSlots": [],
+    "classDcRank": "trained",
+    "keyAttribute": "str",
+    "spellcasting": {
+      "rank": "trained",
+      "attribute": "wis",
+      "tradition": ""
+    },
+    "perceptionRank": "expert"
+  },
+  "contentCategory": "playerCharacter",
+  "systemId": "681d589d-b3b7-44fd-a91a-e63e2ed0c600",
+  "canEdit": true,
+  "refs": {
+    "427d8975-0375-4dbb-a733-76db98c52ea4": {
+      "name": "Rope",
+      "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+      "data": {
+        "bulk": 0.1
+      }
+    },
+    "21a2a35c-c868-4cb3-b07b-c36b14460487": {
+      "name": "Longsword",
+      "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+      "data": {
+        "bulk": 1
+      }
+    },
+    "d1821775-ccd7-4029-8b63-7d836808fbfc": {
+      "name": "Chain Mail",
+      "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+      "data": {
+        "bulk": 2
+      }
+    },
+    "3e229543-5710-4cb6-a6f6-2c62132d1c71": {
+      "name": "Backpack",
+      "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+      "data": {
+        "bulk": 0.1
+      }
+    }
+  },
+  "links": {}
+}

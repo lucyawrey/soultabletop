@@ -1,0 +1,32 @@
+{
+  "id": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+  "kind": "contentType",
+  "ownerUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "ownerGroupId": null,
+  "readableId": "pf2e-item",
+  "name": "PF2e Item",
+  "description": null,
+  "isPubliclyReadable": false,
+  "createdByUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "updatedByUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "isAdminHidden": false,
+  "moderationReason": null,
+  "moderatedAt": null,
+  "moderatedByUserId": null,
+  "createdAt": "2026-10-04T00:48:49.658Z",
+  "updatedAt": "2026-10-04T00:48:49.658Z",
+  "ownerReadableId": "lucyawrey",
+  "source": "you",
+  "canEdit": true,
+  "canChangeOwner": true,
+  "resourceId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+  "systemId": "681d589d-b3b7-44fd-a91a-e63e2ed0c600",
+  "contentCategory": "general",
+  "hasStrictSchema": false,
+  "showSheetWarnings": false,
+  "schema": {
+    "bulk": {
+      "type": "number"
+    }
+  }
+}

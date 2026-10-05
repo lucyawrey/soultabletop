@@ -1,0 +1,24 @@
+{
+  "id": "21a2a35c-c868-4cb3-b07b-c36b14460487",
+  "readableId": "longsword",
+  "isPubliclyReadable": false,
+  "name": "Longsword",
+  "ownerUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "ownerGroupId": null,
+  "ownerReadableId": "lucyawrey",
+  "source": "you",
+  "canChangeOwner": true,
+  "createdAt": "2026-10-04T00:48:50.899Z",
+  "updatedAt": "2026-10-04T00:48:50.899Z",
+  "resourceId": "21a2a35c-c868-4cb3-b07b-c36b14460487",
+  "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+  "sheetId": null,
+  "data": {
+    "bulk": 1
+  },
+  "contentCategory": "general",
+  "systemId": "681d589d-b3b7-44fd-a91a-e63e2ed0c600",
+  "canEdit": true,
+  "refs": {},
+  "links": {}
+}

@@ -1,0 +1,507 @@
+{
+  "id": "c52ca66a-8403-42fa-abe8-010499870fd3",
+  "kind": "contentType",
+  "ownerUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "ownerGroupId": null,
+  "readableId": "pf2e-character",
+  "name": "PF2e Character",
+  "description": null,
+  "isPubliclyReadable": false,
+  "createdByUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "updatedByUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "isAdminHidden": false,
+  "moderationReason": null,
+  "moderatedAt": null,
+  "moderatedByUserId": null,
+  "createdAt": "2026-10-04T00:48:50.078Z",
+  "updatedAt": "2026-10-04T19:30:49.007Z",
+  "ownerReadableId": "lucyawrey",
+  "source": "you",
+  "canEdit": true,
+  "canChangeOwner": true,
+  "resourceId": "c52ca66a-8403-42fa-abe8-010499870fd3",
+  "systemId": "681d589d-b3b7-44fd-a91a-e63e2ed0c600",
+  "contentCategory": "playerCharacter",
+  "hasStrictSchema": false,
+  "showSheetWarnings": false,
+  "schema": {
+    "level": {
+      "type": "number",
+      "required": true
+    },
+    "xp": {
+      "type": "number",
+      "label": "XP"
+    },
+    "ancestry": {
+      "type": "string"
+    },
+    "heritage": {
+      "type": "string"
+    },
+    "background": {
+      "type": "string"
+    },
+    "class": {
+      "type": "string"
+    },
+    "keyAttribute": {
+      "type": "string",
+      "label": "Key Attribute"
+    },
+    "heroPoints": {
+      "type": "number"
+    },
+    "attributes": {
+      "type": "struct",
+      "entries": {
+        "str": {
+          "type": "number"
+        },
+        "dex": {
+          "type": "number"
+        },
+        "con": {
+          "type": "number"
+        },
+        "int": {
+          "type": "number"
+        },
+        "wis": {
+          "type": "number"
+        },
+        "cha": {
+          "type": "number"
+        }
+      }
+    },
+    "perceptionRank": {
+      "type": "string"
+    },
+    "classDcRank": {
+      "type": "string"
+    },
+    "saves": {
+      "type": "struct",
+      "entries": {
+        "fortitude": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "reflex": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "will": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "struct",
+      "entries": {
+        "acrobatics": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "arcana": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "athletics": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "crafting": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "deception": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "diplomacy": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "intimidation": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "medicine": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "nature": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "occultism": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "performance": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "religion": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "society": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "stealth": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "survival": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        },
+        "thievery": {
+          "type": "struct",
+          "entries": {
+            "rank": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "lores": {
+      "type": "array",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "name": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "armor": {
+      "type": "struct",
+      "entries": {
+        "name": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "string"
+        },
+        "dexCap": {
+          "type": "number"
+        },
+        "itemBonus": {
+          "type": "number"
+        },
+        "strength": {
+          "type": "number"
+        },
+        "checkPenalty": {
+          "type": "number",
+          "description": "As in the armor table, e.g. -2"
+        },
+        "speedPenalty": {
+          "type": "number",
+          "description": "As in the armor table, e.g. -5"
+        }
+      }
+    },
+    "shield": {
+      "type": "struct",
+      "entries": {
+        "name": {
+          "type": "string"
+        },
+        "bonus": {
+          "type": "number"
+        },
+        "hardness": {
+          "type": "number"
+        },
+        "hp": {
+          "type": "number",
+          "label": "HP"
+        },
+        "maxHp": {
+          "type": "number",
+          "label": "Max HP"
+        },
+        "raised": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ac": {
+      "type": "number",
+      "label": "AC"
+    },
+    "speed": {
+      "type": "number"
+    },
+    "hp": {
+      "type": "struct",
+      "entries": {
+        "current": {
+          "type": "number"
+        },
+        "ancestry": {
+          "type": "number"
+        },
+        "classPerLevel": {
+          "type": "number"
+        },
+        "bonus": {
+          "type": "number"
+        },
+        "temp": {
+          "type": "number",
+          "label": "Temp HP"
+        },
+        "dying": {
+          "type": "number"
+        },
+        "wounded": {
+          "type": "number"
+        }
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "strikes": {
+      "type": "array",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "name": {
+            "type": "string"
+          },
+          "attribute": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "string"
+          },
+          "itemBonus": {
+            "type": "number"
+          },
+          "agile": {
+            "type": "boolean"
+          },
+          "damageDice": {
+            "type": "string"
+          },
+          "damageAttribute": {
+            "type": "string"
+          },
+          "damageType": {
+            "type": "string"
+          },
+          "traits": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "spellcasting": {
+      "type": "struct",
+      "entries": {
+        "tradition": {
+          "type": "string"
+        },
+        "attribute": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "string"
+        },
+        "focusPoints": {
+          "type": "number"
+        },
+        "focusMax": {
+          "type": "number",
+          "label": "Focus Max"
+        }
+      }
+    },
+    "spellSlots": {
+      "type": "array",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "rank": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "left": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "spells": {
+      "type": "array",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "name": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "number"
+          },
+          "actions": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "feats": {
+      "type": "array",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "level": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "currency": {
+      "type": "struct",
+      "entries": {
+        "pp": {
+          "type": "number",
+          "label": "PP"
+        },
+        "gp": {
+          "type": "number",
+          "label": "GP"
+        },
+        "sp": {
+          "type": "number",
+          "label": "SP"
+        },
+        "cp": {
+          "type": "number",
+          "label": "CP"
+        }
+      }
+    },
+    "inventory": {
+      "type": "array",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "item": {
+            "type": "content",
+            "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+            "allow": "both"
+          },
+          "qty": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
