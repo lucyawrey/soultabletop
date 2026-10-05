@@ -33,6 +33,9 @@ export interface FormulaCheckHost<S> {
   // The scope of one item of a list (`list` is undefined when the list isn't
   // a path, e.g. a parameter).
   itemScope(list: S | undefined): S;
+  // The scope of a list whose items have scope `item` (what filter and sort
+  // give back, an array even when they repeated over a struct).
+  listScope?(item: S): S | undefined;
   // A struct `list` whose entries a per-item function can repeat over (all
   // alike), with the type of one entry.
   structEntries?(list: S): { entries: { key: string; label: string }[]; type: FormulaType } | undefined;
@@ -151,7 +154,28 @@ class Checker<S> {
         return { type: arithmeticOps.has(op) ? formulaTypes.number : formulaTypes.boolean };
       }
       case "call":
-        return { type: this.call(node, scope, itemDepth) };
+        return this.call(node, scope, itemDepth);
+      case "member": {
+        const target = this.check(node.target, scope, itemDepth);
+        const kinds = definiteKinds(target.type);
+        if (kinds?.has("array") && kinds.size === 1) {
+          this.error(
+            "formula-type",
+            `${node.text} needs one item, not a list; pick one with first or at`,
+            node.loc,
+          );
+          return { type: formulaTypes.any };
+        }
+        if (!couldBe(target.type, ["record", "string"])) {
+          this.error("formula-type", `${node.text} needs a group of fields, not ${describeType(target.type)}`, node.loc);
+          return { type: formulaTypes.any };
+        }
+        // Checked against the schema like a path in a List row of the items.
+        if (target.scope !== undefined) {
+          return this.host.resolve(node.path, node.text, target.scope, node.loc) ?? { type: formulaTypes.any };
+        }
+        return { type: formulaTypes.any };
+      }
     }
   }
 
@@ -159,17 +183,17 @@ class Checker<S> {
     node: Extract<FormulaNode, { type: "call" }>,
     scope: S,
     itemDepth: number,
-  ): FormulaType {
+  ): Checked<S> {
     const target = resolveFormulaCall(node.name, (name) => !!this.host.definition(name));
 
     if (target === "dice") {
       this.error("formula-dice", diceNotAvailable, node.nameLoc);
-      return formulaTypes.any;
+      return { type: formulaTypes.any };
     }
     if (target === "unknown") {
       this.error("formula-unknown-function", `There's no function named ${node.name}`, node.nameLoc);
       for (const arg of node.args) this.check(arg, scope, itemDepth);
-      return formulaTypes.any;
+      return { type: formulaTypes.any };
     }
     if (target === "definition") {
       const definition = this.host.definition(node.name)!;
@@ -183,7 +207,7 @@ class Checker<S> {
         );
       }
       for (const arg of node.args) this.check(arg, scope, itemDepth);
-      return definition.type;
+      return { type: definition.type };
     }
 
     const fn = formulaFunctions.get(node.name)!;
@@ -195,12 +219,12 @@ class Checker<S> {
       if (!kind) {
         this.error(
           "formula-no-item",
-          `${fn.name}() works only in a List or Table row, or inside sum, count, any, or all`,
+          `${fn.name}() works only in a List or Table row, or inside a per-item function like sum or filter`,
           node.loc,
         );
-        return formulaTypes.any;
+        return { type: formulaTypes.any };
       }
-      return kind === "unknown" ? formulaTypes.any : fn.item[kind];
+      return { type: kind === "unknown" ? formulaTypes.any : fn.item[kind] };
     }
     const types: FormulaType[] = [];
     let listScope: S | undefined;
@@ -235,7 +259,10 @@ class Checker<S> {
     fn.check?.(types, {
       report: (index, message) => this.error("formula-type", message, node.args[index]?.loc ?? node.loc),
     });
-    return fn.result(types);
+    const type = fn.result(types);
+    if (!fn.resultScope || listScope === undefined) return { type };
+    const item = this.host.itemScope(listScope);
+    return { type, scope: fn.resultScope === "item" ? item : this.host.listScope?.(item) };
   }
 }
 

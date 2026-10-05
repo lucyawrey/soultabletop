@@ -548,6 +548,10 @@ class Validator {
         return shape && { type: shapeType(shape), scope: shape };
       },
       itemScope: (list) => (list ? this.itemShape(list) : { kind: "unknown", depth: 0, item: "unknown" }),
+      listScope: (item) =>
+        item.kind === "field"
+          ? { kind: "field", field: { type: "array", itemType: item.field }, strict: item.strict, depth: item.depth }
+          : { kind: "unknown", depth: item.depth },
       structEntries: (list) => {
         const rows = list.kind === "field" ? structRows(list.field) : undefined;
         return rows && { entries: rows.entries, type: fieldType(rows.item) };
