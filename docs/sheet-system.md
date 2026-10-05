@@ -193,7 +193,8 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
   can't hold `object`, `content`, or `resourceLink` values, and those types can't have one. Checked on schema save
   (`fieldDefaultError` in `shared/content-schema.ts`) and in the builder.
 - **Stored on create**, never a fallback when reading: a copy goes into new Content created without data
-  (`defaultContentData`, required or not, and a struct is created when its entries have defaults), into a new List
+  (`defaultContentData`, required or not; an optional struct is created when its entries have defaults, unless a
+required `resourceLink` or `content` entry without a default would be left empty and fail the next save), into a new List
   item or field (`defaultSheetValue`; a struct item gets its entries' defaults), and into the editor preview's sample
   data. Changing a default never touches saved data, and a cleared field stays cleared. A default wins over a required
   field's empty value or first option.

@@ -268,6 +268,10 @@ describe("defaults", () => {
     expect(builderToSchema([field]).level).toEqual({ type: "number", default: 2.5 });
     field.defaultText = " ";
     expect(builderToSchema([field]).level).toEqual({ type: "number" });
+    // Text keeps its spaces; only an empty box is no default.
+    field.type = "string";
+    expect(builderToSchema([field]).level).toEqual({ type: "string", default: " " });
+    field.type = "number";
     // Only types that take a default save one.
     field.type = "object";
     field.defaultText = "{}";
@@ -291,5 +295,8 @@ describe("defaults", () => {
 
   it("rejects defaults on types that can't have one in JSON", () => {
     expect(parseSchemaJson('{"a": {"type": "object", "default": {}}}')).toHaveProperty("error");
+    expect(parseSchemaJson('{"a": {"type": "string", "default": 5}}')).toHaveProperty("error");
+    expect(parseSchemaJson('{"a": {"type": "number", "default": "3"}}')).toHaveProperty("error");
+    expect(parseSchemaJson('{"a": {"type": "scalar", "default": {}}}')).toHaveProperty("error");
   });
 });

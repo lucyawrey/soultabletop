@@ -155,7 +155,8 @@ export function builderDefault(
   node: BuilderNode,
 ): { value: unknown } | { error: string } | undefined {
   const text = node.defaultText;
-  if (!text.trim() || !(DEFAULT_FIELD_TYPES as readonly string[]).includes(node.type))
+  // Text keeps its spaces; only an empty box means no default.
+  if ((node.type === "string" ? !text : !text.trim()) || !(DEFAULT_FIELD_TYPES as readonly string[]).includes(node.type))
     return undefined;
   switch (node.type) {
     case "string":
@@ -362,9 +363,9 @@ function isFieldShape(value: unknown, depth: number): boolean {
   const field = value as Record<string, unknown>;
   if (typeof field.type !== "string" || !FIELD_TYPES.has(field.type)) return false;
   if (depth > 32) return false;
-  // Other types would lose their default in the builder.
-  if (field.default !== undefined && !(DEFAULT_FIELD_TYPES as readonly string[]).includes(field.type))
-    return false;
+  // Other types would lose their default in the builder, and a default of
+  // another type would be turned into this one.
+  if (field.default !== undefined && !defaultShapeFits(field.type, field.default)) return false;
   if (field.type === "array") return isFieldShape(field.itemType, depth + 1);
   if (field.type === "struct") return isSchemaShape(field.entries, depth + 1);
   if (field.type === "resourceLink")
@@ -391,6 +392,21 @@ function isFieldShape(value: unknown, depth: number): boolean {
     );
   }
   return true;
+}
+
+function defaultShapeFits(type: string, value: unknown) {
+  switch (type) {
+    case "string":
+    case "number":
+    case "boolean":
+      return typeof value === type;
+    case "scalar":
+      return value === null || ["string", "number", "boolean"].includes(typeof value);
+    case "array":
+      return Array.isArray(value);
+    default:
+      return false;
+  }
 }
 
 function isSchemaShape(value: unknown, depth: number): boolean {

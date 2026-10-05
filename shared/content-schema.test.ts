@@ -144,6 +144,21 @@ describe("defaults", () => {
     ).toEqual({ stats: { str: 10 } });
   });
 
+  it("leaves out an optional struct whose required entries can't start filled", () => {
+    expect(
+      defaultContentData({
+        stats: {
+          type: "struct",
+          entries: { str: { type: "number", default: 10 }, owner: { type: "resourceLink", required: true } },
+        },
+        gear: {
+          type: "struct",
+          entries: { size: { type: "string", default: "m" }, notes: { type: "string", required: true } },
+        },
+      }),
+    ).toEqual({ gear: { size: "m", notes: "" } });
+  });
+
   it("copies defaults, so new content never shares them", () => {
     const schema: ContentTypeSchema = { tags: { type: "array", itemType: { type: "string" }, default: ["a"] } };
     const first = defaultContentData(schema);

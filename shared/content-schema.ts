@@ -246,13 +246,25 @@ export function referencedContentTypeIds(
   return ids;
 }
 
-// Whether a schema's fields, or their struct entries, have any `default`.
+// Whether an optional struct with these entries starts filled in: some entry
+// (or a nested struct's entry) has a `default`, and every required entry can
+// get a starting value. A required resourceLink or content entry without a
+// default can't, so the struct is left out rather than stored without it,
+// which would fail the next save.
 export function hasFieldDefaults(schema: ContentTypeSchema, depth = 0): boolean {
-  return Object.values(schema).some(
+  return canFillRequired(schema, depth) && Object.values(schema).some(
     (field) =>
       fieldDefault(field) !== undefined ||
       (field.type === "struct" && depth < 8 && hasFieldDefaults(field.entries, depth + 1)),
   );
+}
+
+function canFillRequired(schema: ContentTypeSchema, depth: number): boolean {
+  return Object.values(schema).every((field) => {
+    if (!field.required || fieldDefault(field) !== undefined) return true;
+    if (field.type === "resourceLink" || field.type === "content") return false;
+    return field.type !== "struct" || (depth < 8 && canFillRequired(field.entries, depth + 1));
+  });
 }
 
 // Starting data for new Content created without data: every field with a
