@@ -41,3 +41,14 @@ First draft: "a very good start but it def needs a lot of work still." Ideas fro
 - **Builder hints:** previews of linked content in both modes, and empty feat slots for coming levels in edit only. Boost tracking waits for the builder flow.
 - **Layout:** a balance between columns and tabs, not one or the other. For example, the always-needed things (attributes, defenses, Strikes, skills) are laid out on the page, and the long lists (feats, spells, inventory, biography) go in tabs. Drop the Columns/Tabs toggle.
 - **Density:** keep the Compact/Roomy toggle.
+
+## Mockup v2 review (user, 2026-10-05)
+
+Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), then decided:
+
+- **Header:** doctrine (Cleric) and racket (Rogue) get a labeled chip like ancestry and class. Rows with nothing in them (Senses) are hidden in play and shown as an empty slot in edit.
+- **Defenses:** AC, HP, and Perception stay big boxes. Fortitude, Reflex, and Will become one smaller Saves box with three rows. On a phone: AC and Perception side by side, HP full width, Saves one row.
+- **Strikes on a phone:** no column headers; each Strike is two lines (action glyph, name, hit and MAP; then damage and traits).
+- **Skills:** untrained skills dimmed (the U badge stays, so it isn't color alone); both columns share one row grid; Lore last.
+- **Class tab:** a new first tab with class features by level, the deity for a Cleric (domains, favored weapon, sanctification, edicts and anathema, font), and the racket for a Rogue. The Feats tab holds only feats and empty slots.
+- **Proficiencies:** two labeled rows, Attacks (unarmed, simple, martial, advanced) and Defenses (unarmored, light, medium, heavy), each with its rank badge, plus class DC in the same block.
