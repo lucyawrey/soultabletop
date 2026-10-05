@@ -18,22 +18,17 @@ export interface Loc {
   end: Position;
 }
 
-export interface Interpolation {
-  path: string;
-  loc: Loc;
-}
-
-// `{= expr}`: a formula, as written (entities not decoded). The validator
+// `{expr}`: a formula, as written (entities not decoded). The validator
 // parses it and sets `ast` when it is valid.
 export interface FormulaPart {
   formula: string;
   loc: Loc;
-  // Where the expression starts, after `{=`.
+  // Where the expression starts, after `{`.
   bodyStart: Position;
   ast?: FormulaNode;
 }
 
-export type TextPart = string | Interpolation | FormulaPart;
+export type TextPart = string | FormulaPart;
 
 export function isFormulaPart(part: TextPart): part is FormulaPart {
   return typeof part === "object" && "formula" in part;
@@ -50,8 +45,8 @@ export interface SheetAttr {
   valueLoc?: Loc;
 }
 
-// Attributes whose value is a formula, kept as written.
-const rawAttributes = new Set(["formula"]);
+// Attributes whose value is a bare formula, kept as written.
+const rawAttributes = new Set(["formula", "show"]);
 
 export interface SheetElement {
   type: "element";
@@ -388,7 +383,7 @@ class Parser {
         const after = this.src[this.pos];
         const cutShort = after !== undefined && !isWhitespace(after) && after !== ">" && after !== "/";
         const value = this.src.slice(valueStart, close);
-        const openFormula = value.lastIndexOf("{=");
+        const openFormula = value.lastIndexOf("{");
         if (!isRaw && cutShort && openFormula !== -1 && !value.includes("}", openFormula)) {
           this.report(
             "formula-syntax",
@@ -485,7 +480,7 @@ class Parser {
         continue;
       }
       // A formula may contain < and quoted }; skip to its end.
-      if (char === "{" && this.src[end + 1] === "=") {
+      if (char === "{") {
         const close = this.formulaEnd(end + 2, this.src.length);
         if (close !== -1) {
           end = close + 1;
@@ -504,10 +499,10 @@ class Parser {
     siblings.push({ type: "text", parts, loc: this.loc(start, end) });
   }
 
-  // The `}` that ends a formula starting at `from` (after `{=`), skipping
+  // The `}` that ends a formula starting at `from` (after `{`), skipping
   // quoted text in it; -1 if there is none before `end`. The search stops
   // after the longest formula allowed (so markup can't make parsing
-  // quadratic) and at a closing tag (an unclosed `{=` doesn't swallow the
+  // quadratic) and at a closing tag (an unclosed `{` doesn't swallow the
   // tags after it).
   private formulaEnd(from: number, end: number) {
     end = Math.min(end, from + formulaLimits.maxLength + 1);
@@ -527,8 +522,8 @@ class Parser {
     return -1;
   }
 
-  // Text and attribute values: entities, `\{` `\}` `\\` escapes, `{path}`
-  // interpolation, and `{= expr}` formulas. Text collapses whitespace like
+  // Text and attribute values: entities, `\{` `\}` `\\` escapes, and
+  // `{expr}` formulas. Text collapses whitespace like
   // HTML and is trimmed.
   private parts(start: number, end: number, collapse: boolean): TextPart[] {
     const parts: TextPart[] = [];
@@ -571,35 +566,12 @@ class Parser {
         }
       }
 
-      if (char === "{" && next === "=") {
-        const close = this.formulaEnd(index + 2, end);
+      if (char === "{") {
+        const close = this.formulaEnd(index + 1, end);
         if (close === -1) {
           this.report(
             "unterminated-formula",
-            `{= starts a formula but has no closing } (within ${formulaLimits.maxLength.toLocaleString("en-US")} characters); write \\{ for a literal {`,
-            index,
-            index + 2,
-          );
-          buffer += this.src.slice(index, end);
-          index = end;
-          continue;
-        }
-        flush();
-        parts.push({
-          formula: this.src.slice(index + 2, close),
-          loc: this.loc(index, close + 1),
-          bodyStart: this.position(index + 2),
-        });
-        index = close + 1;
-        continue;
-      }
-
-      if (char === "{") {
-        const close = this.src.indexOf("}", index + 1);
-        if (close === -1 || close >= end) {
-          this.report(
-            "unterminated-interpolation",
-            "{ starts a field reference but has no closing }; write \\{ for a literal {",
+            `{ starts a formula but has no closing } (within ${formulaLimits.maxLength.toLocaleString("en-US")} characters); write \\{ for a literal {`,
             index,
             index + 1,
           );
@@ -607,19 +579,23 @@ class Parser {
           index = end;
           continue;
         }
-        const path = this.src.slice(index + 1, close).trim();
-        if (!path) {
-          this.report("empty-interpolation", "{} needs a field path, like {hitPoints}", index, close + 1);
-        } else if (!isValidSheetPath(path)) {
+        const formula = this.src.slice(index + 1, close);
+        if (!formula.trim()) {
+          this.report("empty-formula", "{} needs a formula, like {hitPoints}", index, close + 1);
+        } else if (/^\s*=(?!=)/.test(formula)) {
           this.report(
-            "invalid-path",
-            invalidPathMessage(path),
+            "formula-syntax",
+            "Write {…} without the =: every {…} is a formula",
             index,
             close + 1,
           );
         } else {
           flush();
-          parts.push({ path, loc: this.loc(index, close + 1) });
+          parts.push({
+            formula,
+            loc: this.loc(index, close + 1),
+            bodyStart: this.position(index + 1),
+          });
         }
         index = close + 1;
         continue;

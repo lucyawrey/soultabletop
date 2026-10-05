@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  isFormulaPart,
   isValidSheetPath,
   parseSheetMarkup,
   sheetParseLimits,
@@ -27,7 +26,7 @@ function codes(source: string) {
 // A text part without its location.
 function partShape(part: TextPart) {
   if (typeof part === "string") return part;
-  return isFormulaPart(part) ? { formula: part.formula } : { path: part.path };
+  return { formula: part.formula };
 }
 
 // Strips locations so trees can be compared structurally.
@@ -120,7 +119,7 @@ describe("text", () => {
     const result = parseSheetMarkup("Hi {name}, level { stats.level }!");
     expect(result.diagnostics).toEqual([]);
     const node = text(result.nodes[0]);
-    expect(shape([node])).toEqual([["Hi ", { path: "name" }, ", level ", { path: "stats.level" }, "!"]]);
+    expect(shape([node])).toEqual([["Hi ", { formula: "name" }, ", level ", { formula: " stats.level " }, "!"]]);
     const interpolation = node.parts[1];
     expect(typeof interpolation === "object" && interpolation.loc).toEqual({
       start: { line: 1, column: 4, offset: 3 },
@@ -130,12 +129,12 @@ describe("text", () => {
 
   it("supports root paths, the current item, and numeric segments", () => {
     const node = text(parseSheetMarkup("{/name} {.} {attacks.0.name}").nodes[0]);
-    expect(shape([node])).toEqual([[{ path: "/name" }, " ", { path: "." }, " ", { path: "attacks.0.name" }]]);
+    expect(shape([node])).toEqual([[{ formula: "/name" }, " ", { formula: "." }, " ", { formula: "attacks.0.name" }]]);
   });
 
   it("keeps whitespace between interpolations but trims the ends", () => {
     const node = text(parseSheetMarkup("  {a}   {b}  ").nodes[0]);
-    expect(shape([node])).toEqual([[{ path: "a" }, " ", { path: "b" }]]);
+    expect(shape([node])).toEqual([[{ formula: "a" }, " ", { formula: "b" }]]);
   });
 
   it("handles escapes", () => {
@@ -168,7 +167,7 @@ describe("attribute values", () => {
     expect(shape(result.nodes)).toEqual([
       {
         tag: "Tracker",
-        attrs: { field: ["hp"], max: [{ path: "hpMax" }], label: ["  Hit  Points "] },
+        attrs: { field: ["hp"], max: [{ formula: "hpMax" }], label: ["  Hit  Points "] },
         selfClosing: true,
         children: [],
       },
@@ -320,19 +319,18 @@ describe("errors and recovery", () => {
     expect(shape(result.nodes)).toEqual([["a"]]);
   });
 
-  it("reports bad interpolations and drops them", () => {
-    const result = parseSheetMarkup("a {} b {not a path} c {open");
+  it("reports empty and unterminated formulas and drops them", () => {
+    const result = parseSheetMarkup("a {} b {open");
     expect(result.diagnostics.map((item) => item.code)).toEqual([
-      "empty-interpolation",
-      "invalid-path",
-      "unterminated-interpolation",
+      "empty-formula",
+      "unterminated-formula",
     ]);
-    expect(shape(result.nodes)).toEqual([["a b c {open"]]);
+    expect(shape(result.nodes)).toEqual([["a b {open"]]);
   });
 
   it("does not let an unterminated interpolation in text run past the next tag", () => {
     const result = parseSheetMarkup("<Note>{oops</Note><Divider />");
-    expect(result.diagnostics.map((item) => item.code)).toEqual(["unterminated-interpolation"]);
+    expect(result.diagnostics.map((item) => item.code)).toEqual(["unterminated-formula"]);
     expect(result.nodes).toHaveLength(2);
   });
 
@@ -342,7 +340,7 @@ describe("errors and recovery", () => {
     ).toEqual([
       "unquoted-attribute",
       "duplicate-attribute",
-      "empty-interpolation",
+      "empty-formula",
       "unexpected-close-tag",
       "unclosed-element",
     ]);
@@ -396,58 +394,49 @@ describe("isValidSheetPath", () => {
   ])("rejects the reserved %j", (path) => {
     expect(isValidSheetPath(path)).toBe(false);
   });
-  it("names reserved keys in the diagnostic", () => {
-    const { diagnostics } = parseSheetMarkup("{stats.__proto__}");
-    expect(diagnostics).toMatchObject([
-      {
-        code: "invalid-path",
-        message: "\"stats.__proto__\" uses a reserved name (__proto__, constructor, prototype)",
-      },
-    ]);
-  });
 });
 
 describe("formulas", () => {
-  it("reads {= expr} in text, past < and quoted }", () => {
-    const { nodes, diagnostics } = parseSheetMarkup("<Note>A {= a <b} and {= concat('}', x)} end</Note>");
+  it("reads {expr} in text, past < and quoted }", () => {
+    const { nodes, diagnostics } = parseSheetMarkup("<Note>A {a <b} and {concat('}', x)} end</Note>");
     expect(diagnostics).toEqual([]);
     expect(shape(nodes)).toEqual([
       {
         tag: "Note",
         attrs: {},
-        children: [["A ", { formula: " a <b" }, " and ", { formula: " concat('}', x)" }, " end"]],
+        children: [["A ", { formula: "a <b" }, " and ", { formula: "concat('}', x)" }, " end"]],
       },
     ]);
   });
 
   it("records where the formula body starts", () => {
-    const text = parseSheetMarkup("x\n  {=  hp}").nodes[0] as SheetText;
+    const text = parseSheetMarkup("x\n  {hp}").nodes[0] as SheetText;
     expect(text.parts[1]).toMatchObject({
-      formula: "  hp",
-      bodyStart: { line: 2, column: 5, offset: 6 },
-      loc: { start: { line: 2, column: 3 }, end: { line: 2, column: 10 } },
+      formula: "hp",
+      bodyStart: { line: 2, column: 4, offset: 5 },
+      loc: { start: { line: 2, column: 3 }, end: { line: 2, column: 7 } },
     });
   });
 
-  it("reads {= } in attribute values, bounded by the quotes", () => {
-    const node = element(parseSheetMarkup('<Tracker max="{= a > 1}" />').nodes[0]);
-    expect(node.attrs[0]!.value).toMatchObject([{ formula: " a > 1" }]);
+  it("reads {} in attribute values, bounded by the quotes", () => {
+    const node = element(parseSheetMarkup('<Tracker max="{a > 1}" />').nodes[0]);
+    expect(node.attrs[0]!.value).toMatchObject([{ formula: "a > 1" }]);
   });
 
-  it("keeps \\{= literal and reports an unclosed {=", () => {
-    expect(shape(parseSheetMarkup("\\{= a}").nodes)).toEqual([["{= a}"]]);
-    expect(parseSheetMarkup("<Note>{= a</Note>").diagnostics).toMatchObject([
+  it("keeps \\{literal and reports an unclosed {", () => {
+    expect(shape(parseSheetMarkup("\\{a}").nodes)).toEqual([["{a}"]]);
+    expect(parseSheetMarkup("<Note>{a</Note>").diagnostics).toMatchObject([
       { code: "unterminated-formula" },
     ]);
   });
 
   it("parses old markup exactly as before", () => {
-    const old = parseSheetMarkup('<Section title="{name} \\{x\\}">Hi {hp}, {= }</Section>');
+    const old = parseSheetMarkup('<Section title="{name} \\{x\\}">Hi {hp}, {}</Section>');
     expect(shape(old.nodes)).toEqual([
       {
         tag: "Section",
-        attrs: { title: [{ path: "name" }, " {x}"] },
-        children: [["Hi ", { path: "hp" }, ", ", { formula: " " }]],
+        attrs: { title: [{ formula: "name" }, " {x}"] },
+        children: [["Hi ", { formula: "hp" }, ","]],
       },
     ]);
   });
@@ -472,7 +461,7 @@ describe("formulas", () => {
 
 describe("unclosed formulas", () => {
   it("parse in linear time", () => {
-    const parse = (count: number) => parseSheetMarkup(`<Sheet><Section>${"{=".repeat(count)}</Section></Sheet>`);
+    const parse = (count: number) => parseSheetMarkup(`<Sheet><Section>${"{".repeat(count)}</Section></Sheet>`);
     const time = (count: number) => {
       const start = performance.now();
       parse(count);
@@ -487,7 +476,7 @@ describe("unclosed formulas", () => {
 
   it("don't swallow the tags after them", () => {
     const { nodes, diagnostics } = parseSheetMarkup(
-      '<Sheet><Section title="A">Hi {= level <Number field="x" /></Section><Section title="B">{name}</Section></Sheet>',
+      '<Sheet><Section title="A">Hi {level <Number field="x" /></Section><Section title="B">{name}</Section></Sheet>',
     );
     expect(diagnostics.map((item) => item.code)).toContain("unterminated-formula");
     const sheet = element(nodes[0]);

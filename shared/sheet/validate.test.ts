@@ -148,7 +148,7 @@ describe("valid sheets", () => {
     expect(node.attrs).toMatchObject({
       field: "hp",
       min: -3,
-      max: { path: "hpMax" },
+      max: { source: "hpMax", type: { kind: "number" } },
       step: 0.5,
       live: false,
       locked: true,
@@ -323,14 +323,12 @@ describe("paths", () => {
 
   it("checks {paths} in text and attributes", () => {
     expect(errorCodes(`<Note>{nope}</Note><Section title="{nope2}" />`)).toEqual(["unknown-field", "unknown-field"]);
-    expect(messages(`<Note>{stats}</Note>`)).toEqual([
-      "warning interpolates-object: {stats} is an object and will show as raw data",
-    ]);
+    expect(errorCodes(`<Note>{stats}</Note>`)).toEqual(["formula-result-type"]);
   });
 
   it("requires number attributes given as {path} to point at numbers", () => {
     expect(messages(`<Tracker field="hp" max="{notes}" />`)).toEqual([
-      "error invalid-attribute: max=\"{notes}\" must point at a number field, but it's a text field",
+      "error formula-result-type: max must be a number, but {notes} gives text",
     ]);
   });
 });
@@ -564,8 +562,8 @@ describe("formulas", () => {
     });
     const [syntax] = compile('<Value formula="hp + * 2" />').diagnostics;
     expect(syntax).toMatchObject({ code: "formula-syntax", loc: { start: { line: 1, column: 22 } } });
-    const [inText] = compile("<Note>HP {= hp +}</Note>").diagnostics;
-    expect(inText).toMatchObject({ code: "formula-syntax", loc: { start: { column: 17 } } });
+    const [inText] = compile("<Note>HP {hp +}</Note>").diagnostics;
+    expect(inText).toMatchObject({ code: "formula-syntax", loc: { start: { column: 15 } } });
   });
 
   it("reports type errors, unknown functions, arity, and dice", () => {
@@ -583,26 +581,26 @@ describe("formulas", () => {
     );
   });
 
-  it("compiles {= } in text and attributes", () => {
-    const { nodes, diagnostics } = compile('<Section title="HP {= hp * 2}">Max {= hpMax}</Section>');
+  it("compiles {} in text and attributes", () => {
+    const { nodes, diagnostics } = compile('<Section title="HP {hp * 2}">Max {hpMax}</Section>');
     expect(diagnostics).toEqual([]);
     const section = nodes[0] as ValidatedElement;
-    expect((section.attrs.title as unknown[])[1]).toMatchObject({ formula: " hp * 2", ast: { type: "binary" } });
+    expect((section.attrs.title as unknown[])[1]).toMatchObject({ formula: "hp * 2", ast: { type: "binary" } });
     expect(section.children[0]).toMatchObject({ type: "text", parts: ["Max ", { ast: { type: "path" } }] });
-    expect(errorCodes("<Note>{= tags}</Note>")).toEqual(["formula-result-type"]);
+    expect(errorCodes("<Note>{tags}</Note>")).toEqual(["formula-result-type"]);
   });
 
-  it("takes number attributes as {= formula}", () => {
-    expect(messages('<Tracker field="hp" max="{= hpMax + stats.str}" />')).toEqual([]);
-    const node = element('<Tracker field="hp" max="{= hpMax * 2}" />');
-    expect(node.attrs.max).toMatchObject({ source: " hpMax * 2", type: { kind: "number" } });
-    expect(messages('<Tracker field="hp" max="{= notes}" />')).toEqual([
-      "error formula-result-type: max must be a number, but {= notes} gives text",
+  it("takes number attributes as {formula}", () => {
+    expect(messages('<Tracker field="hp" max="{hpMax + stats.str}" />')).toEqual([]);
+    const node = element('<Tracker field="hp" max="{hpMax * 2}" />');
+    expect(node.attrs.max).toMatchObject({ source: "hpMax * 2", type: { kind: "number" } });
+    expect(messages('<Tracker field="hp" max="{notes}" />')).toEqual([
+      "error formula-result-type: max must be a number, but {notes} gives text",
     ]);
   });
 
   it("limits formulas per sheet", () => {
-    const many = Array.from({ length: 2_001 }, () => "{= 1}").join(" ");
+    const many = Array.from({ length: 2_001 }, () => "{1}").join(" ");
     expect(errorCodes(`<Note>${many}</Note>`)).toEqual(["formula-too-large"]);
   });
 });
@@ -701,36 +699,38 @@ describe("newSheetErrors", () => {
 });
 
 describe("show", () => {
-  it("takes one {= formula} or one {field}, on every tag but Column", () => {
-    expect(messages('<Section show="{= hp > 0}"><Note show="{alive}">x</Note></Section>')).toEqual([]);
-    expect(messages('<Tabs><Tab label="A" show="{= hp > 1}">a</Tab></Tabs>')).toEqual([]);
-    expect(messages('<Table field="attacks"><Column field="name" /><RowDetails show="{= bonus > 0}">x</RowDetails></Table>')).toEqual([]);
-    expect(messages('<Value field="hp" show=" {= hp > 1} " />')).toEqual([]);
-    expect(messages('<Table field="attacks"><Column field="name" show="{= true}" /></Table>')).toEqual([
+  it("takes a bare formula, on every tag but Column", () => {
+    expect(messages('<Section show="hp > 0"><Note show="alive">x</Note></Section>')).toEqual([]);
+    expect(messages('<Tabs><Tab label="A" show="hp > 1">a</Tab></Tabs>')).toEqual([]);
+    expect(messages('<Table field="attacks"><Column field="name" /><RowDetails show="bonus > 0">x</RowDetails></Table>')).toEqual([]);
+    expect(messages('<Value field="hp" show=" hp > 1 " />')).toEqual([]);
+    expect(messages('<Table field="attacks"><Column field="name" show="true" /></Table>')).toEqual([
       "error unknown-attribute: <Column> has no show attribute; use show on the Table, or a formula in the column",
     ]);
   });
 
-  it("rejects anything else", () => {
-    const rule = "error invalid-attribute: show must be one {= formula} or one {field}, like show=\"{= level >= 5}\"";
-    expect(messages('<Note show="true">x</Note>')).toEqual([rule]);
-    expect(messages('<Note show="{alive}{alive}">x</Note>')).toEqual([rule]);
-    expect(messages('<Note show="x {alive}">x</Note>')).toEqual([rule]);
+  it("rejects braces and an empty formula", () => {
+    expect(messages('<Note show="{alive}">x</Note>')).toEqual([
+      'error formula-syntax: Unexpected "{"; inside a formula, refer to fields by name, like level, without braces',
+    ]);
+    expect(messages('<Note show="">x</Note>')).toEqual([
+      'error invalid-attribute: show needs a formula, like show="level >= 5"',
+    ]);
   });
 
   it("needs true, false, or nothing", () => {
-    expect(messages('<Note show="{= hp}">x</Note>')).toEqual([
-      "error formula-result-type: show must give true or false, but {= hp} gives a number",
+    expect(messages('<Note show="hp">x</Note>')).toEqual([
+      "error formula-result-type: show must give true or false, but hp gives a number",
     ]);
-    expect(messages('<Note show="{notes}">x</Note>')[0]).toMatch(
-      /^error formula-result-type: show="\{notes\}" must point at a boolean field, but it's a text field/,
+    expect(messages('<Note show="notes">x</Note>')[0]).toMatch(
+      /^error formula-result-type: show must give true or false, but notes gives text/,
     );
-    expect(messages('<Note show="{= extra}">x</Note>')).toEqual([]);
+    expect(messages('<Note show="extra">x</Note>')).toEqual([]);
   });
 
   it("evaluates in the tag's scope and still validates hidden content", () => {
-    expect(messages('<List field="attacks"><Note show="{= bonus > 0}">{name}</Note></List>')).toEqual([]);
-    expect(errorCodes('<Section show="{= false}"><Number field="nope" /></Section>')).toEqual(["unknown-field"]);
+    expect(messages('<List field="attacks"><Note show="bonus > 0">{name}</Note></List>')).toEqual([]);
+    expect(errorCodes('<Section show="false"><Number field="nope" /></Section>')).toEqual(["unknown-field"]);
   });
 });
 
@@ -781,13 +781,13 @@ describe("formula types from the schema", () => {
 
 describe("dynamic number attributes", () => {
   it("take {…} only where they're computed when rendering", () => {
-    expect(messages('<Heading level="{= 2}">Hi</Heading>')).toEqual([
+    expect(messages('<Heading level="{2}">Hi</Heading>')).toEqual([
       "error invalid-attribute: level on <Heading> must be a plain number, not {…}",
     ]);
     expect(errorCodes('<Grid cols="{hp}">x</Grid>')).toEqual(["invalid-attribute"]);
-    expect(errorCodes('<Section span="{= 2}">x</Section>')).toEqual(["invalid-attribute"]);
-    expect(messages('<Number field="hp" min="{= 0}" max="{hpMax}" step="{= 1}" />')).toEqual([]);
-    expect(messages('<Tracker field="hp" max="{= hpMax}" />')).toEqual([]);
+    expect(errorCodes('<Section span="{2}">x</Section>')).toEqual(["invalid-attribute"]);
+    expect(messages('<Number field="hp" min="{0}" max="{hpMax}" step="{1}" />')).toEqual([]);
+    expect(messages('<Tracker field="hp" max="{hpMax}" />')).toEqual([]);
   });
 });
 
@@ -835,8 +835,8 @@ describe("review follow-ups", () => {
     ]);
   });
 
-  it("explains a quote that cuts a {= } attribute short", () => {
-    expect(messages('<Section title="{= concat("a", hp)}">x</Section>')).toContain(
+  it("explains a quote that cuts a {} attribute short", () => {
+    expect(messages('<Section title="{concat("a", hp)}">x</Section>')).toContain(
       "error formula-syntax: The formula ends at this \"; inside title=\"…\", write text in single quotes, like 'expert'",
     );
   });

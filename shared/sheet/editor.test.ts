@@ -97,15 +97,15 @@ describe("markupFormulaRanges", () => {
     return markupFormulaRanges(doc).map((range) => ({ text: doc.slice(range.from, range.to), params: range.params }));
   }
 
-  it("finds formula attributes and {= } in text and attributes", () => {
+  it("finds formula attributes and {} in text and attributes", () => {
     expect(
-      ranges(`<Value formula="a + b" /><Note>x {= c <d} y {= concat('}', e)}</Note><Tracker max="{= f}" show='{= g}' />`),
+      ranges(`<Value formula="a + b" /><Note>x {c <d} y {concat('}', e)}</Note><Tracker max="{f}" show='g' />`),
     ).toEqual([
       { text: "a + b", params: [] },
-      { text: " c <d", params: [] },
-      { text: " concat('}', e)", params: [] },
-      { text: " f", params: [] },
-      { text: " g", params: [] },
+      { text: "c <d", params: [] },
+      { text: "concat('}', e)", params: [] },
+      { text: "f", params: [] },
+      { text: "g", params: [] },
     ]);
   });
 
@@ -122,8 +122,8 @@ describe("markupFormulaRanges", () => {
     ]);
   });
 
-  it("skips comments and escapes, and runs an unclosed {= to the line end", () => {
-    expect(ranges("<!-- {= no} --> \\{= no} {= yes\nnext")).toEqual([{ text: " yes", params: [] }]);
+  it("skips comments and escapes, and runs an unclosed {to the line end", () => {
+    expect(ranges("<!-- {no} --> \\{no} {yes\nnext")).toEqual([{ text: "yes", params: [] }]);
   });
 });
 
@@ -147,7 +147,7 @@ describe("markupFormulaRanges on unclosed formulas", () => {
   it("runs in linear time", () => {
     const time = (count: number) => {
       const start = performance.now();
-      markupFormulaRanges(`<Note>${"{=".repeat(count)}</Note>`);
+      markupFormulaRanges(`<Note>${"{".repeat(count)}</Note>`);
       return performance.now() - start;
     };
     time(5_000); // Warm up the JIT.
