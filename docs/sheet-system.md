@@ -147,12 +147,12 @@ View mode renders formatted values, edit mode renders the input.
 | `Text` | `multiline`, `placeholder` | string | `UInput` / `UTextarea` |
 | `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "exceptZero"` so the input shows "+3" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
 | `Checkbox` / `Toggle` | — | boolean | `UCheckbox` / `USwitch` |
-| `Select` | `options` (comma list, req) | string | `USelect` |
-| `Tags` | — | array of string | `UInputTags` |
+| `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
+| `Tags` | — | array of string (not of choices) | `UInputTags` |
 | `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
 | `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format`, `formula` | any | read-only in both modes |
-| `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string (not a struct or an array of objects) | picks input from schema type (decided); generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
+| `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
 
@@ -163,6 +163,28 @@ Label resolution: `label` attr → schema field `label` → humanized field name
 `description`. (decided: `ContentFieldSchema` entries gain optional `label` and `description`.)
 
 Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is not shown (a Column's header is left empty) but still names the input for screen readers. An explicit `label=""` is not used for this: it stays "no label given" and falls back to the schema label, so the two are not confused. `List` and `Table` already show no label unless `label` is given.
+
+### Choice fields (decided 2026-10-04)
+- A `string` or `number` schema field may have `options: [{ value, label? }]` (1–200, values unique and of the
+  field's type, labels 1–100 characters, defaulting to the value as text). It stays a string or number everywhere
+  else (formula types, binding, formatting); `fieldOptions`, `choiceLabel`, and `fieldOptionsError` are in
+  `shared/content-schema.ts`. Number options let ranks be stored as `0`–`4` and shown as Untrained…Legendary.
+- Content save rejects a value that isn't listed, whatever the strictness; absent means no choice, and `""` is only
+  valid if listed. A required choice field starts at its first option (`defaultContentData`, new List items, sample
+  data). Changing options never touches saved data: an unlisted stored value shows as it is, and a `Select` lists it
+  as "… (not an option)" until it's changed.
+- `Select` without `options` uses the schema's options; with `options` on a field that has schema options it's a
+  warning (`options-ignored`) and the schema's list wins, so adding options never breaks a sheet. On a field without
+  schema options the attribute works as before (and is required). `Field`, `Column`, and generated sheets show a
+  `Select` for a field with options.
+- Free inputs (`Text`, `Number`, `Tracker`, `Markdown`, `Image`, `Tags`) on a field with options, or on an array of
+  them, are an error (`wrong-field-type`); so is `Field` with a `formula` on one (`invalid-attribute`). Formula-only
+  tags are unaffected.
+- Labels, not values, show wherever a choice field is shown as text: view mode, `display="text"`, `Value` and
+  `Column` bound by `field`, and a `{…}` that is just a path to the field (`{rank}` → "Expert"). Any other formula
+  sees the stored value (`{rank + 0}` → `2`), and a formula's result is never relabeled.
+- The schema builder shows an **Options** checkbox on string and number fields (and array items), with value and
+  label rows reordered by dragging (`app/components/schema/Options.vue`).
 
 ### Content fields: references and local data (decided)
 - Schema type `{ type: "content", contentTypeId, allow: "reference" | "local" | "both", required }` replaces the old
@@ -257,6 +279,8 @@ the item):
 |---|---|---|
 | Path not in schema | error | warning\* (data may hold extra keys) |
 | Tag can't bind that field type (e.g. `Number` on a string) | error | error |
+| Free input on a field with options (e.g. `Text` on a choice field) | error | error |
+| `Select` with its own `options` on a field with schema options | warning (`options-ignored`; the schema wins) | same |
 | Field is `scalar` | binds `Field`, `Value`, `Column`; no paths below it | same |
 | Path goes into a free-form `object` | warning\* (not checked; shows whatever the data holds) | same |
 | `List`/`Table` on a non-array | error | error |
@@ -285,7 +309,8 @@ ordinary markup, so it goes through the same parse/validate/render path as autho
   (the page header already shows the name, so no heading), then a `<Field>` per field.
 - `struct` field → its own `Section` titled by label, recursing. Free-form `object` → a `Section` with a `<Field>` (JSON editor).
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
-- Array of strings → `Tags`; other primitive arrays → `List field="."`.
+- Array of strings → `Tags` (of choices → `Field`, a multiple select); other primitive arrays → `List field="."`.
+  A field with options gets a `Field`, which shows a `Select`.
 - `resourceLink` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)
   showing the referenced content type's primitive fields, one level deep, plus the ref/custom picker in edit mode.
 - Order = schema key order. `content_type.schema` is `jsonb`, which does not preserve key order, so it becomes

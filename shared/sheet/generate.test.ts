@@ -214,3 +214,22 @@ describe("generatedSheetDefaults", () => {
     });
   });
 });
+
+describe("generated sheets with choice fields", () => {
+  it("uses Field for choice fields and arrays of them, and validates", () => {
+    const choiceSchemas: SheetSchemas = {
+      root: {
+        hasStrictSchema: true,
+        schema: {
+          size: { type: "string", options: [{ value: "s" }] },
+          ranks: { type: "array", itemType: { type: "number", options: [{ value: 1 }] } },
+        },
+      },
+      types: {},
+    };
+    const markup = generateSheetMarkup(choiceSchemas);
+    expect(markup).toContain('<Field field="size" />');
+    expect(markup).toContain('<Field field="ranks" />');
+    expect(compileSheet(markup, choiceSchemas).diagnostics).toEqual([]);
+  });
+});

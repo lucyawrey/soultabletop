@@ -7,9 +7,12 @@
 import {
   fieldKeyPattern,
   isReservedKey,
+  MAX_FIELD_OPTIONS,
+  MAX_OPTION_LABEL_LENGTH,
   NAME_FIELD,
   RESOURCE_LINK_KINDS,
   type ContentFieldAllow,
+  type ContentFieldOption,
   type ContentFieldSchema,
   type ContentTypeSchema,
   type ResourceLinkKind,
@@ -36,6 +39,17 @@ export interface BuilderNode {
   allow: ContentFieldAllow;
   // `resourceLink`: "" for any kind.
   kind: ResourceLinkKind | "";
+  // `string` and `number`: whether it's a choice field, and its options.
+  hasOptions: boolean;
+  options: BuilderOption[];
+}
+
+// One option of a choice field. `value` is text as typed; a `number` field's
+// values must parse as numbers to save.
+export interface BuilderOption {
+  id: string;
+  value: string;
+  label: string;
 }
 
 export interface BuilderField extends BuilderNode {
@@ -81,7 +95,13 @@ export function newBuilderNode(type: BuilderFieldType = "string"): BuilderNode {
     contentTypeId: "",
     allow: "both",
     kind: "",
+    hasOptions: false,
+    options: [],
   };
+}
+
+export function newBuilderOption(value = "", label = ""): BuilderOption {
+  return { id: newBuilderId(), value, label };
 }
 
 export function newBuilderField(key = ""): BuilderField {
@@ -100,6 +120,12 @@ function toNode(field: ContentFieldSchema): BuilderNode {
     node.allow = field.allow;
   }
   if (field.type === "resourceLink") node.kind = field.kind ?? "";
+  if ((field.type === "string" || field.type === "number") && field.options) {
+    node.hasOptions = true;
+    node.options = field.options.map((option) =>
+      newBuilderOption(String(option.value), option.label ?? ""),
+    );
+  }
   return node;
 }
 
@@ -141,12 +167,38 @@ function fromNode(node: BuilderNode): ContentFieldSchema {
         ...base,
       };
     case "string":
+      return {
+        type: "string",
+        ...(node.hasOptions ? { options: builderOptions(node, (value) => value) } : {}),
+        ...base,
+      };
     case "number":
+      return {
+        type: "number",
+        ...(node.hasOptions ? { options: builderOptions(node, (value) => Number(value.trim())) } : {}),
+        ...base,
+      };
     case "boolean":
     case "scalar":
     case "object":
       return { type: node.type, ...base };
   }
+}
+
+function builderOptions<V extends string | number>(
+  node: BuilderNode,
+  parse: (value: string) => V,
+): ContentFieldOption<V>[] {
+  return node.options.map((option) => ({
+    value: parse(option.value),
+    ...(option.label.trim() ? { label: option.label.trim() } : {}),
+  }));
+}
+
+// A number option's value, or undefined if it doesn't parse.
+function parseNumberOption(value: string) {
+  const number = Number(value.trim());
+  return value.trim() && Number.isFinite(number) ? number : undefined;
 }
 
 export function builderToSchema(fields: BuilderField[]): ContentTypeSchema {
@@ -156,15 +208,35 @@ export function builderToSchema(fields: BuilderField[]): ContentTypeSchema {
 }
 
 // Problems that block saving: bad or duplicate keys and the reserved
-// top-level `name` (by node id), and content fields without a content type
-// (by `contentTypeErrorId(node id)`).
+// top-level `name` (by node id), content fields without a content type (by
+// `contentTypeErrorId(node id)`), choice fields without options (by
+// `optionsErrorId(node id)`), and bad option values or labels (by option id).
 export function builderErrors(fields: BuilderField[]): Map<string, string> {
   const errors = new Map<string, string>();
   const visitNode = (node: BuilderNode) => {
     if (node.type === "content" && !node.contentTypeId)
       errors.set(contentTypeErrorId(node.id), "Choose a content type");
+    if ((node.type === "string" || node.type === "number") && node.hasOptions)
+      visitOptions(node);
     if (node.type === "array") visitNode(node.item ?? newBuilderNode());
     if (node.type === "struct") visitList(node.fields, false);
+  };
+  const visitOptions = (node: BuilderNode) => {
+    if (!node.options.length)
+      errors.set(optionsErrorId(node.id), "Add at least one option");
+    else if (node.options.length > MAX_FIELD_OPTIONS)
+      errors.set(optionsErrorId(node.id), `Use at most ${MAX_FIELD_OPTIONS} options`);
+    const seen = new Set<string | number>();
+    for (const option of node.options) {
+      const value =
+        node.type === "number" ? parseNumberOption(option.value) : option.value;
+      if (value === undefined) errors.set(option.id, "Enter a number");
+      else if (value === "") errors.set(option.id, "Enter a value");
+      else if (seen.has(value)) errors.set(option.id, "This value is listed twice");
+      else if (option.label.trim().length > MAX_OPTION_LABEL_LENGTH)
+        errors.set(option.id, `Use at most ${MAX_OPTION_LABEL_LENGTH} characters for the label`);
+      if (value !== undefined) seen.add(value);
+    }
   };
   const visitList = (list: BuilderField[], topLevel: boolean) => {
     const seen = new Set<string>();
@@ -194,6 +266,10 @@ export function contentTypeErrorId(nodeId: string) {
   return `${nodeId}:contentType`;
 }
 
+export function optionsErrorId(nodeId: string) {
+  return `${nodeId}:options`;
+}
+
 // Moves an item within one list (drag and drop).
 export function moveBuilderItem<T>(list: T[], from: number, to: number) {
   if (from === to || from < 0 || from >= list.length) return;
@@ -220,6 +296,19 @@ function isFieldShape(value: unknown, depth: number): boolean {
       typeof field.contentTypeId === "string" &&
       ["reference", "local", "both"].includes(field.allow as string)
     );
+  if (field.options !== undefined) {
+    if (field.type !== "string" && field.type !== "number") return false;
+    return (
+      Array.isArray(field.options) &&
+      field.options.every(
+        (option: unknown) =>
+          !!option &&
+          typeof option === "object" &&
+          typeof (option as ContentFieldOption).value === field.type &&
+          ["undefined", "string"].includes(typeof (option as ContentFieldOption).label),
+      )
+    );
+  }
   return true;
 }
 
@@ -246,7 +335,7 @@ export function parseSchemaJson(
   if (!isSchemaShape(value, 0))
     return {
       error:
-        "The schema must be an object of fields, each with a known type (and itemType, entries, contentTypeId and allow, or a known kind where needed).",
+        "The schema must be an object of fields, each with a known type (and itemType, entries, contentTypeId and allow, a known kind, or options of the field's type where needed).",
     };
   return { schema: value as ContentTypeSchema };
 }
