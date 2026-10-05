@@ -13,6 +13,7 @@ import {
 import type { TextPart } from "#shared/sheet/parser";
 import type { SheetDisplay } from "#shared/sheet/registry";
 import {
+  entryScopes,
   evaluateSheetFormula,
   formatFormulaValue,
   sheetCondition,
@@ -192,7 +193,11 @@ export function useSheet() {
     scope,
     resolve,
     evaluate,
-    items: (path: SheetPath) => itemScopes(resolve(path)),
+    // The rows of a List or Table: its array's items, or its struct's entries.
+    rows: (node: ValidatedElement) => {
+      const list = resolve(node.binding!.path);
+      return node.entries ? entryScopes(list, node.entries) : itemScopes(list);
+    },
     format: (value: unknown, format?: "plain" | "signed") =>
       formatSheetValue(value, context.refs.value, format),
     // A formula value as text ("" for errors and nothing).

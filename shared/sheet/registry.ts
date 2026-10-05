@@ -49,6 +49,10 @@ export type BindKind =
   // An array of choice values (items with schema options).
   | "choiceArray"
   | "objectArray"
+  // A struct whose entries are all alike (see `structRows`), and one whose
+  // alike entries are structs.
+  | "entries"
+  | "objectEntries"
   | "anyValue";
 
 export type ChildrenRule =
@@ -477,7 +481,7 @@ const tagList: TagSpec[] = [
     name: "List",
     category: "repeater",
     description:
-      "Repeats its content for each item of an array; paths inside are relative to the item",
+      "Repeats its content for each item of an array, or each entry of a struct; paths inside are relative to the item",
     attrs: {
       field: { ...fieldAttrs.field!, required: true },
       label: fieldAttrs.label!,
@@ -489,16 +493,16 @@ const tagList: TagSpec[] = [
       addLabel: text("Text of the add button (default \"Add\")"),
     },
     children: "any",
-    binds: ["array"],
+    binds: ["array", "entries"],
     itemScope: true,
   },
   {
     name: "Table",
     category: "repeater",
-    description: "An array of objects as a table; contains Column tags",
+    description: "An array of objects, or a struct of structs, as a table; contains Column tags",
     attrs: { field: { ...fieldAttrs.field!, required: true }, label: fieldAttrs.label! },
     children: { only: ["Column", "RowDetails"] },
-    binds: ["objectArray"],
+    binds: ["objectArray", "objectEntries"],
     itemScope: true,
   },
   {

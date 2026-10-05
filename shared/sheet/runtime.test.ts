@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ContentFieldSchema } from "../content-schema";
 import {
   defaultSheetValue,
+  entryScopes,
   evaluateSheetFormula,
   setSheetValue,
   sheetCondition,
@@ -98,7 +99,7 @@ describe("resolveSheetPath", () => {
 
   it("gives item scopes no path when the list came through a reference", () => {
     const scopes = itemScopes({ value: ["a"], path: null });
-    expect(scopes).toEqual([{ value: "a", path: null }]);
+    expect(scopes).toEqual([{ value: "a", path: null, item: { key: 0 } }]);
     expect(itemScopes({ value: "not a list", path: [] })).toEqual([]);
   });
 });
@@ -547,5 +548,62 @@ describe("choice fields", () => {
         choiceSchemas,
       ),
     ).toEqual({ size: "m" });
+  });
+});
+
+describe("struct entry rows", () => {
+  const rank = { type: "struct" as const, entries: { rank: { type: "number" as const } } };
+  const structSchemas: SheetSchemas = {
+    root: {
+      hasStrictSchema: true,
+      schema: {
+        skills: { type: "struct", entries: { acrobatics: rank, arcana: { ...rank, label: "Arcana Lore" } } },
+        attributes: { type: "struct", entries: { str: { type: "number" }, dex: { type: "number" } } },
+      },
+    },
+    types: {},
+  };
+  const entries = [
+    { key: "acrobatics", label: "Acrobatics" },
+    { key: "arcana", label: "Arcana Lore" },
+  ];
+  const sheetData = { skills: { arcana: { rank: 2 } }, attributes: { str: 3, dex: -1 } };
+  const sheetRoot: SheetScope = { value: sheetData, path: [] };
+
+  it("gives every entry a row, stored or not, with its key and label", () => {
+    const skills = resolveSheetPath(parseSheetPath("skills"), sheetRoot, sheetRoot, refs);
+    expect(entryScopes(skills, entries)).toEqual([
+      { value: undefined, path: ["skills", "acrobatics"], item: { key: "acrobatics", label: "Acrobatics" } },
+      { value: { rank: 2 }, path: ["skills", "arcana"], item: { key: "arcana", label: "Arcana Lore" } },
+    ]);
+    expect(entryScopes({ value: undefined, path: null }, entries).map((row) => row.path)).toEqual([null, null]);
+    expect(entryScopes({ value: undefined, path: null, unavailable: true }, entries)).toEqual([]);
+  });
+
+  it("computes itemKey(), itemLabel(), and per-item functions over structs", () => {
+    const compiled = compileSheet(
+      `<Table field="skills"><Column formula="concat(itemLabel(), ' (', itemKey(), ') ', text(coalesce(rank, 0)))" /></Table>
+       <Value formula="count(skills, rank > 0)" />
+       <Value formula="sum(attributes)" />`,
+      structSchemas,
+    );
+    expect(compiled.diagnostics.filter((item) => item.severity === "error")).toEqual([]);
+    const [table, ...values] = compiled.nodes.filter((node): node is ValidatedElement => node.type === "element");
+    const column = table!.children[0] as ValidatedElement;
+    const skills = resolveSheetPath(parseSheetPath("skills"), sheetRoot, sheetRoot, refs);
+    const texts = entryScopes(skills, table!.entries!).map((row) =>
+      evaluateSheetFormula(column.formula!.ast, sheetRoot, row, refs),
+    );
+    expect(texts).toEqual(["Acrobatics (acrobatics) 0", "Arcana Lore (arcana) 2"]);
+    expect(values.slice(0, 2).map((node) => evaluateSheetFormula(node.formula!.ast, sheetRoot, sheetRoot, refs))).toEqual([1, 2]);
+  });
+
+  it("gives array rows their index as itemKey()", () => {
+    const compiled = compileSheet(`<Value formula="sum(tags, itemKey())" />`, {
+      root: { hasStrictSchema: true, schema: { tags: { type: "array", itemType: { type: "string" } } } },
+      types: {},
+    });
+    const node = compiled.nodes[0] as ValidatedElement;
+    expect(evaluateSheetFormula(node.formula!.ast, root, root, refs)).toBe(1);
   });
 });

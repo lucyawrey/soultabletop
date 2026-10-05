@@ -10,7 +10,7 @@ import {
   type ContentTypeSchema,
 } from "../content-schema";
 import { humanizeFieldName, type SheetDisplay } from "./registry";
-import type { SheetSchemas } from "./validate";
+import { structRows, type SheetSchemas } from "./validate";
 import type { ContentCategory } from "../content-categories";
 
 export const GENERATED_SHEET_NAME = "Generated (from schema)";
@@ -121,7 +121,15 @@ export function generateSheetMarkup(schemas: SheetSchemas): string {
   ) {
     add(depth, `<Section title="${label(key, field)}">`);
     const inner = depth + 1;
-    if (field.type === "struct") {
+    const rows = structRows(field);
+    if (rows?.item.type === "struct" && Object.values(rows.item.entries).every(isColumnable)) {
+      // Alike structs (like skills, each with a rank): one table row each.
+      add(inner, `<Table field="${path}">`);
+      add(inner + 1, "<Column formula=\"itemLabel()\" />");
+      for (const [entryKey] of Object.entries(rows.item.entries))
+        add(inner + 1, `<Column field="${entryKey}" />`);
+      add(inner, "</Table>");
+    } else if (field.type === "struct") {
       fields(field.entries, path, inner, false);
     } else if (field.type === "object") {
       add(inner, `<Field field="${path}" />`);

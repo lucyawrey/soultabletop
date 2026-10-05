@@ -2,14 +2,15 @@
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // <List>: its children once per item of the bound array, with add, remove,
-// and reorder controls when editable.
+// and reorder controls when editable, or once per entry of the bound struct
+// (rows from the schema, so no controls).
 const props = defineProps<{ node: ValidatedElement }>();
 
-const { items, resolve } = useSheet();
+const { rows, resolve } = useSheet();
 const attrText = useSheetAttrText();
 
 const list = computed(() => resolve(props.node.binding!.path));
-const scopes = computed(() => items(props.node.binding!.path));
+const scopes = computed(() => rows(props.node));
 const label = computed(() => attrText(props.node.attrs.label));
 const layout = computed(() =>
   props.node.attrs.layout === "grid"
@@ -20,10 +21,10 @@ const layout = computed(() =>
     : "space-y-3",
 );
 
-const { editable, lockedEditable, unlock, remove, move } = useSheetListEditing(
-  () => props.node,
-  list,
-);
+const editing = useSheetListEditing(() => props.node, list);
+const { unlock, remove, move } = editing;
+const editable = computed(() => editing.editable.value && !props.node.entries);
+const lockedEditable = computed(() => editing.lockedEditable.value && !props.node.entries);
 </script>
 
 <template>
