@@ -220,8 +220,20 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 ### Repeaters
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
-| `List` | `field` (array), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder; `field="."` = the item itself (arrays of primitives) |
-| `Table` / `Column` | Table: `field`; Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row |
+| `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
+| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row |
+
+Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
+skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even
+with nothing stored, and editing a cell writes into it (creating the objects on the way); there are no add, remove,
+or reorder controls (`addLabel` is a `flag-no-effect` warning). The entries must all be alike: the same type and
+fields (labels, descriptions, and `required` may differ), each a struct (`Table` needs this) or a single value
+(`string`, `number`, `boolean`, `scalar`; only `List`). `structRows` in `validate.ts` decides this, and validated
+`List`/`Table` nodes carry the rows as `entries`; relative paths are checked against the first entry, which stands for
+all. Free-form objects and non-strict extra keys are never repeated over. In a struct row, `field="."` is labeled by
+its entry (`<List field="attributes"><Number field="." /></List>` shows "Str", "Dex", …, from the schema labels). Each
+row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `SheetScope.item`, `entryScopes` in
+`scope.ts`).
 
 ### Definitions and conditional display
 - `<Define name="prof" params="rank" formula="…" />`: a reusable formula, called as `prof(x)` (one without
@@ -283,7 +295,7 @@ the item):
 | `Select` with its own `options` on a field with schema options | warning (`options-ignored`; the schema wins) | same |
 | Field is `scalar` | binds `Field`, `Value`, `Column`; no paths below it | same |
 | Path goes into a free-form `object` | warning\* (not checked; shows whatever the data holds) | same |
-| `List`/`Table` on a non-array | error | error |
+| `List`/`Table` on a non-array (a struct whose entries aren't alike; `Table` on a struct of single values) | error | error |
 | Relative path inside a `List` of primitives (other than `.`) | error | error |
 | `{…}` formula path not in schema | error | warning\* |
 | Path crosses > 3 `content` fields | error | error |
@@ -309,6 +321,8 @@ ordinary markup, so it goes through the same parse/validate/render path as autho
   (the page header already shows the name, so no heading), then a `<Field>` per field.
 - `struct` field → its own `Section` titled by label, recursing. Free-form `object` → a `Section` with a `<Field>` (JSON editor).
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
+- Struct of alike structs whose fields are all primitive (skills, each with a rank) → a `Table` over its entries, with
+  an `itemLabel()` column first.
 - Array of strings → `Tags` (of choices → `Field`, a multiple select); other primitive arrays → `List field="."`.
   A field with options gets a `Field`, which shows a `Select`.
 - `resourceLink` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)
@@ -548,7 +562,7 @@ Reserved words (`and`, `or`, `not`, `true`, `false`, `null`): a field with one o
 
 Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
 parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't
-use one. Built-ins added after v1 (so far `list`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
+use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
 (it wins in that sheet, with a warning).
 
 ### Functions (v1)
@@ -562,9 +576,15 @@ use one. Built-ins added after v1 (so far `list`) go in `formulaLaterBuiltins`; 
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |
+| Rows | `itemKey()`: the current row's entry key in a struct (`'acrobatics'`), or its index in an array (from 0); `itemLabel()`: a struct entry's schema label, else its humanized key, and nothing in an array row. Only in a `List` or `Table` row or inside a per-item function (else `formula-no-item`; a `<Define>` body is checked at the top level, so pass them in as arguments) |
 
 In `sum(list, expr)` and the others, `expr` is evaluated once per item, scoped to the item like inside a `List`
-(relative paths are the item's, `/` the top level); these can nest two levels. `roll`, `dice`, `adv`, `dis`, and
+(relative paths are the item's, `/` the top level); these can nest two levels. `sum`, `count`, `any`, and `all` also
+take a path to a struct whose entries are alike, repeating over its schema entries like a struct `Table`
+(`count(skills, rank > 0)`, `sum(attributes)`); the evaluator doesn't know the schema, so the validator puts the
+entries on the path node (`entries`). Per-row constants, like each skill's attribute, come from a definition:
+`<Define name="skillAttr" params="s" formula="switch(s, 'acrobatics', 'dex', …)" />` called as
+`skillAttr(itemKey())`. `roll`, `dice`, `adv`, `dis`, and
 dice like `2d6` are reserved for dice rolls (an error now). Left out on purpose: regular expressions, dates,
 randomness, locale formatting. The editor's reference panel lists every function from the table in
 `formula-functions.ts`.
