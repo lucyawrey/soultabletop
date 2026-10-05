@@ -2,7 +2,7 @@ import { count, eq } from "drizzle-orm";
 import { contentType, group, resource, sheet } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
-import { sheetListColumns } from "../../utils/list-columns";
+import { resourceListColumns, sheetListColumns } from "../../utils/list-columns";
 import {
   listOrder,
   listQueryParameters,
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
       const select = database
         .select({
           sheet: sheetListColumns,
-          resource,
+          resource: resourceListColumns,
           systemId: contentType.systemId,
           official: officialColumn,
           ownerReadableId: ownerReadableIdColumn,

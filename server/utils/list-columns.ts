@@ -1,9 +1,10 @@
 import { getTableColumns } from "drizzle-orm";
-import { content, contentType, sheet } from "../database/schema";
+import { content, contentType, resource, sheet } from "../database/schema";
 
 // The columns of the per-kind tables that list endpoints select. Lists leave
-// out the large ones (a sheet's `markup` and `cssStyles`, about 20 KB a page; a
-// content type's `schema`; a content's `data`), which single-resource GETs
+// out the large ones (a resource's `description`; a sheet's `markup` and
+// `cssStyles`, about 20 KB a page; a content type's `schema`; a content's
+// `data`), which single-resource GETs
 // still return. Everything else is kept, so a column added later shows up in
 // lists unless it is added to the omitted set here.
 
@@ -16,10 +17,12 @@ function omit<T extends Record<string, unknown>, K extends keyof T>(
   ) as Omit<T, K>;
 }
 
+export const RESOURCE_LIST_OMITTED = ["description"] as const;
 export const SHEET_LIST_OMITTED = ["markup", "cssStyles"] as const;
 export const CONTENT_TYPE_LIST_OMITTED = ["schema"] as const;
 export const CONTENT_LIST_OMITTED = ["data"] as const;
 
+export const resourceListColumns = omit(getTableColumns(resource), RESOURCE_LIST_OMITTED);
 export const sheetListColumns = omit(getTableColumns(sheet), SHEET_LIST_OMITTED);
 export const contentTypeListColumns = omit(
   getTableColumns(contentType),

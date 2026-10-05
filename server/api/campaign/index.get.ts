@@ -1,3 +1,4 @@
+import { resourceListColumns } from "../../utils/list-columns";
 import { count, eq } from "drizzle-orm";
 import { campaign, group, resource } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
     where: systemId ? eq(campaign.systemId, systemId) : undefined,
     fetchRows: ({ where, limit, offset }) => {
       const select = database
-        .select({ campaign, resource, official: officialColumn, ownerReadableId: ownerReadableIdColumn })
+        .select({ campaign, resource: resourceListColumns, official: officialColumn, ownerReadableId: ownerReadableIdColumn })
         .from(campaign)
         .innerJoin(resource, eq(resource.id, campaign.resourceId))
         .leftJoin(group, eq(group.id, resource.ownerGroupId))
