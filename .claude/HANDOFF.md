@@ -5,7 +5,7 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 **Last updated:** 2026-10-05
 
 - **Nothing in progress.** Merged today: #87 (resource descriptions), #88 (demo polish), #89 (mockup tools; agent-only scripts moved to `.claude/scripts/`, including `agent-run.sh`: older worktrees still have it in `scripts/`). All their worktrees and branches are removed.
-- **Next:** the demo prep order in `TODO.md` Next up, starting with the database reset (confirm with the user right before dropping). The PF2e demo system is planned in `.claude/plans/pf2e-demo.md`; export `pf2e-test` (its step 1) before dropping. Open questions there: demo system owner, which two classes.
+- **Next:** the demo prep order in `TODO.md` Next up, starting with the database reset (confirm with the user right before dropping). The PF2e demo system is planned in `.claude/plans/pf2e-demo.md`; export `pf2e-test` (its step 1) before dropping.
 - **UI mockups:** the process is `.claude/ui-mockups.md`; the redesign's frozen reference is `.claude/mockups/ui-redesign/`. A first comparison of the landing page found small drift (nav order: Content before Characters; smaller sign-in tab text; Sign in button looks disabled until filled), not yet logged in `TODO.md` or checked with the user.
 - The user asked about the `frontend-design` plugin: worth trying for an exploratory direction mockup, not for matching the frozen design.
 - The live `pf2e-test` sheet still uses the old `{= }` / braced `show` syntax; the reset removes it.

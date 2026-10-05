@@ -6,7 +6,7 @@ The plan for the "Pathfinder 2e demo system" item in `TODO.md` (Next up). It's a
 
 - **Start from `pf2e-test`.** Export the old system's schemas and sheet through the API *before the reset*, then port them to the current formula syntax (the export still uses `{= }` and braced `show`).
 - **Quick mockup first**, in `.claude/mockups/pf2e-sheet/`, approved before the sheet is built (process: `.claude/ui-mockups.md`).
-- **Tiny content slice**, enough for two pre-built characters: 2 classes (e.g. Fighter, Cleric), 3 ancestries, 3 backgrounds, about 15 feats, 15 spells, and 25 items. Only ORC Remaster items from the Foundry data, loaded by an import script.
+- **Tiny content slice**, enough for two pre-built characters: 2 classes (Cleric and Rogue), 3 ancestries, 3 backgrounds, about 15 feats, 15 spells, and 25 items. Only ORC Remaster items from the Foundry data, loaded by an import script.
 - **References, not text.** The character links to its ancestry, background, class, feats, spells, and items as references to the imported content, and formulas read values from them (HP, key ability, item bonus, damage dice) where today's features allow. Anything they can't do goes into "Sheet features found missing" in `TODO.md`.
 
 ## References and how to use them
@@ -31,7 +31,5 @@ Direction (to confirm in the mockup step): a built-in density setting for the wh
 6. **Character sheet:** port the `pf2e-test` sheet onto the new schema and the approved mockup. Use references and formulas, and check it with the `soul-tabletop-sheets` skill.
 7. **System page:** the description credits the Foundry pf2e data and states the ORC license notice. The credits text is technical; anything promotional is team copy. Build the two demo characters through the UI or API with the user.
 
-## Open questions
-
-- Who owns the demo system: the `soul` group (Official) or the user's account.
-- Which two classes to use (Fighter and Cleric match the old test characters).
+- **Owner:** the `soul` group owns demo systems, so they're Official.
+- **Classes:** Cleric and Rogue. Rogue is new compared with the old Fighter and Cleric test characters, so its parts (sneak attack, racket, skill-heavy proficiencies) aren't in the `pf2e-test` export.
