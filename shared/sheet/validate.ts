@@ -209,6 +209,10 @@ const nameField: ContentFieldSchema = {
 };
 
 const iconPattern = /^i-[a-z0-9]+(?:-[a-z0-9]+)+$/;
+// Icon collections sheets may use: bundled with the app (nuxt.config.ts
+// `icon.serverBundle`), so an icon never loads from a third-party API, and
+// with known licenses (game-icons.net is credited on /credits).
+export const SHEET_ICON_COLLECTIONS = ["lucide", "game-icons"] as const;
 const classNamePattern = /^[a-z][a-z0-9-]*$/;
 const indexPattern = /^\d+$/;
 const identifierPattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -1267,9 +1271,11 @@ class Validator {
       }
       case "icon": {
         const iconName = raw.trim();
-        return iconPattern.test(iconName)
+        if (!iconPattern.test(iconName))
+          return fail(`${name} must be an icon name like i-lucide-sword or i-game-icons-crossed-swords`);
+        return SHEET_ICON_COLLECTIONS.some((collection) => iconName.startsWith(`i-${collection}-`))
           ? iconName
-          : fail(`${name} must be an icon name like i-lucide-sword`);
+          : fail(`${name} must be a Lucide (i-lucide-…) or game-icons (i-game-icons-…) icon`);
       }
       case "className": {
         const names = raw.split(/\s+/).filter(Boolean);

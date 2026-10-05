@@ -404,6 +404,13 @@ describe("tags and attributes", () => {
     ).toEqual([]);
   });
 
+  it("accepts only bundled icon collections", () => {
+    expect(messages(`<Section icon="i-game-icons-crossed-swords" /><Callout icon="i-lucide-info">x</Callout>`)).toEqual([]);
+    expect(messages(`<Section icon="i-mdi-sword" />`)).toEqual([
+      "error invalid-attribute: icon must be a Lucide (i-lucide-…) or game-icons (i-game-icons-…) icon",
+    ]);
+  });
+
   it("keeps hideLabel and the resolved label on the validated node", () => {
     const node = first(compile(`<Number field="hp" hideLabel />`).nodes);
     expect(node.attrs.hideLabel).toBe(true);
@@ -415,7 +422,7 @@ describe("tags and attributes", () => {
       "error invalid-attribute: cols on <Grid> must be between 1 and 12",
       "error invalid-attribute: gap on <Grid> must be one of: none, sm, md, lg",
       "error invalid-attribute: span on <Section> must be a whole number",
-      "error invalid-attribute: icon must be an icon name like i-lucide-sword",
+      "error invalid-attribute: icon must be an icon name like i-lucide-sword or i-game-icons-crossed-swords",
       "error invalid-attribute: Class \"Bad_name\" must use lowercase letters, numbers, and hyphens, starting with a letter",
     ]);
     expect(errorCodes(`<Grid cols />`)).toEqual(["invalid-attribute"]);
