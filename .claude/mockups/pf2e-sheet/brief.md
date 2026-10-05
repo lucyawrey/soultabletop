@@ -23,7 +23,7 @@ The characters are invented for the mockup. Rules names (feats, spells, items) a
 
 First draft: "a very good start but it def needs a lot of work still." Ideas from the agent, recorded at the user's request; the user hasn't picked among them beyond deciding #1 first.
 
-1. **Play vs. edit.** The user decided: a play mode and an edit mode, with build choices made through pickers in edit mode. Builder flows should be supported later, so nothing should block them. Still open: how this fits the existing Edit and Autosave switches (`ContentDetail.vue`, `Renderer.vue`'s `editMode`). The agent's proposal, not yet agreed:
+1. **Play vs. edit.** The user decided: a play mode and an edit mode, with build choices made through pickers in edit mode. Builder flows should be supported later, so nothing should block them. Still open: how this fits the existing Edit and Autosave switches (`ContentDetail.vue`, `Renderer.vue`'s `editMode`). The design (agreed by the user):
    - **The Edit switch stays as it is**, and Edit off becomes "play". In play, the tags a sheet marks with a new `live` attribute (Tracker, Checkbox, Toggle, Number, and the conditions Tags) stay editable for viewers who can edit, and a change saves at once whatever the Autosave setting. Everything else shows as values, as today.
    - **Formulas can see the mode** (e.g. `{editing}`), so a sheet can show empty choice slots and pickers only while editing.
    - **Default mode (user's decision):** keep the default as it is. Character sheets still start with Edit Fields and Autosave on (`shared/sheet/generate.ts:28`), since simple sheets are played in edit mode. Only advanced sheets like the PF2e one turn it off and use play mode with `live` tags.
@@ -33,3 +33,11 @@ First draft: "a very good start but it def needs a lot of work still." Ideas fro
 4. **Missing content (vs. the Paizo sheet):** Initiative; senses, languages, size, traits; weapon and armor proficiencies; shield (Hardness, HP, BT); resistances and weaknesses; coins, worn/held, invested (10); the Cleric's deity (domains, favored weapon, sanctification, edicts and anathema); class features (racket, doctrine); notes and biography; dying, wounded, and doomed as real trackers.
 5. **Builder functionality (Pathbuilder as a function reference only):** empty feat slots for coming levels; where attribute boosts came from; references open a preview of the linked content (spell, feat, item text).
 6. **Visual hierarchy:** AC, HP, and Perception/Initiative stand out more than saves; untrained skills dimmed; two-column skills on desktop; a motif of our own (e.g. folio tab section labels) so it feels like the site, not a generic form.
+
+## Mockup v2 scope (user, 2026-10-05)
+
+- **Play/Edit toggle:** play shows `live` tags (HP, hero points, slots, font, conditions, dying/wounded/doomed) as editable; edit shows pickers and empty choice slots (`{editing}`).
+- **Include ideas 2, 3, 4, and 6:** actions, number breakdowns, the missing content, and hierarchy plus a motif of our own.
+- **Builder hints:** previews of linked content in both modes, and empty feat slots for coming levels in edit only. Boost tracking waits for the builder flow.
+- **Layout:** a balance between columns and tabs, not one or the other. For example, the always-needed things (attributes, defenses, Strikes, skills) are laid out on the page, and the long lists (feats, spells, inventory, biography) go in tabs. Drop the Columns/Tabs toggle.
+- **Density:** keep the Compact/Roomy toggle.
