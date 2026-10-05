@@ -250,9 +250,9 @@ class Lexer {
         return this.path(start);
       }
       if (isDigit(this.peek(1))) {
-        if (this.previous?.type === ")") {
+        if (this.previous?.type === ")" && this.previous.end === start) {
           throw new FormulaSyntaxError(
-            "Pick an item by its index with at, like at(attacks, 0)",
+            "A number can't start with a dot; to pick an item by its index, use at, like at(attacks, 0)",
             start,
             start + 2,
           );

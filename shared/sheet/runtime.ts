@@ -188,6 +188,7 @@ function formulaEnv(
     scope,
     refs,
     budget: { steps: formulas.stepBudget ?? formulaBudget().steps },
+    picked: new WeakMap(),
     hasDefinition: (name) => formulas.definitions.has(name),
     call(name, args) {
       const definition = formulas.definitions.get(name);

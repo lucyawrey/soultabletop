@@ -68,6 +68,7 @@ function env(overrides: Partial<FormulaEnv> = {}): FormulaEnv {
     refs,
     budget: formulaBudget(),
     hasDefinition: (name) => definitions.has(name),
+    picked: new WeakMap(),
     call(name, args) {
       const definition = definitions.get(name);
       return definition ? callFormulaDefinition(definition, args, this) : undefined;

@@ -60,6 +60,11 @@ export interface FormulaEnv {
   computedField?(path: (string | number)[], stored: unknown, env: FormulaEnv): FormulaValue | undefined;
   // The computed fields being computed, to stop cycles.
   computing?: ReadonlySet<string>;
+  // Where the items that filter, sort, first, and at pass on came from: each
+  // item's scope for a list they return, the item's scope for a group of
+  // fields they pick. Paths on them then reach computed fields like any path.
+  // One per evaluation; without it, picked items lose their place.
+  picked?: WeakMap<object, SheetScope | readonly SheetScope[]>;
 }
 
 export interface FormulaDefinition {
@@ -159,6 +164,17 @@ function evaluateBinary(
   return arithmetic(op, left as number, right as number);
 }
 
+// A resolved path's value: a computed field's value when nothing is stored
+// and it has an override formula, else the stored value.
+function resolvedValue(resolved: SheetScope, env: FormulaEnv): FormulaValue {
+  if (resolved.unavailable) return null;
+  if (resolved.path && env.computedField) {
+    const computed = env.computedField(resolved.path, resolved.value, env);
+    if (computed !== undefined) return computed;
+  }
+  return toFormulaValue(resolved.value);
+}
+
 // A list argument as a scope, so its items can be scopes too.
 function listScope(node: FormulaNode, env: FormulaEnv): SheetScope | FormulaError {
   if (node.type === "path") {
@@ -184,6 +200,11 @@ function listItems(node: FormulaNode, env: FormulaEnv, name: string): SheetScope
     env.budget.steps = -1;
     return budgetError();
   }
+  // A list filter or sort returned: its items keep where they came from, as
+  // rows of the new list (itemKey() is the index in it).
+  const picked = env.picked?.get(list.value);
+  if (Array.isArray(picked) && picked.length === list.value.length)
+    return (picked as SheetScope[]).map((scope, index) => ({ ...scope, item: { key: index } }));
   return itemScopes(list);
 }
 
@@ -230,15 +251,21 @@ function callBuiltin(
       if (isFormulaError(items)) return items;
       for (const item of items) {
         if (!step(env)) return budgetError();
-        const itemValue = toFormulaValue(item.value);
+        const itemValue = resolvedValue(item, env);
+        if (isFormulaError(itemValue)) return itemValue;
         const value =
           exprIndex === undefined
             ? itemValue
             : evaluateNode(node.args[exprIndex]!, { ...env, scope: item });
         if (isFormulaError(value)) return value;
-        if (visit(itemValue, value) === false) break;
+        if (visit(itemValue, value, item) === false) break;
       }
       return undefined;
+    },
+    passOn: (value, scopes) => {
+      if (env.picked && value !== null && typeof value === "object" && !isFormulaError(value))
+        env.picked.set(value, scopes);
+      return value;
     },
   };
   return fn.special!(context);
@@ -287,15 +314,8 @@ export function evaluateFormulaNode(node: FormulaNode, env: FormulaEnv): Formula
       return env.params && Object.hasOwn(env.params, node.name)
         ? env.params[node.name]!
         : null;
-    case "path": {
-      const resolved = resolveSheetPath(node.path, env.root, env.scope, env.refs);
-      if (resolved.unavailable) return null;
-      if (resolved.path && env.computedField) {
-        const computed = env.computedField(resolved.path, resolved.value, env);
-        if (computed !== undefined) return computed;
-      }
-      return toFormulaValue(resolved.value);
-    }
+    case "path":
+      return resolvedValue(resolveSheetPath(node.path, env.root, env.scope, env.refs), env);
     case "unary": {
       const value = evaluateNode(node.operand, env);
       if (isFormulaError(value)) return value;
@@ -322,10 +342,11 @@ export function evaluateFormulaNode(node: FormulaNode, env: FormulaEnv): Formula
       }
       if (typeof target === "number" || typeof target === "boolean")
         return typeError(node.text, "a group of fields", target);
-      // Text is a reference, followed like a path. Fields reached here aren't
-      // the Content's top-level fields, so computed fields don't apply.
-      const resolved = resolveSheetPath(node.path, env.root, { value: target, path: null }, env.refs);
-      return resolved.unavailable ? null : toFormulaValue(resolved.value);
+      // Text is a reference, followed like a path. An item a list function
+      // picked keeps its place, so computed fields apply as for any path.
+      const picked = typeof target === "object" ? env.picked?.get(target) : undefined;
+      const scope = picked && !Array.isArray(picked) ? (picked as SheetScope) : { value: target, path: null };
+      return resolvedValue(resolveSheetPath(node.path, env.root, scope, env.refs), env);
     }
   }
 }

@@ -19,7 +19,7 @@ import {
   type FormulaType,
   type FormulaValue,
 } from "./formula";
-import { findRef, ownProperty, refRecord, type SheetRefs } from "./scope";
+import { findRef, ownProperty, refRecord, type SheetRefs, type SheetScope } from "./scope";
 import { isReservedKey } from "../content-schema";
 
 // What a function sees of its call, for lazy and per-item functions.
@@ -41,8 +41,12 @@ export interface FormulaCallContext {
   each(
     listIndex: number,
     exprIndex: number | undefined,
-    visit: (item: FormulaValue, value: FormulaValue) => boolean | undefined,
+    visit: (item: FormulaValue, value: FormulaValue, scope: SheetScope) => boolean | undefined,
   ): FormulaError | undefined;
+  // Returns `value` (a list of items from `each`, or one item), remembering
+  // where they came from (`scopes`, or one scope) so paths on them work like
+  // paths on the originals.
+  passOn(value: FormulaValue, scopes: SheetScope | readonly SheetScope[]): FormulaValue;
 }
 
 export interface FormulaArgCheck {
@@ -476,16 +480,20 @@ const functionList: FormulaFunction[] = [
     },
     special: (call) => {
       const items: FormulaValue[] = [];
+      const scopes: SheetScope[] = [];
       let failed: FormulaError | undefined;
-      const error = call.each(0, 1, (item, value) => {
+      const error = call.each(0, 1, (item, value, scope) => {
         const condition = conditionValue("filter", value);
         if (isFormulaError(condition)) {
           failed = condition;
           return false;
         }
-        if (condition) items.push(item);
+        if (condition) {
+          items.push(item);
+          scopes.push(scope);
+        }
       });
-      return error ?? failed ?? items;
+      return error ?? failed ?? call.passOn(items, scopes);
     },
   },
   {
@@ -515,9 +523,9 @@ const functionList: FormulaFunction[] = [
       expect(types, problems, "sort", ["boolean"], "true or false as descending", descending ? [2] : []);
     },
     special: (call) => {
-      const keyed: { item: FormulaValue; key: FormulaValue; index: number }[] = [];
-      const error = call.each(0, call.argCount > 1 ? 1 : undefined, (item, key) => {
-        keyed.push({ item, key, index: keyed.length });
+      const keyed: { item: FormulaValue; key: FormulaValue; index: number; scope: SheetScope }[] = [];
+      const error = call.each(0, call.argCount > 1 ? 1 : undefined, (item, key, scope) => {
+        keyed.push({ item, key, index: keyed.length, scope });
       });
       if (error) return error;
       const descending = call.argCount > 2 ? conditionValue("sort", call.value(2)) : false;
@@ -544,7 +552,10 @@ const functionList: FormulaFunction[] = [
         const order = left < right ? -1 : left > right ? 1 : 0;
         return (descending ? -order : order) || a.index - b.index;
       });
-      return keyed.map(({ item }) => item);
+      return call.passOn(
+        keyed.map(({ item }) => item),
+        keyed.map(({ scope }) => scope),
+      );
     },
   },
   {
@@ -565,7 +576,7 @@ const functionList: FormulaFunction[] = [
     },
     special: (call) => {
       let found: FormulaValue = null;
-      const error = call.each(0, call.argCount > 1 ? 1 : undefined, (item, value) => {
+      const error = call.each(0, call.argCount > 1 ? 1 : undefined, (item, value, scope) => {
         if (call.argCount > 1) {
           const condition = conditionValue("first", value);
           if (isFormulaError(condition)) {
@@ -574,7 +585,7 @@ const functionList: FormulaFunction[] = [
           }
           if (!condition) return;
         }
-        found = item;
+        found = call.passOn(item, scope);
         return false;
       });
       return error ?? found;
@@ -602,9 +613,13 @@ const functionList: FormulaFunction[] = [
       if (isFormulaError(index) || index === null) return index;
       if (typeof index !== "number" || !Number.isInteger(index))
         return new FormulaError("type", "at needs a whole number as its index");
-      const items = call.items(0);
-      if (isFormulaError(items)) return items;
-      return items[index < 0 ? items.length + index : index] ?? null;
+      const items: { item: FormulaValue; scope: SheetScope }[] = [];
+      const error = call.each(0, undefined, (item, _, scope) => {
+        items.push({ item, scope });
+      });
+      if (error) return error;
+      const picked = items[index < 0 ? items.length + index : index];
+      return picked ? call.passOn(picked.item, picked.scope) : null;
     },
   },
   {

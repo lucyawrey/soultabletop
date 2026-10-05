@@ -560,7 +560,8 @@ Reserved words (`and`, `or`, `not`, `true`, `false`, `null`): a field with one o
 `.and`. Field names that read as dice (`d6`, `d20`, also as a path's first segment) are likewise reached as `/d6`.
 A path written right after a call's `)`, with no space, reads a field of the call's result:
 `first(weapons, equipped).bonus`, `at(attacks, 0).name` (decided: paths on call results rather than only `get`). It
-follows references like any path; the validator checks it against the schema when the call's result is items of a
+follows references like any path, and reaches computed fields (overrides) like any path, since the items `filter`,
+`sort`, `first`, and `at` pass on keep where they came from; the validator checks it against the schema when the call's result is items of a
 known list (`filter`, `sort`, `first`, `at`), so `first(inventory).item.weight` is checked like `.item.weight` in a
 `List` row of `inventory`. Indexes aren't allowed there (`first(x).0` is an error that points to `at`).
 `__proto__`, `constructor`, and `prototype` are never valid path segments or field keys.
