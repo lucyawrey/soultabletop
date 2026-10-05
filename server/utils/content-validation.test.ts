@@ -105,3 +105,35 @@ describe("choice fields", () => {
     expect(check({ type: "string", options: [{ value: "a", extra: 1 }] })).toBe(false);
   });
 });
+
+describe("defaults", () => {
+  it("checks defaults on schema save, nested ones too", () => {
+    expect(() => assertFieldKeys({ size: { type: "string", options: [{ value: "s" }], default: "m" } })).toThrow(
+      'Field "size" has a default that isn\'t one of the options',
+    );
+    expect(() =>
+      assertFieldKeys({
+        stats: { type: "struct", entries: { str: { type: "number", default: "10" as unknown as number } } },
+      }),
+    ).toThrow('Field "str" has a default that isn\'t a number');
+    expect(() =>
+      assertFieldKeys({ list: { type: "array", itemType: { type: "boolean", default: true }, default: [false] } }),
+    ).not.toThrow();
+  });
+
+  it("accepts defaults of the field's type only", () => {
+    const check = (field: unknown) => Value.Check(contentTypeSchemaSchema, { field });
+    expect(check({ type: "string", default: "a" })).toBe(true);
+    expect(check({ type: "number", default: 1 })).toBe(true);
+    expect(check({ type: "boolean", default: false })).toBe(true);
+    expect(check({ type: "scalar", default: null })).toBe(true);
+    expect(check({ type: "array", itemType: { type: "string" }, default: ["a"] })).toBe(true);
+    expect(check({ type: "string", default: 1 })).toBe(false);
+    expect(check({ type: "boolean", default: "true" })).toBe(false);
+    expect(check({ type: "scalar", default: {} })).toBe(false);
+    expect(check({ type: "array", itemType: { type: "string" }, default: "a" })).toBe(false);
+    expect(check({ type: "object", default: {} })).toBe(false);
+    expect(check({ type: "struct", entries: {}, default: {} })).toBe(false);
+    expect(check({ type: "resourceLink", default: "x" })).toBe(false);
+  });
+});

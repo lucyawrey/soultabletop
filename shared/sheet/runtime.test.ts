@@ -199,6 +199,19 @@ describe("defaultSheetValue", () => {
     expect(defaultSheetValue(field as ContentFieldSchema | undefined, schemas)).toEqual(value);
   });
 
+  it("starts at the field's default, and fills entries with defaults", () => {
+    const field: ContentFieldSchema = {
+      type: "struct",
+      entries: {
+        name: { type: "string", default: "Unarmed" },
+        bonus: { type: "number" },
+        tags: { type: "array", itemType: { type: "string" }, default: ["melee"] },
+      },
+    };
+    expect(defaultSheetValue(field, schemas)).toEqual({ name: "Unarmed", tags: ["melee"] });
+    expect(defaultSheetValue({ type: "string", options: [{ value: "s" }, { value: "m" }], default: "m" }, schemas)).toBe("m");
+  });
+
   it("fills required fields of objects and local Content", () => {
     expect(
       defaultSheetValue(

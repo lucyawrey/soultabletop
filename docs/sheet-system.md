@@ -186,6 +186,21 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 - The schema builder shows an **Options** checkbox on string and number fields (and array items), with value and
   label rows reordered by dragging (`app/components/schema/Options.vue`).
 
+### Default values (decided 2026-10-05)
+- `string`, `number`, `boolean`, `scalar`, and `array` fields (and array item types) may have a `default`: a value of
+  the field (one of a choice field's options), or for an array a list of starting items, at most 100
+  (`MAX_DEFAULT_ITEMS`). Struct items in an array default must have their required entries and no others. Defaults
+  can't hold `object`, `content`, or `resourceLink` values, and those types can't have one. Checked on schema save
+  (`fieldDefaultError` in `shared/content-schema.ts`) and in the builder.
+- **Stored on create**, never a fallback when reading: a copy goes into new Content created without data
+  (`defaultContentData`, required or not; an optional struct is created when its entries have defaults, unless a
+required `resourceLink` or `content` entry without a default would be left empty and fail the next save), into a new List
+  item or field (`defaultSheetValue`; a struct item gets its entries' defaults), and into the editor preview's sample
+  data. Changing a default never touches saved data, and a cleared field stays cleared. A default wins over a required
+  field's empty value or first option.
+- The schema builder shows a **Default** input (`app/components/schema/Default.vue`): text, a number, a select for
+  boolean and choice fields, and JSON for `scalar` and `array`; empty means none.
+
 ### Content fields: references and local data (decided)
 - Schema type `{ type: "content", contentTypeId, allow: "reference" | "local" | "both", required }` replaces the old
   `contentType` type (whose validator wrongly required the value to equal the content type id).

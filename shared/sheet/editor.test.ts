@@ -81,6 +81,21 @@ describe("sampleSheetData", () => {
     expect("link" in data).toBe(false);
   });
 
+  it("shows defaults, and sample items for an empty array default", () => {
+    const data = sampleSheetData({
+      root: {
+        hasStrictSchema: true,
+        schema: {
+          size: { type: "string", default: "Medium" },
+          tags: { type: "array", itemType: { type: "string" }, default: [] },
+          gear: { type: "array", itemType: { type: "string" }, default: ["Rope"] },
+        },
+      },
+      types: {},
+    });
+    expect(data).toEqual({ name: "Sample Name", size: "Medium", tags: ["Sample tags 1", "Sample tags 2"], gear: ["Rope"] });
+  });
+
   it("stops at self-referencing ContentTypes", () => {
     expect(() => sampleSheetData(schemas)).not.toThrow();
   });
