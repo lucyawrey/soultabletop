@@ -19,7 +19,7 @@ One folder per mockup, `.claude/mockups/<name>/`, on the `docs` branch (the user
 2. **Mockup.** The main Opus session builds it, never a subagent, in the conversation where the ideas came up. One self-contained HTML file:
    - Tokens first: every color, font, and radius comes from a short list of variables.
    - Real pages and content from this app, not generic filler.
-   - Options as segmented controls at the top (`data-ctl` groups of buttons with `data-v` values, as in `mockups/ui-redesign/mockup.html`), so the user picks by clicking.
+   - Options as segmented controls at the top (`data-ctl` groups of buttons with `data-v` values), so the user picks by clicking. Keep that header lean, as in `mockups/ui-redesign/frozen.html` (user, 2026-10-05): one bar with a short title and a few words of status, then the controls with no visible labels (`role="group"` and an `aria-label` instead), and controls that only matter for one view shown only there. Explanations go in `brief.md` and `spec.md`, not on the page.
    - Accessibility built in: one light theme, text at least 4.5:1 and control outlines at least 3:1 (a live contrast table like the redesign's), visible focus, state never shown by color alone.
    - Desktop and phone widths both work.
    - Site mockups use Tailwind (the CDN build) with the app's tokens and Nuxt UI's semantic class names (`bg-elevated`, `text-muted`, `ring-accented`, `rounded-md`), so class strings carry over to the Nuxt code; free-form CSS only for a new theme. Each element is tagged with what builds it: `data-impl="UButton color=neutral variant=outline"`, `data-impl="DetailHeader"`, `data-impl="new: ResourceCounts"`.
