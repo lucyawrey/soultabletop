@@ -481,7 +481,7 @@ class Parser {
       }
       // A formula may contain < and quoted }; skip to its end.
       if (char === "{") {
-        const close = this.formulaEnd(end + 2, this.src.length);
+        const close = this.formulaEnd(end + 1, this.src.length);
         if (close !== -1) {
           end = close + 1;
           continue;

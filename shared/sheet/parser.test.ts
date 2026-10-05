@@ -409,6 +409,18 @@ describe("formulas", () => {
     ]);
   });
 
+  it("reads a formula that starts with a quote, with < inside, in text", () => {
+    for (const body of ["\"a<b\"", "'<b>'"]) {
+      const source = `<Note>{${body}}</Note>`;
+      const { nodes, diagnostics } = parseSheetMarkup(source);
+      expect(diagnostics).toEqual([]);
+      expect(nodes).toHaveLength(1);
+      expect(shape(nodes)).toEqual([
+        { tag: "Note", attrs: {}, children: [[{ formula: body }]] },
+      ]);
+    }
+  });
+
   it("records where the formula body starts", () => {
     const text = parseSheetMarkup("x\n  {hp}").nodes[0] as SheetText;
     expect(text.parts[1]).toMatchObject({
