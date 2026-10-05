@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import type { ContentFieldSchema } from "../content-schema";
-import { parseSheetMarkup, type SheetText } from "./parser";
 import {
   defaultSheetValue,
   evaluateSheetFormula,
@@ -216,16 +215,20 @@ describe("defaultSheetValue", () => {
 });
 
 describe("interpolateSheetText", () => {
-  it("fills in {paths}", () => {
-    const text = parseSheetMarkup("{name} ({class.name}) has {hp} HP and {missing}.").nodes[0] as SheetText;
-    expect(interpolateSheetText(text.parts, root, root, refs)).toBe("Violet (Wizard) has 7 HP and .");
+  it("fills in {fields}", () => {
+    const compiled = compileSheet("<Note>{name} ({class.name}) has {hp} HP and {missing}.</Note>", {
+      root: { hasStrictSchema: false, schema: {} },
+      types: {},
+    });
+    const parts = ((compiled.nodes[0] as ValidatedElement).children[0] as ValidatedText).parts;
+    expect(interpolateSheetText(parts, root, root, refs)).toBe("Violet (Wizard) has 7 HP and .");
   });
 });
 
 describe("formulas in text", () => {
   const compiled = compileSheet(
     '<Define name="twice" params="x" formula="x * 2" /><Define name="base" formula="hp + 1" />' +
-      "<Note>{name} has {= twice(hp) + base()} HP, {= 1 / 0}, {= 0.1 + 0.2}</Note>",
+      "<Note>{name} has {twice(hp) + base()} HP, {1 / 0}, {0.1 + 0.2}</Note>",
     { root: { hasStrictSchema: false, schema: {} }, types: {} },
   );
   const note = compiled.nodes.find(
@@ -234,7 +237,7 @@ describe("formulas in text", () => {
   const parts = (note.children[0] as ValidatedText).parts;
   const formulas = { definitions: compiled.definitions };
 
-  it("computes {= } parts, with definitions", () => {
+  it("computes {} parts, with definitions", () => {
     expect(interpolateSheetText(parts, root, root, refs, formulas)).toBe("Violet has 22 HP, —, 0.3");
   });
 
@@ -251,7 +254,7 @@ describe("formulas in text", () => {
   });
 
   it("shows a broken formula part as —", () => {
-    const broken = compileSheet("<Note>{= nope(}</Note>", { root: { hasStrictSchema: false, schema: {} }, types: {} });
+    const broken = compileSheet("<Note>{nope(}</Note>", { root: { hasStrictSchema: false, schema: {} }, types: {} });
     const brokenParts = ((broken.nodes[0] as ValidatedElement).children[0] as ValidatedText).parts;
     expect(sheetTextSegments(brokenParts, root, root, refs)).toEqual([
       { text: "—", error: "This formula has errors" },
@@ -278,21 +281,21 @@ describe("sheetCondition", () => {
   }
 
   it("shows on true and hides on false or nothing", () => {
-    expect(show('<Note show="{= hp > 5}">x</Note>')).toEqual({ shown: true });
-    expect(show('<Note show="{= hp > 10}">x</Note>')).toEqual({ shown: false });
-    expect(show('<Note show="{missing}">x</Note>')).toEqual({ shown: false });
-    expect(show('<Note show="{= missing > 1}">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="hp > 5">x</Note>')).toEqual({ shown: true });
+    expect(show('<Note show="hp > 10">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="missing">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="missing > 1">x</Note>')).toEqual({ shown: false });
     expect(show("<Note>x</Note>")).toEqual({ shown: true });
   });
 
   it("shows the tag when the formula fails, with the error", () => {
-    expect(show('<Note show="{= 1 / 0 > 1}">x</Note>')).toEqual({ shown: true, error: "Division by zero" });
-    expect(show('<Note show="{= get(stats, \'str\')}">x</Note>')).toEqual({ shown: true, error: "show needs true or false" });
+    expect(show('<Note show="1 / 0 > 1">x</Note>')).toEqual({ shown: true, error: "Division by zero" });
+    expect(show('<Note show="get(stats, \'str\')">x</Note>')).toEqual({ shown: true, error: "show needs true or false" });
   });
 
   it("evaluates in the given scope", () => {
     const [rope] = itemScopes(resolve("inventory"));
-    expect(show('<Note show="{= qty > 1}">x</Note>', rope)).toEqual({ shown: true });
+    expect(show('<Note show="qty > 1">x</Note>', rope)).toEqual({ shown: true });
   });
 });
 
@@ -355,8 +358,8 @@ describe("computed fields", () => {
     expect(value(checkbox, "trained", { level: 3, trained: false })).toBe(false);
   });
 
-  it("shows the computed value in {= path} text, and the stored one in {path}", () => {
-    const compiled = compileSheet(`${sheet}<Note>{= hp} / {hp}</Note>`, empty);
+  it("shows the computed value of an override field in {…} text", () => {
+    const compiled = compileSheet(`${sheet}<Note>{hp} / {hp}</Note>`, empty);
     const note = compiled.nodes.find(
       (node): node is ValidatedElement => node.type === "element" && node.tag === "Note",
     )!;
@@ -367,7 +370,7 @@ describe("computed fields", () => {
         definitions: compiled.definitions,
         computedFields: compiled.computedFields,
       }),
-    ).toBe("4 / ");
+    ).toBe("4 / 4");
   });
 
   it("gives cycles an error", () => {
@@ -414,8 +417,8 @@ describe("computed fields", () => {
 });
 
 describe("compiled number attributes", () => {
-  it("evaluates {= } in number attributes", () => {
-    const { nodes } = compileSheet('<Tracker field="hp" max="{= hp * 2 + stats.str}" />', {
+  it("evaluates {} in number attributes", () => {
+    const { nodes } = compileSheet('<Tracker field="hp" max="{hp * 2 + stats.str}" />', {
       root: { hasStrictSchema: false, schema: {} },
       types: {},
     });
@@ -502,7 +505,7 @@ describe("sheet step budget", () => {
     expect(sheetStepBudget(0)).toBe(formulaLimits.maxSteps);
     expect(sheetStepBudget(2_000)).toBe(formulaLimits.maxSheetSteps / 2_000);
     const empty = { root: { hasStrictSchema: false, schema: {} }, types: {} };
-    expect(compileSheet('<Value formula="1" /><Note>{= 2} {= 3}</Note>', empty).stepBudget).toBe(formulaLimits.maxSteps);
+    expect(compileSheet('<Value formula="1" /><Note>{2} {3}</Note>', empty).stepBudget).toBe(formulaLimits.maxSteps);
   });
 
   it("gives evaluations the sheet's budget", () => {

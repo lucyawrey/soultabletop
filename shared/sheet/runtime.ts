@@ -22,11 +22,10 @@ import {
   type FormulaEnv,
 } from "./formula-eval";
 import { formatFormulaNumber } from "./formula-functions";
-import { isFormulaPart, parseSheetPath, type TextPart } from "./parser";
+import type { TextPart } from "./parser";
 import {
   findRef,
   isRecord,
-  resolveSheetPath,
   type SheetRefs,
   type SheetScope,
 } from "./scope";
@@ -268,18 +267,10 @@ export function sheetTextSegments(
 ): SheetTextSegment[] {
   return parts.map((part) => {
     if (typeof part === "string") return { text: part };
-    if (isFormulaPart(part)) {
-      if (!part.ast) return { text: "—", error: "This formula has errors" };
-      const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas);
-      if (isFormulaError(value)) return { text: "—", error: value.message };
-      return { text: formatFormulaValue(value, refs) };
-    }
-    return {
-      text: formatSheetValue(
-        resolveSheetPath(parseSheetPath(part.path), root, scope, refs).value,
-        refs,
-      ),
-    };
+    if (!part.ast) return { text: "—", error: "This formula has errors" };
+    const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas);
+    if (isFormulaError(value)) return { text: "—", error: value.message };
+    return { text: formatFormulaValue(value, refs) };
   });
 }
 
@@ -321,15 +312,8 @@ export function sheetCondition(
   formulas: SheetFormulaDefinitions = noDefinitions,
 ): { shown: boolean; error?: string } {
   if (condition === undefined) return { shown: true };
-  let value: FormulaValue;
-  if (isCompiledFormula(condition)) {
-    value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas);
-  } else if (typeof condition === "object" && "path" in condition) {
-    const resolved = resolveSheetPath(parseSheetPath(condition.path), root, scope, refs);
-    value = resolved.unavailable ? null : (resolved.value as FormulaValue);
-  } else {
-    return { shown: true };
-  }
+  if (!isCompiledFormula(condition)) return { shown: true };
+  const value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas);
   if (isFormulaError(value)) return { shown: true, error: value.message };
   if (value === true) return { shown: true };
   if (value === false || value === null || value === undefined) return { shown: false };
