@@ -4,7 +4,7 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-10-05
 
-- **In progress: Resource descriptions** (branch and worktree `resource-descriptions`): column, migration `0015` (not applied yet), and list columns done; system PATCH, the system page panel, tests, docs, and the PR still to do.
+- **PR #87 open: Resource descriptions** (branch and worktree `resource-descriptions`; migration `0015` already applied to the shared database). An Opus review was running when this was written: check the PR for its findings, fix them, then wait for the user's merge. After the merge: remove the worktree and branch and its In progress item in `TODO.md`.
 - **Then the demo prep list in Next up (`TODO.md`)**, in order: database reset, PF2e demo system, onboarding structure, one polish PR, dice buttons. Demo in about a week.
 - **Sheet feature planning** continues after the demo: the rest of "Sheet features found missing…" (Phase 1).
 - The Obsidian docs review is done; the user hasn't reported yet on how the vault performs with `node_modules/` (hidden by Unhide and excluded from search).
