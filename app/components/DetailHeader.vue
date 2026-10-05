@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
+
 // The top of a resource's detail page: a back link, the kind as a small
-// eyebrow, the name in the display font, a meta row of badges (`#meta`), and
-// the page's buttons (`#actions`, usually Edit and Delete as outline buttons).
+// eyebrow, the name in the display font, the resource's system under it
+// (`systemId`, for kinds that belong to one), a meta row of badges (the
+// Source badge, then `#meta`), and the page's buttons (`#actions`, usually
+// Edit and Delete as outline buttons).
 defineProps<{
   backTo: string;
   // "Back to Systems"
@@ -9,6 +13,8 @@ defineProps<{
   // The kind, singular, Title Case: "System".
   eyebrow: string;
   title: string;
+  systemId?: string;
+  source?: ResourceSource;
 }>();
 </script>
 
@@ -38,7 +44,11 @@ defineProps<{
           <slot name="actions" />
         </div>
       </div>
-      <div v-if="$slots.meta" class="flex flex-wrap items-center gap-2">
+      <p v-if="systemId" class="text-[15px] text-muted">
+        System: <SystemLink :system-id="systemId" />
+      </p>
+      <div v-if="source || $slots.meta" class="flex flex-wrap items-center gap-2">
+        <SourceBadge v-if="source" :source="source" />
         <slot name="meta" />
       </div>
     </header>

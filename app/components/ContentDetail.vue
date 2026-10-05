@@ -38,6 +38,7 @@ interface ContentDetail {
   id: string;
   readableId: string;
   ownerReadableId: string | null;
+  source: ResourceSource;
   name: string;
   updatedAt: string;
   contentTypeId: string;
@@ -330,6 +331,8 @@ function printPage() {
         :back-label="`Back to ${listLabel}`"
         :eyebrow="label"
         :title="item.name"
+        :system-id="item.systemId"
+        :source="item.source"
       >
         <template #meta>
           <ReadableIdBadge
@@ -341,8 +344,7 @@ function printPage() {
             {{ contentType.name }}
           </LabelChip>
           <span class="text-sm text-muted">
-            <SystemLink :system-id="item.systemId" />
-            · Updated {{ formatShortDate(item.updatedAt) }}
+            Updated {{ formatShortDate(item.updatedAt) }}
           </span>
         </template>
         <template #actions>

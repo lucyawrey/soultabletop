@@ -3,7 +3,6 @@ import type { ResourceSource } from "#shared/resource-list";
 import type { TableColumn } from "@nuxt/ui";
 import {
   isCharacterCategory,
-  NON_CHARACTER_CATEGORIES,
   type ContentCategory,
 } from "#shared/content-categories";
 import { extractApiErrorMessage } from "~/utils/api-error";
@@ -33,15 +32,28 @@ interface ContentTypeItem {
   contentCategory: ContentCategory;
 }
 
-const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySystem: true, extraQuery: { categories: NON_CHARACTER_CATEGORIES.join(",") } });
-const { items: contentRecords, status, refresh } = list;
-
 const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
     default: () => [],
   },
 );
+
+// General content, pages, or both; or one content type while a system is
+// selected.
+const {
+  value: filter,
+  options: filterOptions,
+  label: filterLabel,
+  extraQuery: filterQuery,
+} = useContentListFilter(
+  { general: "General", page: "Pages" },
+  "All content",
+  contentTypes,
+);
+
+const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySystem: true, extraQuery: filterQuery });
+const { items: contentRecords, status, refresh } = list;
 
 const standardContentTypes = computed(() =>
   contentTypes.value.filter(
@@ -215,6 +227,16 @@ async function remove() {
       view-key="content"
       default-view="table"
     >
+      <template #filters>
+        <USelect
+          v-if="standardContentTypes.length > 0"
+          v-model="filter"
+          :items="filterOptions"
+          :aria-label="filterLabel"
+          :ui="{ base: 'h-10' }"
+          class="w-56"
+        />
+      </template>
 <UTable
       :data="contentRecords"
       :columns="columns"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import {
   extractApiErrorMessage,
   extractBrokenSheets,
@@ -22,6 +23,7 @@ interface ContentTypeDetail {
   id: string;
   readableId: string;
   ownerReadableId: string | null;
+  source: ResourceSource;
   name: string;
   systemId: string;
   contentCategory: ContentCategory;
@@ -305,6 +307,8 @@ async function remove() {
         back-label="Back to Content Types"
         eyebrow="Content Type"
         :title="contentType.name"
+        :system-id="contentType.systemId"
+        :source="contentType.source"
       >
         <template #meta>
           <ReadableIdBadge

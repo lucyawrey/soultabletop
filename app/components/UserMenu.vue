@@ -88,8 +88,37 @@ async function signOut() {
   }
 }
 
+// "Working as": create dialogs' Owner field starts on this group. Offered only
+// when there are groups the user can create resources for.
+const { group: workingAs, groups: ownerGroups, setGroup } = useWorkingAs();
+const workingAsItems = computed<DropdownMenuItem[]>(() =>
+  ownerGroups.value.length
+    ? [
+        { type: "label", label: "Working as" },
+        {
+          label: "Yourself",
+          type: "checkbox",
+          checked: !workingAs.value,
+          onUpdateChecked: (checked: boolean) => {
+            if (checked) setGroup(null);
+          },
+        },
+        ...ownerGroups.value.map(
+          (item): DropdownMenuItem => ({
+            label: item.name,
+            type: "checkbox",
+            checked: workingAs.value?.id === item.id,
+            onUpdateChecked: (checked: boolean) =>
+              setGroup(checked ? item.id : null),
+          }),
+        ),
+      ]
+    : [],
+);
+
 const items = computed<DropdownMenuItem[][]>(() => [
   [{ type: "label", slot: "account" as const }],
+  ...(workingAsItems.value.length ? [workingAsItems.value] : []),
   [
     { label: "Profile", icon: "i-lucide-user", to: "/profile" },
   ],
@@ -118,25 +147,40 @@ const items = computed<DropdownMenuItem[][]>(() => [
       :block="!collapsed"
       class="gap-2 p-1.5"
       :class="collapsed ? 'justify-center' : 'justify-start'"
-      aria-label="User menu"
+      :aria-label="workingAs ? `User menu, working as ${workingAs.name}` : 'User menu'"
     >
       <UIcon
         v-if="signOutBusy"
         name="i-lucide-loader-circle"
         class="size-8 animate-spin p-1.5"
       />
-      <UAvatar
+      <!-- The dot marks "working as" a group on the collapsed rail. -->
+      <UChip
         v-else
-        ref="triggerAvatar"
-        v-bind="avatar"
-        size="md"
-        :ui="avatarUi"
-      />
+        :show="collapsed && !!workingAs"
+        color="primary"
+        position="bottom-right"
+        inset
+      >
+        <UAvatar
+          ref="triggerAvatar"
+          v-bind="avatar"
+          size="md"
+          :ui="avatarUi"
+        />
+      </UChip>
       <span v-if="!collapsed" class="min-w-0 flex-1 text-start">
         <span class="block truncate text-sm font-semibold text-highlighted">
           {{ displayName }}
         </span>
-        <span v-if="showUsername" class="block truncate text-xs font-normal text-muted">
+        <span
+          v-if="workingAs"
+          class="flex min-w-0 items-center gap-1 text-xs font-medium text-primary"
+        >
+          <UIcon name="i-lucide-users" class="size-3.5 shrink-0" />
+          <span class="truncate">as {{ workingAs.name }}</span>
+        </span>
+        <span v-else-if="showUsername" class="block truncate text-xs font-normal text-muted">
           @{{ username }}
         </span>
       </span>

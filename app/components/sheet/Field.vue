@@ -136,6 +136,7 @@ const tags = computed(() =>
 );
 
 // A computed maximum can be anything; keep it a whole number of at least 0.
+// 0 (or no `max`) shows just the count.
 const trackerMax = computed(() => Math.max(Math.floor(number(props.node.attrs.max) ?? 0), 0));
 const trackerValue = computed(() =>
   typeof value.value === "number" ? value.value : 0,
@@ -265,6 +266,14 @@ const imageSize = computed(
     </span>
 
     <span
+      v-else-if="display === 'boolean' && node.attrs.style === 'dot'"
+      class="inline-block size-4 rounded-full border-2 border-primary align-middle"
+      :class="value === true ? 'bg-primary' : ''"
+    >
+      <span class="sr-only">{{ value === true ? "Yes" : "No" }}</span>
+    </span>
+
+    <span
       v-else-if="display === 'boolean'"
       class="inline-flex items-center gap-1"
     >
@@ -287,6 +296,11 @@ const imageSize = computed(
       <span v-if="!tags.length" class="text-dimmed">—</span>
     </div>
 
+    <!-- Without a maximum, just the count. -->
+    <span v-else-if="display === 'tracker' && trackerMax === 0" class="tabular-nums">
+      {{ trackerValue }}
+    </span>
+
     <div v-else-if="display === 'tracker'" class="space-y-1">
       <div v-if="node.attrs.style === 'pips'" class="flex flex-wrap gap-1">
         <span
@@ -296,7 +310,7 @@ const imageSize = computed(
           :class="index < trackerValue ? 'bg-primary' : ''"
         />
       </div>
-      <UProgress v-else :model-value="trackerValue" :max="trackerMax || 1" />
+      <UProgress v-else :model-value="trackerValue" :max="trackerMax" />
       <div class="text-xs text-muted tabular-nums">
         {{ trackerValue }} / {{ trackerMax }}
       </div>

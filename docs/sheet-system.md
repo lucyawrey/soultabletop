@@ -146,10 +146,10 @@ View mode renders formatted values, edit mode renders the input.
 |---|---|---|---|
 | `Text` | `multiline`, `placeholder` | string | `UInput` / `UTextarea` |
 | `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "exceptZero"` so the input shows "+3" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
-| `Checkbox` / `Toggle` | — | boolean | `UCheckbox` / `USwitch` |
+| `Checkbox` / `Toggle` | Checkbox: `style` (check/dot) | boolean | `UCheckbox` / `USwitch`; `style="dot"` is a filled or empty circle in every mode, with no Yes/No text (e.g. proficiency marks) |
 | `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
 | `Tags` | — | array of string (not of choices) | `UInputTags` |
-| `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
+| `Tracker` | `max` (optional, at least 0), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max" |
 | `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format`, `formula` | any | read-only in both modes |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
@@ -236,7 +236,7 @@ required `resourceLink` or `content` entry without a default would be left empty
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
 | `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
-| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row |
+| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
 
 Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
 skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even

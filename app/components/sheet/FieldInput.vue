@@ -168,7 +168,8 @@ const numberFormat = computed(() =>
     : undefined,
 );
 
-// Tracker
+// Tracker. Without a maximum (or at 0) it's a plain count: no bar, pips, or
+// "/ max".
 const trackerMax = computed(() => Math.max(Math.floor(number(props.node.attrs.max) ?? 0), 0));
 const pips = computed(() =>
   Array.from({ length: Math.min(trackerMax.value, 50) }, (_, index) => index),
@@ -289,6 +290,18 @@ const imageError = computed(() =>
     :disabled="disabled"
     :aria-label="label"
   />
+  <!-- `style="dot"`: a filled or empty circle (e.g. proficiency marks). -->
+  <button
+    v-else-if="display === 'boolean' && node.attrs.style === 'dot'"
+    type="button"
+    role="checkbox"
+    :aria-checked="value === true"
+    :disabled="disabled"
+    :aria-label="label"
+    class="size-5 rounded-full border-2 border-primary disabled:cursor-not-allowed disabled:opacity-75"
+    :class="value === true ? 'bg-primary' : ''"
+    @click="booleanValue = !booleanValue"
+  />
   <UCheckbox
     v-else-if="display === 'boolean'"
     v-model="booleanValue"
@@ -305,7 +318,7 @@ const imageError = computed(() =>
   />
 
   <div v-else-if="display === 'tracker'" class="space-y-1">
-    <div v-if="node.attrs.style === 'pips'" class="flex flex-wrap gap-1">
+    <div v-if="node.attrs.style === 'pips' && trackerMax > 0" class="flex flex-wrap gap-1">
       <button
         v-for="index in pips"
         :key="index"
@@ -325,11 +338,11 @@ const imageError = computed(() =>
       :increment="narrow ? false : undefined"
       :decrement="narrow ? false : undefined"
       :ui="narrow ? { base: 'px-1.5' } : undefined"
-      :max="trackerMax"
+      :max="trackerMax || undefined"
       :aria-label="label"
       class="w-full"
     />
-    <div class="text-xs text-muted tabular-nums">
+    <div v-if="trackerMax > 0" class="text-xs text-muted tabular-nums">
       {{ typeof value === "number" ? value : 0 }} / {{ trackerMax }}
     </div>
   </div>

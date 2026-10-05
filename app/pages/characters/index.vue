@@ -2,7 +2,6 @@
 import type { ResourceSource } from "#shared/resource-list";
 import type { TableColumn } from "@nuxt/ui";
 import {
-  CHARACTER_CATEGORIES,
   CONTENT_CATEGORY_LABELS,
   isCharacterCategory,
   type ContentCategory,
@@ -34,24 +33,31 @@ interface ContentTypeItem {
   contentCategory: ContentCategory;
 }
 
-// Player characters, NPCs, or both.
-const categoryFilter = ref<ContentCategory | "all">("all");
-const categoryFilterOptions = [
-  { label: "All characters", value: "all" },
-  { label: "Player Characters", value: "playerCharacter" },
-  { label: "Non-Player Characters", value: "nonPlayerCharacter" },
-];
-
-const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySystem: true, extraQuery: () => ({ categories: categoryFilter.value === "all" ? CHARACTER_CATEGORIES.join(",") : categoryFilter.value }) });
-const { items: characters, status, refresh } = list;
-watch(categoryFilter, () => list.setPage(1));
-
 const { data: contentTypes, status: contentTypesStatus } = await useLazyFetch<ContentTypeItem[]>(
   "/api/content-type",
   {
     default: () => [],
   },
 );
+
+// Player characters, NPCs, or both; or one content type while a system is
+// selected.
+const {
+  value: filter,
+  options: filterOptions,
+  label: filterLabel,
+  extraQuery: filterQuery,
+} = useContentListFilter(
+  {
+    playerCharacter: "Player Characters",
+    nonPlayerCharacter: "Non-Player Characters",
+  },
+  "All characters",
+  contentTypes,
+);
+
+const list = await useResourceList<ContentItem>("/api/content", loggedIn, { bySystem: true, extraQuery: filterQuery });
+const { items: characters, status, refresh } = list;
 
 const characterTypes = computed(() =>
   contentTypes.value.filter((item) => isCharacterCategory(item.contentCategory)),
@@ -233,9 +239,9 @@ async function remove() {
       <template #filters>
         <USelect
           v-if="characterTypes.length > 0"
-          v-model="categoryFilter"
-          :items="categoryFilterOptions"
-          aria-label="Filter by category"
+          v-model="filter"
+          :items="filterOptions"
+          :aria-label="filterLabel"
           :ui="{ base: 'h-10' }"
           class="w-56"
         />
