@@ -50,7 +50,7 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Number` | `formula`, `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric); `formula` overrides |
 | `Checkbox` | `formula` | boolean | `formula` overrides |
 | `Toggle` | none | boolean | On/off switch |
-| `Select` | `options` (req, comma-separated) | string | `options="Small, Medium, Large"` |
+| `Select` | `options` (comma-separated; only on a text field without schema options) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
 | `Tags` | none | array of strings | |
 | `Tracker` | `formula`, `max` (req, number >= 1, one `{formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; `formula` (read-only) computes the current value |
 | `Ref` | none | resourceLink, content | Link to the referenced resource or Content |

@@ -518,3 +518,34 @@ describe("sheet step budget", () => {
     );
   });
 });
+
+describe("choice fields", () => {
+  const choiceSchemas: SheetSchemas = {
+    root: {
+      hasStrictSchema: true,
+      schema: {
+        rank: { type: "number", options: [{ value: 0, label: "Untrained" }, { value: 2, label: "Expert" }] },
+      },
+    },
+    types: {},
+  };
+
+  it("shows the label for {path} text and the value for other formulas", () => {
+    const compiled = compileSheet("<Note>{rank}, {rank + 0}, {/rank}</Note>", choiceSchemas);
+    const parts = ((compiled.nodes[0] as ValidatedElement).children[0] as ValidatedText).parts;
+    const scope: SheetScope = { value: { rank: 2 }, path: [] };
+    expect(interpolateSheetText(parts, scope, scope, refs)).toBe("Expert, 2, Expert");
+    const unlisted: SheetScope = { value: { rank: 3 }, path: [] };
+    expect(interpolateSheetText(parts, unlisted, unlisted, refs)).toBe("3, 3, 3");
+  });
+
+  it("starts a new choice field at its first option", () => {
+    expect(defaultSheetValue(choiceSchemas.root.schema.rank, choiceSchemas)).toBe(0);
+    expect(
+      defaultSheetValue(
+        { type: "struct", entries: { size: { type: "string", required: true, options: [{ value: "m" }] } } },
+        choiceSchemas,
+      ),
+    ).toEqual({ size: "m" });
+  });
+});
