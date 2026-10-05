@@ -4,9 +4,9 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-10-05
 
-- **PR #88 open: Demo polish** (branch and worktree `demo-polish`, Tier B, not reviewed yet). Smoke-tested on a dev server; not checked in a browser: `display="text"` for the dot Checkbox and max-less Tracker, and the collapsed-rail "working as" dot. After merging each PR, clean up its worktree, branch, and the `TODO.md` items its In progress entry lists.
-- **PF2e demo system blockers** (checked 2026-10-05): only the database reset (#87, descriptions for the credits, has merged) (anything loaded before it is wiped). Its design and import script can start any time; the polish, onboarding, and dice items don't block it.
-- **UI mockup process** (2026-10-05): `.claude/ui-mockups.md`; the redesign mockup is frozen in `.claude/mockups/ui-redesign/`. **PR #89 open: mockup tools** (worktree `mockup-tools`; agent scripts in `.claude/scripts/`): the Tailwind theme kit and `compare-mockup.mjs`. Its first comparison (landing) shows small drift from the frozen mockup (nav order, sign-in tab text size), not yet logged in `TODO.md`. Then continue the demo prep order in `TODO.md` Next up.
-- **After #89 merges:** `agent-run.sh` and `smoke-session.mjs` move to `.claude/scripts/`. Merge `origin/main` into `docs` right away (it brings the new `settings.json` paths), then update the docs-only references (`.claude/ui-mockups.md`, this file) and the user's `.claude/settings.local.json` allowlist entries. Other worktrees keep the old paths until they merge `main`.
+- **Nothing in progress.** Merged today: #87 (resource descriptions), #88 (demo polish), #89 (mockup tools; agent-only scripts moved to `.claude/scripts/`, including `agent-run.sh`: older worktrees still have it in `scripts/`). All their worktrees and branches are removed.
+- **Next:** the demo prep order in `TODO.md` Next up, starting with the database reset (confirm with the user right before dropping). The PF2e demo system's only blocker is the reset.
+- **UI mockups:** the process is `.claude/ui-mockups.md`; the redesign's frozen reference is `.claude/mockups/ui-redesign/`. A first comparison of the landing page found small drift (nav order: Content before Characters; smaller sign-in tab text; Sign in button looks disabled until filled), not yet logged in `TODO.md` or checked with the user.
+- The user asked about the `frontend-design` plugin: worth trying for an exploratory direction mockup, not for matching the frozen design.
 - The live `pf2e-test` sheet still uses the old `{= }` / braced `show` syntax; the reset removes it.
 - **Unverified on the Mac:** that `code` is on the PATH. **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70).
