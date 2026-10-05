@@ -67,6 +67,7 @@ function env(overrides: Partial<FormulaEnv> = {}): FormulaEnv {
     scope: root,
     refs,
     budget: formulaBudget(),
+    hasDefinition: (name) => definitions.has(name),
     call(name, args) {
       const definition = definitions.get(name);
       return definition ? callFormulaDefinition(definition, args, this) : undefined;
@@ -333,6 +334,79 @@ describe("functions", () => {
   });
 });
 
+describe("list functions", () => {
+  it.each([
+    ["join(map(inventory, qty), ', ')", "10, 1, 2"],
+    ["join(map(inventory, item.name), ', ')", "Rope, Sword"],
+    ["sum(map(inventory, qty * 2))", 26],
+    ["length(map(empty, .))", 0],
+    ["length(map(missing, .))", 0],
+    ["count(filter(inventory, qty > 1))", 2],
+    ["join(map(filter(inventory, qty > 1), item.name), ', ')", "Rope"],
+    ["join(filter(tags, . != 'brave'), ',')", "tired"],
+    ["join(sort(tags, ., true), ' ')", "tired brave"],
+    ["join(map(sort(inventory, qty), qty), ',')", "1,2,10"],
+    ["join(map(sort(inventory, qty, true), qty), ',')", "10,2,1"],
+    ["join(sort(list('b', 'A', 'c')), '')", "Abc"],
+    // Ties (here by case) keep the list's order, in both directions.
+    ["join(sort(list('b', 'B', 'a')), '')", "abB"],
+    ["join(sort(list('b', 'B', 'a'), ., true), '')", "bBa"],
+    // Empty values go last, in both directions.
+    ["join(map(sort(list(2, null, 1)), coalesce(., 0)), ',')", "1,2,0"],
+    ["join(map(sort(list(2, null, 1), ., true), coalesce(., 0)), ',')", "2,1,0"],
+    ["join(sort(list(2, 1), ., missing), ',')", "1,2"],
+    ["first(inventory).qty", 10],
+    ["first(inventory, qty < 5).qty", 1],
+    ["first(inventory, qty > 100).qty", null],
+    ["first(inventory).item.name", "Rope"],
+    ["first(inventory, qty == 1).item.name", "Sword"],
+    ["first(empty)", null],
+    ["first(tags)", "brave"],
+    ["first(sort(inventory, qty)).qty", 1],
+    ["first(groups).members.1.hp", 2],
+    ["at(inventory, -1).qty", 2],
+    ["at(inventory, 3)", null],
+    ["at(tags, 0)", "brave"],
+    ["at(tags, -2)", "brave"],
+    ["at(tags, -3)", null],
+    ["at(tags, missing)", null],
+    ["sum(groups, first(members).hp)", 4],
+  ])("%s → %j", (source, value) => {
+    expect(evaluate(source)).toEqual(value);
+  });
+
+  it.each([
+    ["map(groups, members)", "map needs a single value for each item, not a list"],
+    ["filter(inventory, qty)", "filter needs true or false, not a number"],
+    ["first(inventory, qty)", "first needs true or false, not a number"],
+    ["sort(inventory)", "sort needs numbers or text for each item, not a group of fields"],
+    ["sort(list(1, 'a'))", "sort can't compare numbers with text"],
+    ["sort(tags, ., 1)", "sort needs true or false, not a number"],
+    ["at(tags, 1.5)", "at needs a whole number as its index"],
+    ["at(level, 0)", "at needs a list, not a number"],
+    ["first(filter(tags, true).x)", ".x needs one item, not a list; pick one with first or at"],
+    ["first(nums).x", ".x needs a group of fields, not a number"],
+  ])("%s is a type error", (source, message) => {
+    expect(failure(source)).toEqual({ code: "type", message });
+  });
+
+  it("stops first at the first match", () => {
+    const budget = { steps: 1000 };
+    evaluate("first(inventory, qty > 5).qty", { budget });
+    const early = 1000 - budget.steps;
+    budget.steps = 1000;
+    evaluate("first(inventory, qty > 1000).qty", { budget });
+    expect(1000 - budget.steps).toBeGreaterThan(early);
+  });
+
+  it("evaluates per-item arguments only per item when the sheet has no definition by that name", () => {
+    // At the top level `qty + name` is a type error; for each item it's nothing.
+    expect(evaluate("count(filter(inventory, qty + name > 0))")).toBe(0);
+    // Without knowing, they're computed once at the top level first.
+    expect(failure("count(filter(inventory, qty + name > 0))", { hasDefinition: undefined }).code).toBe("type");
+  });
+});
+
 describe("definitions", () => {
   it("calls definitions with arguments, against the top level", () => {
     expect(evaluate("pb()")).toBe(2);
@@ -392,7 +466,7 @@ describe("limits and safety", () => {
     const own = parseFormula("42", { line: 1, column: 1, offset: 0 }).ast!;
     const call: FormulaEnv["call"] = (name, args) =>
       name === "list" ? callFormulaDefinition({ params: ["a"], ast: own }, args, env()) : undefined;
-    expect(evaluate("list(1)", { call })).toBe(42);
+    expect(evaluate("list(1)", { call, hasDefinition: (name) => name === "list" })).toBe(42);
     expect(evaluate("length(list(1, 2))", { call: () => undefined })).toBe(2);
   });
 

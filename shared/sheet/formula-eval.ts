@@ -47,6 +47,9 @@ export interface FormulaEnv {
   // Calls the sheet's definition `name`, or returns undefined if the sheet has
   // none by that name. See callFormulaDefinition.
   call(name: string, args: FormulaValue[]): FormulaValue | undefined;
+  // Whether the sheet has a definition by this name. Without it, a later
+  // built-in's arguments are computed first in case a definition takes them.
+  hasDefinition?(name: string): boolean;
   // Shared by everything one evaluation computes, definitions included.
   budget: FormulaBudget;
   // Definitions and computed fields entered so far.
@@ -215,20 +218,27 @@ function callBuiltin(
     value: (index) => evaluateNode(node.args[index]!, env),
     item: () => env.scope.item,
     items: (listIndex, exprIndex) => {
+      const values: FormulaValue[] = [];
+      const error = context.each(listIndex, exprIndex, (_, value) => {
+        values.push(value);
+      });
+      return error ?? values;
+    },
+    each: (listIndex, exprIndex, visit) => {
       // Each item costs a step.
       const items = listItems(node.args[listIndex]!, env, fn.name);
       if (isFormulaError(items)) return items;
-      const values: FormulaValue[] = [];
       for (const item of items) {
         if (!step(env)) return budgetError();
+        const itemValue = toFormulaValue(item.value);
         const value =
           exprIndex === undefined
-            ? toFormulaValue(item.value)
+            ? itemValue
             : evaluateNode(node.args[exprIndex]!, { ...env, scope: item });
         if (isFormulaError(value)) return value;
-        values.push(value);
+        if (visit(itemValue, value) === false) break;
       }
-      return values;
+      return undefined;
     },
   };
   return fn.special!(context);
@@ -241,7 +251,11 @@ function evaluateCall(
   // The same order as resolveFormulaCall: a first-version built-in, then the
   // sheet's definition, then a later built-in.
   const builtin = formulaFunctions.get(node.name);
-  if (builtin && !formulaLaterBuiltins.includes(node.name)) return callBuiltin(builtin, node, env);
+  if (
+    builtin &&
+    (!formulaLaterBuiltins.includes(node.name) || env.hasDefinition?.(node.name) === false)
+  )
+    return callBuiltin(builtin, node, env);
   if (formulaDiceNames.includes(node.name)) return new FormulaError("dice", diceNotAvailable);
 
   const args: FormulaValue[] = [];
@@ -297,6 +311,22 @@ export function evaluateFormulaNode(node: FormulaNode, env: FormulaEnv): Formula
       return evaluateBinary(node, env);
     case "call":
       return evaluateCall(node, env);
+    case "member": {
+      const target = evaluateNode(node.target, env);
+      if (isFormulaError(target) || target === null) return target;
+      if (Array.isArray(target)) {
+        return new FormulaError(
+          "type",
+          `${node.text} needs one item, not a list; pick one with first or at`,
+        );
+      }
+      if (typeof target === "number" || typeof target === "boolean")
+        return typeError(node.text, "a group of fields", target);
+      // Text is a reference, followed like a path. Fields reached here aren't
+      // the Content's top-level fields, so computed fields don't apply.
+      const resolved = resolveSheetPath(node.path, env.root, { value: target, path: null }, env.refs);
+      return resolved.unavailable ? null : toFormulaValue(resolved.value);
+    }
   }
 }
 

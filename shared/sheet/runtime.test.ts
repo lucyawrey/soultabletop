@@ -598,6 +598,21 @@ describe("struct entry rows", () => {
     expect(values.slice(0, 2).map((node) => evaluateSheetFormula(node.formula!.ast, sheetRoot, sheetRoot, refs))).toEqual([1, 2]);
   });
 
+  it("lets the list functions repeat over structs", () => {
+    const compiled = compileSheet(
+      `<Value formula="first(skills, rank > 0).rank" />
+       <Value formula="sum(filter(attributes, . > 0))" />
+       <Value formula="at(attributes, -1)" />
+       <Value formula="join(map(sort(attributes, ., true), text(.)), ',')" />`,
+      structSchemas,
+    );
+    expect(compiled.diagnostics.filter((item) => item.severity === "error")).toEqual([]);
+    const values = compiled.nodes.filter((node): node is ValidatedElement => node.type === "element");
+    expect(values.map((node) => evaluateSheetFormula(node.formula!.ast, sheetRoot, sheetRoot, refs))).toEqual([
+      2, 3, -1, "3,-1",
+    ]);
+  });
+
   it("gives array rows their index as itemKey()", () => {
     const compiled = compileSheet(`<Value formula="sum(tags, itemKey())" />`, {
       root: { hasStrictSchema: true, schema: { tags: { type: "array", itemType: { type: "string" } } } },

@@ -145,6 +145,21 @@ describe("calls and parameters", () => {
     expect(ast("not(a)")).toMatchObject({ type: "unary", op: "not" });
   });
 
+  it("reads paths on call results", () => {
+    expect(ast("first(a).b")).toEqual({
+      type: "member",
+      target: { type: "call", name: "first", args: [{ type: "path", path: { absolute: false, segments: ["a"] }, text: "a" }] },
+      path: { absolute: false, segments: ["b"] },
+      text: ".b",
+    });
+    expect(print("first(a, c).b.c + 1")).toBe("(first(a, c).b.c + 1)");
+    expect(print("at(a, 0).b / 2")).toBe("(at(a, 0).b / 2)");
+    expect(error("first(a) .b").message).toMatch(/^Unexpected "\.b"/);
+    expect(error("first(a).0").message).toBe("Pick an item by its index with at, like at(attacks, 0)");
+    expect(error("first(a).b(1)").message).toMatch(/isn't a function name/);
+    expect(error("first(a).constructor").message).toMatch(/reserved name/);
+  });
+
   it("rejects calls on paths", () => {
     expect(error("a.b(1)").message).toMatch(/isn't a function name/);
     expect(error("/a(1)").message).toMatch(/isn't a function name/);

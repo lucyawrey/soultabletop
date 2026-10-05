@@ -747,6 +747,10 @@ describe("formula types from the schema", () => {
   const loose: SheetSchemas = { root: { ...character, hasStrictSchema: false, showSheetWarnings: true }, types: schemas.types };
 
   it.each([
+    ["first(inventory).item.weight + 1", []],
+    ["first(inventory).item.cost + 1", ["formula-type"]],
+    ["first(inventory).item.nope", ["unknown-field"]],
+    ["first(tags).x", ["not-an-object"]],
     ["hp + 1", []],
     ["notes + 1", ["formula-type"]],
     ["alive + 1", ["formula-type"]],
@@ -999,7 +1003,7 @@ describe("repeating over a struct's entries", () => {
     expect(structErrors(`<Table field="attacks"><Column formula="itemKey() + 1" /></Table>`)).toEqual([]);
     expect(structErrors(`<Value formula="sum(attacks, bonus + itemKey())" />`)).toEqual([]);
     expect(structMessages(`<Value formula="itemKey()" />`)).toEqual([
-      "error formula-no-item: itemKey() works only in a List or Table row, or inside sum, count, any, or all",
+      "error formula-no-item: itemKey() works only in a List or Table row, or inside a per-item function like sum or filter",
     ]);
     expect(structErrors(`<Table field="skills"><Column field="rank" /></Table><Define name="k" formula="itemLabel()" /><Value formula="k()" />`)).toContain("formula-no-item");
   });
@@ -1014,6 +1018,19 @@ describe("repeating over a struct's entries", () => {
     const call = first.formula!.ast as Extract<FormulaNode, { type: "call" }>;
     expect(call.args[0]).toMatchObject({ type: "path", entries: [{ key: "acrobatics" }, { key: "arcana" }] });
     expect(structErrors(`<Value formula="sum(mixed)" />`)).toEqual(["formula-type"]);
+  });
+
+  it("lets the list functions repeat over a struct's entries, and checks paths on their results", () => {
+    expect(structErrors(`<Value formula="first(skills, rank > 0).rank" />`)).toEqual([]);
+    expect(structErrors(`<Value formula="at(sort(skills, rank, true), 0).rank" />`)).toEqual([]);
+    expect(structErrors(`<Value formula="sum(filter(attributes, . > 0))" />`)).toEqual([]);
+    expect(structErrors(`<Value formula="at(attributes, -1) + 1" />`)).toEqual([]);
+    expect(structMessages(`<Value formula="first(skills).nope" />`)).toEqual([
+      'error unknown-field: ".nope": the schema has no field "nope"',
+    ]);
+    expect(structErrors(`<Value formula="first(attacks).bonus + 1" />`)).toEqual([]);
+    expect(structErrors(`<Value formula="concat(first(attacks).bonus)" />`)).toEqual([]);
+    expect(structErrors(`<Value formula="filter(attacks, bonus > 0).bonus" />`)).toEqual(["formula-type"]);
   });
 
   it("lets a definition named like the new functions keep working, with a warning", () => {

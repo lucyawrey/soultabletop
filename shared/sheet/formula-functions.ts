@@ -34,6 +34,15 @@ export interface FormulaCallContext {
   // The items of the list in argument `listIndex`, or with `exprIndex`, that
   // argument evaluated with each item as its scope. Nulls are left in.
   items(listIndex: number, exprIndex?: number): FormulaValue[] | FormulaError;
+  // Visits the same items in order: each item's own value and its value
+  // (argument `exprIndex` evaluated with the item as its scope, or the item's
+  // own value without one), until `visit` returns false. An error stops it and
+  // is returned.
+  each(
+    listIndex: number,
+    exprIndex: number | undefined,
+    visit: (item: FormulaValue, value: FormulaValue) => boolean | undefined,
+  ): FormulaError | undefined;
 }
 
 export interface FormulaArgCheck {
@@ -45,8 +54,13 @@ export interface FormulaFunction {
   name: string;
   minArgs: number;
   maxArgs: number;
-  // Arguments evaluated once per item of argument 0, scoped to the item.
+  // Arguments evaluated once per item of argument 0, scoped to the item. Set
+  // (empty if need be) on every function that repeats over argument 0, so a
+  // struct path's entries are its items.
   itemArgs?: readonly number[];
+  // The result is argument 0's items ("list") or one of them ("item"), so
+  // paths on it (`first(weapons).bonus`) are checked against the schema.
+  resultScope?: "list" | "item";
   // Arguments are evaluated by the function (only the ones it needs).
   lazy?: boolean;
   // Eager and walks list arguments: each item costs a step.
@@ -421,6 +435,179 @@ const functionList: FormulaFunction[] = [
     reduce: (values) => values.every((value) => value === true),
   }),
   {
+    name: "map",
+    minArgs: 2,
+    maxArgs: 2,
+    itemArgs: [1],
+    signature: "map(list, expr)",
+    description:
+      "The list of expr for each item (paths in expr are the item's), like join(map(feats, name), ', '); empty values stay in it",
+    result: ([, expr]) => arrayOf(expr ?? formulaTypes.any),
+    check: (types, problems) => {
+      const [list, expr] = types;
+      if (list && !couldBe(list, ["array"])) problems.report(0, `map needs a list, not ${describeType(list)}`);
+      if (expr && !couldBe(expr, ["number", "string", "boolean"]))
+        problems.report(1, `map needs a single value for each item, not ${describeType(expr)}`);
+    },
+    special: (call) => {
+      const values = call.items(0, 1);
+      if (isFormulaError(values)) return values;
+      for (const value of values) {
+        if (value !== null && typeof value === "object")
+          return typeError("map", "a single value for each item", value);
+      }
+      return values;
+    },
+  },
+  {
+    name: "filter",
+    minArgs: 2,
+    maxArgs: 2,
+    itemArgs: [1],
+    resultScope: "list",
+    signature: "filter(list, cond)",
+    description: "The items that make cond true (paths in cond are the item's), in order",
+    result: ([list]) => arrayOf(list ? itemTypeOf(list) : formulaTypes.any),
+    check: (types, problems) => {
+      const [list, cond] = types;
+      if (list && !couldBe(list, ["array"])) problems.report(0, `filter needs a list, not ${describeType(list)}`);
+      if (cond && !couldBe(cond, ["boolean"]))
+        problems.report(1, `filter needs true or false for each item, not ${describeType(cond)}`);
+    },
+    special: (call) => {
+      const items: FormulaValue[] = [];
+      let failed: FormulaError | undefined;
+      const error = call.each(0, 1, (item, value) => {
+        const condition = conditionValue("filter", value);
+        if (isFormulaError(condition)) {
+          failed = condition;
+          return false;
+        }
+        if (condition) items.push(item);
+      });
+      return error ?? failed ?? items;
+    },
+  },
+  {
+    name: "sort",
+    minArgs: 1,
+    maxArgs: 3,
+    itemArgs: [1],
+    resultScope: "list",
+    signature: "sort(list, expr?, descending?)",
+    description:
+      "The items in order of expr (or of the items themselves; sort(list, ., true) sorts them high to low): numbers by value, text ignoring case; empty values last",
+    result: ([list]) => arrayOf(list ? itemTypeOf(list) : formulaTypes.any),
+    check: (types, problems) => {
+      const [list, expr, descending] = types;
+      if (list && !couldBe(list, ["array"])) {
+        problems.report(0, `sort needs a list, not ${describeType(list)}`);
+        return;
+      }
+      const each = expr ?? (list ? itemTypeOf(list) : formulaTypes.any);
+      if (!couldBe(each, ["number", "string"]))
+        problems.report(
+          expr ? 1 : 0,
+          expr
+            ? `sort needs numbers or text for each item, not ${describeType(each)}`
+            : `sort needs a list of numbers or text, not of ${describeType(each)}; add a second argument, like sort(list, field)`,
+        );
+      expect(types, problems, "sort", ["boolean"], "true or false as descending", descending ? [2] : []);
+    },
+    special: (call) => {
+      const keyed: { item: FormulaValue; key: FormulaValue; index: number }[] = [];
+      const error = call.each(0, call.argCount > 1 ? 1 : undefined, (item, key) => {
+        keyed.push({ item, key, index: keyed.length });
+      });
+      if (error) return error;
+      const descending = call.argCount > 2 ? conditionValue("sort", call.value(2)) : false;
+      if (isFormulaError(descending)) return descending;
+      let kind: "number" | "string" | undefined;
+      for (const { key } of keyed) {
+        if (key === null) continue;
+        if (typeof key !== "number" && typeof key !== "string")
+          return typeError("sort", "numbers or text for each item", key);
+        if (kind && kind !== typeof key)
+          return new FormulaError("type", "sort can't compare numbers with text");
+        kind = typeof key as "number" | "string";
+      }
+      // Text compares by character code, ignoring case and locale, so the
+      // server and the browser agree. Ties keep the list's order.
+      const sortKey = (key: FormulaValue) => (typeof key === "string" ? key.toLowerCase() : key);
+      keyed.sort((a, b) => {
+        if (a.key === null || b.key === null) {
+          if (a.key === b.key) return a.index - b.index;
+          return a.key === null ? 1 : -1;
+        }
+        const left = sortKey(a.key)!;
+        const right = sortKey(b.key)!;
+        const order = left < right ? -1 : left > right ? 1 : 0;
+        return (descending ? -order : order) || a.index - b.index;
+      });
+      return keyed.map(({ item }) => item);
+    },
+  },
+  {
+    name: "first",
+    minArgs: 1,
+    maxArgs: 2,
+    itemArgs: [1],
+    resultScope: "item",
+    signature: "first(list, cond?)",
+    description:
+      "The first item (or the first that makes cond true; paths in cond are the item's); nothing if there is none. Read its fields with a path: first(weapons, equipped).bonus",
+    result: ([list]) => unionOf(list ? itemTypeOf(list) : formulaTypes.any, formulaTypes.null),
+    check: (types, problems) => {
+      const [list, cond] = types;
+      if (list && !couldBe(list, ["array"])) problems.report(0, `first needs a list, not ${describeType(list)}`);
+      if (cond && !couldBe(cond, ["boolean"]))
+        problems.report(1, `first needs true or false for each item, not ${describeType(cond)}`);
+    },
+    special: (call) => {
+      let found: FormulaValue = null;
+      const error = call.each(0, call.argCount > 1 ? 1 : undefined, (item, value) => {
+        if (call.argCount > 1) {
+          const condition = conditionValue("first", value);
+          if (isFormulaError(condition)) {
+            found = condition;
+            return false;
+          }
+          if (!condition) return;
+        }
+        found = item;
+        return false;
+      });
+      return error ?? found;
+    },
+  },
+  {
+    name: "at",
+    minArgs: 2,
+    maxArgs: 2,
+    // Repeats over argument 0 (a struct's entries in schema order) without
+    // per-item arguments.
+    itemArgs: [],
+    resultScope: "item",
+    signature: "at(list, n)",
+    description:
+      "The item at index n, from 0 (-1 is the last); nothing if there is none. Read its fields with a path: at(attacks, 0).name",
+    result: ([list]) => unionOf(list ? itemTypeOf(list) : formulaTypes.any, formulaTypes.null),
+    check: (types, problems) => {
+      const [list] = types;
+      if (list && !couldBe(list, ["array"])) problems.report(0, `at needs a list, not ${describeType(list)}`);
+      expect(types, problems, "at", ["number"], "a number as its index", [1]);
+    },
+    special: (call) => {
+      const index = call.value(1);
+      if (isFormulaError(index) || index === null) return index;
+      if (typeof index !== "number" || !Number.isInteger(index))
+        return new FormulaError("type", "at needs a whole number as its index");
+      const items = call.items(0);
+      if (isFormulaError(items)) return items;
+      return items[index < 0 ? items.length + index : index] ?? null;
+    },
+  },
+  {
     name: "list",
     minArgs: 0,
     maxArgs: formulaLimits.maxArgs,
@@ -644,7 +831,16 @@ export const diceNotAvailable = "Dice rolls aren't available here yet";
 // Built-in functions added after the first version. A sheet's `<Define>` with
 // one of these names keeps working (it wins in that sheet, with a warning);
 // add new built-ins here, never to formulaReservedNames.
-export const formulaLaterBuiltins: readonly string[] = ["list", "itemKey", "itemLabel"];
+export const formulaLaterBuiltins: readonly string[] = [
+  "list",
+  "itemKey",
+  "itemLabel",
+  "map",
+  "filter",
+  "sort",
+  "first",
+  "at",
+];
 
 // Names a `<Define>` can't use.
 export const formulaReservedNames: ReadonlySet<string> = new Set([
