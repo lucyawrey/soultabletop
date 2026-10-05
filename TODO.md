@@ -8,8 +8,6 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
-- **Resource descriptions** · feature · PR #87 (Tier B; schema change, migration `0015` already applied to the shared database)
-  From the user (2026-10-05), needed for the demo system's credits: a Markdown `description` on every resource (nullable column on `resource`, at most 20,000 characters, left out of list endpoints like other heavy columns). Systems get the API (PATCH) and UI now: a Description panel on the system page, shown and edited with Nuxt UI's Markdown editor (`UEditor`, as sheets use it), hidden from viewers when empty. Other kinds can add the UI later without a schema change. Must merge before the database reset, so the squashed baseline includes the column.
 - **Demo polish** · feature · PR #88 (Tier B; branch and worktree `demo-polish`)
   Source badge on detail pages, system under every detail heading, card counts (content types: sheets and content; campaigns: members; user's decision, 2026-10-05), Content's category filter becoming a content type filter with a system selected, a type's first sheet becoming its default, "working as" a group, and the small sheet display fixes. Also settles "Go over the Source label's priority": Official wins over You and Group (user's decision, 2026-10-05). When it merges, delete this item and the separate items it covers (source badge, Source priority, category dropdown on Content, counts on cards, first sheet default, working as, and the compact checkbox, Trackers without a maximum, and Tables on phones bullets in Phase 1).
 
