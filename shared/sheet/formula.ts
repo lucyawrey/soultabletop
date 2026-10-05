@@ -64,7 +64,9 @@ export type FormulaNode =
   | { type: "string"; value: string; loc: Loc }
   | { type: "boolean"; value: boolean; loc: Loc }
   | { type: "null"; loc: Loc }
-  | { type: "path"; path: SheetPath; text: string; loc: Loc }
+  // `entries`: set by the validator on a path to a struct that a per-item
+  // function like sum repeats over (its schema entries, in order).
+  | { type: "path"; path: SheetPath; text: string; loc: Loc; entries?: { key: string; label: string }[] }
   | { type: "param"; name: string; loc: Loc }
   | { type: "unary"; op: "-" | "not"; operand: FormulaNode; loc: Loc }
   | {

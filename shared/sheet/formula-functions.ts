@@ -28,6 +28,9 @@ export interface FormulaCallContext {
   readonly refs: SheetRefs;
   // Evaluates an argument in the call's scope.
   value(index: number): FormulaValue;
+  // The row the call is in (a List or Table row, or a per-item function's
+  // item), if any.
+  item(): { key: string | number; label?: string } | undefined;
   // The items of the list in argument `listIndex`, or with `exprIndex`, that
   // argument evaluated with each item as its scope. Nulls are left in.
   items(listIndex: number, exprIndex?: number): FormulaValue[] | FormulaError;
@@ -48,6 +51,9 @@ export interface FormulaFunction {
   lazy?: boolean;
   // Eager and walks list arguments: each item costs a step.
   walksLists?: boolean;
+  // Reads the current row (`itemKey()`): an error outside one. Its result
+  // type in an array row and in a struct entry row.
+  item?: { array: FormulaType; struct: FormulaType };
   signature: string;
   description: string;
   // Result type from the argument types.
@@ -374,6 +380,28 @@ const functionList: FormulaFunction[] = [
       return total;
     },
   },
+  {
+    name: "itemKey",
+    minArgs: 0,
+    maxArgs: 0,
+    item: { array: formulaTypes.number, struct: formulaTypes.string },
+    signature: "itemKey()",
+    description:
+      "The current row's key: its entry key in a struct (like 'acrobatics'), or its index in an array (from 0)",
+    result: () => formulaTypes.any,
+    special: (call) => call.item()?.key ?? null,
+  },
+  {
+    name: "itemLabel",
+    minArgs: 0,
+    maxArgs: 0,
+    item: { array: formulaTypes.null, struct: formulaTypes.string },
+    signature: "itemLabel()",
+    description:
+      "The current struct entry's label (its schema label, else its humanized key); nothing in an array row",
+    result: () => formulaTypes.any,
+    special: (call) => call.item()?.label ?? null,
+  },
   aggregate("any", {
     signature: "any(list, cond)",
     description: "Whether cond is true for at least one item (paths in cond are the item's)",
@@ -616,7 +644,7 @@ export const diceNotAvailable = "Dice rolls aren't available here yet";
 // Built-in functions added after the first version. A sheet's `<Define>` with
 // one of these names keeps working (it wins in that sheet, with a warning);
 // add new built-ins here, never to formulaReservedNames.
-export const formulaLaterBuiltins: readonly string[] = ["list"];
+export const formulaLaterBuiltins: readonly string[] = ["list", "itemKey", "itemLabel"];
 
 // Names a `<Define>` can't use.
 export const formulaReservedNames: ReadonlySet<string> = new Set([

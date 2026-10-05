@@ -4,6 +4,7 @@
 // knows nothing about schemas. See formula.ts.
 
 import {
+  arrayOf,
   couldBe,
   describeType,
   formulaLimits,
@@ -32,6 +33,12 @@ export interface FormulaCheckHost<S> {
   // The scope of one item of a list (`list` is undefined when the list isn't
   // a path, e.g. a parameter).
   itemScope(list: S | undefined): S;
+  // A struct `list` whose entries a per-item function can repeat over (all
+  // alike), with the type of one entry.
+  structEntries?(list: S): { entries: { key: string; label: string }[]; type: FormulaType } | undefined;
+  // What kind of row `scope` is (List or Table row, or a per-item function's
+  // item), or undefined outside one.
+  itemKind?(scope: S): "array" | "struct" | "unknown" | undefined;
   // The sheet's definition by this name.
   definition(name: string): { params: readonly string[]; type: FormulaType } | undefined;
   // Inside a definition: its parameters' types.
@@ -183,6 +190,18 @@ class Checker<S> {
     if (node.args.length < fn.minArgs || node.args.length > fn.maxArgs) {
       this.error("formula-arity", `${fn.name} ${describeArity(fn.minArgs, fn.maxArgs)}: ${fn.signature}`, node.loc);
     }
+    if (fn.item) {
+      const kind = this.host.itemKind?.(scope);
+      if (!kind) {
+        this.error(
+          "formula-no-item",
+          `${fn.name}() works only in a List or Table row, or inside sum, count, any, or all`,
+          node.loc,
+        );
+        return formulaTypes.any;
+      }
+      return kind === "unknown" ? formulaTypes.any : fn.item[kind];
+    }
     const types: FormulaType[] = [];
     let listScope: S | undefined;
     node.args.forEach((arg, index) => {
@@ -200,6 +219,17 @@ class Checker<S> {
       }
       const checked = this.check(arg, scope, itemDepth);
       if (index === 0) listScope = checked.scope;
+      // A struct a per-item function repeats over: the evaluator walks its
+      // schema entries, which it can't know, so they go on the path.
+      const struct =
+        index === 0 && fn.itemArgs && arg.type === "path" && checked.scope !== undefined
+          ? this.host.structEntries?.(checked.scope)
+          : undefined;
+      if (struct && arg.type === "path") {
+        arg.entries = struct.entries;
+        types.push(arrayOf(struct.type));
+        return;
+      }
       types.push(checked.type);
     });
     fn.check?.(types, {

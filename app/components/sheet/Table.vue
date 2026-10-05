@@ -3,20 +3,21 @@ import type { TableColumn } from "@nuxt/ui";
 import type { SheetScope } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
-// <Table>: one row per item of the bound array, one column per <Column>,
+// <Table>: one row per item of the bound array (or entry of the bound
+// struct, with no add, remove, or reorder controls), one column per <Column>,
 // and an expandable row per item when there is a <RowDetails>.
 const props = defineProps<{ node: ValidatedElement }>();
 
-const { context, items, resolve, condition } = useSheet();
+const { context, rows: tableRows, resolve, condition } = useSheet();
 const attrText = useSheetAttrText();
 
 const label = computed(() => attrText(props.node.attrs.label));
 const list = computed(() => resolve(props.node.binding!.path));
-const rows = computed(() => items(props.node.binding!.path));
-const { editable, lockedEditable, unlock, remove, move } = useSheetListEditing(
-  () => props.node,
-  list,
-);
+const rows = computed(() => tableRows(props.node));
+const editing = useSheetListEditing(() => props.node, list);
+const { unlock, remove, move } = editing;
+const editable = computed(() => editing.editable.value && !props.node.entries);
+const lockedEditable = computed(() => editing.lockedEditable.value && !props.node.entries);
 const columnNodes = computed(() =>
   props.node.children.filter(
     (child): child is ValidatedElement =>
