@@ -78,7 +78,11 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .box .mod { font-size: var(--d-big); border-bottom: 0; text-align: center; }
 .box.key { border: 2px solid var(--st-primary); }
 .box input { width: 100%; text-align: center; font-weight: 700; }
-.defs { display: grid; grid-template-columns: 1.1fr 1.7fr 1.1fr 1fr 1fr 1fr; gap: var(--d-gap); }
+.defs { display: grid; grid-template-columns: 1fr 1.8fr 1fr 1.25fr; gap: var(--d-gap); }
+.saves { text-align: left; align-content: start; gap: 2px; }
+.saves .srow { display: grid; grid-template-columns: 1fr auto 24px; align-items: center; gap: 6px; }
+.saves .srow .mod { font-size: calc(var(--d-big) * .8); border-bottom: 1px dotted var(--st-border-strong); }
+.saves .parts { margin-top: 2px; }
 .hero-n .sheet-field-value, .hero-n .mod { font-size: var(--d-hero); }
 .hp { text-align: left; grid-template-columns: 1fr auto; gap: 3px 8px; }
 .hp .now { display: flex; align-items: baseline; gap: 4px; }
@@ -93,10 +97,12 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .row { display: grid; align-items: center; gap: 6px; min-height: var(--d-h); border-bottom: 1px solid var(--st-border); padding: calc(var(--d-gap) * .3) 0; }
 .row:last-child { border-bottom: 0; }
 .row.th { min-height: 0; } .row.th > * { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-.row.untrained > span:first-child { color: var(--st-ink-muted); }
-.skills .cols2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: calc(var(--d-gap) * 3); }
+.row.untrained > span:first-child, .row.untrained .mod { color: var(--st-ink-muted); font-weight: 400; }
+/* One row grid for both columns, so rows line up across them. */
+.skills .cols2 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(var(--half), auto); grid-auto-flow: column; column-gap: calc(var(--d-gap) * 3); }
 .skills .row { grid-template-columns: 1fr 30px 46px 42px; }
 .strikes .row { grid-template-columns: 22px 1.2fr 92px 1.1fr 1.5fr; }
+.strikes .dt { display: contents; }
 .mapcell { font-size: var(--d-lfs); color: var(--st-ink-muted); white-space: nowrap; }
 .acts .row { grid-template-columns: 44px 1fr auto; }
 .inv .row { grid-template-columns: 1fr 40px 40px 66px 30px; }
@@ -106,6 +112,8 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .feat { border-left: 3px solid var(--st-accent); padding-left: 6px; }
 .feat .small { color: var(--st-ink-muted); display: block; }
 .feat.empty { border-left-style: dashed; border-left-color: var(--st-border-strong); }
+.profrows { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; align-items: center; }
+.profrows > div { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .kv { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; align-items: baseline; }
 
 /* Tabs for the long lists. */
@@ -120,10 +128,15 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 
 @media (max-width: 900px) {
   .top { grid-template-columns: 1fr; } .attrs { grid-template-columns: repeat(6, 1fr); }
-  .defs { grid-template-columns: repeat(3, 1fr); } .defs .hp { grid-column: span 3; }
-  .mid { grid-template-columns: 1fr; } .skills .cols2 { grid-template-columns: 1fr; }
+  .defs { grid-template-columns: 1fr 1fr; grid-template-areas: "ac perc" "hp hp" "saves saves"; }
+  .defs .ac { grid-area: ac; } .defs .perc { grid-area: perc; } .defs .hp { grid-area: hp; } .defs .saves { grid-area: saves; }
+  .saves .srows { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--d-gap); }
+  .saves .srow { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 0; }
+  .mid { grid-template-columns: 1fr; } .skills .cols2 { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
   .head { grid-template-columns: 1fr; } .meta { justify-content: start; }
-  .strikes .row { grid-template-columns: 22px 1fr 92px; } .strikes .row > :nth-child(n+4) { grid-column: 2 / -1; }
+  .strikes .row.th { display: none; }
+  .strikes .row { grid-template-columns: 22px 1fr auto; row-gap: 0; }
+  .strikes .dt { display: flex; flex-wrap: wrap; gap: 0 6px; align-items: baseline; grid-column: 2 / -1; font-size: var(--d-lfs); }
 }
 .contrast { max-width: 1180px; margin: 16px auto; padding: 0 16px; font-size: 12px; color: var(--st-ink-muted); }
 .contrast td { padding: 1px 8px 1px 0; }
@@ -131,7 +144,7 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 </head>
 <body>
 <div class="bar">
-  <b>PF2e demo sheet</b><small>mockup v2 · draft</small>
+  <b>PF2e demo sheet</b><small>mockup v3 · draft</small>
   <div class="ctl" role="group" aria-label="Mode" data-ctl="mode"><button data-v="play">Play</button><button data-v="edit">Edit</button></div>
   <div class="ctl" role="group" aria-label="Density" data-ctl="density"><button data-v="compact">Compact</button><button data-v="roomy">Roomy</button></div>
   <div class="ctl" role="group" aria-label="Character" data-ctl="pc"><button data-v="cleric">Cleric</button><button data-v="rogue">Rogue</button></div>
@@ -142,38 +155,39 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 <div class="contrast"><table id="contrast"></table></div>
 
 <script>
-const S = { mode: "play", density: "compact", pc: "cleric", gaps: "on", tab: "Feats", open: null, preview: null };
+const S = { mode: "play", density: "compact", pc: "cleric", gaps: "on", tab: "Class", open: null, preview: null };
 const ATTR = ["Str", "Dex", "Con", "Int", "Wis", "Cha"];
 const RANKS = { u: ["U", "Untrained", 0], t: ["T", "Trained", 2], e: ["E", "Expert", 4], m: ["M", "Master", 6], l: ["L", "Legendary", 8] };
 const SKILLS = [["Acrobatics","Dex"],["Arcana","Int"],["Athletics","Str"],["Crafting","Int"],["Deception","Cha"],["Diplomacy","Cha"],["Intimidation","Cha"],["Medicine","Wis"],["Nature","Wis"],["Occultism","Int"],["Performance","Cha"],["Religion","Wis"],["Society","Int"],["Stealth","Dex"],["Survival","Wis"],["Thievery","Dex"]];
 const CHECK = { Acrobatics: 1, Athletics: 1, Stealth: 1, Thievery: 1 };
 const PCS = {
-  cleric: { name: "Maren Ashvale", level: 1, ancestry: "Human", heritage: "Versatile Human", background: "Acolyte", cls: "Cleric", sub: "Cloistered", key: "Wis",
+  cleric: { name: "Maren Ashvale", level: 1, ancestry: "Human", heritage: "Versatile Human", background: "Acolyte", cls: "Cleric", subLabel: "Doctrine", sub: "Cloistered Cleric", key: "Wis",
     attr: { Str: 0, Dex: 1, Con: 1, Int: 0, Wis: 4, Cha: 2 }, hpMax: 17, hp: 17, temp: 0, hero: 1, dying: 0, wounded: 0, doomed: 0, speed: 25, size: "Medium",
-    traits: ["Human", "Humanoid"], senses: "—", languages: "Common, Empyrean",
+    traits: ["Human", "Humanoid"], senses: "", languages: "Common, Empyrean",
     armor: { name: "No armor", ac: 0, cap: 99, check: 0, rank: "t" }, shield: { name: "Wooden shield", ac: 2, hard: 3, hp: 12, bt: 6 },
     perc: "t", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","t"], Will: ["Wis","e"] }, classDC: "t",
-    profs: [["Unarmed","t"],["Simple","t"],["Martial","u"],["Unarmored","t"],["Light","u"],["Medium","u"],["Heavy","u"]],
+    profs: { Attacks: [["Unarmed","t"],["Simple","t"],["Martial","u"],["Advanced","u"]], Defenses: [["Unarmored","t"],["Light","u"],["Medium","u"],["Heavy","u"]] },
     skills: { Religion: "t", Medicine: "t", Diplomacy: "t", Society: "t", Nature: "t" }, lore: [["Scribing Lore","Int","t"]],
     strikes: [["◆","Mace","Str","t",0,"1d6 B","Shove"],["◆","Sling","Dex","t",0,"1d6 B","Propulsive · 50 ft"]],
     actions: [["◆","Raise a Shield","+2 circumstance to AC"],["◆–◆◆◆","Heal","Divine Font spell"],["↺","Shield Block","Cantrip: Shield"]],
-    features: [["Doctrine","Cloistered Cleric"],["Deity","—  (picked from content)"],["Divine Font","Heal"]],
+    features: [["1","Deity"],["1","Cleric Spellcasting"],["1","Doctrine: Cloistered Cleric"],["1","Divine Font (heal)"],["3","Second Doctrine"]],
+    deity: { name: "Sarenrae", font: "Heal", sanct: "Can choose holy", skill: "Medicine", weapon: "Scimitar", domains: "Fire, healing, sun, truth", attrs: "Con or Wis" },
     feats: [["Ancestry","Natural Ambition","1",""],["Class","Healing Hands","1",""],["Skill","Student of the Canon","Background",""],["General","Shield Block","1","↺"]],
     upcoming: [["2","Class feat"],["2","Skill feat"],["3","General feat"],["3","Skill increase"]],
     spells: { trad: "Divine", attr: "Wis", cantrips: [["Divine Lance","◆◆"],["Guidance","◆"],["Light","◆◆"],["Shield","◆"],["Stabilize","◆◆"]], r1: [["Bless","◆◆",0],["Command","◆◆",1]], font: ["Heal", 4, 1] },
     inv: [["Mace",1,1,"Held",0],["Sling",0.1,1,"Worn",0],["Wooden shield",1,1,"Held",0],["Religious symbol",0.1,1,"Worn",0],["Healer's toolkit",1,1,"Worn",0],["Backpack",0.1,1,"Worn",0],["Bedroll",0.1,1,"Stowed",0],["Rations (1 week)",0.1,1,"Stowed",0]],
     coins: { pp: 0, gp: 4, sp: 3, cp: 0 } },
-  rogue: { name: "Tessaly Quill", level: 1, ancestry: "Elf", heritage: "Woodland Elf", background: "Criminal", cls: "Rogue", sub: "Thief racket", key: "Dex",
+  rogue: { name: "Tessaly Quill", level: 1, ancestry: "Elf", heritage: "Woodland Elf", background: "Criminal", cls: "Rogue", subLabel: "Racket", sub: "Thief", key: "Dex",
     attr: { Str: 0, Dex: 4, Con: 1, Int: 1, Wis: 1, Cha: 1 }, hpMax: 15, hp: 9, temp: 0, hero: 2, dying: 0, wounded: 1, doomed: 0, speed: 30, size: "Medium",
     traits: ["Elf", "Humanoid"], senses: "Low-light vision", languages: "Common, Elven, Sylvan",
     armor: { name: "Leather armor", ac: 1, cap: 4, check: -1, rank: "t" },
     perc: "e", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","e"], Will: ["Wis","e"] }, classDC: "t",
-    profs: [["Unarmed","t"],["Simple","t"],["Martial","u"],["Rogue weapons","t"],["Unarmored","t"],["Light","t"],["Medium","u"],["Heavy","u"]],
+    profs: { Attacks: [["Unarmed","t"],["Simple","t"],["Martial","u"],["Advanced","u"],["Rapier, sap, shortbow, …","t"]], Defenses: [["Unarmored","t"],["Light","t"],["Medium","u"],["Heavy","u"]] },
     skills: { Acrobatics: "t", Athletics: "t", Deception: "t", Stealth: "t", Thievery: "t", Society: "t", Intimidation: "t", Crafting: "t", Diplomacy: "t" }, lore: [["Underworld Lore","Int","t"]],
     strikes: [["◆","Rapier","Dex","t",0,"1d6+4 P","Deadly d8 · Disarm · Finesse"],["◆","Shortbow","Dex","t",0,"1d6 P","Deadly d10 · 60 ft"]],
     sneak: "1d6",
     actions: [["↺","Nimble Dodge","+2 circumstance to AC"],["◆","Steal","Thievery"],["◆","Sneak","Stealth"],["—","Sneak Attack 1d6","off-guard target"]],
-    features: [["Racket","Thief (Dex to damage)"],["Surprise Attack","Off-guard on first round"]],
+    features: [["1","Rogue's Racket: Thief"],["1","Sneak Attack 1d6"],["1","Surprise Attack"],["2","Skill feat every level"],["3","Deny Advantage"]],
     feats: [["Ancestry","Nimble Elf","1",""],["Class","Nimble Dodge","1","↺"],["Skill","Experienced Smuggler","Background",""],["Skill","Pickpocket","1",""]],
     upcoming: [["2","Class feat"],["2","Skill feat"],["2","Skill increase"],["3","General feat"]],
     inv: [["Rapier",1,1,"Held",0],["Shortbow",1,1,"Worn",0],["Arrows",0.1,20,"Worn",0],["Leather armor",1,1,"Worn",0],["Thieves' toolkit",0.1,1,"Worn",0],["Backpack",0.1,1,"Worn",0],["Bedroll",0.1,1,"Stowed",0]],
@@ -201,7 +215,7 @@ function render() {
 
   const head = `<section class="sheet-section"${tag("Section")}><h2>Character</h2><div class="head">
     <div><h1${tag("Text", 'field="name"')}>${E() ? `<input value="${c.name}" aria-label="Name" style="font:inherit;height:auto;width:min(100%,420px)">` : c.name}</h1>
-      <div class="refs">${[["Ancestry",c.ancestry,"ancestry"],["Heritage",c.heritage,"heritage"],["Background",c.background,"background"],["Class",c.cls,"class"],["",c.sub,"subclass"]].map(([l,v,f]) =>
+      <div class="refs">${[["Ancestry",c.ancestry,"ancestry"],["Heritage",c.heritage,"heritage"],["Background",c.background,"background"],["Class",c.cls,"class"],[c.subLabel,c.sub,"subclass"]].map(([l,v,f]) =>
         `<span class="ref">${l ? `<span class="sheet-field-label">${l}</span>` : ""}${ref(v, f)}</span>`).join("")}</div></div>
     <div class="meta">
       <div><div class="sheet-field-label">Level</div><span class="sheet-field-value"${tag("Number", 'field="level"')}>${E() ? `<input type="number" value="${L}" style="width:48px" aria-label="Level">` : L}</span></div>
@@ -210,7 +224,7 @@ function render() {
       <div><div class="sheet-field-label">Size</div><span class="sheet-field-value" style="font-size:var(--d-fs)">${c.size}</span></div>
     </div>
     <div class="facts small"><span><span class="sheet-field-label">Traits</span> ${c.traits.map(t => `<span class="chip">${t}</span>`).join("")}</span>
-      <span><span class="sheet-field-label">Senses</span> ${c.senses}</span><span><span class="sheet-field-label">Languages</span> ${c.languages}</span></div>
+      ${c.senses ? `<span><span class="sheet-field-label">Senses</span> ${c.senses}</span>` : E() ? `<span${tag("Section", 'show="{editing or senses}"', "editing isn't visible to formulas yet")}><span class="sheet-field-label">Senses</span> <button class="pick">+ Add</button></span>` : ""}<span><span class="sheet-field-label">Languages</span> ${c.languages}</span></div>
   </div></section>`;
 
   const attrs = `<div class="attrs"${tag("Grid", 'columns="3"')}>${ATTR.map(k => `<div class="box ${k === c.key ? "key" : ""}"${tag("Number", `field="attributes.${k.toLowerCase()}" signed`)}>
@@ -219,21 +233,22 @@ function render() {
   const shieldUp = S.shieldUp && c.shield;
   const ac = mod("ac", [["Dex" + (c.armor.cap < 99 ? ` (cap ${sg(c.armor.cap)})` : ""), Math.min(a.Dex, c.armor.cap)], [RANKS[c.armor.rank][1], P(c.armor.rank, L)], ["Armor", c.armor.ac], ...(shieldUp ? [["Shield raised", c.shield.ac]] : [])], 10);
   const perc = mod("perc", [["Wis", a.Wis], [RANKS[c.perc][1], P(c.perc, L)]]);
-  const save = ([n, [k, r]]) => { const m = mod(n, [[k, a[k]], [RANKS[r][1], P(r, L)]]);
-    return `<div class="box"${tag("Value", `formula="{${k.toLowerCase()} + prof(saves.${n.toLowerCase()})}"`, "breakdown on a box")}><span class="sheet-field-label">${n}</span>${m.btn}<span>${rank(r)}</span>${m.parts}</div>`; };
+  const saveRows = Object.entries(c.saves).map(([n, [k, r]]) => ({ n, k, m: mod(n, [[k, a[k]], [RANKS[r][1], P(r, L)]]), r }));
+  const saves = `<div class="box saves"${tag("Table", 'field="saves" rows="fixed"', "breakdown on a box")}><span class="sheet-field-label">Saving Throws</span>
+    <div class="srows">${saveRows.map(({ n, k, m, r }) => `<div class="srow"${tag("Value", `formula="{${k.toLowerCase()} + prof(saves.${n.toLowerCase()})}"`)}><span>${n}</span>${m.btn}${rank(r)}</div>`).join("")}</div>
+    ${saveRows.map(x => x.m.parts).join("")}</div>`;
   const defs = `<div style="min-width:0"><div class="defs">
-    <div class="box key hero-n"${tag("Value", 'formula="{10 + min(dex, armor.dexCap) + prof(armor.rank) + armor.ac + (shieldRaised ? shield.ac : 0)}"', "breakdown on a box")}><span class="sheet-field-label">Armor Class</span>${ac.btn}<span class="small dim">${c.armor.name}</span>${ac.parts}</div>
+    <div class="box key hero-n ac"${tag("Value", 'formula="{10 + min(dex, armor.dexCap) + prof(armor.rank) + armor.ac + (shieldRaised ? shield.ac : 0)}"', "breakdown on a box")}><span class="sheet-field-label">Armor Class</span>${ac.btn}<span class="small dim">${c.armor.name}</span>${ac.parts}</div>
     <div class="box hp"${tag("Tracker", 'field="hp" max="{ancestry.hp + (class.hp + con) * level}" live', "live attribute doesn't exist yet")}>
       <span class="sheet-field-label">Hit Points</span><span class="small dim">max ${c.hpMax}</span>
       <span class="now"><input aria-label="Current HP" value="${c.hp}"><span class="dim">/ ${c.hpMax}</span></span><span class="small"><span class="sheet-field-label">Temp</span> <input aria-label="Temp HP" value="${c.temp}" style="width:34px;height:20px;text-align:center"></span>
       <div class="meter"><i style="width:${c.hp / c.hpMax * 100}%"></i></div>
       <div class="death small"><span><span class="sheet-field-label">Dying</span> ${pips(c.dying, 4, "bad", "Dying")}</span><span><span class="sheet-field-label">Wounded</span> ${pips(c.wounded, 3, "bad sq", "Wounded")}</span><span><span class="sheet-field-label">Doomed</span> ${pips(c.doomed, 3, "bad sq", "Doomed")}</span></div>
     </div>
-    <div class="box hero-n"${tag("Value", 'formula="{wis + prof(perception)}"')}><span class="sheet-field-label">Perception</span>${perc.btn}<span>${rank(c.perc)} <span class="small dim">Initiative</span></span>${perc.parts}</div>
-    ${Object.entries(c.saves).map(save).join("")}
+    <div class="box hero-n perc"${tag("Value", 'formula="{wis + prof(perception)}"')}><span class="sheet-field-label">Perception</span>${perc.btn}<span>${rank(c.perc)} <span class="small dim">Initiative</span></span>${perc.parts}</div>
+    ${saves}
   </div>
   <div class="strip small">
-    <span><span class="sheet-field-label">Class DC</span> <b>${10 + a[c.key] + P(c.classDC, L)}</b></span>
     ${c.shield ? `<span${tag("Toggle", 'field="shieldRaised" live', "live attribute doesn't exist yet")}><label><input type="checkbox" ${shieldUp ? "checked" : ""} data-shield style="height:auto"> <b>${c.shield.name}</b> raised</label> <span class="dim">Hardness ${c.shield.hard} · HP ${c.shield.hp} · BT ${c.shield.bt}</span></span>` : ""}
     <span><span class="sheet-field-label">Resist / weak</span> <span class="dim">none</span></span>
     <span${tag("Tags", 'field="conditions" live', "conditions don't change the numbers")}><span class="sheet-field-label">Conditions</span> ${S.pc === "rogue" ? `<span class="chip">Frightened 1</span>` : `<span class="dim">none</span>`} <button class="pick">+ Add</button></span>
@@ -244,7 +259,7 @@ function render() {
   const strikes = `<section class="sheet-section strikes"${tag("Table", 'field="strikes"', "hit and damage typed, not read from the inventory item")}><h2>Strikes</h2><span class="aside">MAP −5 / −10</span>
     <div class="rows"><div class="row th"><span></span><span>Weapon</span><span>Hit · MAP</span><span>Damage</span><span>Traits</span></div>
     ${c.strikes.map(([g, n, k, r, item, d, t]) => { const m = mod("s" + n, [[k, a[k]], [RANKS[r][1], P(r, L)], ["Item", item]]);
-      return `<div class="row"><span class="act" aria-label="One action">${g}</span><button class="link plain" data-prev="${n}">${n}</button><span><span data-gap="roll button">${m.btn}</span> <span class="mapcell">${sg(m.total - 5)} ${sg(m.total - 10)}</span></span><span>${d}${c.sneak ? ` <span class="dim small">+${c.sneak} sneak</span>` : ""}</span><span>${t.split(" · ").map(x => `<span class="chip">${x}</span>`).join("")}</span>${m.parts}</div>`; }).join("")}
+      return `<div class="row"><span class="act" aria-label="One action">${g}</span><button class="link plain" data-prev="${n}">${n}</button><span><span data-gap="roll button">${m.btn}</span> <span class="mapcell">${sg(m.total - 5)} ${sg(m.total - 10)}</span></span><span class="dt"><span>${d}${c.sneak ? ` <span class="dim small">+${c.sneak} sneak</span>` : ""}</span><span>${t.split(" · ").map(x => `<span class="chip">${x}</span>`).join("")}</span></span>${m.parts}</div>`; }).join("")}
     </div></section>`;
 
   const actions = `<section class="sheet-section acts"${tag("List", 'field="actions" item="Ref"')}><h2>Actions &amp; Reactions</h2>
@@ -256,15 +271,21 @@ function render() {
   const all = [...SKILLS.map(([n, k]) => [n, k, c.skills[n] || "u"]), ...c.lore];
   const half = Math.ceil(all.length / 2);
   const skills = `<section class="sheet-section skills"${tag("Table", 'field="skills" rows="fixed"')}><h2>Skills</h2><span class="aside">${penalty ? `armor ${penalty} on Str/Dex skills` : ""}</span>
-    <div class="cols2"><div class="rows">${all.slice(0, half).map(skillRow).join("")}</div><div class="rows">${all.slice(half).map(skillRow).join("")}</div></div></section>`;
+    <div class="cols2" style="--half:${half}">${all.map(skillRow).join("")}</div></section>`;
 
-  const profs = `<section class="sheet-section"${tag("Grid", 'columns="auto"')}><h2>Proficiencies</h2>
-    <div style="display:flex;flex-wrap:wrap;gap:4px 14px">${c.profs.map(([n, r]) => `<span style="white-space:nowrap">${rank(r)} <span class="small">${n}</span></span>`).join("")}</div></section>`;
+  const profs = `<section class="sheet-section"${tag("Grid", 'columns="2"')}><h2>Proficiencies</h2>
+    <div class="profrows">${Object.entries(c.profs).map(([g, list]) => `<span class="sheet-field-label">${g}</span><div>${list.map(([n, r]) => `<span style="white-space:nowrap">${rank(r)} <span class="small">${n}</span></span>`).join("")}</div>`).join("")}
+      <span class="sheet-field-label">Class DC</span><div><span><b>${10 + a[c.key] + P(c.classDC, L)}</b> ${rank(c.classDC)}</span></div></div></section>`;
 
   // Long lists in tabs.
   const feats = `<div class="feats"${tag("List", 'field="feats" item="Ref"')}>${c.feats.map(([ty, n, src, g]) => `<div class="feat"><button class="link plain" data-prev="${n}">${n}</button> ${g ? `<span class="act">${g}</span>` : ""}<span class="small">${ty} · ${src === "Background" ? "from background" : "level " + src}</span></div>`).join("")}
-    ${E() ? c.upcoming.map(([lv, ty]) => `<div class="feat empty"${tag("Section", 'show="{editing}"', "editing isn't visible to formulas yet")}><button class="pick">Choose ${ty.toLowerCase()}</button><span class="small">level ${lv}</span></div>`).join("") : ""}</div>
-    <div class="kv small" style="margin-top:var(--d-gap)">${c.features.map(([k, v]) => `<span class="sheet-field-label">${k}</span><span>${v}</span>`).join("")}</div>`;
+    ${E() ? c.upcoming.map(([lv, ty]) => `<div class="feat empty"${tag("Section", 'show="{editing}"', "editing isn't visible to formulas yet")}><button class="pick">Choose ${ty.toLowerCase()}</button><span class="small">level ${lv}</span></div>`).join("") : ""}</div>`;
+  const dz = c.deity;
+  const klass = `<div class="rows"${tag("List", 'field="class.features" item="Ref"', "a list read from the referenced class")}><div class="row th" style="grid-template-columns:52px 1fr"><span>Level</span><span>Class feature</span></div>
+      ${c.features.map(([lv, n]) => `<div class="row ${+lv > L ? "untrained" : ""}" style="grid-template-columns:52px 1fr"><span class="small">${lv}</span><button class="link plain" data-prev="${n}">${n}</button></div>`).join("")}</div>
+    ${dz ? `<div style="margin-top:calc(var(--d-gap) * 2)"${tag("Section", 'field="deity"')}><div class="kv small"><span class="sheet-field-label">Deity</span><span>${ref(dz.name, "deity")}</span>
+        ${[["Divine font", dz.font], ["Sanctification", dz.sanct], ["Divine skill", dz.skill], ["Favored weapon", dz.weapon], ["Domains", dz.domains], ["Divine attributes", dz.attrs]].map(([k, v]) => `<span class="sheet-field-label">${k}</span><span>${v}</span>`).join("")}
+        <span class="sheet-field-label">Edicts</span><span class="dim">From the imported deity's text.</span><span class="sheet-field-label">Anathema</span><span class="dim">From the imported deity's text.</span></div></div>` : ""}`;
   const sp = c.spells;
   const spells = sp ? (() => { const dc = 10 + a[sp.attr] + P("t", L), atk = a[sp.attr] + P("t", L);
     return `<div class="strip small" style="margin:0 0 var(--d-gap)"><b>${sp.trad} prepared</b><span><span class="sheet-field-label">Spell DC</span> <b>${dc}</b></span><span><span class="sheet-field-label">Attack</span> <b>${sg(atk)}</b></span></div>
@@ -281,8 +302,8 @@ function render() {
     ${c.inv.map(([n, b, q, st, invd]) => `<div class="row"><button class="link plain" data-prev="${n}">${n}</button><span>${q}</span><span class="dim">${b === 0.1 ? "L" : b}</span><span class="small">${E() ? `<select aria-label="State" style="height:20px"><option>${st}</option></select>` : st}</span><span>${invd ? "✓" : ""}</span></div>`).join("")}
     ${E() ? `<div class="row"><button class="pick" style="justify-self:start">+ Add item</button></div>` : ""}</div>`;
   const bio = `<div class="kv"${tag("Grid", 'columns="2"')}>${["Pronouns", "Age", "Appearance", "Personality", "Notes"].map(k => `<span class="sheet-field-label">${k}</span>${E() ? `<input aria-label="${k}" style="width:100%">` : `<span class="dim">—</span>`}`).join("")}</div>`;
-  const T = { Feats: feats, ...(sp ? { Spells: spells } : {}), Inventory: inv, Biography: bio };
-  if (!T[S.tab]) S.tab = "Feats";
+  const T = { Class: klass, Feats: feats, ...(sp ? { Spells: spells } : {}), Inventory: inv, Biography: bio };
+  if (!T[S.tab]) S.tab = "Class";
   const tabs = `<div${tag("Tabs")}><div class="tabs" role="tablist">${Object.keys(T).map(k => `<button role="tab" aria-selected="${k === S.tab}" data-tab="${k}">${k}</button>`).join("")}</div>
     <div class="tabpanel" role="tabpanel">${T[S.tab]}</div></div>`;
 
