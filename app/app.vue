@@ -102,8 +102,9 @@ watch(
           // phones), then the system picker on a line of its own.
           header: 'h-auto flex-wrap items-center gap-x-1.5 gap-y-[18px] px-3.5 pt-[18px] pb-0',
           body: 'gap-[18px] px-3.5 pt-[18px]',
-          // Empty on the signed-out landing page, so hidden there.
-          footer: loggedIn || showSignIn ? 'mx-3.5 border-t border-default px-0 py-2.5' : 'hidden',
+          // Empty on the signed-out landing page, so hidden there. The user
+          // menu (or Sign in) sits above the Credits link.
+          footer: loggedIn || showSignIn ? 'mx-3.5 flex-col items-stretch gap-1 border-t border-default px-0 py-2.5' : 'hidden',
           // The phone drawer is a modal, whose content divides its children
           // with lines; the desktop sidebar has none under the system picker.
           content: 'divide-y-0',
@@ -166,6 +167,17 @@ watch(
             :label="isCollapsed ? undefined : 'Sign in'"
           />
           <UserMenu v-else-if="loggedIn" :collapsed="isCollapsed" />
+          <UButton
+            to="/credits"
+            color="neutral"
+            variant="link"
+            size="xs"
+            :icon="isCollapsed ? 'i-lucide-info' : undefined"
+            :aria-label="isCollapsed ? 'Credits' : undefined"
+            :label="isCollapsed ? undefined : 'Credits'"
+            class="text-muted"
+            :class="isCollapsed ? 'self-center' : 'self-start'"
+          />
         </template>
       </UDashboardSidebar>
 

@@ -99,6 +99,16 @@ export default defineNuxtConfig({
     })),
   },
 
+  // Icons come only from collections bundled with the app (Lucide, and
+  // game-icons for sheets; SHEET_ICON_COLLECTIONS in shared/sheet/validate.ts),
+  // served by its own endpoint. No fallback to Iconify's public API, so a
+  // page never makes browsers fetch icons from a third party.
+  icon: {
+    provider: "server",
+    fallbackToApi: false,
+    serverBundle: { collections: ["lucide", "game-icons"] },
+  },
+
   scalar: {
     // Light like the rest of the site.
     darkMode: false,

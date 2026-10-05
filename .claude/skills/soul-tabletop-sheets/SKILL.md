@@ -43,7 +43,7 @@ Read these when in doubt; this skill is a summary and the code wins if they disa
 - Comments: `<!-- ... -->` (an unterminated comment is an error).
 - Limits: 100,000 characters, 32 levels of nesting, 5,000 nodes. CSS: 50,000 characters.
 - Some attributes take a `{formula}` instead of a literal: `Tracker`'s `max` and `Number`'s `min`, `max`, and `step` accept exactly one `{formula}` (e.g. `max="{hp.max}"`, `max="{hp.base + level * 2}"`); other number attributes (`cols`, `span`, `level`) take plain numbers only; text attributes accept both mixed with text; enum, boolean, icon, class, list, and field attributes cannot use `{...}`.
-- No raw HTML, `style`, `on*` events, or URLs. Icons are Iconify names like `i-lucide-sword`. Images are `https` URLs held in a string field.
+- No raw HTML, `style`, `on*` events, or URLs. Icons are Iconify names from Lucide (`i-lucide-sword`) or game-icons.net (`i-game-icons-crossed-swords`); no other icon sets. Images are `https` URLs held in a string field.
 
 ## Tags
 

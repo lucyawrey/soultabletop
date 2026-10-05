@@ -36,8 +36,9 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 | `Collapsible` | `title` (req), `subtitle`, `icon`, `open` | any | Header shows or hides content |
 | `RowDetails` | none | any | Only directly inside `Table`; shown when a row is expanded |
 
-`color` values: `primary | secondary | success | info | warning | error | neutral`. `icon` is an Iconify name that
-matches `i-<set>-<name>`, for example `i-lucide-sword`. "text" children means text with `{formula}`s and no tags.
+`color` values: `primary | secondary | success | info | warning | error | neutral`. `icon` is an Iconify name from Lucide or
+game-icons.net, for example `i-lucide-sword` or `i-game-icons-crossed-swords` (browse them at lucide.dev and
+game-icons.net); other icon sets are an error. "text" children means text with `{formula}`s and no tags.
 
 ## Field tags
 

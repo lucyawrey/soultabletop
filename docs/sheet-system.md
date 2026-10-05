@@ -115,6 +115,12 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 `Section` also accepts `collapsible` and `collapsed`. `Table` accepts a `RowDetails` child (any content) rendered
 in `UTable`'s expandable rows.
 
+`icon` takes an Iconify name from the two bundled sets only: Lucide (`i-lucide-sword`) and game-icons.net
+(`i-game-icons-crossed-swords`, CC BY 3.0, credited on `/credits`); any other set is an `invalid-attribute` error
+(`SHEET_ICON_COLLECTIONS` in `shared/sheet/validate.ts`). The app serves icons only from its own bundle
+(`icon` in `nuxt.config.ts`, no fallback to Iconify's public API), so a sheet never makes browsers fetch from a
+third party.
+
 ### Fields
 Common attrs: `field`, `label` (default: humanized last path segment, `hitPoints` → "Hit Points"), `hideLabel` (boolean), `hint`.
 View mode renders formatted values, edit mode renders the input.
