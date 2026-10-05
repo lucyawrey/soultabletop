@@ -14,7 +14,8 @@ Moved out of `CLAUDE.md` so it is read only when needed. `CLAUDE.md` keeps the s
 
 ## Migrations
 
+- The migrations start from one baseline, `0000_baseline` (the database was reset on 2026-10-05). Its end is hand-written: the `owner_readable_id` triggers and the `soul` system group's row, which drizzle-kit doesn't model; a later migration that changes them hand-writes its own steps the same way.
 - Always read generated migrations before applying them:
-  - **Renames**: `drizzle-kit generate` stops to ask whether a column was renamed or dropped and recreated, and that prompt can't be answered non-interactively. Hand-write the migration (`ALTER TABLE ... RENAME COLUMN`, rename indexes/constraints), the matching `meta/NNNN_snapshot.json` and `_journal.json` entry, then run `pnpm db:generate` and confirm it reports "No schema changes". See `0005_rename_profile_slug_to_username`.
-  - **Enum value changes**: generated migrations drop/recreate the enum type and cast with `USING col::new_enum`, which fails or loses data for rows holding old labels. Insert `UPDATE "table" SET "col" = CASE "col" WHEN 'Old' THEN 'new' ... ELSE "col" END;` after the `SET DATA TYPE text` step and before the final cast. See `0004_cute_bushwacker`.
+  - **Renames**: `drizzle-kit generate` stops to ask whether a column was renamed or dropped and recreated, and that prompt can't be answered non-interactively. Hand-write the migration (`ALTER TABLE ... RENAME COLUMN`, rename indexes/constraints), the matching `meta/NNNN_snapshot.json` and `_journal.json` entry, then run `pnpm db:generate` and confirm it reports "No schema changes".
+  - **Enum value changes**: generated migrations drop/recreate the enum type and cast with `USING col::new_enum`, which fails or loses data for rows holding old labels. Insert `UPDATE "table" SET "col" = CASE "col" WHEN 'Old' THEN 'new' ... ELSE "col" END;` after the `SET DATA TYPE text` step and before the final cast.
 
