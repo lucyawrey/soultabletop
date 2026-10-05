@@ -1,7 +1,7 @@
 import { count, eq } from "drizzle-orm";
 import { contentType, group, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
-import { contentTypeListColumns } from "../../utils/list-columns";
+import { contentTypeListColumns, resourceListColumns } from "../../utils/list-columns";
 import { useDatabase } from "../../utils/database";
 import {
   listOrder,
@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
       const select = database
         .select({
           type: contentTypeListColumns,
-          resource,
+          resource: resourceListColumns,
           official: officialColumn,
           ownerReadableId: ownerReadableIdColumn,
         })

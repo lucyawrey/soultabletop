@@ -4,6 +4,7 @@ import { resource } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
 import {
+  requireDescription,
   requireName,
   requireResourceEditor,
   resolveOwnerChange,
@@ -26,6 +27,11 @@ defineRouteMeta({
               name: { type: "string" },
               readableId: { type: "string" },
               isPubliclyReadable: { type: "boolean" },
+              description: {
+                type: ["string", "null"],
+                description:
+                  "Markdown shown on the system's page, at most 20,000 characters; null or blank text removes it.",
+              },
               ownerGroupId: {
                 type: ["string", "null"],
                 format: "uuid",
@@ -52,6 +58,7 @@ export default defineEventHandler(async (event) => {
     name?: unknown;
     readableId?: unknown;
     isPubliclyReadable?: unknown;
+    description?: unknown;
     ownerGroupId?: unknown;
   }>(event);
   const item = await requireResourceEditor(user, id);
@@ -68,6 +75,7 @@ export default defineEventHandler(async (event) => {
       ...(body.isPubliclyReadable !== undefined
         ? { isPubliclyReadable: body.isPubliclyReadable === true }
         : {}),
+      ...(body.description !== undefined ? { description: requireDescription(body.description) } : {}),
       updatedByUserId: user.id,
       updatedAt: new Date(),
     })

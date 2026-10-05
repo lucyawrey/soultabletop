@@ -51,7 +51,7 @@ Asking for parallel work makes the session the coordinator: each feature gets it
 - Everything user-created is a row in the polymorphic `resource` table (`kind`: `system`, `campaign`, `contentType`, `sheet`, `content`) plus a per-kind table keyed by `resourceId`, owned by a user or a group, with extra access via `resourceGrant`. Resources owned by a `system` group are "Official".
 - Routes find their user with `getAuthenticatedUser` / `requireAuthenticatedUser` (`server/utils/auth.ts`), never by reading the session themselves. Access is computed by `getResourceAccess` (`server/utils/resource-access.ts`) and its wrappers; every resource `[id]` route calls `resolveResourceRouteId` right after finding the user.
 - List and single-resource GET endpoints return `canEdit`; the UI hides edit/delete when it's false.
-- List endpoints leave out heavy columns (sheet `markup`/`cssStyles`, content type `schema`, content `data`; `server/utils/list-columns.ts`); fetch the single resource for them.
+- List endpoints leave out heavy columns (a resource's `description`, sheet `markup`/`cssStyles`, content type `schema`, content `data`; `server/utils/list-columns.ts`); fetch the single resource for them.
 - Characters and Content are both `content` resources, split by the content type's `contentCategory`; use `shared/content-categories.ts` rather than repeating category checks.
 - `ContentFieldSchema` (`shared/content-schema.ts`) and its TypeBox mirror `contentTypeSchemaSchema` (`server/utils/api-schemas.ts`) stay in sync.
 - Code shared by client and server lives in `shared/`; server code imports it with relative paths (drizzle-kit loads the schema without Nuxt aliases).

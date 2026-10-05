@@ -1,3 +1,4 @@
+import { resourceListColumns } from "../../utils/list-columns";
 import { and, count, eq, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { contentType, group, resource, system } from "../../database/schema";
@@ -59,7 +60,7 @@ export default defineEventHandler(async (event) => {
     fetchRows: ({ where, viewer, limit, offset }) => {
       const select = database
         .select({
-          resource,
+          resource: resourceListColumns,
           official: officialColumn,
           ownerReadableId: ownerReadableIdColumn,
           contentTypeCount: readableContentTypeCount(viewer),
