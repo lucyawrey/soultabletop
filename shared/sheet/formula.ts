@@ -17,7 +17,7 @@ export const formulaLimits = {
   maxArgs: 32,
   maxDefinitions: 200,
   maxParams: 8,
-  // Formulas (attributes, `{= }` parts, and `show`) in one sheet.
+  // Formulas (attributes, `{…}` parts, and `show`) in one sheet.
   maxSites: 2_000,
   // Per-item arguments inside per-item arguments (`sum(a, sum(b, x))` is 2).
   maxItemNesting: 2,

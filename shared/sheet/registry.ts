@@ -4,9 +4,9 @@
 // autocomplete are generated from it. See docs/sheet-system.md, section 2.
 
 export type AttrType =
-  // Free text; may contain {path} interpolation.
+  // Free text; may contain {formula}s.
   | { kind: "text" }
-  // A number; with `dynamic`, also a single {path} or {= formula} computed
+  // A number; with `dynamic`, also a single {formula} computed
   // when rendering.
   | { kind: "number"; min?: number; max?: number; integer?: boolean; dynamic?: boolean }
   // Bare attribute, "true", or "false".
@@ -22,7 +22,7 @@ export type AttrType =
   | { kind: "className" }
   // A formula, written as is (no braces): `formula="level + 2"`.
   | { kind: "formula" }
-  // Exactly one `{= expr}` or `{path}` that gives true, false, or nothing.
+  // A bare formula that gives true, false, or nothing, like `level >= 5`.
   | { kind: "condition" }
   // An identifier, like a `<Define>`'s name.
   | { kind: "name" };
@@ -51,7 +51,7 @@ export type BindKind =
 
 export type ChildrenRule =
   | "any" // tags and text
-  | "text" // text only (with {path} interpolation)
+  | "text" // text only (with {formula}s)
   | "none"
   | { only: readonly string[] };
 
@@ -134,7 +134,7 @@ export const commonAttrs: Record<string, AttrSpec> = {
   show: {
     type: { kind: "condition" },
     description:
-      "Shows the tag only when this is true, like show=\"{= level >= 5}\" or show=\"{hasSpells}\"; false or empty hides it",
+      "Shows the tag only when this is true, like show=\"level >= 5\" or show=\"hasSpells\"; false or empty hides it",
   },
 };
 
@@ -420,7 +420,7 @@ const tagList: TagSpec[] = [
       max: {
         type: { kind: "number", min: 1, dynamic: true },
         required: true,
-        description: "Maximum: a number, {field}, or {= formula}",
+        description: "Maximum: a number or a {formula}",
       },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
     },
