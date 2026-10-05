@@ -9,7 +9,7 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 # In progress
 
 - **Reset the database and squash the migrations** · chore · PR #90 (`squash-migrations`)
-  Dropped and rebuilt from `0000_baseline` on 2026-10-05 (Neon backup branch taken first; `pf2e-test` exported to `.claude/pf2e/legacy/`). Left: the user re-registers, then `pnpm admin:set` makes them site admin; a new API key from `/profile` on each machine; merge #90.
+  Dropped and rebuilt from `0000_baseline` on 2026-10-05 (Neon backup branch taken first; `pf2e-test` exported to `.claude/pf2e/legacy/`). Done: the user re-registered as `lucy` and is site admin. Left: a new API key from `/profile` on each machine; merge #90.
 
 # Next up
 
