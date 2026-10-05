@@ -8,6 +8,9 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
+- **Formula list functions** · feature · branch `formula-list-functions`
+  Decided with the user (2026-10-05): `map(list, expr)`, `filter(list, cond)`, `sort(list, expr?, descending?)` (numbers by value, text case-insensitive by code point with no locale, empty values last, stable, mixing numbers and text is an error), `first(list, cond?)`, `at(list, n)` (from 0, negative from the end, out of range is nothing), and paths on call results (`first(filter(inventory, equipped)).ac`; fall back to `get()` if impractical). Lists take arrays and structs of alike entries, like `sum`. Document comparing against the outer row with a `<Define>` called with `itemKey()` (spells known per rank vs slots) in `docs/sheet-system.md`.
+
 # Next up
 
 The exact order: do these one at a time, top first.
@@ -17,13 +20,12 @@ The exact order: do these one at a time, top first.
 What official systems like Pathfinder 2e and D&D 2024 need from the Sheet system.
 
 - **Sheet features found missing while building the D&D 2024 and Pathfinder 2e sheets** · feature
-  Choice fields and tables over fixed rows moved to "Sheet schema design" (Next up), and the narrow number columns bug was fixed in #78 (2026-10-04).
+  Choice fields and tables over fixed rows moved to "Sheet schema design" (Next up), picking a field from each list item to "Formula list functions" (In progress), and the narrow number columns bug was fixed in #78 (2026-10-04).
   Found while building the D&D 2024 character sheet (2026-09-30; the test sheet's files are local only):
   - **Formulas matter most** (built in #71; rebuild the sheet with them to check): every ability modifier, skill bonus, saving throw, passive Perception, spell save DC, and spell attack bonus is typed in by hand. Formulas should cover these cases: a modifier from a score, a bonus from modifier + proficiency bonus by training, and values shown with a sign.
   - **Default values in schemas**: e.g. size "Medium", or arrays that start with rows. `defaultContentData` only fills empty values for required fields.
   - **Compact checkbox in text display**: a boolean shows "✓ Yes" / "✗ No" under its label; proficiency marks need an icon-only or dot variant.
   Found while building the Pathfinder 2e test sheet with formulas (2026-10-04; `lucyawrey`'s `pf2e-test` system, characters Test Fighter and Test Cleric). Formulas covered every derived number (proficiency, skills with armor check penalty, saves, AC with a raised shield, class and spell DCs, Strikes with the multiple attack penalty and damage text, max HP, Speed with armor penalties, Bulk and encumbrance). What they and the Sheet tags couldn't do:
-  - **Picking a field from each list item**: no `map`-like function, so `join` can't list item or feat names, and nothing can compare spells known per rank with slots (see the `list(…)` item).
   - **Conditions with effects**: conditions are free tags; frightened, clumsy, and the like can't feed the numbers they change (a status penalty on checks and DCs). Encumbered's Speed penalty could be computed but isn't.
   - **Linking strikes to inventory**: a Strike's item bonus and damage dice are typed by hand rather than read from the weapon in the inventory.
   - **Tables on phones**: a `Table` whose columns are text inputs (Strikes, Spells) squeezes them to a few characters and scrolls sideways at phone width.
