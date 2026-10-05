@@ -1,0 +1,239 @@
+{
+  "readableId": "pf2e-deity",
+  "name": "Deity",
+  "contentCategory": "general",
+  "hasStrictSchema": true,
+  "schema": {
+    "category": {
+      "type": "string",
+      "options": [
+        {
+          "value": "deity",
+          "label": "Deity"
+        },
+        {
+          "value": "pantheon",
+          "label": "Pantheon"
+        },
+        {
+          "value": "philosophy",
+          "label": "Philosophy"
+        }
+      ],
+      "label": "Category",
+      "default": "deity"
+    },
+    "font": {
+      "type": "array",
+      "label": "Divine Font",
+      "itemType": {
+        "type": "string",
+        "options": [
+          {
+            "value": "heal",
+            "label": "Heal"
+          },
+          {
+            "value": "harm",
+            "label": "Harm"
+          }
+        ]
+      }
+    },
+    "sanctification": {
+      "type": "string",
+      "label": "Sanctification",
+      "description": "For example can choose holy."
+    },
+    "attributes": {
+      "type": "array",
+      "label": "Divine Attributes",
+      "itemType": {
+        "type": "string",
+        "options": [
+          {
+            "value": "str",
+            "label": "Strength"
+          },
+          {
+            "value": "dex",
+            "label": "Dexterity"
+          },
+          {
+            "value": "con",
+            "label": "Constitution"
+          },
+          {
+            "value": "int",
+            "label": "Intelligence"
+          },
+          {
+            "value": "wis",
+            "label": "Wisdom"
+          },
+          {
+            "value": "cha",
+            "label": "Charisma"
+          }
+        ],
+        "label": "Attribute"
+      }
+    },
+    "skill": {
+      "type": "string",
+      "options": [
+        {
+          "value": "acrobatics",
+          "label": "Acrobatics"
+        },
+        {
+          "value": "arcana",
+          "label": "Arcana"
+        },
+        {
+          "value": "athletics",
+          "label": "Athletics"
+        },
+        {
+          "value": "crafting",
+          "label": "Crafting"
+        },
+        {
+          "value": "deception",
+          "label": "Deception"
+        },
+        {
+          "value": "diplomacy",
+          "label": "Diplomacy"
+        },
+        {
+          "value": "intimidation",
+          "label": "Intimidation"
+        },
+        {
+          "value": "medicine",
+          "label": "Medicine"
+        },
+        {
+          "value": "nature",
+          "label": "Nature"
+        },
+        {
+          "value": "occultism",
+          "label": "Occultism"
+        },
+        {
+          "value": "performance",
+          "label": "Performance"
+        },
+        {
+          "value": "religion",
+          "label": "Religion"
+        },
+        {
+          "value": "society",
+          "label": "Society"
+        },
+        {
+          "value": "stealth",
+          "label": "Stealth"
+        },
+        {
+          "value": "survival",
+          "label": "Survival"
+        },
+        {
+          "value": "thievery",
+          "label": "Thievery"
+        }
+      ],
+      "label": "Divine Skill"
+    },
+    "favoredWeapon": {
+      "type": "string",
+      "label": "Favored Weapon"
+    },
+    "domains": {
+      "type": "array",
+      "label": "Domains",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "alternateDomains": {
+      "type": "array",
+      "label": "Alternate Domains",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "clericSpells": {
+      "type": "array",
+      "label": "Cleric Spells",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "rank": {
+            "type": "number",
+            "label": "Rank",
+            "required": true
+          },
+          "spell": {
+            "type": "content",
+            "label": "Spell",
+            "contentTypeId": "pf2e-spell",
+            "allow": "reference"
+          }
+        }
+      }
+    },
+    "edicts": {
+      "type": "string",
+      "label": "Edicts"
+    },
+    "anathema": {
+      "type": "string",
+      "label": "Anathema"
+    },
+    "traits": {
+      "type": "array",
+      "label": "Traits",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "rarity": {
+      "type": "string",
+      "options": [
+        {
+          "value": "common",
+          "label": "Common"
+        },
+        {
+          "value": "uncommon",
+          "label": "Uncommon"
+        },
+        {
+          "value": "rare",
+          "label": "Rare"
+        },
+        {
+          "value": "unique",
+          "label": "Unique"
+        }
+      ],
+      "label": "Rarity",
+      "default": "common"
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "description": "Rules text, in Markdown."
+    },
+    "source": {
+      "type": "string",
+      "label": "Source",
+      "description": "The book it was published in."
+    }
+  }
+}
