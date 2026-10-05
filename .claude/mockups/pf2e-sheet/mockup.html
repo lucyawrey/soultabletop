@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PF2e Demo Sheet</title>
+<script src="../_kit/app-theme.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style>
+/* Sheet tokens, as app/assets/css/main.css maps them. */
+:root {
+  --st-page: var(--color-folio-100); --st-panel: var(--ui-bg); --st-panel-muted: var(--ui-bg-elevated);
+  --st-ink: var(--ui-text-highlighted); --st-ink-muted: var(--ui-text-muted);
+  --st-primary: var(--ui-primary); --st-on-primary: var(--ui-text-inverted); --st-accent: var(--ui-secondary);
+  --st-border: var(--ui-border); --st-border-strong: var(--ui-border-accented);
+  --st-radius: calc(var(--ui-radius) * 1.5);
+  --st-font-body: var(--font-sans); --st-font-display: var(--font-display);
+}
+body { margin: 0; background: var(--st-page); color: var(--st-ink); font-family: var(--st-font-body); }
+
+/* Mockup chrome (not part of the sheet). */
+.bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 8px 16px; background: var(--st-panel); border-bottom: 1px solid var(--st-border); position: sticky; top: 0; z-index: 5; }
+.bar b { font-family: var(--st-font-display); font-size: 20px; }
+.bar small { color: var(--st-ink-muted); }
+.ctl { display: inline-flex; border: 1px solid var(--st-border-strong); border-radius: 6px; overflow: hidden; }
+.ctl button { font: inherit; font-size: 13px; padding: 4px 10px; border: 0; background: transparent; color: var(--st-ink); cursor: pointer; }
+.ctl button[aria-pressed="true"] { background: var(--st-primary); color: var(--st-on-primary); font-weight: 700; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--st-primary); outline-offset: 2px; }
+
+/* Density: the proposed built-in setting. One attribute on <Sheet> swaps these. */
+.sheet[data-density="compact"] { --d-gap: 6px; --d-pad: 8px; --d-h: 24px; --d-fs: 13px; --d-lfs: 10.5px; --d-big: 22px; --d-h2: 17px; }
+.sheet[data-density="roomy"]   { --d-gap: 16px; --d-pad: 16px; --d-h: 36px; --d-fs: 15px; --d-lfs: 13px; --d-big: 28px; --d-h2: 22px; }
+
+.sheet { max-width: 1120px; margin: 0 auto; padding: var(--d-gap); display: grid; gap: var(--d-gap); font-size: var(--d-fs); }
+.sheet-section { background: var(--st-panel); border: 1px solid var(--st-border); border-radius: var(--st-radius); padding: var(--d-pad); min-width: 0; }
+.sheet-section > h2 { font-family: var(--st-font-display); font-size: var(--d-h2); margin: 0 0 var(--d-gap); line-height: 1.1; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.sheet-section > h2 small { font-family: var(--st-font-body); font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 600; }
+.sheet-field-label { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.sheet-field-value { font-weight: 700; }
+input, select { font: inherit; color: var(--st-ink); height: var(--d-h); box-sizing: border-box; border: 1px solid var(--st-border-strong); border-radius: calc(var(--st-radius) * .66); background: var(--st-panel); padding: 0 6px; min-width: 0; }
+.grid { display: grid; gap: var(--d-gap); }
+
+/* Header */
+.head { display: grid; grid-template-columns: 1fr auto; gap: var(--d-gap); align-items: end; }
+.head h1 { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.3); margin: 0; line-height: 1; }
+.refs { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 4px; }
+.ref { display: inline-flex; gap: 4px; align-items: baseline; border: 1px solid var(--st-border-strong); border-radius: 999px; padding: 1px 8px; background: var(--st-panel-muted); }
+.ref a { color: var(--st-primary); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.lvl { text-align: center; } .lvl .sheet-field-value { font-size: var(--d-big); }
+.hero { display: flex; gap: 3px; } .hero span { width: 12px; height: 12px; border: 1.5px solid var(--st-primary); border-radius: 50%; } .hero span.on { background: var(--st-primary); }
+
+/* Stat boxes */
+.stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--d-gap); }
+.box { border: 1px solid var(--st-border-strong); border-radius: var(--st-radius); padding: calc(var(--d-pad) * .5); text-align: center; background: var(--st-panel); }
+.box .sheet-field-value { font-size: var(--d-big); line-height: 1.1; display: block; }
+.box.key { border-color: var(--st-primary); border-width: 2px; }
+.box .note { font-size: var(--d-lfs); color: var(--st-ink-muted); }
+.def { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: var(--d-gap); }
+.hp { grid-column: span 2; text-align: left; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: center; }
+.hp .bar2 { grid-column: 1 / -1; height: 6px; background: var(--st-panel-muted); border: 1px solid var(--st-border); border-radius: 3px; overflow: hidden; } .hp .bar2 i { display: block; height: 100%; background: var(--st-primary); }
+.hp input { width: 48px; text-align: center; height: calc(var(--d-h) * 1.1); font-size: calc(var(--d-big) * .8); font-weight: 700; }
+
+/* Rows: skills, strikes, inventory */
+.rows { display: grid; gap: 0; }
+.row { display: grid; align-items: center; gap: 6px; min-height: var(--d-h); border-bottom: 1px solid var(--st-border); padding: calc(var(--d-gap) * .35) 0; }
+.row:last-child { border-bottom: 0; }
+.row.th { min-height: 0; } .row.th > * { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.skills .row { grid-template-columns: 1fr 34px 46px 46px; }
+.mod { font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.rank { display: inline-grid; place-items: center; width: 22px; height: 18px; border-radius: 4px; font-size: 11px; font-weight: 700; border: 1px solid var(--st-border-strong); color: var(--st-ink-muted); }
+.rank.t, .rank.e { background: var(--st-primary); color: var(--st-on-primary); border-color: var(--st-primary); }
+.rank.e { box-shadow: inset 0 0 0 2px var(--st-on-primary); }
+.dim { color: var(--st-ink-muted); font-weight: 400; }
+.strikes .row { grid-template-columns: 1.4fr 52px 1.2fr 1.4fr; }
+.inv .row { grid-template-columns: 1fr 44px 44px; }
+.map { font-size: var(--d-lfs); color: var(--st-ink-muted); }
+.chip { display: inline-block; font-size: var(--d-lfs); border: 1px solid var(--st-border); border-radius: 4px; padding: 0 4px; margin: 1px 2px 1px 0; color: var(--st-ink-muted); }
+.feats { display: grid; gap: var(--d-gap); grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.feat { border-left: 3px solid var(--st-accent); padding-left: 6px; }
+.feat b { display: block; } .feat span { font-size: var(--d-lfs); color: var(--st-ink-muted); }
+.slots { display: flex; gap: 3px; } .slots i { width: 11px; height: 11px; border: 1.5px solid var(--st-primary); border-radius: 2px; } .slots i.used { background: var(--st-primary); }
+
+/* Layouts */
+.cols { display: grid; grid-template-columns: 300px 1fr; gap: var(--d-gap); align-items: start; }
+.cols > div { display: grid; gap: var(--d-gap); }
+.tabs { display: flex; gap: 2px; border-bottom: 2px solid var(--st-border-strong); flex-wrap: wrap; }
+.tabs button { font: inherit; font-weight: 700; padding: 4px 12px; border: 0; background: transparent; color: var(--st-ink-muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.tabs button[aria-selected="true"] { color: var(--st-primary); border-color: var(--st-primary); }
+[data-gap] { outline: 2px dashed var(--ui-warning); outline-offset: 1px; }
+body.nogaps [data-gap] { outline: 0; }
+
+@media (max-width: 760px) {
+  .stats { grid-template-columns: repeat(3, 1fr); }
+  .cols { grid-template-columns: 1fr; }
+  .strikes .row { grid-template-columns: 1fr 48px; } .strikes .row > :nth-child(n+3) { grid-column: 1 / -1; }
+  .head { grid-template-columns: 1fr; }
+}
+.contrast { max-width: 1120px; margin: 16px auto; padding: 0 16px; font-size: 12px; color: var(--st-ink-muted); }
+.contrast td { padding: 1px 8px 1px 0; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>PF2e demo sheet</b><small>mockup · draft</small>
+  <div class="ctl" role="group" aria-label="Density" data-ctl="density"><button data-v="compact">Compact</button><button data-v="roomy">Roomy</button></div>
+  <div class="ctl" role="group" aria-label="Layout" data-ctl="layout"><button data-v="cols">Columns</button><button data-v="tabs">Tabs</button></div>
+  <div class="ctl" role="group" aria-label="Character" data-ctl="pc"><button data-v="cleric">Cleric</button><button data-v="rogue">Rogue</button></div>
+  <div class="ctl" role="group" aria-label="Gap outlines" data-ctl="gaps"><button data-v="on">Gaps</button><button data-v="off">Hide gaps</button></div>
+</div>
+<main id="sheet" class="sheet" data-tag="Sheet" data-attrs='density="compact"' data-gap="density attribute doesn't exist yet"></main>
+<div class="contrast"><table id="contrast"></table></div>
+
+<script>
+const S = { density: "compact", layout: "cols", pc: "cleric", gaps: "on", tab: "Skills" };
+const ATTR = ["Str", "Dex", "Con", "Int", "Wis", "Cha"];
+const PROF = { u: 0, t: 2, e: 4 }; // + level when trained or better
+const SKILLS = [["Acrobatics","Dex"],["Arcana","Int"],["Athletics","Str"],["Crafting","Int"],["Deception","Cha"],["Diplomacy","Cha"],["Intimidation","Cha"],["Medicine","Wis"],["Nature","Wis"],["Occultism","Int"],["Performance","Cha"],["Religion","Wis"],["Society","Int"],["Stealth","Dex"],["Survival","Wis"],["Thievery","Dex"]];
+const ARMOR = { Acrobatics: 1, Athletics: 1, Stealth: 1, Thievery: 1 };
+const PCS = {
+  cleric: { name: "Maren Ashvale", level: 1, ancestry: "Human", heritage: "Versatile Human", background: "Acolyte", cls: "Cleric", sub: "Cloistered", key: "Wis",
+    attr: { Str: 0, Dex: 1, Con: 1, Int: 0, Wis: 4, Cha: 2 }, hp: [17, 17], hero: 1, speed: 25, armor: { name: "None", ac: 0, cap: 9, check: 0 },
+    perc: "t", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","t"], Will: ["Wis","e"] }, classDC: "t",
+    skills: { Religion: "t", Medicine: "t", Diplomacy: "t", Society: "t", Nature: "t" }, lore: [["Scribing Lore","Int","t"]],
+    strikes: [["Mace","Str","t","1d6 B","Shove"],["Sling","Dex","t","1d6 B","Propulsive, range 50 ft"]],
+    feats: [["Ancestry","Natural Ambition","1"],["Class","Healing Hands","1"],["Skill","Student of the Canon","Background"],["Class feature","Divine Font (heal)","1"]],
+    spells: { trad: "Divine", cantrips: ["Divine Lance","Guidance","Light","Shield","Stabilize"], r1: [["Bless",1],["Command",0]], font: ["Heal", 4, 1] },
+    inv: [["Mace",1,1],["Sling",0.1,1],["Religious symbol (wooden)",0.1,1],["Backpack",0.1,1],["Bedroll",0.1,1],["Rations (1 week)",0.1,1],["Healer's toolkit",1,1]] },
+  rogue: { name: "Tessaly Quill", level: 1, ancestry: "Elf", heritage: "Woodland Elf", background: "Criminal", cls: "Rogue", sub: "Thief racket", key: "Dex",
+    attr: { Str: 0, Dex: 4, Con: 1, Int: 1, Wis: 1, Cha: 1 }, hp: [15, 12], hero: 1, speed: 30, armor: { name: "Leather armor", ac: 1, cap: 4, check: -1 },
+    perc: "e", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","e"], Will: ["Wis","e"] }, classDC: "t",
+    skills: { Acrobatics: "t", Athletics: "t", Deception: "t", Stealth: "t", Thievery: "t", Society: "t", Intimidation: "t", Crafting: "t", Diplomacy: "t" }, lore: [["Underworld Lore","Int","t"]],
+    strikes: [["Rapier","Dex","t","1d6+4 P","Deadly d8, Disarm, Finesse"],["Shortbow","Dex","t","1d6 P","Deadly d10, range 60 ft"]],
+    sneak: "1d6",
+    feats: [["Ancestry","Nimble Elf","1"],["Class","Nimble Dodge","1"],["Skill","Experienced Smuggler","Background"],["Skill","Pickpocket","1"],["Class feature","Sneak Attack 1d6, Surprise Attack","1"]],
+    inv: [["Rapier",1,1],["Shortbow",1,1],["Arrows",0.1,20],["Leather armor",1,1],["Thieves' toolkit",0.1,1],["Backpack",0.1,1],["Bedroll",0.1,1]] },
+};
+const sg = n => (n >= 0 ? "+" : "−") + Math.abs(n);
+const prof = (r, lvl) => (r === "u" ? 0 : PROF[r] + lvl);
+const tag = (t, a = "", gap = "") => ` data-tag="${t}"${a ? ` data-attrs='${a}'` : ""}${gap ? ` data-gap="${gap}"` : ""}`;
+const rank = r => `<span class="rank ${r}" aria-label="${{u:"Untrained",t:"Trained",e:"Expert"}[r]}">${r.toUpperCase()}</span>`;
+
+function render() {
+  const c = PCS[S.pc], L = c.level, a = c.attr;
+  const dexAC = Math.min(a.Dex, c.armor.cap);
+  const ac = 10 + dexAC + prof("t", L) + c.armor.ac;
+  const perc = a.Wis + prof(c.perc, L);
+  const bulk = c.inv.reduce((s, [, b, q]) => s + (b === 0.1 ? 0 : b * q), 0), light = c.inv.filter(([, b]) => b === 0.1).length;
+  const bulkTxt = `${bulk + Math.floor(light / 10)}${light % 10 ? ` + ${light % 10} L` : ""}`;
+
+  const head = `<section class="sheet-section"${tag("Section")}><div class="head">
+    <div><h1${tag("Text", 'field="name"')}>${c.name}</h1>
+      <div class="refs">${[["Ancestry",c.ancestry],["Heritage",c.heritage],["Background",c.background],["Class",`${c.cls}`],["",c.sub]].map(([l,v]) =>
+        `<span class="ref"${tag("Ref", `field="${(l||"subclass").toLowerCase()}"`)}>${l ? `<span class="sheet-field-label">${l}</span>` : ""}<a href="#">${v}</a></span>`).join("")}</div></div>
+    <div style="display:flex;gap:16px;align-items:end">
+      <div${tag("Tracker", 'field="heroPoints" max="3" style="pips"')}><div class="sheet-field-label">Hero</div><div class="hero">${[0,1,2].map(i => `<span class="${i < c.hero ? "on" : ""}"></span>`).join("")}</div></div>
+      <div class="lvl"${tag("Number", 'field="level"')}><div class="sheet-field-label">Level</div><span class="sheet-field-value">${L}</span></div>
+    </div></div></section>`;
+
+  const stats = `<div class="stats"${tag("Grid", 'columns="6"')}>${ATTR.map(k => `<div class="box ${k === c.key ? "key" : ""}"${tag("Number", `field="attributes.${k.toLowerCase()}" signed`)}>
+      <span class="sheet-field-label">${k}</span><span class="sheet-field-value">${sg(a[k])}</span>${k === c.key ? `<span class="note">key</span>` : ""}</div>`).join("")}</div>`;
+
+  const save = ([n, [k, r]]) => `<div class="box"${tag("Value", `value="{${k.toLowerCase()} + prof(saves.${n.toLowerCase()})}"`)}><span class="sheet-field-label">${n}</span><span class="sheet-field-value">${sg(a[k] + prof(r, L))}</span>${rank(r)}</div>`;
+  const def = `<div class="def"${tag("Grid", 'columns="auto"')}>
+    <div class="box key"${tag("Value", 'value="{10 + min(dex, armor.dexCap) + prof(\'t\') + armor.ac}"')}><span class="sheet-field-label">AC</span><span class="sheet-field-value">${ac}</span><span class="note">${c.armor.name}</span></div>
+    <div class="box hp"${tag("Tracker", 'field="hp" max="{ancestry.hp + (class.hp + con) * level}"')}><span class="sheet-field-label">HP</span><span class="note">max ${c.hp[0]} · temp 0</span>
+      <input aria-label="Current HP" value="${c.hp[1]}"><span class="note">Dying 0 · Wounded 0</span><div class="bar2"><i style="width:${c.hp[1] / c.hp[0] * 100}%"></i></div></div>
+    <div class="box"${tag("Value", 'value="{wis + prof(perception)}"')}><span class="sheet-field-label">Perception</span><span class="sheet-field-value">${sg(perc)}</span>${rank(c.perc)}</div>
+    ${Object.entries(c.saves).map(save).join("")}
+    <div class="box"${tag("Value", 'value="{10 + ' + c.key.toLowerCase() + ' + prof(classDC)}"')}><span class="sheet-field-label">Class DC</span><span class="sheet-field-value">${10 + a[c.key] + prof(c.classDC, L)}</span></div>
+    <div class="box"${tag("Value", 'value="{ancestry.speed}"')}><span class="sheet-field-label">Speed</span><span class="sheet-field-value">${c.speed}</span><span class="note">feet</span></div>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"${tag("Tags", 'field="conditions"', "conditions don't change the numbers")}><span class="sheet-field-label">Conditions</span>${S.pc === "rogue" ? `<span class="chip">Frightened 1</span>` : `<span class="dim">None</span>`}</div>`;
+
+  const skillRows = [...SKILLS.map(([n, k]) => [n, k, c.skills[n] || "u"]), ...c.lore].map(([n, k, r]) => {
+    const pen = ARMOR[n] && r !== "u" ? c.armor.check : ARMOR[n] ? c.armor.check : 0;
+    const m = a[k] + prof(r, L) + pen;
+    return `<div class="row"><span>${n}${pen ? ` <span class="dim" title="Armor check penalty">${sg(pen)}</span>` : ""}</span><span class="dim">${k}</span>${rank(r)}<span class="mod">${sg(m)}</span></div>`; }).join("");
+  const skills = `<section class="sheet-section skills"${tag("Table", 'field="skills" rows="fixed"')}><h2>Skills <small>${c.armor.check ? `armor ${c.armor.check} on Str/Dex skills` : ""}</small></h2>
+    <div class="rows"><div class="row th"><span>Skill</span><span>Attr</span><span>Rank</span><span class="mod">Mod</span></div>${skillRows}</div></section>`;
+
+  const strikes = `<section class="sheet-section strikes"${tag("List", 'field="strikes"', "strike values typed, not read from the inventory item")}><h2>Strikes <small>MAP −5 / −10 (agile −4 / −8)</small></h2>
+    <div class="rows"><div class="row th"><span>Weapon</span><span class="mod">Hit</span><span>Damage</span><span>Traits</span></div>
+    ${c.strikes.map(([n, k, r, d, t]) => { const h = a[k] + prof(r, L); return `<div class="row"><b>${n}</b><span class="mod" data-gap="roll button">${sg(h)}</span><span>${d}${c.sneak ? ` <span class="dim">+${c.sneak} precision</span>` : ""}</span><span>${t.split(", ").map(x => `<span class="chip">${x}</span>`).join("")}</span></div>`; }).join("")}
+    </div></section>`;
+
+  const feats = `<section class="sheet-section"${tag("List", 'field="feats" item="Ref"')}><h2>Feats &amp; Features <small>level ${L}</small></h2>
+    <div class="feats">${c.feats.map(([ty, n, src]) => `<div class="feat"><b><a href="#" style="color:var(--st-ink)">${n}</a></b><span>${ty} · ${src}</span></div>`).join("")}</div></section>`;
+
+  const sp = c.spells;
+  const spells = sp ? `<section class="sheet-section"${tag("Section", 'show="{class.spellcasting}"')}><h2>Spells <small>${sp.trad} prepared · DC ${10 + a.Wis + prof("t", L)} · attack ${sg(a.Wis + prof("t", L))}</small></h2>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+      <div><div class="sheet-field-label">Cantrips · rank 1</div>${sp.cantrips.map(x => `<span class="chip" style="color:var(--st-ink)">${x}</span>`).join("")}</div>
+      <div><div class="sheet-field-label">Rank 1</div>${sp.r1.map(([n, u]) => `<div class="row" style="grid-template-columns:1fr auto"><span>${n}</span><span class="slots"><i class="${u ? "used" : ""}" aria-label="${u ? "Cast" : "Prepared"}"></i></span></div>`).join("")}</div>
+      <div${tag("Tracker", 'field="divineFont" max="{4}"')}><div class="sheet-field-label">Divine font · ${sp.font[0]}</div><div class="slots" style="margin-top:4px">${Array.from({ length: sp.font[1] }, (_, i) => `<i class="${i < sp.font[2] ? "used" : ""}"></i>`).join("")}</div></div>
+    </div></section>` : "";
+
+  const inv = `<section class="sheet-section inv"${tag("Table", 'field="inventory" item="Ref"')}><h2>Inventory <small>Bulk ${bulkTxt} / ${5 + a.Str} (max ${10 + a.Str})</small></h2>
+    <div class="rows"><div class="row th"><span>Item</span><span class="mod">Qty</span><span class="mod">Bulk</span></div>
+    ${c.inv.map(([n, b, q]) => `<div class="row"><a href="#" style="color:var(--st-ink)">${n}</a><span class="mod">${q}</span><span class="mod dim">${b === 0.1 ? "L" : b}</span></div>`).join("")}
+    </div></section>`;
+
+  const top = `${head}<section class="sheet-section"${tag("Section")} style="display:grid;gap:var(--d-gap)">${stats}${def}</section>`;
+  let body;
+  if (S.layout === "cols") {
+    body = `<div class="cols"><div>${skills}</div><div>${strikes}${feats}${spells}${inv}</div></div>`;
+  } else {
+    const T = { Skills: skills, Strikes: strikes, Feats: feats, ...(sp ? { Spells: spells } : {}), Inventory: inv };
+    if (!T[S.tab]) S.tab = "Skills";
+    body = `<div${tag("Tabs")}><div class="tabs" role="tablist">${Object.keys(T).map(k => `<button role="tab" aria-selected="${k === S.tab}" data-tab="${k}">${k}</button>`).join("")}</div>
+      <div style="margin-top:var(--d-gap)">${T[S.tab]}</div></div>`;
+  }
+  const el = document.getElementById("sheet");
+  el.dataset.density = S.density;
+  el.innerHTML = top + body;
+  document.body.classList.toggle("nogaps", S.gaps === "off");
+  document.querySelectorAll("[data-ctl]").forEach(g => g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", S[g.dataset.ctl] === b.dataset.v)));
+  contrast();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const g = b.closest("[data-ctl]");
+  if (g) { S[g.dataset.ctl] = b.dataset.v; render(); }
+  else if (b.dataset.tab) { S.tab = b.dataset.tab; render(); }
+});
+
+function rgb(v) { const d = document.createElement("div"); d.style.color = v; document.body.append(d); const m = getComputedStyle(d).color.match(/[\d.]+/g).map(Number); d.remove(); return m; }
+function lum([r, g, b]) { return [r, g, b].map(x => { x /= 255; return x <= .03928 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; }).reduce((s, x, i) => s + x * [.2126, .7152, .0722][i], 0); }
+function ratio(a, b) { const [x, y] = [lum(rgb(a)), lum(rgb(b))].sort((p, q) => q - p); return (x + .05) / (y + .05); }
+function contrast() {
+  const pairs = [["ink on panel", "--st-ink", "--st-panel", 4.5], ["muted on panel", "--st-ink-muted", "--st-panel", 4.5], ["primary on panel", "--st-primary", "--st-panel", 4.5],
+    ["on-primary on primary", "--st-on-primary", "--st-primary", 4.5], ["border-strong on panel", "--st-border-strong", "--st-panel", 3]];
+  document.getElementById("contrast").innerHTML = pairs.map(([n, f, b, min]) => { const r = ratio(`var(${f})`, `var(${b})`);
+    return `<tr><td>${n}</td><td>${r.toFixed(2)}:1</td><td>${r >= min ? "pass" : "FAIL"} (≥ ${min})</td></tr>`; }).join("");
+}
+render();
+</script>
+</body>
+</html>
