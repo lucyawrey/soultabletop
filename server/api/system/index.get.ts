@@ -44,7 +44,7 @@ defineRouteMeta({
     summary: "List accessible systems",
     parameters: [...listQueryParameters],
     responses: {
-      200: { description: "System list. Each row has `source` (you, yourGroups, shared, official, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address, and `contentTypeCount`, how many content types its own owner made for it that you can read" },
+      200: { description: "System list. Each row has `source` (official, you, yourGroups, shared, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address, and `contentTypeCount`, how many content types its own owner made for it that you can read" },
     },
   },
 });

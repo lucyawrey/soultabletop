@@ -796,6 +796,19 @@ describe("dynamic number attributes", () => {
   });
 });
 
+describe("display fixes for real sheets", () => {
+  it("lets a Tracker go without a maximum, or have one of 0", () => {
+    expect(messages('<Tracker field="hp" />')).toEqual([]);
+    expect(messages('<Tracker field="hp" max="0" />')).toEqual([]);
+    expect(errorCodes('<Tracker field="hp" max="-1" />')).toEqual(["invalid-attribute"]);
+  });
+
+  it("takes a dot style on Checkbox", () => {
+    expect(messages('<Checkbox field="alive" style="dot" />')).toEqual([]);
+    expect(errorCodes('<Checkbox field="alive" style="star" />')).toEqual(["invalid-attribute"]);
+  });
+});
+
 describe("review follow-ups", () => {
   it("checks the bodies of definitions that can't be used", () => {
     expect(errorCodes('<Define name="a" formula="1" /><Define name="a" formula="1 +* 2" />')).toEqual([

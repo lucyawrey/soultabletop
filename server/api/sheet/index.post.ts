@@ -1,5 +1,5 @@
 import { createError } from "h3";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { contentType, resource, sheet } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
 import { useDatabase } from "../../utils/database";
@@ -47,7 +47,11 @@ defineRouteMeta({
                 description: "Defaults to markup generated from the schema",
               },
               cssStyles: { type: "string" },
-              isDefault: { type: "boolean" },
+              isDefault: {
+                type: "boolean",
+                description:
+                  "When left out, the sheet becomes the default if its content type has no default sheet yet and you can edit the content type",
+              },
               confirmReplaceDefault: {
                 type: "boolean",
                 description:
@@ -156,6 +160,29 @@ export default defineEventHandler(async (event) => {
         })
         .returning();
       if (!createdResource) throw new Error("Sheet Resource was not created");
+      // Without `isDefault`, a content type's first Sheet becomes its default
+      // (replacing the generated one, so no confirmation), for anyone who can
+      // edit the type. Locking the type's row keeps two concurrent creates
+      // from both taking it.
+      let isDefault = body.isDefault === true;
+      if (body.isDefault === undefined && typeAccess.canEdit) {
+        await tx
+          .select({ id: contentType.resourceId })
+          .from(contentType)
+          .where(eq(contentType.resourceId, body.contentTypeId as string))
+          .for("update");
+        const [existingDefault] = await tx
+          .select({ id: sheet.resourceId })
+          .from(sheet)
+          .where(
+            and(
+              eq(sheet.contentTypeId, body.contentTypeId as string),
+              eq(sheet.isDefault, true),
+            ),
+          )
+          .limit(1);
+        isDefault = !existingDefault;
+      }
       // Only one default Sheet per ContentType (partial unique index).
       if (body.isDefault === true)
         await tx
@@ -169,7 +196,7 @@ export default defineEventHandler(async (event) => {
           contentTypeId: body.contentTypeId as string,
           markup,
           cssStyles: typeof body.cssStyles === "string" ? body.cssStyles : "",
-          isDefault: body.isDefault === true,
+          isDefault,
           // Unless given, the Edit/Autosave switches start as the content
           // category suggests (characters: on), like generated sheets.
           defaultEditMode:

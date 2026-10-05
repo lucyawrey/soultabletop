@@ -48,11 +48,11 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Field` | `formula` (only on a string, number, or boolean field; needs `field`) | string, number, boolean, scalar, object, resourceLink, content, array of strings | Input chosen from the schema type; with `formula` it acts like `Text`/`Number`/`Checkbox` (an override) |
 | `Text` | `formula`, `multiline`, `placeholder` | string | `formula` overrides (see below) |
 | `Number` | `formula`, `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric); `formula` overrides |
-| `Checkbox` | `formula` | boolean | `formula` overrides |
+| `Checkbox` | `formula`, `style` (`check` \| `dot`, default check) | boolean | `formula` overrides; `style="dot"` is a filled or empty circle with no Yes/No text (proficiency marks) |
 | `Toggle` | none | boolean | On/off switch |
 | `Select` | `options` (comma-separated; only on a text field without schema options) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
 | `Tags` | none | array of strings | |
-| `Tracker` | `formula`, `max` (req, number >= 1, one `{formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; `formula` (read-only) computes the current value |
+| `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value |
 | `Ref` | none | resourceLink, content | Link to the referenced resource or Content |
 | `Value` | `formula`, `format` (`plain` \| `signed`) | any value | Never editable; `formula` (read-only) instead of `field` |
 | `Markdown` | none | string | Formatted long text |

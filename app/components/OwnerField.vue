@@ -7,34 +7,31 @@
 const owner = defineModel<string | null>({ required: true });
 const props = defineProps<{ original?: string | null }>();
 
-interface GroupItem {
-  id: string;
-  name: string;
-  kind: "user" | "system";
-  // null: a system group the user (a site admin) isn't in.
-  role: "admin" | "editor" | "member" | null;
-}
-
-const { data: groups } = useLazyFetch<GroupItem[]>("/api/group", {
-  key: "owner-field-groups",
-  default: () => [],
-});
-
+const { groups } = useOwnerGroups();
 const editing = computed(() => props.original !== undefined);
+
+// Create dialogs start on the group the user is working as (from the user
+// menu), once per dialog, so switching back to You sticks.
+const { group: workingAs } = useWorkingAs();
+if (!editing.value) {
+  let prefilled = false;
+  watch(
+    workingAs,
+    (item) => {
+      if (prefilled || !item) return;
+      prefilled = true;
+      if (owner.value === null) owner.value = item.id;
+    },
+    { immediate: true },
+  );
+}
 
 // Select items can't have an empty value, so "you" is a sentinel.
 const YOU = "you";
 const options = computed(() => {
   const items = [
     { label: "You", value: YOU },
-    ...groups.value
-      .filter(
-        (item) =>
-          item.role === "admin" ||
-          item.role === "editor" ||
-          (item.kind === "system" && item.role === null),
-      )
-      .map((item) => ({ label: item.name, value: item.id })),
+    ...groups.value.map((item) => ({ label: item.name, value: item.id })),
   ];
   // The current owning group, if the user can't pick it themselves (e.g. a
   // site admin outside it).

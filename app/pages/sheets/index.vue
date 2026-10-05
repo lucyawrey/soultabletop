@@ -30,6 +30,7 @@ interface ContentTypeItem {
   name: string;
   source: ResourceSource;
   canEdit: boolean;
+  hasDefaultSheet: boolean;
 }
 
 const list = await useResourceList<SheetItem>("/api/sheet", loggedIn, { bySystem: true });
@@ -89,15 +90,17 @@ const { onReadableIdInput, resetReadableIdTouched, readableIdError } = useReadab
 const idAvailability = useResourceIdAvailability(form, "sheet");
 
 // Only editors of the ContentType may change its default Sheet (enforced
-// server-side too), so the switch is hidden for everyone else.
-const canSetDefault = computed(
-  () =>
-    contentTypes.value.find((item) => item.id === form.contentTypeId)
-      ?.canEdit ?? false,
+// server-side too), so the switch is hidden for everyone else. It starts on
+// when the type has no default Sheet yet, so a type's first Sheet becomes its
+// default unless switched off.
+const selectedType = computed(() =>
+  contentTypes.value.find((item) => item.id === form.contentTypeId),
 );
-watch(canSetDefault, (allowed) => {
-  if (!allowed) form.isDefault = false;
-});
+const canSetDefault = computed(() => selectedType.value?.canEdit ?? false);
+function resetDefaultSwitch() {
+  form.isDefault = canSetDefault.value && !selectedType.value?.hasDefaultSheet;
+}
+watch(() => form.contentTypeId, resetDefaultSwitch);
 
 const formBusy = ref(false);
 const formError = ref("");
@@ -118,7 +121,7 @@ function openCreate(contentTypeId?: string) {
   form.isPubliclyReadable = false;
   form.ownerGroupId = null;
   if (!contentTypeId || !selectType(contentTypeId)) selectStartingSystem();
-  form.isDefault = false;
+  resetDefaultSwitch();
   resetReadableIdTouched(false);
   isFormOpen.value = true;
 }

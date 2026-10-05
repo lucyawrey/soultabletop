@@ -39,21 +39,21 @@ export function requiresReadableType(categories: unknown) {
   return categories !== undefined;
 }
 
-// Where a resource comes from, relative to the viewer. Precedence: yours, your
-// groups' (including a system group you belong to), Official, shared with you
-// (through a grant, or a campaign you're a member of), then Community.
-// Logged-out viewers only get Official and Community.
+// Where a resource comes from, relative to the viewer. Precedence: Official
+// (even for members of the system group that owns it), yours, your groups',
+// shared with you (through a grant, or a campaign you're a member of), then
+// Community. Logged-out viewers only get Official and Community.
 export function getResourceSource(
   item: Resource,
   official: boolean,
   context: ResourceAccessContext | null,
 ): ResourceSource {
+  if (official) return "official";
   if (context) {
     if (item.ownerUserId === context.userId) return "you";
     if (item.ownerGroupId && context.groupRoles.has(item.ownerGroupId))
       return "yourGroups";
   }
-  if (official) return "official";
   if (
     context?.campaignRoles.has(item.id) ||
     context?.grants.some(

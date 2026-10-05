@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import {
   CONTENT_CATEGORY_LABELS,
   type ContentCategory,
@@ -9,6 +10,7 @@ interface SystemDetail {
   id: string;
   readableId: string;
   ownerReadableId: string | null;
+  source: ResourceSource;
   name: string;
   isPubliclyReadable: boolean;
   updatedAt: string;
@@ -129,6 +131,7 @@ async function remove() {
         back-label="Back to Systems"
         eyebrow="System"
         :title="system.name"
+        :source="system.source"
       >
         <template #meta>
           <ReadableIdBadge

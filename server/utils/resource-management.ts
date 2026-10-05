@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import type { User } from "better-auth";
 import { createError } from "h3";
-import { resource } from "../database/schema";
+import { group, resource, type Resource } from "../database/schema";
 import { useDatabase } from "./database";
+import { getResourceSource } from "./resource-list-filter";
 import { isUniqueConstraintError } from "./user-profile";
 import { loadOwnerReadableId } from "./resource-address";
 import {
@@ -102,16 +103,42 @@ export async function loadReadableResource(
   if (!access.canRead) {
     throw createError({ statusCode: 404, statusMessage: "Resource not found" });
   }
+  const [ownerReadableId, source] = await Promise.all([
+    loadOwnerReadableId(item),
+    loadResourceSource(item, context),
+  ]);
   return {
     item: {
       ...item,
       // With `readableId`, the resource's owner + readable ID address.
-      ownerReadableId: await loadOwnerReadableId(item),
+      ownerReadableId,
+      source,
       canEdit: access.canEdit,
       canChangeOwner: !!context && canChangeResourceOwner(item, user!, context),
     },
     context,
   };
+}
+
+// The resource's Source label for the viewer (`getResourceSource`), as list
+// rows carry it, for single-resource GETs.
+export async function loadResourceSource(
+  item: Resource,
+  context: ResourceAccessContext | null,
+) {
+  let official = false;
+  if (item.ownerGroupId) {
+    if (context) official = context.systemGroupIds.has(item.ownerGroupId);
+    else {
+      const [owner] = await useDatabase()
+        .select({ kind: group.kind })
+        .from(group)
+        .where(eq(group.id, item.ownerGroupId))
+        .limit(1);
+      official = owner?.kind === "system";
+    }
+  }
+  return getResourceSource(item, official, context);
 }
 
 // Who owns a new resource: the user, or `ownerGroupId` if the user may create
