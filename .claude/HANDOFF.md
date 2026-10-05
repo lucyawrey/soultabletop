@@ -4,10 +4,8 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-10-05
 
-- **Nothing in progress.** Merged today: #87 (resource descriptions), #88 (demo polish), #89 (mockup tools; agent-only scripts moved to `.claude/scripts/`, including `agent-run.sh`: older worktrees still have it in `scripts/`). All their worktrees and branches are removed.
-- **Next:** the demo prep order in `TODO.md` Next up, starting with the database reset (confirm with the user right before dropping). The PF2e demo system is planned in `.claude/plans/pf2e-demo.md`; export `pf2e-test` (its step 1) before dropping.
-- **PF2e sheet mockup:** v2 in `.claude/mockups/pf2e-sheet/mockup.html`, built from `brief.md` (script syntax-checked only; not rendered in a browser by an agent, not yet reviewed by the user). Next: user reviews v2; then freeze + spec.
-- **UI mockups:** the process is `.claude/ui-mockups.md`; the redesign's frozen reference is `.claude/mockups/ui-redesign/`. A first comparison of the landing page found small drift (nav order: Content before Characters; smaller sign-in tab text; Sign in button looks disabled until filled), not yet logged in `TODO.md` or checked with the user.
-- The user asked about the `frontend-design` plugin: worth trying for an exploratory direction mockup, not for matching the frozen design.
-- The live `pf2e-test` sheet still uses the old `{= }` / braced `show` syntax; the reset removes it.
+- **Database reset done** (2026-10-05): the user took a Neon backup branch, then the `public` and `drizzle` schemas were dropped and `0000_baseline` applied from PR #90 (`squash-migrations`, worktree `../soultabletop-worktrees/squash-migrations`; the user reviews and merges). The database has no users yet. **Don't run `db:migrate` from `main` until #90 merges.**
+- **Next:** the user re-registers, then `pnpm admin:set` for them; each machine needs a new API key from `/profile` (the Mac's `.env.local` names it `SOUL_API_KEY`, the README says `SOUL_TABLETOP_API_KEY`). Then the PF2e demo system, step 2 of `.claude/plans/pf2e-demo.md` (step 1, the `pf2e-test` export, is in `.claude/pf2e/legacy/`).
+- **PF2e sheet mockup:** v2 in `.claude/mockups/pf2e-sheet/mockup.html` waits for the user's review (not yet rendered in a browser by an agent).
+- **UI mockups:** a comparison of the landing page with `.claude/mockups/ui-redesign/` found small drift (nav order: Content before Characters; smaller sign-in tab text; Sign in button looks disabled until filled), not yet logged in `TODO.md` or checked with the user.
 - **Unverified on the Mac:** that `code` is on the PATH. **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70).
