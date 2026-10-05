@@ -50,7 +50,7 @@ Read these when in doubt; this skill is a summary and the code wins if they disa
 The full list of attributes and children is in `references/tags.md` (verified against the registry). Summary:
 
 - Layout: `Sheet`, `Section` (card; `title`, `description`, `icon`, `span`, `collapsible`, `collapsed`), `Grid` (`cols` 1-12, `gap`), `Stack` (`direction`, `gap`, `align`, `wrap`), `Tabs` (only `Tab` children) and `Tab` (`label` required), `Divider`, `Heading` (`level` 1-4), `Note`, `Callout`, `Badge`, `Collapsible` (`title` required).
-- Fields (need `field`, or `formula` where allowed; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (`options` required), `Tags`, `Tracker` (`max` required), `Ref`, `Value` (never editable), `Markdown`, `Image`.
+- Fields (need `field`, or `formula` where allowed; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (the field's schema options, else its own `options` list), `Tags`, `Tracker` (`max` required), `Ref`, `Value` (never editable), `Markdown`, `Image`.
 - Repeaters: `List` (repeats its children per array item), `Table` (only `Column` and `RowDetails` children; `Column` takes `field` or `formula`, and `format`).
 - Definitions: `Define` (`name`, `params`, `formula`; top level or directly inside `Sheet`; renders nothing).
 - Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Define` takes none.
@@ -66,7 +66,7 @@ Rendering notes: `Number variant="stat"` shows a big number with its label small
 - `content` fields: a path continues into the referenced content type's schema: `class.name`, `class.hitDie`, `class.subclass.feature.name`. At most 3 content fields may be crossed; a fourth is an error. Values reached through a reference are read-only. In an array of structs holding a content field (`inventory: [{ item: content, qty }]`), `item.weight` sits next to `qty` inside the List.
 - Free-form `object` fields: `<Field field="o" />` edits them as JSON; paths below them (`o.foo.bar`) only warn (when `showSheetWarnings` is on) and show whatever the data holds.
 - `scalar` fields bind `Field`, `Value`, `Column` only.
-- Which tag binds which field type: `Text`, `Select`, `Markdown`, `Image` bind string; `Number`, `Tracker` bind number; `Checkbox`, `Toggle` bind boolean; `Tags` binds an array of strings; `Ref` binds resourceLink and content; `Value` binds anything; `Field` binds string, number, boolean, scalar, object, resourceLink, content, and arrays of strings; `Column` binds string, number, boolean, scalar, resourceLink, content.
+- Which tag binds which field type: `Text`, `Select`, `Markdown`, `Image` bind string; `Number`, `Tracker` bind number (`Select` too, when the number field has options); `Checkbox`, `Toggle` bind boolean; `Tags` binds an array of strings; `Ref` binds resourceLink and content; `Value` binds anything; `Field` binds string, number, boolean, scalar, object, resourceLink, content, and arrays of strings or of choices; `Column` binds string, number, boolean, scalar, resourceLink, content.
 - Unknown paths: error when the content type has a strict schema, warning when not (`hasStrictSchema`), and the warning only shows if the sheet's content type has `showSheetWarnings` on (off by default). `{path}` follows the same rule.
 - Labels: `label` attribute, else the schema field's `label`, else the humanized name (`hitPoints` becomes "Hit Points"). `hint` falls back to the schema description. `label=""` does NOT hide the label (it falls back to the schema label); add `hideLabel` (on any field tag or `Column`) to hide it. A hidden label still names the input for screen readers.
 
@@ -111,10 +111,10 @@ Details and tables are in `references/css.md`. Essentials:
 A content type's `schema` is a JSON object mapping field keys to field definitions, in display order. To get it:
 
 - The content type's page (`/types/[id]`, JSON view), or `GET /api/content-type/[id]` (the `schema` and `hasStrictSchema` fields). Sheet pages and the editor's Reference panel list the valid field paths with their types.
-- Field definition: `{ "type": ..., "required"?, "label"?, "description"? }` plus, by type: `array` has `itemType` (a field definition); `struct` has `entries` (a schema: exactly those fields); `object` is free-form; `resourceLink` has optional `kind` (`system`, `campaign`, `contentType`, `sheet`, `content`); `content` has `contentTypeId` and `allow` (`reference`, `local`, `both`); `string`, `number`, `boolean`, `scalar` have nothing extra. Source: `shared/content-schema.ts`.
+- Field definition: `{ "type": ..., "required"?, "label"?, "description"? }` plus, by type: `array` has `itemType` (a field definition); `struct` has `entries` (a schema: exactly those fields); `object` is free-form; `resourceLink` has optional `kind` (`system`, `campaign`, `contentType`, `sheet`, `content`); `content` has `contentTypeId` and `allow` (`reference`, `local`, `both`); `string` and `number` may have `options` (`[{ "value": …, "label"?: … }]`, values of the field's type), which makes a choice field; `boolean` and `scalar` have nothing extra. Source: `shared/content-schema.ts`.
 - Turn it into paths: top-level key `hp` of type `struct` with `current` and `max` gives `hp.current` and `hp.max`; an `array` of `struct` gives a `List`/`Table` on the array and item-relative paths (`name`, `bonus`); an `array` of `string` gives `Tags` or `List field="."`; a `content` field `class` adds `class.name` and every field of that type as `class.<key>` (fetch that content type's schema too).
 - Pick the tag by type: string is `Text` (`multiline` for long text, `Markdown` for formatted text, `Select` for a fixed set of options, `Image` for an image URL); number is `Number` (or `Tracker` with a `max` for a current-out-of-maximum value); boolean is `Checkbox` or `Toggle`; `resourceLink` and `content` are `Ref`; string arrays are `Tags`; arrays of structs are `Table` (short primitive columns) or `List` (nested layout); read-only display is `Value`.
-- Choose `Select` `options` yourself: the schema cannot list allowed choices yet (TODO.md), so saved data is not checked against them.
+- Choice fields (a `string` or `number` with `options` in the schema): use `Select` without `options`, `Field`, `Column`, or `Value`; they show each option's label, and only listed values save. `Text`, `Number`, `Tracker`, `Markdown`, `Image`, and `Tags` on one are errors. Formulas see the stored value (`rank * 2` on number options), while `{rank}` alone shows the label. On a text field without schema options, give `Select` its own `options` list (saved data isn't checked against it); suggest adding options to the schema instead when the user can edit it.
 - Do not invent fields. If the schema lacks a field the user wants, say so; changing a schema is a content type edit (and it can break existing sheets: the app asks to confirm).
 
 ## Checking your work
@@ -129,7 +129,7 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 
 - Formulas can't roll dice or write data, and computed values aren't saved or returned by the API.
 - `{…}` is always a formula, never a bare lookup: a field named like a keyword (`and`, `true`) or dice (`d6`) is reached as `{/and}`, `{/d6}`.
-- Dice buttons, choice fields in schemas, and iterating a struct's entries in a `List`/`Table` are all planned in TODO.md, not available.
+- Dice buttons and iterating a struct's entries in a `List`/`Table` are planned in TODO.md, not available.
 
 ## Known doc drift
 
