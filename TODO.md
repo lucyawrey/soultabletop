@@ -10,6 +10,7 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 - **Choice fields in schemas** · feature · PR #83 (branch `choice-fields`)
   Design decided (2026-10-04): [sheet-schema-design.md](.claude/plans/sheet-schema-design.md), part A. `options` (value + label) on `string` and `number` fields, checked on save; `Select`, `Field`, `Column`, and generated sheets show them as a dropdown, and sheets show labels while formulas see values.
+
 # Next up
 
 The exact order: do these one at a time, top first.
