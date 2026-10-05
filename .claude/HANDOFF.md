@@ -4,7 +4,6 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-10-05
 
-- **PR #86 open: Schema default values** (branch and worktree `schema-defaults`). Reviewed; fixes pushed. Waiting for the user's merge; then remove its worktree and branch and its In progress item.
 - **In progress: Resource descriptions** (branch and worktree `resource-descriptions`): column, migration `0015` (not applied yet), and list columns done; system PATCH, the system page panel, tests, docs, and the PR still to do.
 - **Then the demo prep list in Next up (`TODO.md`)**, in order: database reset, PF2e demo system, onboarding structure, one polish PR, dice buttons. Demo in about a week.
 - **Sheet feature planning** continues after the demo: the rest of "Sheet features found missing…" (Phase 1).

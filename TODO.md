@@ -8,8 +8,6 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
-- **Schema default values** · feature · PR #86 (Tier B, waiting for the user's merge)
-  Decided with the user (2026-10-05): `default` on string, number, boolean, scalar, and array fields, stored on create (never a read-time fallback); array defaults edited as JSON in the builder. See "Default values" in `docs/sheet-system.md`. Reviewed by an Opus agent; its three findings are fixed.
 - **Resource descriptions** · feature · branch `resource-descriptions`
   From the user (2026-10-05), needed for the demo system's credits: a Markdown `description` on every resource (nullable column on `resource`, at most 20,000 characters, left out of list endpoints like other heavy columns). Systems get the API (PATCH) and UI now: a Description panel on the system page, shown and edited with Nuxt UI's Markdown editor (`UEditor`, as sheets use it), hidden from viewers when empty. Other kinds can add the UI later without a schema change. Must merge before the database reset, so the squashed baseline includes the column.
 
