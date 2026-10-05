@@ -12,6 +12,10 @@ import {
 } from "../database/schema";
 import { useDatabase } from "./database";
 
+// A resource row as access checks need it: list endpoints leave out the
+// description (see `resourceListColumns`).
+export type AccessResource = Omit<Resource, "description">;
+
 export interface ResourceAccessContext {
   userId: string;
   isSiteAdmin: boolean;
@@ -198,7 +202,7 @@ export interface ResourceAccessOptions {
 }
 
 export function getResourceAccess(
-  resource: Resource,
+  resource: AccessResource,
   context: ResourceAccessContext,
   options: ResourceAccessOptions = {},
 ): ResourceAccess {
@@ -260,7 +264,7 @@ export function getResourceAccess(
 // Whether the user may delete a campaign: its editors may, as for systems,
 // sheets, and content types, except GMs whose edit access comes from their
 // role.
-export function canDeleteCampaign(resource: Resource, context: ResourceAccessContext) {
+export function canDeleteCampaign(resource: AccessResource, context: ResourceAccessContext) {
   return getResourceAccess(resource, context, { gmEdit: false }).canEdit;
 }
 
@@ -276,7 +280,7 @@ export function canCreateForGroup(groupId: string, context: ResourceAccessContex
 // Like getResourceAccess, but for routes that allow anonymous visitors (no
 // context): they can read public, non-hidden Resources and edit nothing.
 export function getResourceAccessOrPublic(
-  resource: Resource,
+  resource: AccessResource,
   context: ResourceAccessContext | null,
 ): ResourceAccess {
   if (context) return getResourceAccess(resource, context);

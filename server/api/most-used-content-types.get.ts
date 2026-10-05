@@ -3,6 +3,7 @@ import { asc, count, desc, eq } from "drizzle-orm";
 import { content, contentType, resource } from "../database/schema";
 import { requireAuthenticatedUser } from "../utils/auth";
 import { useDatabase } from "../utils/database";
+import { resourceListColumns } from "../utils/list-columns";
 import { getResourceAccess, loadResourceAccessContext } from "../utils/resource-access";
 import { requireResourceReader, requireUuid } from "../utils/resource-management";
 
@@ -35,7 +36,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: "System not found" });
 
   const rows = await useDatabase()
-    .select({ resource, uses: count(content.resourceId) })
+    .select({ resource: resourceListColumns, uses: count(content.resourceId) })
     .from(contentType)
     .innerJoin(resource, eq(resource.id, contentType.resourceId))
     .leftJoin(content, eq(content.contentTypeId, contentType.resourceId))
