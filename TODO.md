@@ -12,14 +12,10 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 The exact order: do these one at a time, top first.
 
-- **Sheet schema design: choice fields and tables over fixed rows** · feature · needs decision: the design
-  Design both together (choice fields decide what a `Column` can show, which tables over fixed rows depends on), with Opus, then likely build them as two PRs.
-  - **Choice fields in schemas** · feature · needs decision: the design (how options and their labels live in the schema, and what generated sheets and `Column` show)
-    Split out of "Sheet features found missing" (2026-10-04). D&D 2024 sheet: a string limited to listed options (size, alignment, skill training, spellcasting ability). Today the options live only in the markup's `Select`, so saved data isn't checked, and the generated sheet shows a plain text input.
-    Pathfinder 2e sheet: every proficiency rank, attribute, and tradition is a `Select` storing lowercase text (`expert`, `wis`), with no way to show a different label (`Expert`, `Wis`) than the stored value; in a `Table` the Lores rank column is a plain text input, since a `Column` can't be a `Select`.
-  - **Tables over fixed rows in Sheets** · feature · needs decision: the design
-    Split out of "Sheet features found missing" (2026-10-04). D&D 2024 sheet: `Table` binds only arrays, so a fixed set like the 18 skills (a `struct` of structs) needs one small `Grid` each. E.g. let `Table`/`List` iterate a struct's entries.
-    Pathfinder 2e sheet: the 16 skills and 3 saves are hand-written rows (`Stack` of a `Value` and a `Select` each).
+- **Choice fields in schemas** · feature
+  Design decided (2026-10-04): [sheet-schema-design.md](.claude/plans/sheet-schema-design.md), part A. `options` (value + label) on `string` and `number` fields, checked on save; `Select`, `Field`, `Column`, and generated sheets show them as a dropdown, and sheets show labels while formulas see values.
+- **Tables over fixed rows in Sheets** · feature · depends on: choice fields in schemas
+  Design decided (2026-10-04): [sheet-schema-design.md](.claude/plans/sheet-schema-design.md), part B. `List`/`Table` repeat over a struct's schema entries (the 16 PF2e skills, 3 saves, 18 D&D skills), with `itemKey()`/`itemLabel()` in formulas and aggregates over structs.
 
 # Phase 1: Sheets ready for real systems
 
