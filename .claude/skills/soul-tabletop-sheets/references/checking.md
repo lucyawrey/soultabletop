@@ -62,10 +62,10 @@ test("sheet compiles", () => {
 });
 ```
 
-Run it from the repo root with output shown (`scripts/agent-run.sh` loads the project's Node and pnpm):
+Run it from the repo root with output shown (`.claude/scripts/agent-run.sh` loads the project's Node and pnpm):
 
 ```sh
-SHEET_DIR=/path/to/folder scripts/agent-run.sh pnpm exec vitest run shared/sheet/check-sheet.tmp.test.ts --disableConsoleIntercept
+SHEET_DIR=/path/to/folder .claude/scripts/agent-run.sh pnpm exec vitest run shared/sheet/check-sheet.tmp.test.ts --disableConsoleIntercept
 rm shared/sheet/check-sheet.tmp.test.ts
 ```
 
