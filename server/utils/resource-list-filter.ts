@@ -1,8 +1,8 @@
-import type { Resource } from "../database/schema";
 import type { ListQuery, ListScope, ResourceSource } from "../../shared/resource-list";
 import {
   getGrantEffect,
   getResourceAccess,
+  type AccessResource,
   type ResourceAccess,
   type ResourceAccessContext,
 } from "./resource-access";
@@ -15,7 +15,7 @@ import {
 // more than read access.
 // `resource-access-sql.ts` applies the same rules in SQL.
 export function isListed(
-  item: Resource,
+  item: AccessResource,
   access: ResourceAccess,
   context: ResourceAccessContext | null,
   scope: ListScope | undefined,
@@ -44,7 +44,7 @@ export function requiresReadableType(categories: unknown) {
 // (through a grant, or a campaign you're a member of), then Community.
 // Logged-out viewers only get Official and Community.
 export function getResourceSource(
-  item: Resource,
+  item: AccessResource,
   official: boolean,
   context: ResourceAccessContext | null,
 ): ResourceSource {

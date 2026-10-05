@@ -1,7 +1,7 @@
 import { createError, getQuery, type H3Event } from "h3";
 import { and, asc, desc, ilike, or, sql, type SQL } from "drizzle-orm";
 import type { User } from "better-auth";
-import { group, ownerReadableId, resource, type Resource } from "../database/schema";
+import { group, ownerReadableId, resource } from "../database/schema";
 import {
   clampPage,
   escapeLike,
@@ -19,6 +19,7 @@ import {
   getResourceAccessOrPublic,
   loadViewerAccessContext,
   withResourceGrants,
+  type AccessResource,
   type ResourceAccess,
   type ResourceAccessContext,
 } from "./resource-access";
@@ -92,7 +93,7 @@ export function listCondition(query: ListQuery, viewer: ListViewer | null) {
 }
 
 interface ListRow {
-  resource: Resource;
+  resource: AccessResource;
   official: boolean;
 }
 
