@@ -3,6 +3,7 @@ import {
   choiceLabel,
   defaultContentData,
   fieldOptions,
+  fieldDefaultError,
   fieldOptionsError,
   resolveShowSheetWarnings,
   type ContentTypeSchema,
@@ -107,5 +108,71 @@ describe("choice fields", () => {
     expect(fieldOptionsError([{ value: Number.NaN }])).toMatch(/finite/);
     expect(fieldOptionsError([{ value: "a", label: "x".repeat(101) }])).toMatch(/label/);
     expect(fieldOptionsError(Array.from({ length: 201 }, (_, value) => ({ value })))).toMatch(/200/);
+  });
+});
+
+describe("defaults", () => {
+  const options = [{ value: "s" }, { value: "m" }];
+
+  it("starts fields at their default, required or not", () => {
+    expect(
+      defaultContentData({
+        size: { type: "string", options, default: "m" },
+        ancestry: { type: "string", required: true, default: "Human" },
+        level: { type: "number", default: 1 },
+        alive: { type: "boolean", default: true },
+        extra: { type: "scalar", default: null },
+        attacks: {
+          type: "array",
+          itemType: { type: "struct", entries: { name: { type: "string" } } },
+          default: [{ name: "Unarmed" }],
+        },
+        notes: { type: "string" },
+      }),
+    ).toEqual({ size: "m", ancestry: "Human", level: 1, alive: true, extra: null, attacks: [{ name: "Unarmed" }] });
+  });
+
+  it("fills structs that have entries with defaults, even when optional", () => {
+    expect(
+      defaultContentData({
+        stats: {
+          type: "struct",
+          entries: { str: { type: "number", default: 10 }, dex: { type: "number" } },
+        },
+        empty: { type: "struct", entries: { a: { type: "number" } } },
+      }),
+    ).toEqual({ stats: { str: 10 } });
+  });
+
+  it("copies defaults, so new content never shares them", () => {
+    const schema: ContentTypeSchema = { tags: { type: "array", itemType: { type: "string" }, default: ["a"] } };
+    const first = defaultContentData(schema);
+    (first.tags as string[]).push("b");
+    expect(defaultContentData(schema)).toEqual({ tags: ["a"] });
+  });
+
+  it("checks defaults against the field", () => {
+    expect(fieldDefaultError({ type: "string", default: "x" })).toBeUndefined();
+    expect(fieldDefaultError({ type: "string", options, default: "x" })).toBe(
+      "has a default that isn't one of the options",
+    );
+    expect(fieldDefaultError({ type: "number", default: Number.NaN })).toBe("has a default that isn't a number");
+    expect(fieldDefaultError({ type: "boolean", default: 1 as unknown as boolean })).toBe(
+      "has a default that isn't true or false",
+    );
+    expect(fieldDefaultError({ type: "scalar", default: [] as unknown as null })).toMatch(/isn't a string, number/);
+    const rows = { type: "struct" as const, entries: { name: { type: "string" as const, required: true }, bonus: { type: "number" as const } } };
+    expect(fieldDefaultError({ type: "array", itemType: rows, default: [{ name: "Unarmed", bonus: 0 }] })).toBeUndefined();
+    expect(fieldDefaultError({ type: "array", itemType: rows, default: [{ bonus: 0 }] })).toBe(
+      "has a default that is missing the required [0].name",
+    );
+    expect(fieldDefaultError({ type: "array", itemType: rows, default: [{ name: "a", extra: 1 }] })).toBe(
+      'has a default that has a key "extra" the schema doesn\'t define at [0]',
+    );
+    expect(fieldDefaultError({ type: "array", itemType: { type: "string" }, default: Array(101).fill("a") })).toMatch(/100/);
+    expect(
+      fieldDefaultError({ type: "array", itemType: { type: "resourceLink" }, default: ["x"] }),
+    ).toMatch(/can't hold object, content, or resourceLink values/);
+    expect(fieldDefaultError({ type: "object", default: {} } as never)).toMatch(/can't have a default/);
   });
 });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   BUILDER_FIELD_TYPES,
+  DEFAULT_BUILDER_TYPES,
   schemaDisplayName,
   contentTypeErrorId,
   newBuilderNode,
@@ -14,8 +15,8 @@ import {
 
 // Settings for a node's type: a `struct`'s entries, an `array`'s itemType
 // (itself a node, so arrays of structs or of arrays work), a `content` field's
-// contentTypeId and allow, a `resourceLink`'s kind, or a `string` or
-// `number` field's options.
+// contentTypeId and allow, a `resourceLink`'s kind, a `string` or `number`
+// field's options, and the `default` of the types that take one.
 const node = defineModel<BuilderNode>({ required: true });
 const { errors, contentTypeOptions, readonly } = useSchemaBuilder();
 
@@ -85,7 +86,7 @@ watch(
     </UFormField>
     <div
       v-if="
-        ['struct', 'array', 'content', 'resourceLink', 'string', 'number'].includes(
+        ['struct', 'array', 'content', 'resourceLink', 'string', 'number', 'boolean', 'scalar'].includes(
           node.item.type,
         )
       "
@@ -138,4 +139,6 @@ watch(
     v-else-if="node.type === 'string' || node.type === 'number'"
     v-model="node"
   />
+
+  <SchemaDefault v-if="DEFAULT_BUILDER_TYPES.includes(node.type)" v-model="node" />
 </template>
