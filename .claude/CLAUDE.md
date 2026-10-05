@@ -61,6 +61,7 @@ Asking for parallel work makes the session the coordinator: each feature gets it
 **Read `.claude/conventions.md`** before building or changing pages, forms, or list endpoints, or anything about readable IDs, visibility, owners, search, the dashboard, or what logged-out visitors see. In short:
 
 - Enum values are camelCase (`admin`, `nonPlayerCharacter`).
+- UI design: new pages, layouts, and official sheets start as a mockup the user approves. **Read `.claude/ui-mockups.md`** before making a mockup or building from one; mockups live in `.claude/mockups/<name>/`, and the redesign's frozen reference is `.claude/mockups/ui-redesign/frozen.html`.
 - Theme: one light theme; read `docs/theme.md` before changing colors, fonts, or component defaults. Components use Nuxt UI's semantic classes (`text-muted`, `bg-elevated`, `border-accented`), never raw palette colors or hex values, and never rename or remove a `--st-*` Sheet token.
 - Readable IDs are labeled **"ID"** in the UI and never called "slug"; in code, API fields, and docs, `id` alone means the UUID.
 - Visibility is **Public** or **Limited**, never "Private".

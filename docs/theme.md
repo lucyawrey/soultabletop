@@ -2,7 +2,7 @@
 
 Soul Tabletop has one light theme, called "Folio": a lightly warm page with near-white panels, plum as the primary color, gilt as the accent, Nunito Sans for text, and Cormorant Garamond for large headings. There is no dark mode. Sheet designers get one consistent theme to design against.
 
-The look was chosen from four mockups. They live in `.claude/plans/ui-directions.html`, an interactive page with a live contrast table; open it in a browser. Folio is direction D there. Use the page as the reference when changing the theme.
+The look was chosen from four mockups. They live in `.claude/mockups/ui-redesign/mockup.html`, an interactive page with a live contrast table; open it in a browser. Folio is direction D there. `frozen.html` beside it is the approved design locked to the chosen options, and `spec.md` lists its decisions and measurements; use them as the reference when checking the site or changing the theme.
 
 ## Where things live
 
@@ -71,7 +71,7 @@ Every font on the site, the app's three and the extra ones for sheets, is listed
 
 ### Component defaults and shared pieces
 
-The visual reference is `.claude/plans/ui-directions.html` (direction D, Folio). `app/app.config.ts` sets Nuxt UI's defaults to match it, so pages don't repeat the classes:
+The visual reference is `.claude/mockups/ui-redesign/frozen.html` (direction D, Folio). `app/app.config.ts` sets Nuxt UI's defaults to match it, so pages don't repeat the classes:
 
 - **Buttons:** semibold; `md` is 14px with 9px by 14px padding and 16px icons; solid buttons have a 2px inset shadow at the bottom. Outline buttons in a color (Delete) sit on the panel with a border of that color mixed 60% into `--ui-border-accented`, since Nuxt UI's 50% tint is under 3:1 on the page.
 - **Form fields:** semibold labels and size `lg` by default, which makes inputs, selects, and textareas 40px tall with 15px text. Dense places (Sheet fields, the schema builder) set `size="md"` on their `UFormField`. `VisibilityField` styles its own cards: the chosen one a panel outlined in primary, the other on the page tone.
@@ -120,5 +120,5 @@ Published sheets refer to these names, so **never rename or remove one**; when t
 1. Adjust the palettes and semantic tokens in `app/assets/css/main.css`. Keep colors as `#rrggbb` hex values or `var()` aliases of them, since the test reads only those. To use another palette name, rename it in `app.config.ts` too.
 2. Run `scripts/agent-run.sh pnpm vitest run shared/theme.test.ts`. Each failure names the pair and its ratio.
 3. Check the app in a browser: a list page, a detail page, a form in a modal, the sheet editor (its colors come from `--ui-*` tokens, in `CodeEditor.client.vue`), and a rendered sheet that uses `--st-*` tokens.
-4. If the direction itself changed, update the mockup page in `.claude/plans/ui-directions.html` so the reference matches.
+4. If the direction itself changed, make a new mockup for it (see `.claude/ui-mockups.md`) rather than editing the frozen one, and point this file at it.
 5. Fonts: change `--font-sans` / `--font-display` in `main.css` and the font list in `shared/fonts.ts` (with weights), plus its row in the font table above. Keep the old fonts in the list if published sheets may use them.

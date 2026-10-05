@@ -1,0 +1,819 @@
+<title>Soul Tabletop UI Redesign (Frozen)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=EB+Garamond:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a control bar over a framed app mockup; each direction swaps one token set on .app.
+   The page commits to one light look, matching the app's decision to drop dark mode. */
+:root {
+  color-scheme: light;
+  --chrome-bg: #e7e4de;
+  --chrome-fg: #26231f;
+  --chrome-muted: #6b655c;
+  --chrome-line: #cfcac1;
+  --chrome-card: #f7f5f1;
+  --chrome-accent: #3a3530;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+body { background: var(--chrome-bg); color: var(--chrome-fg); font: 15px/1.5 "Source Sans 3", system-ui, sans-serif; }
+
+/* Direction A: Vellum. Warm parchment, iron-gall ink, oxblood. */
+.app[data-dir="vellum"] {
+  --bg: #f3ead8; --surface: #fbf6ec; --surface-2: #ece0c8; --line: #d9c9a8; --line-strong: #8c7a62;
+  --fg: #2a1f16; --muted: #6e5a45;
+  --primary: #8a2a26; --primary-hover: #74211e; --on-primary: #fdf5ea; --primary-soft: #f0d9cf;
+  --accent: #3f5b4b; --accent-soft: #dbe3d6;
+  --danger: #a3271f;
+  --display: "Cormorant Garamond", Georgia, serif; --display-weight: 700; --display-case: none; --display-track: 0;
+  --body: "Source Sans 3", system-ui, sans-serif;
+  --radius: 6px;
+  --ornament: "❦";
+}
+/* Direction B: Map Room. Cool sage paper, deep teal, brass, inscriptional caps. */
+.app[data-dir="maproom"] {
+  --bg: #e9ebe2; --surface: #f6f7f1; --surface-2: #dde1d3; --line: #c5cbb8; --line-strong: #768074;
+  --fg: #1e2622; --muted: #56625a;
+  --primary: #1f5547; --primary-hover: #17443a; --on-primary: #f2f6ef; --primary-soft: #d3e3dc;
+  --accent: #7a5a14; --accent-soft: #efe3c4;
+  --danger: #9f2b22;
+  --display: "Cinzel", Georgia, serif; --display-weight: 600; --display-case: none; --display-track: 0.02em;
+  --body: "Alegreya Sans", system-ui, sans-serif;
+  --radius: 3px;
+  --ornament: "✦";
+}
+/* Direction C: Grimoire. Bright page, deep indigo ink, gilt accents. */
+.app[data-dir="grimoire"] {
+  --bg: #f8f6f1; --surface: #ffffff; --surface-2: #efebe1; --line: #ddd6c6; --line-strong: #858092;
+  --fg: #1f1d2b; --muted: #5d5a6e;
+  --primary: #33357a; --primary-hover: #282a63; --on-primary: #f7f5ff; --primary-soft: #e0e0f2;
+  --accent: #765a14; --accent-soft: #f3e8c8;
+  --danger: #a3271f;
+  --display: "EB Garamond", Georgia, serif; --display-weight: 600; --display-case: none; --display-track: 0;
+  --body: "Nunito Sans", system-ui, sans-serif;
+  --radius: 10px;
+  --ornament: "✧";
+}
+
+/* Direction D: Folio. Between Vellum and Grimoire: a lightly warm page on white panels,
+   plum ink (oxblood meeting indigo), gilt accents, Cormorant headings, medium corners. */
+.app[data-dir="folio"] {
+  --bg: #f6f1e7; --surface: #fffdf8; --surface-2: #efe7d8; --line: #ddd2bf; --line-strong: #8a7f72;
+  --fg: #251f2a; --muted: #625869;
+  --primary: #6b2d4e; --primary-hover: #57233f; --on-primary: #fdf6f9; --primary-soft: #f1dfe7;
+  --accent: #765a14; --accent-soft: #f2e7c9;
+  --danger: #a3271f;
+  --display: "Cormorant Garamond", Georgia, serif; --display-weight: 700; --display-case: none; --display-track: 0;
+  --body: "Nunito Sans", system-ui, sans-serif;
+  --radius: 8px;
+  --ornament: "❦";
+}
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 18px; }
+.intro h1 { font: 600 22px/1.2 "Source Sans 3", sans-serif; margin: 0 0 4px; text-wrap: balance; }
+.intro p { margin: 0; color: var(--chrome-muted); max-width: 70ch; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: end; }
+.ctl { display: grid; gap: 6px; }
+.ctl-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--chrome-muted); font-weight: 600; }
+.seg { display: inline-flex; background: var(--chrome-card); border: 1px solid var(--chrome-line); border-radius: 8px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { font: 500 14px/1 "Source Sans 3", sans-serif; border: 0; background: transparent; color: var(--chrome-fg); padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--chrome-accent); color: #fff; }
+.seg button:focus-visible { outline: 2px solid var(--chrome-accent); outline-offset: 2px; }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.note { background: var(--chrome-card); border: 1px solid var(--chrome-line); border-radius: 8px; padding: 12px 14px; font-size: 14px; }
+.note[data-active="true"] { border-color: var(--chrome-accent); box-shadow: 0 0 0 1px var(--chrome-accent); }
+.note b { display: block; margin-bottom: 2px; }
+.note .sw { display: flex; gap: 4px; margin-top: 8px; }
+.note .sw span { width: 22px; height: 22px; border-radius: 4px; border: 1px solid rgb(0 0 0 / 0.12); }
+.note p { margin: 0; color: var(--chrome-muted); }
+
+/* ---------- The mockup ---------- */
+.frame { border: 1px solid var(--chrome-line); border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px rgb(40 30 20 / 0.12); }
+.app { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; min-height: 640px; display: grid; grid-template-rows: auto 1fr; }
+.app[data-layout="sidebar"] { grid-template-rows: 1fr; grid-template-columns: 232px 1fr; }
+.app h1, .app h2, .app .brand-name { font-family: var(--display); font-weight: var(--display-weight); letter-spacing: var(--display-track); text-wrap: balance; }
+
+/* Header layout */
+.topbar { display: flex; align-items: center; gap: 20px; padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 8px; color: var(--fg); text-decoration: none; }
+.brand svg { color: var(--primary); }
+.brand-name { font-size: 20px; line-height: 1; }
+.topnav { display: flex; gap: 2px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.navlink { color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: var(--radius); font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.navlink:hover { color: var(--fg); background: var(--surface-2); }
+/* Current nav item: three options, each marked by more than color. */
+.navlink[aria-current="page"] { font-weight: 700; }
+.app[data-ind="solid"] .navlink[aria-current="page"] { background: var(--primary); color: var(--on-primary); }
+.app[data-ind="solid"] .navlink[aria-current="page"]:hover { background: var(--primary-hover); }
+.app[data-ind="outline"] .navlink[aria-current="page"] { background: var(--primary-soft); color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.app[data-ind="dot"] .navlink[aria-current="page"] { background: var(--primary-soft); color: var(--primary); }
+.app[data-ind="dot"] .navlink[aria-current="page"]::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); margin-left: auto; flex: none; }
+.app[data-ind="dot"] .topnav .navlink[aria-current="page"]::after { margin-left: 2px; }
+.topnav .navlink svg { display: none; }
+.right { display: flex; align-items: center; gap: 10px; }
+.sys-select { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: var(--bg); border-radius: var(--radius); padding: 6px 10px; font-size: 14px; color: var(--fg); }
+.sys-select small { color: var(--muted); font-size: 12px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+
+/* Sidebar layout */
+.sidebar { display: none; }
+.app[data-layout="sidebar"] .topbar { display: none; }
+.app[data-layout="sidebar"] .sidebar { display: flex; flex-direction: column; gap: 18px; padding: 18px 14px; background: var(--surface); border-right: 1px solid var(--line); }
+.sidebar .sys-select { width: 100%; justify-content: space-between; }
+.side-group { display: grid; gap: 2px; }
+.side-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0 10px 4px; font-weight: 700; }
+.sidebar .navlink svg { flex: none; }
+.side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-top: 1px solid var(--line); font-size: 14px; }
+.side-foot small { display: block; color: var(--muted); font-size: 12px; }
+
+/* Page body */
+.main { padding: 28px 28px 40px; min-width: 0; display: grid; gap: 20px; align-content: start; }
+.page-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; }
+.page-head h1 { font-size: 34px; line-height: 1.05; margin: 0; }
+.eyebrow { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+.ornament-rule { display: flex; align-items: center; gap: 10px; color: var(--line); font-size: 14px; }
+.ornament-rule::before, .ornament-rule::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.ornament-rule span { color: var(--accent); }
+
+.btn { font: 600 14px/1 var(--body); display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; text-decoration: none; }
+.app :is(a, button, input, select, [tabindex]):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.btn-primary { background: var(--primary); color: var(--on-primary); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-outline { background: var(--surface); color: var(--fg); border-color: var(--line-strong); }
+.btn-outline:hover { background: var(--surface-2); }
+.btn-danger { background: var(--surface); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 60%, var(--line-strong)); }
+.btn-ghost { background: transparent; color: var(--muted); padding: 8px; min-width: 32px; min-height: 32px; justify-content: center; }
+.btn-ghost:hover { background: var(--surface-2); color: var(--fg); }
+.btn-link { background: none; color: var(--muted); padding: 0; font-weight: 500; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.tabs { display: inline-flex; border-bottom: 1px solid var(--line); gap: 18px; }
+.tab { padding: 6px 2px 9px; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--primary); border-color: var(--primary); }
+/* Search and the view toggle share one line; the search box shrinks, the toggle never wraps. */
+.toolbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; flex: 0 1 380px; min-width: 0; }
+.toolbar-right .search { flex: 1 1 auto; width: auto; }
+.viewtoggle { flex: none; }
+.viewtoggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); padding: 2px; }
+.viewtoggle button { border: 0; background: transparent; color: var(--muted); padding: 8px; min-width: 34px; min-height: 34px; border-radius: calc(var(--radius) - 2px); cursor: pointer; display: grid; place-items: center; }
+.viewtoggle button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.viewtoggle button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--radius); padding: 8px 10px; min-width: 0; width: min(320px, 100%); color: var(--muted); font-size: 14px; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; line-height: 1.2; white-space: nowrap; }
+.b-official { background: var(--primary); color: var(--on-primary); }
+.b-community { background: var(--surface-2); color: var(--muted); }
+.b-public { background: var(--accent-soft); color: var(--accent); }
+.b-limited { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+.rid { font: 500 12px/1.2 var(--mono); color: var(--muted); background: var(--surface-2); padding: 3px 7px; border-radius: 4px; }
+
+/* Table view */
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+table { width: 100%; border-collapse: collapse; min-width: 620px; }
+th { text-align: left; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 10px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+td { padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 40%, transparent); }
+td .name { font-weight: 700; color: var(--fg); text-decoration: none; }
+td .name:hover { color: var(--primary); text-decoration: underline; }
+td .sub { display: block; font: 12px var(--mono); color: var(--muted); margin-top: 2px; }
+td.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; white-space: nowrap; }
+
+/* Card view */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; align-content: start; position: relative; }
+.card:hover { border-color: color-mix(in srgb, var(--primary) 40%, var(--line)); }
+.card h3 { margin: 0; font: var(--display-weight) 22px/1.15 var(--display); letter-spacing: var(--display-track); }
+.card .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.card .foot { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; font-variant-numeric: tabular-nums; }
+.card .more { position: absolute; top: 10px; right: 8px; }
+
+.pager { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); flex-wrap: wrap; gap: 8px; }
+
+/* Detail view */
+.detail-head { display: grid; gap: 8px; }
+.detail-head .title-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: end; }
+.detail-head h1 { font-size: 40px; margin: 0; line-height: 1.05; }
+.detail-head .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--muted); font-size: 14px; }
+.detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.panel-head h2 { font-size: 22px; margin: 0; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.list li:last-child { border-bottom: 0; }
+.list .lname { font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.list .lname svg { color: var(--accent); }
+.facts { padding: 6px 18px 14px; display: grid; gap: 0; }
+.facts div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+.facts div:last-child { border-bottom: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; text-align: right; }
+
+/* Form view */
+.form-stage { display: grid; place-items: center; padding: 24px 0; background: color-mix(in srgb, var(--fg) 8%, transparent); border-radius: var(--radius); }
+.modal { width: min(460px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px); box-shadow: 0 20px 50px rgb(30 20 10 / 0.2); }
+.modal header { padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.modal header h2 { margin: 0; font-size: 24px; }
+.modal .body { padding: 18px 20px; display: grid; gap: 14px; }
+.modal footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); background: var(--bg); border-radius: 0 0 calc(var(--radius) + 4px) calc(var(--radius) + 4px); }
+.field { display: grid; gap: 5px; }
+.field label { font-weight: 600; font-size: 14px; }
+.field label i { color: var(--danger); font-style: normal; }
+.field .hint { font-size: 13px; color: var(--muted); }
+.field .ok { font-size: 13px; color: var(--accent); font-weight: 600; }
+.input { font: 15px var(--body); color: var(--fg); background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 9px 11px; width: 100%; box-sizing: border-box; }
+.input:focus { outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent); border-color: var(--primary); }
+.input.mono { font-family: var(--mono); font-size: 14px; }
+.radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.radio { flex: 1; min-width: 150px; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 2px; font-size: 14px; background: var(--bg); }
+.radio b { display: flex; align-items: center; gap: 6px; }
+.radio span { color: var(--muted); font-size: 13px; }
+.radio[data-on="true"] { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); background: var(--surface); }
+.radio .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-strong); display: inline-block; box-sizing: border-box; }
+.radio[data-on="true"] .dot { border: 4px solid var(--primary); }
+
+.audit { background: var(--chrome-card); border: 1px solid var(--chrome-line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 10px; }
+.audit h2 { margin: 0; font: 600 17px/1.2 "Source Sans 3", sans-serif; }
+.audit p { margin: 0; color: var(--chrome-muted); font-size: 14px; max-width: 75ch; }
+.audit-scroll { overflow-x: auto; }
+.audit table { min-width: 560px; font-size: 14px; }
+.audit th { background: transparent; color: var(--chrome-muted); padding: 6px 10px; border-color: var(--chrome-line); }
+.audit td { padding: 6px 10px; border-color: var(--chrome-line); }
+.audit td.ratio { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; }
+.audit .chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 13px; border: 1px solid rgb(0 0 0 / .08); }
+.pass { color: #1f6b3a; font-weight: 700; }
+.fail { color: #a3271f; font-weight: 700; }
+[hidden] { display: none !important; }
+/* Signed-out state (Landing). */
+.app [data-out-only] { display: none !important; }
+.app[data-signed="out"] [data-out-only] { display: flex !important; }
+.app[data-signed="out"] [data-account] { display: none !important; }
+.side-foot-out .btn { width: 100%; justify-content: center; }
+.app[data-signed="out"] .side-browse { display: grid !important; }
+/* The landing page has the sign-in form, so no Sign in button there. */
+.app[data-page="landing"] [data-out-only].side-foot-out, .app[data-page="landing"] .right [data-out-only] { display: none !important; }
+.app[data-signed="out"] .navlink[aria-current="page"] { background: transparent; color: var(--muted); font-weight: 500; }
+
+/* Landing */
+.landing { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 400px); gap: 48px; align-items: center; width: 100%; max-width: 1020px; margin: 0 auto; padding-block: 28px; }
+.hero { display: grid; gap: 14px; justify-items: start; }
+.hero h1 { font-size: clamp(36px, 5vw, 54px); line-height: 1.02; margin: 0; }
+.hero .intro { font-size: 18px; line-height: 1.55; color: var(--muted); max-width: 46ch; margin: 0; }
+.hero .ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.hero .ctas .btn { padding: 11px 18px; font-size: 15px; }
+.hero .browse { color: var(--primary); font-weight: 600; text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+.hero .browse:hover { text-decoration: underline; }
+.badge-lg { font-size: 13px; padding: 4px 10px; background: var(--primary-soft); color: var(--primary); }
+.auth { background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px); padding: 24px; display: grid; gap: 14px; box-shadow: 0 14px 40px rgb(60 30 45 / 0.08); }
+.auth h2 { font-size: 30px; margin: 0; text-align: center; line-height: 1.1; }
+.auth .note-c { text-align: center; color: var(--muted); font-size: 14px; margin: -6px 0 0; }
+.tabs2 { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-2); border-radius: var(--radius); padding: 3px; gap: 3px; }
+.tabs2 button { font: 600 14px/1 var(--body); border: 0; background: transparent; color: var(--muted); padding: 9px; border-radius: calc(var(--radius) - 2px); cursor: pointer; }
+.tabs2 button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.auth .btn-primary { width: 100%; justify-content: center; padding: 11px; font-size: 15px; }
+.auth .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sample { background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px); padding: 20px; display: grid; gap: 14px; box-shadow: 0 14px 40px rgb(60 30 45 / 0.08); position: relative; }
+.sample .example { position: absolute; top: -10px; right: 16px; }
+.sample .head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.sample h3 { margin: 2px 0 0; font: 700 28px/1.05 var(--display); }
+.stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.stat { border: 1px solid var(--line-strong); border-radius: var(--radius); text-align: center; padding: 6px 2px; background: var(--bg); }
+.stat small { display: block; font-size: 10px; letter-spacing: 0.1em; font-weight: 700; color: var(--muted); }
+.stat b { display: block; font: 700 22px/1.1 var(--display); }
+.stat span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hp { display: grid; gap: 6px; font-size: 14px; }
+.hp .bar { height: 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line-strong); overflow: hidden; }
+.hp .bar i { display: block; height: 100%; width: 75%; background: var(--primary); }
+.hp .lbl { display: flex; justify-content: space-between; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sample .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Dashboard */
+.dash { display: grid; gap: 22px; }
+.dash-head { display: flex; justify-content: space-between; align-items: end; gap: 14px; flex-wrap: wrap; }
+.dash-head h1 { font-size: 38px; margin: 0; line-height: 1.05; }
+.dash-head p { margin: 4px 0 0; color: var(--muted); }
+.copy-note { font: 12px var(--mono) !important; }
+.dash-head .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.panel-head .all { color: var(--primary); font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
+.panel-head .all:hover { text-decoration: underline; }
+.list .when { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.list .sub2 { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+.continue { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 20px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px); }
+.continue h2 { font: 700 32px/1.05 var(--display); margin: 2px 0 4px; }
+.continue .meta { color: var(--muted); font-size: 14px; }
+.section-title { font: 700 24px/1.1 var(--display); margin: 0; }
+.chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.char { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit; }
+.char:hover { border-color: var(--line-strong); }
+.char .init { width: 42px; height: 42px; flex: none; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font: 700 20px var(--display); }
+.char b { display: block; }
+.char span { color: var(--muted); font-size: 13px; }
+.shelf { display: grid; gap: 10px; }
+.shelf-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.shelf-head .all { color: var(--primary); font-weight: 600; font-size: 14px; text-decoration: none; }
+.shelf-head .all:hover { text-decoration: underline; }
+.start { display: grid; gap: 16px; }
+.placeholder { border: 2px dashed var(--line-strong); border-radius: var(--radius); padding: 16px; color: var(--muted); display: grid; gap: 2px; }
+.placeholder small { font: 12px var(--mono); }
+.start-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.start-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 12px; align-content: space-between; }
+.start-card b { display: flex; gap: 8px; align-items: center; font-size: 16px; }
+.start-card b svg { color: var(--accent); }
+.start-card .btn { justify-self: start; }
+.empty-line { padding: 18px; color: var(--muted); font-size: 14px; }
+.view[hidden] { display: none !important; }
+
+@media (max-width: 860px) {
+  .landing, .cols3, .cols2 { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .app[data-layout="sidebar"] { grid-template-columns: 1fr; }
+  .app[data-layout="sidebar"] .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
+  .app[data-layout="sidebar"] .side-group { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .app[data-layout="sidebar"] .side-foot { display: none; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .main { padding: 20px 16px 32px; }
+  .page-head h1 { font-size: 28px; }
+  .detail-head h1 { font-size: 32px; }
+  .right .sys-select { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .app, .app * { transition: background-color .2s, color .2s, border-color .2s; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="10" width="12" height="12" rx="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01M10 14h.01M15 6h.01M18 9h.01"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-scroll" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a1 1 0 0 1 1-1h13l-3 5 3 5H5"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5Z"/></symbol>
+    <symbol id="i-layout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></symbol>
+    <symbol id="i-shapes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.63-1.04l3.7-6.3a.7.7 0 0 1 1.24 0l3.7 6.3A.7.7 0 0 1 15.7 10Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 9M22 21a7 7 0 0 0-4-6.3"/></symbol>
+    <symbol id="i-rows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Soul Tabletop UI redesign: frozen mockup</h1>
+    <p>The approved design from the 2026-10-02 planning session, locked to the chosen options: direction D · Folio, the sidebar, the Solid current item, landing option 1, and dashboard option 2. This is the reference to measure the real site against; it is not updated to match the site. Decisions made after the mockup, which it doesn't show, are listed in spec.md. The full page with every option is mockup.html.</p>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <span class="ctl-label">Page</span>
+      <div class="seg" data-ctl="page">
+        <button type="button" data-v="list" aria-pressed="true">List</button>
+        <button type="button" data-v="detail" aria-pressed="false">Detail</button>
+        <button type="button" data-v="form" aria-pressed="false">Edit dialog</button>
+        <button type="button" data-v="landing" aria-pressed="false">Landing</button>
+        <button type="button" data-v="dashboard" aria-pressed="false">Dashboard</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="ctl-label">Dashboard user</span>
+      <div class="seg" data-ctl="dash">
+        <button type="button" data-v="returning" aria-pressed="true">Returning</button>
+        <button type="button" data-v="new" aria-pressed="false">New</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="frame">
+    <div class="app" id="app" data-dir="folio" data-layout="sidebar" data-ind="solid">
+      <!-- Header layout -->
+      <header class="topbar">
+        <a class="brand" href="#app"><svg width="22" height="22"><use href="#i-dice"/></svg><span class="brand-name">Soul Tabletop</span></a>
+        <nav class="topnav" aria-label="Main">
+          <a class="navlink" href="#app" data-account>Campaigns</a>
+          <a class="navlink" href="#app">Characters</a>
+          <a class="navlink" href="#app">Content</a>
+          <a class="navlink" href="#app">Sheets</a>
+          <a class="navlink" href="#app">Types</a>
+          <a class="navlink" href="#app" aria-current="page">Systems</a>
+          <a class="navlink" href="#app" data-account>Groups</a>
+        </nav>
+        <div class="right">
+          <div class="sys-select">Ashen Realms <small>system</small><svg width="14" height="14"><use href="#i-chev"/></svg></div>
+          <div class="avatar" data-account>RW</div>
+          <a class="btn btn-outline" href="#app" data-out-only>Sign in</a>
+        </div>
+      </header>
+
+      <!-- Sidebar layout -->
+      <aside class="sidebar">
+        <a class="brand" href="#app"><svg width="22" height="22"><use href="#i-dice"/></svg><span class="brand-name">Soul Tabletop</span></a>
+        <div class="sys-select">Ashen Realms <svg width="14" height="14"><use href="#i-chev"/></svg></div>
+        <nav class="side-group side-browse" aria-label="Browse" data-out-only>
+          <div class="side-label">Browse</div>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-user"/></svg>Characters</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-book"/></svg>Content</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-layout"/></svg>Sheets</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-shapes"/></svg>Types</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-globe"/></svg>Systems</a>
+        </nav>
+        <nav class="side-group" aria-label="Play" data-account>
+          <div class="side-label">Play</div>
+          <a class="navlink" href="#app" data-account><svg width="17" height="17"><use href="#i-flag"/></svg>Campaigns</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-user"/></svg>Characters</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-book"/></svg>Content</a>
+        </nav>
+        <nav class="side-group" aria-label="Build" data-account>
+          <div class="side-label">Build</div>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-layout"/></svg>Sheets</a>
+          <a class="navlink" href="#app"><svg width="17" height="17"><use href="#i-shapes"/></svg>Types</a>
+          <a class="navlink" href="#app" aria-current="page"><svg width="17" height="17"><use href="#i-globe"/></svg>Systems</a>
+          <a class="navlink" href="#app" data-account><svg width="17" height="17"><use href="#i-users"/></svg>Groups</a>
+        </nav>
+        <div class="side-foot" data-account><div class="avatar">RW</div><div>Rowan Wilde<small>@rowan</small></div></div>
+        <div class="side-foot side-foot-out" data-out-only><a class="btn btn-primary" href="#app">Sign in</a></div>
+      </aside>
+
+      <main class="main">
+        <!-- LIST -->
+        <section class="view" data-view="list">
+          <div style="display:grid;gap:20px">
+            <div class="page-head">
+              <div>
+                <div class="eyebrow">Library</div>
+                <h1>Systems</h1>
+              </div>
+              <a class="btn btn-primary" href="#app"><svg width="16" height="16"><use href="#i-plus"/></svg>New System</a>
+            </div>
+            <div class="toolbar">
+              <div class="tabs" role="tablist">
+                <span class="tab" role="tab" aria-selected="true">My Systems</span>
+                <span class="tab" role="tab" aria-selected="false">Find</span>
+              </div>
+              <div class="toolbar-right">
+                <div class="search"><svg width="16" height="16"><use href="#i-search"/></svg>Search by name or ID</div>
+                <div class="viewtoggle" role="group" aria-label="View">
+                  <button type="button" data-v="table" aria-pressed="true" aria-label="Table" title="Table"><svg width="16" height="16"><use href="#i-rows"/></svg></button>
+                  <button type="button" data-v="cards" aria-pressed="false" aria-label="Cards" title="Cards"><svg width="16" height="16"><use href="#i-grid"/></svg></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="view" data-list="table">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Name</th><th>Source</th><th>Visibility</th><th>Updated</th><th aria-label="Actions"></th></tr></thead>
+                  <tbody id="rows"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="view cards" data-list="cards" id="cards" hidden></div>
+
+            <div class="pager"><span>4 systems</span><span>Page 1 of 1</span></div>
+          </div>
+        </section>
+
+        <!-- DETAIL -->
+        <section class="view" data-view="detail" hidden>
+          <div style="display:grid;gap:20px">
+            <a class="btn btn-link" href="#app"><svg width="15" height="15"><use href="#i-left"/></svg>Back to Systems</a>
+            <div class="detail-head">
+              <div class="eyebrow">System</div>
+              <div class="title-row">
+                <h1>Ashen Realms</h1>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <a class="btn btn-outline" href="#app"><svg width="15" height="15"><use href="#i-pencil"/></svg>Edit</a>
+                  <a class="btn btn-danger" href="#app"><svg width="15" height="15"><use href="#i-trash"/></svg>Delete</a>
+                </div>
+              </div>
+              <div class="meta"><span class="rid">rowan/ashen-realms</span><span class="badge b-public">Public</span><span class="badge b-community">Community</span></div>
+            </div>
+            <div class="ornament-rule"><span class="orn"></span></div>
+            <div class="detail-grid">
+              <div class="panel">
+                <div class="panel-head"><h2>Content Types</h2><a class="btn btn-primary" href="#app"><svg width="15" height="15"><use href="#i-plus"/></svg>New Content Type</a></div>
+                <ul class="list">
+                  <li><span class="lname"><svg width="17" height="17"><use href="#i-user"/></svg>Wanderer</span><span class="badge b-community">Player Character</span></li>
+                  <li><span class="lname"><svg width="17" height="17"><use href="#i-user"/></svg>Ashborn Beast</span><span class="badge b-community">Non-Player Character</span></li>
+                  <li><span class="lname"><svg width="17" height="17"><use href="#i-scroll"/></svg>Ember Rite</span><span class="badge b-community">General</span></li>
+                  <li><span class="lname"><svg width="17" height="17"><use href="#i-book"/></svg>Relic</span><span class="badge b-community">General</span></li>
+                  <li><span class="lname"><svg width="17" height="17"><use href="#i-book"/></svg>Lore Page</span><span class="badge b-community">Page</span></li>
+                </ul>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h2>About</h2></div>
+                <dl class="facts">
+                  <div><dt>Owner</dt><dd>@rowan</dd></div>
+                  <div><dt>ID</dt><dd><span class="rid">ashen-realms</span></dd></div>
+                  <div><dt>Visibility</dt><dd>Public</dd></div>
+                  <div><dt>Content types</dt><dd>5</dd></div>
+                  <div><dt>Updated</dt><dd>Sep 28, 2026</dd></div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FORM -->
+        <section class="view" data-view="form" hidden>
+          <div class="form-stage">
+            <div class="modal" role="dialog" aria-label="Edit System">
+              <header><h2>Edit System</h2></header>
+              <div class="body">
+                <div class="field"><label for="f-name">Name <i>*</i></label><input id="f-name" class="input" value="Ashen Realms"></div>
+                <div class="field"><label for="f-id">ID <i>*</i></label><input id="f-id" class="input mono" value="ashen-realms"><span class="ok">Available</span></div>
+                <div class="field"><span style="font-weight:600;font-size:14px">Visibility</span>
+                  <div class="radio-row">
+                    <div class="radio" data-on="true"><b><span class="dot"></span>Public</b><span>Anyone can view it</span></div>
+                    <div class="radio" data-on="false"><b><span class="dot"></span>Limited</b><span>Only you and people you share with</span></div>
+                  </div>
+                </div>
+                <div class="field"><label for="f-owner">Owner</label><select id="f-owner" class="input"><option>You (@rowan)</option><option>Ember Table (group)</option></select></div>
+              </div>
+              <footer><a class="btn btn-outline" href="#app">Cancel</a><a class="btn btn-primary" href="#app">Save</a></footer>
+            </div>
+          </div>
+        </section>
+
+        <!-- LANDING (signed out). Heading, intro, and notes are the team's copy from content/copy.yml. -->
+        <section class="view" data-view="landing" hidden>
+          <div class="landing" data-variant="1">
+            <div class="hero">
+              <span class="badge badge-lg">Soul Tabletop</span>
+              <h1>An open-source virtual tabletop for open gaming</h1>
+              <p class="intro">Play tabletop RPGs with friends, online or around the table, using a large library of built-in content. Or make your own with support for custom game systems, content, and character sheets.</p>
+              <a class="browse" href="#app">Browse public systems and sheets <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="auth-slot"></div>
+          </div>
+          <div class="landing" data-variant="2" hidden>
+            <div class="hero">
+              <span class="badge badge-lg">Soul Tabletop</span>
+              <h1>An open-source virtual tabletop for open gaming</h1>
+              <p class="intro">Play tabletop RPGs with friends, online or around the table, using a large library of built-in content. Or make your own with support for custom game systems, content, and character sheets.</p>
+              <div class="ctas">
+                <button type="button" class="btn btn-primary" data-auth-open="register">Create account</button>
+                <button type="button" class="btn btn-outline" data-auth-open="login">Sign in</button>
+              </div>
+              <a class="browse" href="#app">Browse public systems and sheets <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="showcase-slot">
+              <div class="sample" aria-label="Example character sheet">
+                <span class="badge b-community example">Example</span>
+                <div class="head">
+                  <div><div class="eyebrow">Wanderer · Ashen Realms</div><h3>Rowan the Grey</h3></div>
+                  <span class="badge b-official">Level 3</span>
+                </div>
+                <div class="stats">
+                  <div class="stat"><small>STR</small><b>14</b><span>+2</span></div>
+                  <div class="stat"><small>DEX</small><b>12</b><span>+1</span></div>
+                  <div class="stat"><small>CON</small><b>13</b><span>+1</span></div>
+                  <div class="stat"><small>INT</small><b>16</b><span>+3</span></div>
+                  <div class="stat"><small>WIS</small><b>10</b><span>+0</span></div>
+                  <div class="stat"><small>CHA</small><b>8</b><span>−1</span></div>
+                </div>
+                <div class="hp"><div class="lbl"><span>Hit points</span><span>18 / 24</span></div><div class="bar"><i></i></div></div>
+                <div class="tags"><span class="badge b-public">Ember-touched</span><span class="badge b-public">Cartographer</span></div>
+              </div>
+            </div>
+          </div>
+          <template id="auth-tpl">
+            <div class="auth">
+              <h2 data-auth-title>Sign in</h2>
+              <p class="note-c" data-auth-note>Get back to your games.</p>
+              <div class="tabs2" role="group" aria-label="Sign in or create account">
+                <button type="button" data-mode="login" aria-pressed="true">Sign in</button>
+                <button type="button" data-mode="register" aria-pressed="false">Create account</button>
+              </div>
+              <div class="field" data-reg hidden><label>Username <i>*</i></label><input class="input mono" placeholder="your-name" value="rowan"><span class="ok">Available</span></div>
+              <div class="field" data-reg hidden><label>Display name</label><input class="input" placeholder="rowan"><span class="hint">Shown with your username. Defaults to it.</span></div>
+              <div class="field"><label>Email <i>*</i></label><input class="input" placeholder="you@example.com"></div>
+              <div class="field"><label>Password <i>*</i></label><input class="input" type="password" placeholder="At least 8 characters"></div>
+              <button type="button" class="btn btn-primary" data-auth-submit>Sign in</button>
+            </div>
+          </template>
+        </section>
+
+        <!-- DASHBOARD (signed in). Heading and subheading are the team's copy. -->
+        <section class="view" data-view="dashboard" hidden>
+          <div class="dash">
+            <div class="dash-head">
+              <div data-dash="returning"><h1>Welcome back, Rowan</h1><p>Pick up where you left off.</p></div>
+              <div data-dash="new" hidden><h1>First-visit heading goes here</h1><p class="copy-note">Copy: written by the team (dashboard heading for someone with nothing yet)</p></div>
+              <div class="acts"><a class="btn btn-primary" href="#app"><svg width="15" height="15"><use href="#i-plus"/></svg>New Character</a><a class="btn btn-outline" href="#app"><svg width="15" height="15"><use href="#i-plus"/></svg>New Campaign</a></div>
+            </div>
+
+            <div data-dash="returning">
+              <div class="cols3" data-variant="1">
+                <div class="panel"><div class="panel-head"><h2>Campaigns</h2><a class="all" href="#app">View all</a></div>
+                  <ul class="list">
+                    <li><span class="lname">The Cinder Road</span><span class="when">2 hours ago</span></li>
+                    <li><span class="lname">Starfall: Act II</span><span class="when">Yesterday</span></li>
+                    <li><span class="lname">Moonlit Court</span><span class="when">Sep 14</span></li>
+                  </ul></div>
+                <div class="panel"><div class="panel-head"><h2>Characters</h2><a class="all" href="#app">View all</a></div>
+                  <ul class="list">
+                    <li><span class="lname">Rowan the Grey</span><span class="when">2 hours ago</span></li>
+                    <li><span class="lname">Ash-Tongue Marrow</span><span class="when">Sep 28</span></li>
+                    <li><span class="lname">Lieutenant Vey</span><span class="when">Sep 21</span></li>
+                  </ul></div>
+                <div class="panel"><div class="panel-head"><h2>Content</h2><a class="all" href="#app">View all</a></div>
+                  <ul class="list">
+                    <li><span class="lname">Ember Rite</span><span class="when">Sep 30</span></li>
+                    <li><span class="lname">Relics of the Cinder Road</span><span class="when">Sep 26</span></li>
+                    <li><span class="lname">The Ashen Wastes</span><span class="when">Sep 19</span></li>
+                  </ul></div>
+              </div>
+
+              <div class="dash" data-variant="2" hidden>
+                <div class="continue">
+                  <div><div class="eyebrow">Continue · Character</div><h2>Rowan the Grey</h2><div class="meta">Wanderer · Ashen Realms · edited 2 hours ago</div></div>
+                  <a class="btn btn-primary" href="#app">Open</a>
+                </div>
+                <div class="shelf">
+                  <div class="shelf-head"><h2 class="section-title">Campaigns</h2><a class="all" href="#app">View all</a></div>
+                  <div class="chars"><a class="char" href="#app"><span class="init">T</span><div><b>The Cinder Road</b><span>GM · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">S</span><div><b>Starfall: Act II</b><span>Player · Starfall Frontier</span></div></a><a class="char" href="#app"><span class="init">M</span><div><b>Moonlit Court</b><span>GM · Ashen Realms</span></div></a></div>
+                </div>
+                <div class="shelf">
+                  <div class="shelf-head"><h2 class="section-title">Characters</h2><a class="all" href="#app">View all</a></div>
+                  <div class="chars"><a class="char" href="#app"><span class="init">R</span><div><b>Rowan the Grey</b><span>Wanderer · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">A</span><div><b>Ash-Tongue Marrow</b><span>Ashborn Beast · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">L</span><div><b>Lieutenant Vey</b><span>Pilot · Starfall Frontier</span></div></a></div>
+                </div>
+                <div class="shelf">
+                  <div class="shelf-head"><h2 class="section-title">Content</h2><a class="all" href="#app">View all</a></div>
+                  <div class="chars"><a class="char" href="#app"><span class="init">E</span><div><b>Ember Rite</b><span>Ritual · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">R</span><div><b>Relics of the Cinder Road</b><span>Page · Ashen Realms</span></div></a><a class="char" href="#app"><span class="init">T</span><div><b>The Ashen Wastes</b><span>Page · Ashen Realms</span></div></a></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="start" data-dash="new" hidden>
+              <div class="placeholder"><b>Welcome text goes here</b><small>Copy: written by the team (what Soul Tabletop is, the main concepts)</small></div>
+              <div class="start-grid">
+                <div class="start-card"><b><svg width="18" height="18"><use href="#i-user"/></svg>Make a character</b><a class="btn btn-primary" href="#app">New Character</a></div>
+                <div class="start-card"><b><svg width="18" height="18"><use href="#i-flag"/></svg>Start a campaign</b><a class="btn btn-outline" href="#app">New Campaign</a></div>
+                <div class="start-card"><b><svg width="18" height="18"><use href="#i-globe"/></svg>Find a system</b><a class="btn btn-outline" href="#app">Browse Systems</a></div>
+                <div class="start-card"><b><svg width="18" height="18"><use href="#i-shapes"/></svg>Build your own</b><a class="btn btn-outline" href="#app">New System</a></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <section class="audit" aria-labelledby="audit-h">
+    <h2 id="audit-h">Contrast check: <span id="audit-dir"></span></h2>
+    <p>Calculated live from the selected direction's colors. Text needs 4.5:1 (AA) and control outlines and state markers need 3:1 (WCAG 1.4.11). Dividers aren't listed because they're decorative. The current nav item (bold, plus a solid fill, an outline, or a dot) and pressed toggles (solid fill) are marked by more than color, so their state never depends on color alone.</p>
+    <div class="audit-scroll"><table><thead><tr><th>Sample</th><th>Used for</th><th>Ratio</th><th>Needs</th><th>Result</th></tr></thead><tbody id="audit-rows"></tbody></table></div>
+  </section>
+</div>
+
+<script>
+const systems = [
+  { name: "Soul Tabletop Core", rid: "soul/core", source: "Official", vis: "Public", updated: "Sep 30, 2026", types: 12 },
+  { name: "Ashen Realms", rid: "rowan/ashen-realms", source: "Community", vis: "Public", updated: "Sep 28, 2026", types: 5 },
+  { name: "Starfall Frontier", rid: "ember-table/starfall", source: "Community", vis: "Limited", updated: "Sep 21, 2026", types: 8 },
+  { name: "Moonlit Court", rid: "rowan/moonlit-court", source: "Community", vis: "Limited", updated: "Aug 14, 2026", types: 2 },
+];
+const badge = (s) => `<span class="badge ${s === "Official" ? "b-official" : "b-community"}">${s}</span>`;
+const vis = (v) => `<span class="badge ${v === "Public" ? "b-public" : "b-limited"}">${v}</span>`;
+const more = `<button class="btn btn-ghost" type="button" aria-label="Actions"><svg width="16" height="16"><use href="#i-more"/></svg></button>`;
+document.getElementById("rows").innerHTML = systems.map((s) =>
+  `<tr><td><a class="name" href="#app">${s.name}</a><span class="sub">${s.rid}</span></td><td>${badge(s.source)}</td><td>${vis(s.vis)}</td><td class="num">${s.updated}</td><td style="text-align:right">${more}</td></tr>`
+).join("");
+document.getElementById("cards").innerHTML = systems.map((s) =>
+  `<article class="card"><span class="more">${more}</span><h3>${s.name}</h3><span class="rid" style="justify-self:start">${s.rid}</span><div class="meta">${badge(s.source)}${vis(s.vis)}</div><div class="foot"><span>${s.types} content types</span><span>${s.updated}</span></div></article>`
+).join("");
+
+const app = document.getElementById("app");
+const state = { page: "list", layout: "sidebar", variant: "1", dash: "returning" };
+const currentNav = [...document.querySelectorAll('.navlink[aria-current="page"]')];
+function render() {
+  const out = state.page === "landing";
+  app.dataset.signed = out ? "out" : "in";
+  app.dataset.layout = out ? "sidebar" : state.layout;
+  app.dataset.page = state.page;
+  document.querySelectorAll("[data-view]").forEach((el) => (el.hidden = el.dataset.view !== state.page));
+  // Frozen: landing option 1, dashboard option 2.
+  const variant = state.page === "dashboard" ? "2" : "1";
+  document.querySelectorAll("[data-variant]").forEach((el) => (el.hidden = el.dataset.variant !== variant));
+  document.querySelectorAll("[data-dash]").forEach((el) => (el.hidden = el.dataset.dash !== state.dash));
+  // Nothing in the nav is current on the home page.
+  const home = state.page === "landing" || state.page === "dashboard";
+  currentNav.forEach((a) => (home ? a.removeAttribute("aria-current") : a.setAttribute("aria-current", "page")));
+}
+
+// One sign-in / create-account form, placed in whichever landing option shows it.
+const authTpl = document.getElementById("auth-tpl");
+function makeAuth(mode) {
+  const node = authTpl.content.firstElementChild.cloneNode(true);
+  const set = (m) => {
+    const reg = m === "register";
+    node.querySelector("[data-auth-title]").textContent = reg ? "Create an account" : "Sign in";
+    node.querySelector("[data-auth-note]").textContent = reg ? "Join our community of players." : "Get back to your games.";
+    node.querySelector("[data-auth-submit]").textContent = reg ? "Create account" : "Sign in";
+    node.querySelectorAll("[data-reg]").forEach((f) => (f.hidden = !reg));
+    node.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+  };
+  node.querySelector(".tabs2").addEventListener("click", (e) => { const b = e.target.closest("[data-mode]"); if (b) set(b.dataset.mode); });
+  set(mode);
+  return node;
+}
+document.querySelector(".auth-slot").appendChild(makeAuth("login"));
+document.querySelectorAll("[data-auth-open]").forEach((b) => b.addEventListener("click", () => {
+  const slot = document.querySelector(".showcase-slot");
+  slot.replaceChildren(makeAuth(b.dataset.authOpen));
+}));
+const ornaments = { vellum: "❦", maproom: "✦", grimoire: "✧", folio: "❦" };
+function setOrn() { document.querySelectorAll(".orn").forEach((el) => (el.textContent = ornaments[app.dataset.dir])); }
+setOrn();
+
+document.querySelectorAll(".seg").forEach((seg) => {
+  seg.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    seg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+    const v = btn.dataset.v;
+    const ctl = seg.dataset.ctl;
+    if (ctl === "dir") {
+      app.dataset.dir = v;
+      document.querySelectorAll(".note").forEach((n) => (n.dataset.active = String(n.dataset.note === v)));
+      setOrn();
+    } else if (ctl === "ind") {
+      app.dataset.ind = v;
+    } else if (ctl === "layout") {
+      state.layout = v;
+    } else if (ctl === "page") {
+      state.page = v;
+    } else if (ctl === "variant") {
+      state.variant = v;
+    } else if (ctl === "dash") {
+      state.dash = v;
+    }
+    render();
+  });
+});
+document.querySelector(".viewtoggle").addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  btn.parentElement.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+  document.querySelectorAll("[data-list]").forEach((el) => (el.hidden = el.dataset.list !== btn.dataset.v));
+});
+const pairs = [
+  ["fg", "bg", "Body text on the page", 4.5],
+  ["fg", "surface", "Body text on panels", 4.5],
+  ["muted", "surface", "Secondary text, hints", 4.5],
+  ["muted", "surface-2", "Table headers, Community badge", 4.5],
+  ["primary", "surface", "Links, active tab", 4.5],
+  ["primary", "primary-soft", "Current nav item (Outlined, Dot)", 4.5],
+  ["on-primary", "primary", "Current nav item (Solid)", 4.5],
+  ["on-primary", "primary", "Solid buttons, Official badge", 4.5],
+  ["on-primary", "primary-hover", "Solid buttons on hover", 4.5],
+  ["accent", "accent-soft", "Public badge", 4.5],
+  ["accent", "surface", "Available hint, icons", 4.5],
+  ["danger", "surface", "Delete button, errors", 4.5],
+  ["line-strong", "surface", "Input and control outlines", 3],
+  ["line-strong", "bg", "Control outlines on the page", 3],
+  ["primary", "surface", "Focus ring, selected radio", 3],
+];
+function lum(rgb) {
+  const c = rgb.match(/\d+(\.\d+)?/g).slice(0, 3).map((x) => {
+    x = Number(x) / 255;
+    return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+const probe = document.createElement("span");
+probe.style.transition = "none"; // read final colors, not mid-transition
+app.appendChild(probe);
+function colorOf(token) {
+  probe.style.color = `var(--${token})`;
+  return getComputedStyle(probe).color;
+}
+const names = { vellum: "A · Vellum", maproom: "B · Map Room", grimoire: "C · Grimoire", folio: "D · Folio" };
+function audit() {
+  document.getElementById("audit-dir").textContent = names[app.dataset.dir];
+  document.getElementById("audit-rows").innerHTML = pairs.map(([f, b, use, need]) => {
+    const fc = colorOf(f), bc = colorOf(b);
+    const [hi, lo] = [lum(fc), lum(bc)].sort((x, y) => y - x);
+    const ratio = (hi + 0.05) / (lo + 0.05);
+    const ok = ratio >= need;
+    const sample = need === 3
+      ? `<span class="chip" style="background:${bc};color:${fc};border:2px solid ${fc}">Outline</span>`
+      : `<span class="chip" style="background:${bc};color:${fc}">Aa text</span>`;
+    return `<tr><td>${sample}</td><td>${use}</td><td class="ratio">${ratio.toFixed(2)}:1</td><td class="ratio">${need}:1</td><td class="${ok ? "pass" : "fail"}">${ok ? (need === 4.5 && ratio >= 7 ? "AAA" : "Pass") : "Fail"}</td></tr>`;
+  }).join("");
+}
+audit();
+// Frozen on Folio: the audit runs once.
+</script>
