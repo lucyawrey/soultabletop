@@ -47,7 +47,11 @@ export async function useResourceList<T>(
   });
 
   function setQuery(changes: { tab?: string; q?: string; page?: number }) {
+    // The page's own parameters (filters like `category`) stay as they are.
     const next: Record<string, string> = {};
+    for (const [key, value] of Object.entries(route.query))
+      if (!["tab", "q", "page"].includes(key) && typeof value === "string")
+        next[key] = value;
     const merged = {
       tab: tab.value,
       q: q.value,

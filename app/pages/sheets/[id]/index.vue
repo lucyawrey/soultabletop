@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import { sampleSheetData } from "#shared/sheet/editor";
 import type { SheetDisplay } from "#shared/sheet/registry";
 import type { SheetLinks, SheetRefs } from "#shared/sheet/runtime";
@@ -10,6 +11,7 @@ interface SheetDetail {
   id: string;
   readableId: string;
   ownerReadableId: string | null;
+  source: ResourceSource;
   ownerGroupId: string | null;
   name: string;
   updatedAt: string;
@@ -116,6 +118,8 @@ async function remove() {
         back-label="Back to Sheets"
         eyebrow="Sheet"
         :title="sheet.name"
+        :system-id="sheet.systemId"
+        :source="sheet.source"
       >
         <template #meta>
           <ReadableIdBadge

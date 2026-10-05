@@ -19,6 +19,7 @@ interface CampaignItem {
   canDelete: boolean;
   ownerGroupId: string | null;
   canChangeOwner: boolean;
+  memberCount: number;
 }
 
 // The page needs an account (auth middleware), so visitors never reach it.
@@ -253,6 +254,9 @@ async function remove() {
     </UTable>
           <template #cards>
         <ResourceCards :items="campaigns" :to="(item) => `/campaigns/${item.id}`">
+          <template #summary="{ item }">
+            {{ item.memberCount }} {{ item.memberCount === 1 ? "member" : "members" }}
+          </template>
           <template #actions="{ item }">
             <ResourceActionsMenu
               :can-edit="item.canEdit"

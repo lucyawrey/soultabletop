@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ResourceSource } from "#shared/resource-list";
 import { extractApiErrorMessage } from "~/utils/api-error";
 
 definePageMeta({ middleware: "auth" });
@@ -7,6 +8,7 @@ interface CampaignDetail {
   id: string;
   readableId: string;
   ownerReadableId: string | null;
+  source: ResourceSource;
   name: string;
   isPubliclyReadable: boolean;
   updatedAt: string;
@@ -115,6 +117,8 @@ async function remove() {
         back-label="Back to Campaigns"
         eyebrow="Campaign"
         :title="campaign.name"
+        :system-id="campaign.systemId"
+        :source="campaign.source"
       >
         <template #meta>
           <ReadableIdBadge

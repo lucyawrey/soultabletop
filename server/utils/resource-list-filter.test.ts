@@ -181,11 +181,16 @@ describe("getResourceSource", () => {
     expect(getResourceSource(resource({ ownerUserId: "me" }), false, context())).toBe("you");
   });
 
-  it("says Group (yourGroups) for any role, including a system group the viewer is in", () => {
+  it("says Group (yourGroups) for any role", () => {
     const ctx = context({ groupRoles: new Map([[PARTY, "member"]]) });
     const owned = resource({ ownerUserId: null, ownerGroupId: PARTY });
     expect(getResourceSource(owned, false, ctx)).toBe("yourGroups");
-    expect(getResourceSource(owned, true, ctx)).toBe("yourGroups");
+  });
+
+  it("says Official even to members of the system group that owns it", () => {
+    const ctx = context({ groupRoles: new Map([[PARTY, "admin"]]) });
+    const owned = resource({ ownerUserId: null, ownerGroupId: PARTY });
+    expect(getResourceSource(owned, true, ctx)).toBe("official");
   });
 
   it("says Official for system group resources the viewer isn't part of", () => {
