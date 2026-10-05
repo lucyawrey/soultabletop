@@ -16,7 +16,7 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 | `live` | bare, `true`, `false` | Fields inside stay editable with Edit off |
 | `locked` | bare, `true`, `false` | Fields inside need their pencil button clicked before editing |
 | `display` | `text` \| `box` | How non-editable fields look: plain value, or their disabled input |
-| `show` | one `{= formula}` or one `{field}` | Shows the tag only when true; false or empty hides it and everything inside |
+| `show` | a bare formula, like `hp > 0` | Shows the tag only when true; false or empty hides it and everything inside |
 
 ## Layout tags
 
@@ -37,7 +37,7 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 | `RowDetails` | none | any | Only directly inside `Table`; shown when a row is expanded |
 
 `color` values: `primary | secondary | success | info | warning | error | neutral`. `icon` is an Iconify name that
-matches `i-<set>-<name>`, for example `i-lucide-sword`. "text" children means text with `{path}` interpolation and no tags.
+matches `i-<set>-<name>`, for example `i-lucide-sword`. "text" children means text with `{formula}`s and no tags.
 
 ## Field tags
 
@@ -50,9 +50,9 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Number` | `formula`, `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric); `formula` overrides |
 | `Checkbox` | `formula` | boolean | `formula` overrides |
 | `Toggle` | none | boolean | On/off switch |
-| `Select` | `options` (req, comma-separated) | string | `options="Small, Medium, Large"` |
+| `Select` | `options` (comma-separated; only on a text field without schema options) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
 | `Tags` | none | array of strings | |
-| `Tracker` | `formula`, `max` (req, number >= 1, one `{path}`, or one `{= formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; `formula` (read-only) computes the current value |
+| `Tracker` | `formula`, `max` (req, number >= 1, one `{formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; `formula` (read-only) computes the current value |
 | `Ref` | none | resourceLink, content | Link to the referenced resource or Content |
 | `Value` | `formula`, `format` (`plain` \| `signed`) | any value | Never editable; `formula` (read-only) instead of `field` |
 | `Markdown` | none | string | Formatted long text |
@@ -62,7 +62,7 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 `formula`: read-only on `Value`, `Column`, `Tracker` (instead of `field`; never both). On `Number`, `Text`, and
 `Checkbox` it may stand alone (read-only) or go with `field` (an override: the field's value wins when it has one; the
 computed value is the input's placeholder; a reset button clears the field). Outside `List`/`Table` rows, other
-formulas reading an override's field with nothing stored get its computed value; `{path}` doesn't, `{= path}` does. `live`/`locked` on a tag with a formula
+formulas reading an override's field with nothing stored get its computed value; `{path}` does too; a field tag shows the stored value. `live`/`locked` on a tag with a formula
 and no field do nothing (a warning). `Field` takes `formula` with `field` on a string, number, or boolean schema field and then acts as the matching tag; any other schema type is an error. Other field tags take no `formula`.
 
 Paths the schema does not know (a non-strict content type, or below a free-form `object`) are accepted by every
@@ -72,10 +72,10 @@ field tag, with a warning.
 
 | Tag | Attributes | Children | Binds |
 |---|---|---|---|
-| `List` | `field` (req), `label`, `layout` (`stack` \| `grid`), `cols` (1-12, for grid), `addLabel` (default "Add") | any; paths inside are relative to each item | any array |
-| `Table` | `field` (req), `label` | only `Column` and `RowDetails`; paths inside are relative to each row | array of structs (also content or object items) |
+| `List` | `field` (req), `label`, `layout` (`stack` \| `grid`), `cols` (1-12, for grid), `addLabel` (default "Add") | any; paths inside are relative to each item | any array, or a struct whose entries are alike |
+| `Table` | `field` (req), `label` | only `Column` and `RowDetails`; paths inside are relative to each row | array of structs (also content or object items), or a struct of alike structs |
 
-In edit mode a `List` or `Table` gets add, remove, and reorder controls.
+In edit mode a `List` or `Table` of an array gets add, remove, and reorder controls; one of a struct's entries has a row per schema entry and no controls.
 
 ## Definitions
 

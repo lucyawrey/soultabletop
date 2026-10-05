@@ -95,11 +95,11 @@ export const pathfinder2eMarkup = `<Sheet>
             formula="10 + min(attributes.dex, coalesce(armor.dexCap, 99)) + prof(armor.rank) + coalesce(armor.itemBonus, 0)" />
     <Value formula="check('wis', perceptionRank)" label="Perception" format="signed" />
     <Number formula="classDc()" label="Class DC" variant="stat" />
-    <Badge>Speed {= speed - if(armor.strength != null and armor.strength > attributes.str, 5, 0)} ft</Badge>
+    <Badge>Speed {speed - if(armor.strength != null and armor.strength > attributes.str, 5, 0)} ft</Badge>
   </Grid>
 
   <Tracker field="hp.current" label="Hit Points" live
-           max="{= hp.ancestry + (hp.classPerLevel + attributes.con) * level + coalesce(hp.bonus, 0)}" />
+           max="{hp.ancestry + (hp.classPerLevel + attributes.con) * level + coalesce(hp.bonus, 0)}" />
 
   <Tabs>
     <Tab label="Saves and Skills">
@@ -111,7 +111,7 @@ export const pathfinder2eMarkup = `<Sheet>
         <Value formula="check('dex', skills.stealth.rank)" label="Stealth" format="signed" />
       </Grid>
     </Tab>
-    <Tab label="Spells" show="{= length(spellcasting.tradition) > 0}">
+    <Tab label="Spells" show="length(spellcasting.tradition) > 0">
       <Number formula="10 + get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell DC" variant="stat" />
       <Value formula="get(attributes, spellcasting.attribute) + prof(spellcasting.rank)" label="Spell Attack" format="signed" />
     </Tab>
@@ -122,7 +122,7 @@ export const pathfinder2eMarkup = `<Sheet>
         <Column formula="qty * coalesce(item.bulk, 0)" label="Bulk" />
       </Table>
       <Value formula="floor(sum(inventory, qty * coalesce(item.bulk, 0)))" label="Bulk Carried" />
-      <Note show="{= sum(inventory, qty * coalesce(item.bulk, 0)) > 5 + attributes.str}">Encumbered</Note>
+      <Note show="sum(inventory, qty * coalesce(item.bulk, 0)) > 5 + attributes.str">Encumbered</Note>
     </Tab>
   </Tabs>
 </Sheet>

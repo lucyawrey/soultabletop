@@ -4,9 +4,9 @@
 // autocomplete are generated from it. See docs/sheet-system.md, section 2.
 
 export type AttrType =
-  // Free text; may contain {path} interpolation.
+  // Free text; may contain {formula}s.
   | { kind: "text" }
-  // A number; with `dynamic`, also a single {path} or {= formula} computed
+  // A number; with `dynamic`, also a single {formula} computed
   // when rendering.
   | { kind: "number"; min?: number; max?: number; integer?: boolean; dynamic?: boolean }
   // Bare attribute, "true", or "false".
@@ -22,7 +22,7 @@ export type AttrType =
   | { kind: "className" }
   // A formula, written as is (no braces): `formula="level + 2"`.
   | { kind: "formula" }
-  // Exactly one `{= expr}` or `{path}` that gives true, false, or nothing.
+  // A bare formula that gives true, false, or nothing, like `level >= 5`.
   | { kind: "condition" }
   // An identifier, like a `<Define>`'s name.
   | { kind: "name" };
@@ -46,12 +46,18 @@ export type BindKind =
   | "content"
   | "array"
   | "stringArray"
+  // An array of choice values (items with schema options).
+  | "choiceArray"
   | "objectArray"
+  // A struct whose entries are all alike (see `structRows`), and one whose
+  // alike entries are structs.
+  | "entries"
+  | "objectEntries"
   | "anyValue";
 
 export type ChildrenRule =
   | "any" // tags and text
-  | "text" // text only (with {path} interpolation)
+  | "text" // text only (with {formula}s)
   | "none"
   | { only: readonly string[] };
 
@@ -134,7 +140,7 @@ export const commonAttrs: Record<string, AttrSpec> = {
   show: {
     type: { kind: "condition" },
     description:
-      "Shows the tag only when this is true, like show=\"{= level >= 5}\" or show=\"{hasSpells}\"; false or empty hides it",
+      "Shows the tag only when this is true, like show=\"level >= 5\" or show=\"hasSpells\"; false or empty hides it",
   },
 };
 
@@ -333,6 +339,7 @@ const tagList: TagSpec[] = [
       "resourceLink",
       "content",
       "stringArray",
+      "choiceArray",
     ],
     formula: "override",
   },
@@ -390,17 +397,16 @@ const tagList: TagSpec[] = [
   {
     name: "Select",
     category: "field",
-    description: "A choice from a list",
+    description: "A choice from a list: the field's options, or its own list",
     attrs: {
       ...fieldAttrs,
       options: {
         type: { kind: "list" },
-        required: true,
-        description: "Comma-separated choices",
+        description: "Comma-separated choices, for a text field without options in the schema",
       },
     },
     children: "none",
-    binds: ["string"],
+    binds: ["string", "number"],
   },
   {
     name: "Tags",
@@ -420,7 +426,7 @@ const tagList: TagSpec[] = [
       max: {
         type: { kind: "number", min: 1, dynamic: true },
         required: true,
-        description: "Maximum: a number, {field}, or {= formula}",
+        description: "Maximum: a number or a {formula}",
       },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
     },
@@ -475,7 +481,7 @@ const tagList: TagSpec[] = [
     name: "List",
     category: "repeater",
     description:
-      "Repeats its content for each item of an array; paths inside are relative to the item",
+      "Repeats its content for each item of an array, or each entry of a struct; paths inside are relative to the item",
     attrs: {
       field: { ...fieldAttrs.field!, required: true },
       label: fieldAttrs.label!,
@@ -487,16 +493,16 @@ const tagList: TagSpec[] = [
       addLabel: text("Text of the add button (default \"Add\")"),
     },
     children: "any",
-    binds: ["array"],
+    binds: ["array", "entries"],
     itemScope: true,
   },
   {
     name: "Table",
     category: "repeater",
-    description: "An array of objects as a table; contains Column tags",
+    description: "An array of objects, or a struct of structs, as a table; contains Column tags",
     attrs: { field: { ...fieldAttrs.field!, required: true }, label: fieldAttrs.label! },
     children: { only: ["Column", "RowDetails"] },
-    binds: ["objectArray"],
+    binds: ["objectArray", "objectEntries"],
     itemScope: true,
   },
   {

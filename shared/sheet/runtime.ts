@@ -3,6 +3,8 @@
 // values as text. Framework-free so it can be unit-tested.
 
 import {
+  choiceLabel,
+  fieldOptions,
   isReservedKey,
   type ContentFieldSchema,
   type ResourceLinkKind,
@@ -22,11 +24,10 @@ import {
   type FormulaEnv,
 } from "./formula-eval";
 import { formatFormulaNumber } from "./formula-functions";
-import { isFormulaPart, parseSheetPath, type TextPart } from "./parser";
+import type { TextPart } from "./parser";
 import {
   findRef,
   isRecord,
-  resolveSheetPath,
   type SheetRefs,
   type SheetScope,
 } from "./scope";
@@ -39,11 +40,13 @@ import {
 } from "./validate";
 
 export {
+  entryScopes,
   findRef,
   itemScopes,
   ownProperty,
   refRecord,
   resolveSheetPath,
+  type SheetEntry,
   type SheetRef,
   type SheetRefs,
   type SheetScope,
@@ -119,7 +122,8 @@ export function setSheetValue(
 }
 
 // A starting value for a new field or List item: empty values, with required
-// entries of structs and local Content filled in.
+// entries of structs and local Content filled in, and choice fields at their
+// first option.
 export function defaultSheetValue(
   field: ContentFieldSchema | undefined,
   schemas: SheetSchemas,
@@ -131,6 +135,8 @@ export function defaultSheetValue(
         .filter(([, entry]) => entry.required)
         .map(([key, entry]) => [key, defaultSheetValue(entry, schemas, depth + 1)]),
     );
+  const options = fieldOptions(field);
+  if (options?.length) return options[0]!.value;
   switch (field?.type) {
     case "string":
       return "";
@@ -268,18 +274,12 @@ export function sheetTextSegments(
 ): SheetTextSegment[] {
   return parts.map((part) => {
     if (typeof part === "string") return { text: part };
-    if (isFormulaPart(part)) {
-      if (!part.ast) return { text: "—", error: "This formula has errors" };
-      const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas);
-      if (isFormulaError(value)) return { text: "—", error: value.message };
-      return { text: formatFormulaValue(value, refs) };
-    }
-    return {
-      text: formatSheetValue(
-        resolveSheetPath(parseSheetPath(part.path), root, scope, refs).value,
-        refs,
-      ),
-    };
+    if (!part.ast) return { text: "—", error: "This formula has errors" };
+    const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas);
+    if (isFormulaError(value)) return { text: "—", error: value.message };
+    // `{path}` to a choice field shows the option's label.
+    const label = part.options && choiceLabel(part.options, value);
+    return { text: label ?? formatFormulaValue(value, refs) };
   });
 }
 
@@ -321,15 +321,8 @@ export function sheetCondition(
   formulas: SheetFormulaDefinitions = noDefinitions,
 ): { shown: boolean; error?: string } {
   if (condition === undefined) return { shown: true };
-  let value: FormulaValue;
-  if (isCompiledFormula(condition)) {
-    value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas);
-  } else if (typeof condition === "object" && "path" in condition) {
-    const resolved = resolveSheetPath(parseSheetPath(condition.path), root, scope, refs);
-    value = resolved.unavailable ? null : (resolved.value as FormulaValue);
-  } else {
-    return { shown: true };
-  }
+  if (!isCompiledFormula(condition)) return { shown: true };
+  const value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas);
   if (isFormulaError(value)) return { shown: true, error: value.message };
   if (value === true) return { shown: true };
   if (value === false || value === null || value === undefined) return { shown: false };

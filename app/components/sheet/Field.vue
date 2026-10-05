@@ -15,7 +15,7 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 // the field's value wins when it has one.
 const props = defineProps<{ node: ValidatedElement; compact?: boolean }>();
 
-const { context, resolve, format, formatFormula, evaluate, number } = useSheet();
+const { context, scope, resolve, format, formatFormula, evaluate, number } = useSheet();
 const attrText = useSheetAttrText();
 
 // A formula-only field has no place in the data, so it can't be edited.
@@ -49,8 +49,13 @@ const value = computed(() => override.value.value);
 const computedText = computed(() =>
   computedValue.value === undefined ? "" : formatFormula(computedValue.value),
 );
+// `field="."` in a struct entry row is labeled by its row ("Str", "Dex", …).
+const rowLabel = computed(() => {
+  const path = props.node.binding?.path;
+  return path && !path.absolute && !path.segments.length ? scope.value.item?.label : undefined;
+});
 const label = computed(
-  () => attrText(props.node.attrs.label) || props.node.binding?.label || "",
+  () => attrText(props.node.attrs.label) || props.node.binding?.label || rowLabel.value || "",
 );
 // `hideLabel` drops the visible label; the label text still names inputs for
 // screen readers.
@@ -101,10 +106,15 @@ const showStatLabel = computed(
     !props.compact,
 );
 
+// A choice field shows its option's label; formulas still see the value.
+const choiceOptions = computed(() => sheetChoiceOptions(props.node));
 const text = computed(() => {
   const signed = props.node.attrs.format === "signed";
   if (automatic.value) return formatFormula(computedValue.value ?? null, signed ? "signed" : "plain");
-  return format(value.value, signed ? "signed" : "plain");
+  return (
+    sheetChoiceText(choiceOptions.value, value.value) ??
+    format(value.value, signed ? "signed" : "plain")
+  );
 });
 // Shown instead of the value when the formula failed.
 const showsError = computed(() => automatic.value && !!formulaError.value);
@@ -119,7 +129,9 @@ function useAutomatic() {
 
 const tags = computed(() =>
   Array.isArray(value.value)
-    ? value.value.map((item) => format(item)).filter(Boolean)
+    ? value.value
+        .map((item) => sheetChoiceText(choiceOptions.value, item) ?? format(item))
+        .filter(Boolean)
     : [],
 );
 
@@ -264,7 +276,7 @@ const imageSize = computed(
       {{ value === true ? "Yes" : "No" }}
     </span>
 
-    <div v-else-if="display === 'tags'" class="flex flex-wrap gap-1">
+    <div v-else-if="display === 'tags' || display === 'choices'" class="flex flex-wrap gap-1">
       <UBadge
         v-for="(tag, index) in tags"
         :key="index"

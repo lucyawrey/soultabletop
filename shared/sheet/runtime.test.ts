@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { ContentFieldSchema } from "../content-schema";
-import { parseSheetMarkup, type SheetText } from "./parser";
 import {
   defaultSheetValue,
+  entryScopes,
   evaluateSheetFormula,
   setSheetValue,
   sheetCondition,
@@ -99,7 +99,7 @@ describe("resolveSheetPath", () => {
 
   it("gives item scopes no path when the list came through a reference", () => {
     const scopes = itemScopes({ value: ["a"], path: null });
-    expect(scopes).toEqual([{ value: "a", path: null }]);
+    expect(scopes).toEqual([{ value: "a", path: null, item: { key: 0 } }]);
     expect(itemScopes({ value: "not a list", path: [] })).toEqual([]);
   });
 });
@@ -216,16 +216,20 @@ describe("defaultSheetValue", () => {
 });
 
 describe("interpolateSheetText", () => {
-  it("fills in {paths}", () => {
-    const text = parseSheetMarkup("{name} ({class.name}) has {hp} HP and {missing}.").nodes[0] as SheetText;
-    expect(interpolateSheetText(text.parts, root, root, refs)).toBe("Violet (Wizard) has 7 HP and .");
+  it("fills in {fields}", () => {
+    const compiled = compileSheet("<Note>{name} ({class.name}) has {hp} HP and {missing}.</Note>", {
+      root: { hasStrictSchema: false, schema: {} },
+      types: {},
+    });
+    const parts = ((compiled.nodes[0] as ValidatedElement).children[0] as ValidatedText).parts;
+    expect(interpolateSheetText(parts, root, root, refs)).toBe("Violet (Wizard) has 7 HP and .");
   });
 });
 
 describe("formulas in text", () => {
   const compiled = compileSheet(
     '<Define name="twice" params="x" formula="x * 2" /><Define name="base" formula="hp + 1" />' +
-      "<Note>{name} has {= twice(hp) + base()} HP, {= 1 / 0}, {= 0.1 + 0.2}</Note>",
+      "<Note>{name} has {twice(hp) + base()} HP, {1 / 0}, {0.1 + 0.2}</Note>",
     { root: { hasStrictSchema: false, schema: {} }, types: {} },
   );
   const note = compiled.nodes.find(
@@ -234,7 +238,7 @@ describe("formulas in text", () => {
   const parts = (note.children[0] as ValidatedText).parts;
   const formulas = { definitions: compiled.definitions };
 
-  it("computes {= } parts, with definitions", () => {
+  it("computes {} parts, with definitions", () => {
     expect(interpolateSheetText(parts, root, root, refs, formulas)).toBe("Violet has 22 HP, —, 0.3");
   });
 
@@ -251,7 +255,7 @@ describe("formulas in text", () => {
   });
 
   it("shows a broken formula part as —", () => {
-    const broken = compileSheet("<Note>{= nope(}</Note>", { root: { hasStrictSchema: false, schema: {} }, types: {} });
+    const broken = compileSheet("<Note>{nope(}</Note>", { root: { hasStrictSchema: false, schema: {} }, types: {} });
     const brokenParts = ((broken.nodes[0] as ValidatedElement).children[0] as ValidatedText).parts;
     expect(sheetTextSegments(brokenParts, root, root, refs)).toEqual([
       { text: "—", error: "This formula has errors" },
@@ -278,21 +282,21 @@ describe("sheetCondition", () => {
   }
 
   it("shows on true and hides on false or nothing", () => {
-    expect(show('<Note show="{= hp > 5}">x</Note>')).toEqual({ shown: true });
-    expect(show('<Note show="{= hp > 10}">x</Note>')).toEqual({ shown: false });
-    expect(show('<Note show="{missing}">x</Note>')).toEqual({ shown: false });
-    expect(show('<Note show="{= missing > 1}">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="hp > 5">x</Note>')).toEqual({ shown: true });
+    expect(show('<Note show="hp > 10">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="missing">x</Note>')).toEqual({ shown: false });
+    expect(show('<Note show="missing > 1">x</Note>')).toEqual({ shown: false });
     expect(show("<Note>x</Note>")).toEqual({ shown: true });
   });
 
   it("shows the tag when the formula fails, with the error", () => {
-    expect(show('<Note show="{= 1 / 0 > 1}">x</Note>')).toEqual({ shown: true, error: "Division by zero" });
-    expect(show('<Note show="{= get(stats, \'str\')}">x</Note>')).toEqual({ shown: true, error: "show needs true or false" });
+    expect(show('<Note show="1 / 0 > 1">x</Note>')).toEqual({ shown: true, error: "Division by zero" });
+    expect(show('<Note show="get(stats, \'str\')">x</Note>')).toEqual({ shown: true, error: "show needs true or false" });
   });
 
   it("evaluates in the given scope", () => {
     const [rope] = itemScopes(resolve("inventory"));
-    expect(show('<Note show="{= qty > 1}">x</Note>', rope)).toEqual({ shown: true });
+    expect(show('<Note show="qty > 1">x</Note>', rope)).toEqual({ shown: true });
   });
 });
 
@@ -355,8 +359,8 @@ describe("computed fields", () => {
     expect(value(checkbox, "trained", { level: 3, trained: false })).toBe(false);
   });
 
-  it("shows the computed value in {= path} text, and the stored one in {path}", () => {
-    const compiled = compileSheet(`${sheet}<Note>{= hp} / {hp}</Note>`, empty);
+  it("shows the computed value of an override field in {…} text", () => {
+    const compiled = compileSheet(`${sheet}<Note>{hp} / {hp}</Note>`, empty);
     const note = compiled.nodes.find(
       (node): node is ValidatedElement => node.type === "element" && node.tag === "Note",
     )!;
@@ -367,7 +371,7 @@ describe("computed fields", () => {
         definitions: compiled.definitions,
         computedFields: compiled.computedFields,
       }),
-    ).toBe("4 / ");
+    ).toBe("4 / 4");
   });
 
   it("gives cycles an error", () => {
@@ -414,8 +418,8 @@ describe("computed fields", () => {
 });
 
 describe("compiled number attributes", () => {
-  it("evaluates {= } in number attributes", () => {
-    const { nodes } = compileSheet('<Tracker field="hp" max="{= hp * 2 + stats.str}" />', {
+  it("evaluates {} in number attributes", () => {
+    const { nodes } = compileSheet('<Tracker field="hp" max="{hp * 2 + stats.str}" />', {
       root: { hasStrictSchema: false, schema: {} },
       types: {},
     });
@@ -502,7 +506,7 @@ describe("sheet step budget", () => {
     expect(sheetStepBudget(0)).toBe(formulaLimits.maxSteps);
     expect(sheetStepBudget(2_000)).toBe(formulaLimits.maxSheetSteps / 2_000);
     const empty = { root: { hasStrictSchema: false, schema: {} }, types: {} };
-    expect(compileSheet('<Value formula="1" /><Note>{= 2} {= 3}</Note>', empty).stepBudget).toBe(formulaLimits.maxSteps);
+    expect(compileSheet('<Value formula="1" /><Note>{2} {3}</Note>', empty).stepBudget).toBe(formulaLimits.maxSteps);
   });
 
   it("gives evaluations the sheet's budget", () => {
@@ -513,5 +517,93 @@ describe("sheet step budget", () => {
     expect(evaluateSheetFormula(ast, scope, scope, refs, { definitions: new Map(), stepBudget: 20 })).toEqual(
       new FormulaError("budget", "This formula takes too many steps to compute"),
     );
+  });
+});
+
+describe("choice fields", () => {
+  const choiceSchemas: SheetSchemas = {
+    root: {
+      hasStrictSchema: true,
+      schema: {
+        rank: { type: "number", options: [{ value: 0, label: "Untrained" }, { value: 2, label: "Expert" }] },
+      },
+    },
+    types: {},
+  };
+
+  it("shows the label for {path} text and the value for other formulas", () => {
+    const compiled = compileSheet("<Note>{rank}, {rank + 0}, {/rank}</Note>", choiceSchemas);
+    const parts = ((compiled.nodes[0] as ValidatedElement).children[0] as ValidatedText).parts;
+    const scope: SheetScope = { value: { rank: 2 }, path: [] };
+    expect(interpolateSheetText(parts, scope, scope, refs)).toBe("Expert, 2, Expert");
+    const unlisted: SheetScope = { value: { rank: 3 }, path: [] };
+    expect(interpolateSheetText(parts, unlisted, unlisted, refs)).toBe("3, 3, 3");
+  });
+
+  it("starts a new choice field at its first option", () => {
+    expect(defaultSheetValue(choiceSchemas.root.schema.rank, choiceSchemas)).toBe(0);
+    expect(
+      defaultSheetValue(
+        { type: "struct", entries: { size: { type: "string", required: true, options: [{ value: "m" }] } } },
+        choiceSchemas,
+      ),
+    ).toEqual({ size: "m" });
+  });
+});
+
+describe("struct entry rows", () => {
+  const rank = { type: "struct" as const, entries: { rank: { type: "number" as const } } };
+  const structSchemas: SheetSchemas = {
+    root: {
+      hasStrictSchema: true,
+      schema: {
+        skills: { type: "struct", entries: { acrobatics: rank, arcana: { ...rank, label: "Arcana Lore" } } },
+        attributes: { type: "struct", entries: { str: { type: "number" }, dex: { type: "number" } } },
+      },
+    },
+    types: {},
+  };
+  const entries = [
+    { key: "acrobatics", label: "Acrobatics" },
+    { key: "arcana", label: "Arcana Lore" },
+  ];
+  const sheetData = { skills: { arcana: { rank: 2 } }, attributes: { str: 3, dex: -1 } };
+  const sheetRoot: SheetScope = { value: sheetData, path: [] };
+
+  it("gives every entry a row, stored or not, with its key and label", () => {
+    const skills = resolveSheetPath(parseSheetPath("skills"), sheetRoot, sheetRoot, refs);
+    expect(entryScopes(skills, entries)).toEqual([
+      { value: undefined, path: ["skills", "acrobatics"], item: { key: "acrobatics", label: "Acrobatics" } },
+      { value: { rank: 2 }, path: ["skills", "arcana"], item: { key: "arcana", label: "Arcana Lore" } },
+    ]);
+    expect(entryScopes({ value: undefined, path: null }, entries).map((row) => row.path)).toEqual([null, null]);
+    expect(entryScopes({ value: undefined, path: null, unavailable: true }, entries)).toEqual([]);
+  });
+
+  it("computes itemKey(), itemLabel(), and per-item functions over structs", () => {
+    const compiled = compileSheet(
+      `<Table field="skills"><Column formula="concat(itemLabel(), ' (', itemKey(), ') ', text(coalesce(rank, 0)))" /></Table>
+       <Value formula="count(skills, rank > 0)" />
+       <Value formula="sum(attributes)" />`,
+      structSchemas,
+    );
+    expect(compiled.diagnostics.filter((item) => item.severity === "error")).toEqual([]);
+    const [table, ...values] = compiled.nodes.filter((node): node is ValidatedElement => node.type === "element");
+    const column = table!.children[0] as ValidatedElement;
+    const skills = resolveSheetPath(parseSheetPath("skills"), sheetRoot, sheetRoot, refs);
+    const texts = entryScopes(skills, table!.entries!).map((row) =>
+      evaluateSheetFormula(column.formula!.ast, sheetRoot, row, refs),
+    );
+    expect(texts).toEqual(["Acrobatics (acrobatics) 0", "Arcana Lore (arcana) 2"]);
+    expect(values.slice(0, 2).map((node) => evaluateSheetFormula(node.formula!.ast, sheetRoot, sheetRoot, refs))).toEqual([1, 2]);
+  });
+
+  it("gives array rows their index as itemKey()", () => {
+    const compiled = compileSheet(`<Value formula="sum(tags, itemKey())" />`, {
+      root: { hasStrictSchema: true, schema: { tags: { type: "array", itemType: { type: "string" } } } },
+      types: {},
+    });
+    const node = compiled.nodes[0] as ValidatedElement;
+    expect(evaluateSheetFormula(node.formula!.ast, root, root, refs)).toBe(1);
   });
 });

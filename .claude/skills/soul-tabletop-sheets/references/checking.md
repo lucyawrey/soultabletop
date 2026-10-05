@@ -90,5 +90,5 @@ imports `sheetTags` and `commonAttrs` from `./registry` and prints `JSON.stringi
   sample data and with real content.
 
 - It does not render anything: layout and looks need the editor preview.
-- It does not check data against Select `options`, or that a referenced content exists.
+- It does not check data against a Select's own `options` list (schema options are checked when content is saved), or that a referenced content exists.
 - Warnings are not errors, but read them: an unknown path in a non-strict schema is a warning and shows an empty value.

@@ -5,6 +5,7 @@
 // docs/sheet-system.md, section 3.
 
 import {
+  fieldOptions,
   isReservedKey,
   MAX_CONTENT_DEPTH,
   NAME_FIELD,
@@ -28,14 +29,13 @@ import {
   type FormulaType,
 } from "./formula";
 import { checkFormula, type FormulaCheckHost } from "./formula-check";
+import type { SheetEntry } from "./scope";
 import { formulaLaterBuiltins, formulaReservedNames } from "./formula-functions";
 import {
   invalidPathMessage,
-  isFormulaPart,
   isValidSheetPath,
   parseSheetMarkup,
   parseSheetPath,
-  type Interpolation,
   type Loc,
   type Position,
   type SheetAttr,
@@ -72,8 +72,8 @@ export interface Binding {
   description?: string;
 }
 
-// A valid formula from an attribute: `formula="…"`, a number attribute given
-// as `{= …}`, or `show="{= …}"`.
+// A valid formula from an attribute: `formula="…"` or `show="…"`, or a number
+// attribute given as `{…}`.
 export interface CompiledFormula {
   source: string;
   loc: Loc;
@@ -91,8 +91,7 @@ export type AttrValue =
   | string
   | string[]
   | TextPart[] // text attributes
-  | Interpolation // number and `show` attributes given as {path}
-  | CompiledFormula; // `formula`, and number and `show` attributes given as {= …}
+  | CompiledFormula; // `formula` and `show`, and number attributes given as {…}
 
 export interface ValidatedElement {
   type: "element";
@@ -102,6 +101,8 @@ export interface ValidatedElement {
   binding?: Binding;
   // The tag's `formula`, when it has a valid one.
   formula?: { ast: FormulaNode; type: FormulaType };
+  // A List or Table bound to a struct: the struct's entries, one row each.
+  entries?: SheetEntry[];
   children: ValidatedNode[];
   loc: Loc;
 }
@@ -162,8 +163,10 @@ export function sheetStepBudget(formulaCount: number) {
 
 // What a path points at. `record` is a set of named fields: the top level, an
 // `object` field's entries, or a ContentType reached through a `content` field.
-// `depth` counts the `content` fields crossed to get here.
-type Shape =
+// `depth` counts the `content` fields crossed to get here. `item` marks the
+// scope of a row (a List or Table row, or a per-item function's item): of an
+// array, of a struct's entries, or of a list of unknown type.
+type Shape = (
   | {
       kind: "record";
       fields: ContentTypeSchema;
@@ -172,7 +175,32 @@ type Shape =
       depth: number;
     }
   | { kind: "field"; field: ContentFieldSchema; strict: boolean; depth: number }
-  | { kind: "unknown"; depth: number };
+  | { kind: "unknown"; depth: number }
+) & { item?: "array" | "struct" | "unknown" };
+
+// Field types a struct's entries can have for a List, Table, or per-item
+// function to repeat over them.
+const repeatableEntryTypes = new Set(["struct", "string", "number", "boolean", "scalar"]);
+
+// A struct's entries as rows: when they are all alike (the same type and
+// fields; labels, descriptions, and `required` may differ) and each a struct
+// or a single value. `item` is the first entry, which stands for all of them.
+export function structRows(
+  field: ContentFieldSchema,
+): { entries: SheetEntry[]; item: ContentFieldSchema } | undefined {
+  if (field.type !== "struct") return undefined;
+  const list = Object.entries(field.entries);
+  const first = list[0]?.[1];
+  if (!first || !repeatableEntryTypes.has(first.type)) return undefined;
+  const shape = ({ label: _label, description: _description, required: _required, ...rest }: ContentFieldSchema) =>
+    JSON.stringify(rest);
+  const firstShape = shape(first);
+  if (!list.every(([, entry]) => shape(entry) === firstShape)) return undefined;
+  return {
+    entries: list.map(([key, entry]) => ({ key, label: entry.label ?? humanizeFieldName(key) })),
+    item: first,
+  };
+}
 
 const nameField: ContentFieldSchema = {
   type: "string",
@@ -270,7 +298,11 @@ const fieldOverrideTags: Record<string, string> = {
   boolean: "Checkbox",
 };
 
-// Plain attribute text, or undefined if it contains {path} interpolation.
+// Tags whose input takes any value, so they can't edit a field limited to
+// options (or an array of them).
+const freeInputTags = new Set(["Text", "Number", "Markdown", "Image", "Tracker", "Tags"]);
+
+// Plain attribute text, or undefined if it contains a {…} formula.
 function plainText(parts: TextPart[]) {
   if (parts.some((part) => typeof part !== "string")) return undefined;
   return parts.join("");
@@ -298,6 +330,8 @@ class Validator {
   readonly diagnostics: SheetDiagnostic[] = [];
   readonly definitions = new Map<string, DefinitionState>();
   readonly computedFields = new Map<string, SheetComputedField>();
+  // What each formula path resolved to, for `{path}` text showing labels.
+  private pathShapes = new WeakMap<SheetPath, Shape>();
   private readonly rootShape: Shape;
   formulaSites = 0;
 
@@ -474,10 +508,17 @@ class Validator {
       case "content":
         kinds.add(field.type);
         break;
+      case "struct": {
+        const rows = structRows(field);
+        if (rows) kinds.add("entries");
+        if (rows?.item.type === "struct") kinds.add("objectEntries");
+        break;
+      }
       case "array": {
         kinds.add("array");
         const item = field.itemType.type;
         if (item === "string") kinds.add("stringArray");
+        if (fieldOptions(field.itemType)) kinds.add("choiceArray");
         if (item === "struct" || item === "content" || item === "object")
           kinds.add("objectArray");
         break;
@@ -486,12 +527,15 @@ class Validator {
     return kinds;
   }
 
-  // The shape of one item of the array a List or Table is bound to.
+  // The shape of one row of the array or struct a List or Table (or a
+  // per-item function) repeats over.
   private itemShape(shape: Shape): Shape {
     if (shape.kind === "field" && shape.field.type === "array") {
-      return { ...shape, field: shape.field.itemType };
+      return { ...shape, field: shape.field.itemType, item: "array" };
     }
-    return { kind: "unknown", depth: shape.depth };
+    const rows = shape.kind === "field" ? structRows(shape.field) : undefined;
+    if (shape.kind === "field" && rows) return { ...shape, field: rows.item, item: "struct" };
+    return { kind: "unknown", depth: shape.depth, item: "unknown" };
   }
 
   // Formulas
@@ -500,9 +544,15 @@ class Validator {
     return {
       resolve: (path, text, scope, loc) => {
         const shape = this.resolvePath(path, text, scope, loc);
+        if (shape) this.pathShapes.set(path, shape);
         return shape && { type: shapeType(shape), scope: shape };
       },
-      itemScope: (list) => (list ? this.itemShape(list) : { kind: "unknown", depth: 0 }),
+      itemScope: (list) => (list ? this.itemShape(list) : { kind: "unknown", depth: 0, item: "unknown" }),
+      structEntries: (list) => {
+        const rows = list.kind === "field" ? structRows(list.field) : undefined;
+        return rows && { entries: rows.entries, type: fieldType(rows.item) };
+      },
+      itemKind: (scope) => scope.item,
       definition: (name) => {
         const definition = this.definitions.get(name);
         return definition && { params: definition.params, type: this.definitionType(definition) };
@@ -544,37 +594,23 @@ class Validator {
     return { source, loc, ast: parsed.ast, type: checked.type };
   }
 
-  // Text parts with `{path}` checked and `{= …}` compiled (`ast` set on valid
-  // ones).
+  // Text parts with their `{…}` formulas compiled (`ast` set on valid ones).
   private compileParts(parts: TextPart[], scope: Shape): TextPart[] {
     return parts.map((part) => {
       if (typeof part === "string") return part;
-      if (isFormulaPart(part)) {
-        const compiled = this.compileFormula(part.formula, part.bodyStart, scope, part.loc);
-        if (!compiled) return part;
-        if (isCollection(compiled.type)) {
-          this.error(
-            "formula-result-type",
-            `{= ${part.formula.trim()}} gives ${describeType(compiled.type)}; text needs a single value`,
-            part.loc,
-          );
-          return part;
-        }
-        return { ...part, ast: compiled.ast };
-      }
-      const shape = this.resolve(part.path, scope, part.loc);
-      if (
-        shape?.kind === "record" ||
-        (shape?.kind === "field" &&
-          (shape.field.type === "struct" || shape.field.type === "object"))
-      ) {
-        this.warn(
-          "interpolates-object",
-          `{${part.path}} is an object and will show as raw data`,
+      const compiled = this.compileFormula(part.formula, part.bodyStart, scope, part.loc);
+      if (!compiled) return part;
+      if (isCollection(compiled.type)) {
+        this.error(
+          "formula-result-type",
+          `{${part.formula.trim()}} gives ${describeType(compiled.type)}; text needs a single value`,
           part.loc,
         );
+        return part;
       }
-      return part;
+      const shape = compiled.ast.type === "path" ? this.pathShapes.get(compiled.ast.path) : undefined;
+      const options = shape?.kind === "field" ? fieldOptions(shape.field) : undefined;
+      return { ...part, ast: compiled.ast, ...(options ? { options } : {}) };
     });
   }
 
@@ -884,16 +920,30 @@ class Validator {
 
     let binding: Binding | undefined;
     let childScope = scope;
+    let entries: SheetEntry[] | undefined;
     if (typeof attrs.field === "string") {
       const path = attrs.field;
       const shape = this.resolve(path, scope, node.loc);
       if (!shape) return broken(`Can't find field "${path}"`);
       const kinds = this.bindKinds(shape);
       if (kinds !== "all" && !spec.binds?.some((kind) => kinds.has(kind))) {
+        const isStruct = shape.kind === "field" && shape.field.type === "struct";
+        if (spec.itemScope && isStruct) {
+          return invalid(
+            "wrong-field-type",
+            kinds.has("entries")
+              ? `<${spec.name}> can't show "${path}": its entries aren't structs; use <List>`
+              : `<${spec.name}> can't repeat over "${path}": a struct's entries must all be alike (the same type and fields) and each a struct or a single value`,
+          );
+        }
         const suggestion =
           kinds.has("array") ? "; use <List> or <Table>" :
-          shape.kind === "record" || (shape.kind === "field" && shape.field.type === "struct")
-            ? "; use a <Section> with fields inside"
+          shape.kind === "record" || isStruct
+            ? `; use a <Section> with fields inside${
+                kinds.has("objectEntries")
+                  ? ", or a <List> or <Table> over its entries"
+                  : kinds.has("entries") ? ", or a <List> over its entries" : ""
+              }`
             : "";
         return invalid(
           "wrong-field-type",
@@ -903,18 +953,39 @@ class Validator {
       const field = shape.kind === "field" ? shape.field : undefined;
       const parsed = parseSheetPath(path);
       const lastSegment = parsed.segments.at(-1);
+      // `.` in a struct entry row is that row's entry, whose label and
+      // description differ by row (the renderer uses the row's label); the
+      // shape's field is only the first entry, standing for all of them.
+      const isEntry = scope.item === "struct" && !parsed.absolute && !parsed.segments.length;
       binding = {
         path: parsed,
         field,
         label:
-          field?.label ??
+          (isEntry ? undefined : field?.label) ??
           (lastSegment && !indexPattern.test(lastSegment)
             ? humanizeFieldName(lastSegment)
             : ""),
-        description: field?.description,
+        description: isEntry ? undefined : field?.description,
       };
-      if (spec.itemScope) childScope = this.itemShape(shape);
+      if (spec.itemScope) {
+        childScope = this.itemShape(shape);
+        const rows = field && structRows(field);
+        if (rows) {
+          entries = rows.entries;
+          const addLabel = attrNamed(node, "addLabel");
+          if (addLabel) {
+            this.warn(
+              "flag-no-effect",
+              `addLabel has no effect on a <List> of a struct's entries: its rows come from the schema`,
+              addLabel.loc,
+            );
+          }
+        }
+      }
     }
+
+    const choiceError = binding && this.checkChoice(node, spec, binding, attrs, formula);
+    if (choiceError) return invalid(choiceError.code, choiceError.message);
 
     // `Field` with a formula acts as the tag matching its field's type.
     let overrideTag = spec.name;
@@ -961,9 +1032,56 @@ class Validator {
       attrs,
       binding,
       ...(formula ? { formula: { ast: formula.ast, type: formula.type } } : {}),
+      ...(entries ? { entries } : {}),
       children: this.children(node.children, spec, childScope),
       loc: node.loc,
     };
+  }
+
+  // Choice fields (schema `options`): only Select, Field, Column, Value, and
+  // formula-only tags show them. Returns an error message, or reports a
+  // Select's own list being ignored as a warning.
+  private checkChoice(
+    node: SheetElement,
+    spec: TagSpec,
+    binding: Binding,
+    attrs: Record<string, AttrValue>,
+    formula: CompiledFormula | undefined,
+  ): { code: string; message: string } | undefined {
+    const wrongType = (message: string) => ({ code: "wrong-field-type", message });
+    const { field } = binding;
+    const path = binding.path.segments.join(".");
+    const options =
+      fieldOptions(field) ?? (field?.type === "array" ? fieldOptions(field.itemType) : undefined);
+    if (spec.name === "Select") {
+      const listAttr = attrNamed(node, "options");
+      if (fieldOptions(field)) {
+        if (listAttr) {
+          this.warn(
+            "options-ignored",
+            `"${path}" has options in the schema, so this options list is ignored; remove it`,
+            listAttr.loc,
+          );
+        }
+        return undefined;
+      }
+      if (field?.type === "number")
+        return wrongType(`<Select> can't show "${path}": it's a number field without options in the schema`);
+      // A list that was written but is invalid is reported already.
+      if (!attrs.options && !listAttr) {
+        return {
+          code: "missing-attribute",
+          message: `<Select> needs an options attribute: "${path}" has no options in the schema`,
+        };
+      }
+      return undefined;
+    }
+    if (!options) return undefined;
+    if (freeInputTags.has(spec.name))
+      return wrongType(`<${spec.name}> can't show "${path}": it has options; use <Select> or <Field>`);
+    if (spec.name === "Field" && formula)
+      return { code: "invalid-attribute", message: `<Field> takes no formula on "${path}": it has options` };
+    return undefined;
   }
 
   // Whether a field tag's formula gives what the tag (and its field, for
@@ -1068,31 +1186,17 @@ class Validator {
     }
 
     if (type.kind === "condition") {
-      const parts = attr.value.filter((part) => typeof part !== "string" || part.trim());
-      const [only] = parts;
-      if (parts.length !== 1 || typeof only === "string" || !only) {
-        return fail(`${name} must be one {= formula} or one {field}, like ${name}="{= level >= 5}"`);
-      }
-      if (isFormulaPart(only)) {
-        const compiled = this.compileFormula(only.formula, only.bodyStart, scope, only.loc);
-        if (!compiled) return undefined;
-        if (!couldBe(compiled.type, ["boolean"])) {
-          return fail(
-            `${name} must give true or false, but {= ${only.formula.trim()}} gives ${describeType(compiled.type)}`,
-            "formula-result-type",
-          );
-        }
-        return compiled;
-      }
-      const shape = this.resolve(only.path, scope, only.loc);
-      if (!shape) return undefined;
-      if (!couldBe(shapeType(shape), ["boolean"])) {
+      const raw = attr.raw ?? "";
+      if (!raw.trim() || !attr.valueLoc) return fail(`${name} needs a formula, like ${name}="level >= 5"`);
+      const compiled = this.compileFormula(raw, attr.valueLoc.start, scope, attr.valueLoc);
+      if (!compiled) return undefined;
+      if (!couldBe(compiled.type, ["boolean"])) {
         return fail(
-          `${name}="{${only.path}}" must point at a boolean field, but it's ${describeShape(shape)}; compare it in a formula, like ${name}="{= ${only.path} != null}"`,
+          `${name} must give true or false, but ${raw.trim()} gives ${describeType(compiled.type)}`,
           "formula-result-type",
         );
       }
-      return only;
+      return compiled;
     }
 
     if (type.kind === "number") {
@@ -1101,28 +1205,22 @@ class Validator {
         return fail(`${name} on <${spec.name}> must be a plain number, not {…}`);
       }
       if (attr.value.length === 1 && typeof only === "object") {
-        if (isFormulaPart(only)) {
-          const compiled = this.compileFormula(only.formula, only.bodyStart, scope, only.loc);
-          if (!compiled) return undefined;
-          if (!couldBe(compiled.type, ["number"])) {
-            return fail(
-              `${name} must be a number, but {= ${only.formula.trim()}} gives ${describeType(compiled.type)}`,
-              "formula-result-type",
-            );
-          }
-          return compiled;
+        const compiled = this.compileFormula(only.formula, only.bodyStart, scope, only.loc);
+        if (!compiled) return undefined;
+        if (!couldBe(compiled.type, ["number"])) {
+          return fail(
+            `${name} must be a number, but {${only.formula.trim()}} gives ${describeType(compiled.type)}`,
+            "formula-result-type",
+          );
         }
-        const shape = this.resolve(only.path, scope, only.loc);
-        if (shape?.kind === "field" && shape.field.type !== "number" && shape.field.type !== "scalar")
-          return fail(`${name}="{${only.path}}" must point at a number field, but it's ${describeField(shape.field)}`);
-        return shape ? only : undefined;
+        return compiled;
       }
       const raw = plainText(attr.value)?.trim();
       const number = raw ? Number(raw) : Number.NaN;
       if (raw === undefined || !Number.isFinite(number))
         return fail(
           type.dynamic
-            ? `${name} on <${spec.name}> must be a number, a single {field}, or a single {= formula}`
+            ? `${name} on <${spec.name}> must be a number or a single {formula}`
             : `${name} on <${spec.name}> must be a number`,
         );
       if (type.integer && !Number.isInteger(number))

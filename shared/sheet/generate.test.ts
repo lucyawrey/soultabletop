@@ -214,3 +214,44 @@ describe("generatedSheetDefaults", () => {
     });
   });
 });
+
+describe("generated sheets with choice fields", () => {
+  it("uses Field for choice fields and arrays of them, and validates", () => {
+    const choiceSchemas: SheetSchemas = {
+      root: {
+        hasStrictSchema: true,
+        schema: {
+          size: { type: "string", options: [{ value: "s" }] },
+          ranks: { type: "array", itemType: { type: "number", options: [{ value: 1 }] } },
+        },
+      },
+      types: {},
+    };
+    const markup = generateSheetMarkup(choiceSchemas);
+    expect(markup).toContain('<Field field="size" />');
+    expect(markup).toContain('<Field field="ranks" />');
+    expect(compileSheet(markup, choiceSchemas).diagnostics).toEqual([]);
+  });
+});
+
+describe("generated sheets with structs of alike structs", () => {
+  it("shows them as a Table with a label column, and validates", () => {
+    const rank = { type: "struct" as const, entries: { rank: { type: "number" as const }, notes: { type: "string" as const } } };
+    const structSchemas: SheetSchemas = {
+      root: {
+        hasStrictSchema: true,
+        schema: { skills: { type: "struct", entries: { acrobatics: rank, arcana: rank } } },
+      },
+      types: {},
+    };
+    const markup = generateSheetMarkup(structSchemas);
+    expect(markup).toContain(`<Section title="Skills">
+  <Table field="skills">
+    <Column formula="itemLabel()" />
+    <Column field="rank" />
+    <Column field="notes" />
+  </Table>
+</Section>`);
+    expect(compileSheet(markup, structSchemas).diagnostics).toEqual([]);
+  });
+});

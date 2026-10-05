@@ -37,13 +37,14 @@ Sections: 1. markup language + parser → 2. tag catalog → 3. validation again
 - Tag names: PascalCase canonical (`Section`); matched case-insensitively so `<section>` works. (decided)
 - Attributes: `name="value"` or `name='value'`; bare `name` = boolean true. No unquoted values. Duplicate attr = error.
 - Text: allowed directly inside layout tags; renders as a paragraph. Whitespace collapsed like HTML. (decided)
-- Interpolation: `{path}` in text and in attribute values → field value (a path lookup). Missing value → empty.
-  Literal braces: `\{` `\}`, literal backslash `\\`. (decided)
-- Formulas: `{= expr}` in text and in attribute values is a formula part (see "Formulas"). After an unescaped `{=`,
-  the parser jumps to the matching `}`, skipping quoted text, so `{= a <b}` isn't read as a tag and
-  `{= concat('}', x)}` works; in attribute values the formula still ends at the attribute's closing quote. An
-  attribute named `formula` is raw text: the parser doesn't look for `{…}` or entities in it, and the validator
-  parses it as one expression (inside `formula="…"`, text goes in single quotes).
+- Formulas: every `{…}` in text and in attribute values is a formula (see "Formulas"); `{hp}` is the formula `hp`, and
+  shows what the `hp` field displays, computed value included (decided 2026-10-04: there is no separate `{path}`
+  lookup, and `{= expr}` is gone). A missing value is empty. After an unescaped `{`, the parser jumps to the
+  matching `}`, skipping quoted text, so `{a <b}` isn't read as a tag and `{concat('}', x)}` works; in attribute
+  values the formula still ends at the attribute's closing quote. `{}` is an error, and so is `{= …}`. Literal
+  braces: `\{` `\}`, literal backslash `\\`. The attributes `formula` and `show` are bare formulas: the parser
+  doesn't look for `{…}` or entities in them, and the validator parses each as one expression (inside them, text
+  goes in single quotes).
 - Comments: `<!-- … -->`.
 - Entities: `&lt; &gt; &amp; &quot; &apos;` and numeric `&#123;` / `&#x7B;`.
 - No raw HTML, no `on*`/event attrs, no `style` attr, no URLs (internal `Ref` links only). Everything renders as text
@@ -89,8 +90,8 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list | formula | condition | name; required; default), allowed children, and which schema field types it may bind to.
-Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one `{path}` or one
-`{= formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
+Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one
+`{formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
 mixed with text.
 Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`), `show` (conditional display; not on `Column`), and
 `live`, `locked`, and `display` (section 5; `Tab` and `RowDetails` accept only `class` and `show`; `Define` accepts
@@ -121,7 +122,7 @@ View mode renders formatted values, edit mode renders the input.
 `field` is required unless the tag has a `formula` (decided):
 - **Read-only formula tags**: `Value`, `Column`, `Tracker` take `field` or `formula`, not both. With `formula` the
   tag shows the computed value and is never editable (a `Tracker` formula is its current value; its `max` can be a
-  `{= formula}` too). Its label is the `label` attribute, else empty.
+  `{formula}` too). Its label is the `label` attribute, else empty.
 - **Override tags**: `Number`, `Text`, `Checkbox` (and `Field`, see below) take `field`, `formula`, or both. With both, the field holds an
   optional manual value that wins over the computed one; absent, `null`, or (for `Text`) `""` means automatic. While
   automatic, the input shows the computed value as its placeholder (a `Checkbox` shows the computed state), typing
@@ -131,8 +132,8 @@ View mode renders formatted values, edit mode renders the input.
   its field in other formulas: a formula reading that path while nothing is stored there gets the computed value, so
   `<Number field="hp" formula="maxHp" />` follows `<Number field="maxHp" formula="…" />` until either is typed in.
   An override inside a hidden region (`show`) still counts. Fields that compute each other give an error value
-  (`formula-cycle`), and chains deeper than the call depth limit give `too-deep`. Plain `{path}` text and field tags
-  still show the stored value; write `{= path}` for the computed one. A field may carry the same formula (spacing and
+  (`formula-cycle`), and chains deeper than the call depth limit give `too-deep`. `{hp}` text shows the computed value too, while field
+  tags show the stored one. A field may carry the same formula (spacing and
   parentheses aside) on several tags; a different one is an error (`computed-field-conflict`).
 - **`Field` with a formula**: `Field` takes `formula` (with `field`, required) on a `string`, `number`, or `boolean`
   schema field only, and then acts exactly like `Text`, `Number`, or `Checkbox` (override, reset button, cascading);
@@ -146,12 +147,12 @@ View mode renders formatted values, edit mode renders the input.
 | `Text` | `multiline`, `placeholder` | string | `UInput` / `UTextarea` |
 | `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "exceptZero"` so the input shows "+3" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
 | `Checkbox` / `Toggle` | — | boolean | `UCheckbox` / `USwitch` |
-| `Select` | `options` (comma list, req) | string | `USelect` |
-| `Tags` | — | array of string | `UInputTags` |
+| `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
+| `Tags` | — | array of string (not of choices) | `UInputTags` |
 | `Tracker` | `max` (req), `style` (bar/pips) | number | `UProgress` or pip boxes |
 | `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format`, `formula` | any | read-only in both modes |
-| `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string (not a struct or an array of objects) | picks input from schema type (decided); generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
+| `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
 
@@ -162,6 +163,28 @@ Label resolution: `label` attr → schema field `label` → humanized field name
 `description`. (decided: `ContentFieldSchema` entries gain optional `label` and `description`.)
 
 Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is not shown (a Column's header is left empty) but still names the input for screen readers. An explicit `label=""` is not used for this: it stays "no label given" and falls back to the schema label, so the two are not confused. `List` and `Table` already show no label unless `label` is given.
+
+### Choice fields (decided 2026-10-04)
+- A `string` or `number` schema field may have `options: [{ value, label? }]` (1–200, values unique and of the
+  field's type, labels 1–100 characters, defaulting to the value as text). It stays a string or number everywhere
+  else (formula types, binding, formatting); `fieldOptions`, `choiceLabel`, and `fieldOptionsError` are in
+  `shared/content-schema.ts`. Number options let ranks be stored as `0`–`4` and shown as Untrained…Legendary.
+- Content save rejects a value that isn't listed, whatever the strictness; absent means no choice, and `""` is only
+  valid if listed. A required choice field starts at its first option (`defaultContentData`, new List items, sample
+  data). Changing options never touches saved data: an unlisted stored value shows as it is, and a `Select` lists it
+  as "… (not an option)" until it's changed.
+- `Select` without `options` uses the schema's options; with `options` on a field that has schema options it's a
+  warning (`options-ignored`) and the schema's list wins, so adding options never breaks a sheet. On a field without
+  schema options the attribute works as before (and is required). `Field`, `Column`, and generated sheets show a
+  `Select` for a field with options.
+- Free inputs (`Text`, `Number`, `Tracker`, `Markdown`, `Image`, `Tags`) on a field with options, or on an array of
+  them, are an error (`wrong-field-type`); so is `Field` with a `formula` on one (`invalid-attribute`). Formula-only
+  tags are unaffected.
+- Labels, not values, show wherever a choice field is shown as text: view mode, `display="text"`, `Value` and
+  `Column` bound by `field`, and a `{…}` that is just a path to the field (`{rank}` → "Expert"). Any other formula
+  sees the stored value (`{rank + 0}` → `2`), and a formula's result is never relabeled.
+- The schema builder shows an **Options** checkbox on string and number fields (and array items), with value and
+  label rows reordered by dragging (`app/components/schema/Options.vue`).
 
 ### Content fields: references and local data (decided)
 - Schema type `{ type: "content", contentTypeId, allow: "reference" | "local" | "both", required }` replaces the old
@@ -197,14 +220,26 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 ### Repeaters
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
-| `List` | `field` (array), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder; `field="."` = the item itself (arrays of primitives) |
-| `Table` / `Column` | Table: `field`; Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row |
+| `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
+| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row |
+
+Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
+skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even
+with nothing stored, and editing a cell writes into it (creating the objects on the way); there are no add, remove,
+or reorder controls (`addLabel` is a `flag-no-effect` warning). The entries must all be alike: the same type and
+fields (labels, descriptions, and `required` may differ), each a struct (`Table` needs this) or a single value
+(`string`, `number`, `boolean`, `scalar`; only `List`). `structRows` in `validate.ts` decides this, and validated
+`List`/`Table` nodes carry the rows as `entries`; relative paths are checked against the first entry, which stands for
+all. Free-form objects and non-strict extra keys are never repeated over. In a struct row, `field="."` is labeled by
+its entry (`<List field="attributes"><Number field="." /></List>` shows "Str", "Dex", …, from the schema labels). Each
+row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `SheetScope.item`, `entryScopes` in
+`scope.ts`).
 
 ### Definitions and conditional display
 - `<Define name="prof" params="rank" formula="…" />`: a reusable formula, called as `prof(x)` (one without
   parameters as `pb()`) from any formula in the sheet. Only at the top level or directly inside `<Sheet>`; order
   doesn't matter; renders nothing. See "Formulas".
-- `show="{= expr}"` or `show="{field}"` (exactly one): `true` shows the tag, `false` or nothing hides it and
+- `show="expr"`, a bare formula like `formula=` (`show="hp > 0"`, `show="hasShield"`; no braces): `true` shows the tag, `false` or nothing hides it and
   everything in it, in every mode; the data is never cleared. It is evaluated in the tag's scope (a `List` or `Table`
   row inside one). Hidden tabs leave the tab list (if the selected one hides, the first visible one is selected; with
   none visible, `Tabs` renders nothing); a `RowDetails` hidden for a row takes away that row's expand button. Not on
@@ -217,7 +252,7 @@ Hiding a label (decided): `hideLabel` on any field tag or `Column`. The label is
 
 `validate()` in `shared/sheet/validate.ts`. Errors block sheet save; warnings are shown in the editor only.
 
-Schema-related warnings (the three "warning" rows marked \* below: a path or `{path}` interpolation not in a non-strict schema, and a path into a free-form `object`) are hidden unless
+Schema-related warnings (the three "warning" rows marked \* below: a path or `{…}` formula path not in a non-strict schema, and a path into a free-form `object`) are hidden unless
 the Sheet's own content type has `showSheetWarnings` on (`content_type.show_sheet_warnings`, default off; the switch
 is shown only while Strict schema is off). Referenced content types' flags are not consulted. Errors, and other warnings
 (e.g. a content type that could not be loaded), are never affected, and the "break existing sheets" check on content type
@@ -230,7 +265,7 @@ enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Di
 Formulas (errors unless noted; codes in parentheses):
 | Case | Result |
 |---|---|
-| Syntax error, with its exact line and column inside the attribute or `{= }` | error (`formula-syntax`) |
+| Syntax error, with its exact line and column inside the attribute or `{ }` | error (`formula-syntax`) |
 | Unknown function, wrong number of arguments | error (`formula-unknown-function`, `formula-arity`) |
 | Operator or argument type that can never work (`name + 1` on a text field) | error (`formula-type`) |
 | Result doesn't fit the tag (`Number`/`Tracker`: number, `Text`: text, `Checkbox`: true/false, `Column`: a single value, `show`: true/false/nothing, number attrs: number; any tag: a list or group of fields) or, for overrides, the field | error (`formula-result-type`) |
@@ -242,7 +277,7 @@ Formulas (errors unless noted; codes in parentheses):
 | `<Define>` name or parameter that looks like dice (`d6`) | error (`formula-reserved-name`, `invalid-attribute`) |
 | Two top-level overrides of the same field with different formulas | error (`computed-field-conflict`) |
 | An override (`field` and `formula`) on a required field | warning (`override-required`): going back to the computed value clears the field, which can't be saved |
-| An unclosed `{=` (no `}` within 1,000 characters or before a closing tag) | error (`unterminated-formula`) |
+| An unclosed `{` (no `}` within 1,000 characters or before a closing tag) | error (`unterminated-formula`) |
 | Over a limit (see "Formulas") | error (`formula-too-large`) |
 | Paths in formulas | the same rules as `field` paths above (strictness, free-form objects, `content-too-deep`, `showSheetWarnings`) |
 
@@ -256,11 +291,13 @@ the item):
 |---|---|---|
 | Path not in schema | error | warning\* (data may hold extra keys) |
 | Tag can't bind that field type (e.g. `Number` on a string) | error | error |
+| Free input on a field with options (e.g. `Text` on a choice field) | error | error |
+| `Select` with its own `options` on a field with schema options | warning (`options-ignored`; the schema wins) | same |
 | Field is `scalar` | binds `Field`, `Value`, `Column`; no paths below it | same |
 | Path goes into a free-form `object` | warning\* (not checked; shows whatever the data holds) | same |
-| `List`/`Table` on a non-array | error | error |
+| `List`/`Table` on a non-array (a struct whose entries aren't alike; `Table` on a struct of single values) | error | error |
 | Relative path inside a `List` of primitives (other than `.`) | error | error |
-| `{path}` interpolation not in schema | error | warning\* |
+| `{…}` formula path not in schema | error | warning\* |
 | Path crosses > 3 `content` fields | error | error |
 | Path continues into a `content` field | resolved against the referenced content type's schema (its strictness applies) | same |
 
@@ -284,7 +321,10 @@ ordinary markup, so it goes through the same parse/validate/render path as autho
   (the page header already shows the name, so no heading), then a `<Field>` per field.
 - `struct` field → its own `Section` titled by label, recursing. Free-form `object` → a `Section` with a `<Field>` (JSON editor).
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
-- Array of strings → `Tags`; other primitive arrays → `List field="."`.
+- Struct of alike structs whose fields are all primitive (skills, each with a rank) → a `Table` over its entries, with
+  an `itemLabel()` column first.
+- Array of strings → `Tags` (of choices → `Field`, a multiple select); other primitive arrays → `List field="."`.
+  A field with options gets a `Field`, which shows a `Select`.
 - `resourceLink` → `Ref`. `content` field → a `Section` (arrays: a `List` of `Collapsible`s titled `{x.name}`)
   showing the referenced content type's primitive fields, one level deep, plus the ref/custom picker in edit mode.
 - Order = schema key order. `content_type.schema` is `jsonb`, which does not preserve key order, so it becomes
@@ -503,8 +543,9 @@ every formula once; the renderer evaluates the compiled trees (`evaluateSheetFor
 ### Where formulas go
 - `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox`, `Field` (override), and as
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
-- `{= expr}` in text, in text attributes (`title="HP {= hp.max}"`), in the number attributes read when rendering
-  (`Tracker max`, `Number min`/`max`/`step`), and in `show="{= …}"`. In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
+- `show="expr"`: a bare formula, like `formula=`.
+- `{expr}` in text, in text attributes (`title="HP {hp.max}"`), and in the number attributes read when rendering
+  (`Tracker max`, `Number min`/`max`/`step`). In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
   there, but the editor's XML highlighting reads it as a tag.
 
 ### Grammar
@@ -516,11 +557,12 @@ Precedence, low to high: `or`; `and`; `==` `!=`; `<` `<=` `>` `>=` (can't be cha
 Paths are field paths as elsewhere: `stats.str`, `attacks.0.name`; `.` is the current item, `.name` an explicit
 relative path, `/name` the top level. `/` before a value starts a path from the top; after a value it divides.
 Reserved words (`and`, `or`, `not`, `true`, `false`, `null`): a field with one of these names is reached as `/and` or
-`.and`. `__proto__`, `constructor`, and `prototype` are never valid path segments or field keys.
+`.and`. Field names that read as dice (`d6`, `d20`, also as a path's first segment) are likewise reached as `/d6`.
+`__proto__`, `constructor`, and `prototype` are never valid path segments or field keys.
 
 Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
 parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't
-use one. Built-ins added after v1 (so far `list`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
+use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
 (it wins in that sheet, with a warning).
 
 ### Functions (v1)
@@ -534,9 +576,15 @@ use one. Built-ins added after v1 (so far `list`) go in `formulaLaterBuiltins`; 
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |
+| Rows | `itemKey()`: the current row's entry key in a struct (`'acrobatics'`), or its index in an array (from 0); `itemLabel()`: a struct entry's schema label, else its humanized key, and nothing in an array row. Only in a `List` or `Table` row or inside a per-item function (else `formula-no-item`; a `<Define>` body is checked at the top level, so pass them in as arguments) |
 
 In `sum(list, expr)` and the others, `expr` is evaluated once per item, scoped to the item like inside a `List`
-(relative paths are the item's, `/` the top level); these can nest two levels. `roll`, `dice`, `adv`, `dis`, and
+(relative paths are the item's, `/` the top level); these can nest two levels. `sum`, `count`, `any`, and `all` also
+take a path to a struct whose entries are alike, repeating over its schema entries like a struct `Table`
+(`count(skills, rank > 0)`, `sum(attributes)`); the evaluator doesn't know the schema, so the validator puts the
+entries on the path node (`entries`). Per-row constants, like each skill's attribute, come from a definition:
+`<Define name="skillAttr" params="s" formula="switch(s, 'acrobatics', 'dex', …)" />` called as
+`skillAttr(itemKey())`. `roll`, `dice`, `adv`, `dis`, and
 dice like `2d6` are reserved for dice rolls (an error now). Left out on purpose: regular expressions, dates,
 randomness, locale formatting. The editor's reference panel lists every function from the table in
 `formula-functions.ts`.

@@ -1,13 +1,19 @@
 import type { InjectionKey, Ref } from "vue";
 import {
+  choiceLabel,
+  fieldOptions,
+  type ContentFieldOption,
+} from "#shared/content-schema";
+import {
   formulaLimits,
   isFormulaError,
   type FormulaNode,
   type FormulaValue,
 } from "#shared/sheet/formula";
-import type { Interpolation, TextPart } from "#shared/sheet/parser";
+import type { TextPart } from "#shared/sheet/parser";
 import type { SheetDisplay } from "#shared/sheet/registry";
 import {
+  entryScopes,
   evaluateSheetFormula,
   formatFormulaValue,
   sheetCondition,
@@ -187,7 +193,11 @@ export function useSheet() {
     scope,
     resolve,
     evaluate,
-    items: (path: SheetPath) => itemScopes(resolve(path)),
+    // The rows of a List or Table: its array's items, or its struct's entries.
+    rows: (node: ValidatedElement) => {
+      const list = resolve(node.binding!.path);
+      return node.entries ? entryScopes(list, node.entries) : itemScopes(list);
+    },
     format: (value: unknown, format?: "plain" | "signed") =>
       formatSheetValue(value, context.refs.value, format),
     // A formula value as text ("" for errors and nothing).
@@ -220,16 +230,12 @@ export function useSheet() {
         context.refs.value,
         formulas(times),
       ),
-    // A number attribute: a literal, a {path}, or a {= formula} computed now.
+    // A number attribute: a literal, or a {formula} computed now.
     number: (value: AttrValue | undefined) => {
       if (typeof value === "number") return value;
       if (isCompiledFormula(value)) {
         const result = evaluate(value.ast);
         return typeof result === "number" && !isFormulaError(result) ? result : undefined;
-      }
-      if (value && typeof value === "object" && "path" in value) {
-        const resolved = resolve((value as Interpolation).path).value;
-        return typeof resolved === "number" ? resolved : undefined;
       }
       return undefined;
     },
@@ -281,6 +287,8 @@ export type SheetFieldDisplay =
   | "stat"
   | "boolean"
   | "tags"
+  // An array of choice values: a multiple select.
+  | "choices"
   | "tracker"
   | "ref"
   | "scalar"
@@ -314,6 +322,7 @@ export function sheetFieldDisplay(node: ValidatedElement): SheetFieldDisplay {
     case "Value":
       return "value";
   }
+  if (fieldOptions(binding?.field)) return "select";
   switch (binding?.field?.type) {
     case "string":
       return "text";
@@ -329,10 +338,27 @@ export function sheetFieldDisplay(node: ValidatedElement): SheetFieldDisplay {
     case "object":
       return "json";
     case "array":
-      return "tags";
+      return fieldOptions(binding!.field!.itemType) ? "choices" : "tags";
     default:
       return "value";
   }
+}
+
+// The options of a field with schema options (or of an array of them), or a
+// Select's own `options` list on a field without.
+export function sheetChoiceOptions(node: ValidatedElement): ContentFieldOption[] | undefined {
+  const field = node.binding?.field;
+  const options =
+    fieldOptions(field) ?? (field?.type === "array" ? fieldOptions(field.itemType) : undefined);
+  if (options) return options;
+  if (node.tag === "Select")
+    return ((node.attrs.options as string[] | undefined) ?? []).map((value) => ({ value }));
+  return undefined;
+}
+
+// A stored value as its option's label; other values as they are.
+export function sheetChoiceText(options: ContentFieldOption[] | undefined, value: unknown) {
+  return options ? choiceLabel(options, value) : undefined;
 }
 
 // Hook class plus the author's classes, for a tag's root element.

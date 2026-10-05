@@ -3,6 +3,7 @@
 // are in markup (for completion and highlighting).
 
 import {
+  fieldOptions,
   MAX_CONTENT_DEPTH,
   type ContentFieldSchema,
   type ContentTypeSchema,
@@ -58,6 +59,8 @@ export function sheetFieldPaths(schemas: SheetSchemas): SheetFieldPath[] {
 export function sampleSheetData(schemas: SheetSchemas): Record<string, unknown> {
   const sample = (field: ContentFieldSchema, key: string, depth: number): unknown => {
     const label = field.label ?? humanizeFieldName(key);
+    const options = fieldOptions(field);
+    if (options?.length) return options[0]!.value;
     switch (field.type) {
       case "string":
         return `Sample ${label.toLowerCase()}`;
@@ -95,9 +98,9 @@ export function sampleSheetData(schemas: SheetSchemas): Record<string, unknown> 
   return { name: "Sample Name", ...record(schemas.root.schema, 0) };
 }
 
-// A formula in markup: the expression of a `formula="…"` attribute or of a
-// `{= …}` (without the braces). `params` are the parameters of the
-// `<Define>` it belongs to. An unclosed `{=` runs to the end of its line.
+// A formula in markup: the expression of a `formula="…"` or `show="…"`
+// attribute or of a `{…}` (without the braces). `params` are the parameters of
+// the `<Define>` it belongs to. An unclosed `{` runs to the end of its line.
 export interface MarkupFormulaRange {
   from: number;
   to: number;
@@ -108,7 +111,7 @@ const tagStart = /<([A-Za-z][A-Za-z0-9]*)/y;
 const attributeStart = /([A-Za-z_][A-Za-z0-9_-]*)\s*=\s*(["'])/y;
 const paramsAttribute = /\bparams\s*=\s*(["'])(.*?)\1/s;
 
-// The `}` that ends a `{=` formula body starting at `from` (skipping quoted
+// The `}` that ends a `{…}` formula body starting at `from` (skipping quoted
 // text), or -1.
 function formulaClose(doc: string, from: number, end: number) {
   end = Math.min(end, from + formulaLimits.maxLength + 1);
@@ -126,7 +129,7 @@ function formulaClose(doc: string, from: number, end: number) {
   return -1;
 }
 
-// `{= …}` formulas between `from` and `end`.
+// `{…}` formulas between `from` and `end`.
 function interpolatedFormulas(doc: string, from: number, end: number, ranges: MarkupFormulaRange[]) {
   let index = from;
   while (index < end) {
@@ -134,11 +137,11 @@ function interpolatedFormulas(doc: string, from: number, end: number, ranges: Ma
       index += 2;
       continue;
     }
-    if (doc[index] === "{" && doc[index + 1] === "=") {
-      const close = formulaClose(doc, index + 2, end);
+    if (doc[index] === "{") {
+      const close = formulaClose(doc, index + 1, end);
       const lineEnd = doc.indexOf("\n", index);
       const stop = close === -1 ? (lineEnd === -1 || lineEnd > end ? end : lineEnd) : close;
-      ranges.push({ from: index + 2, to: stop, params: [] });
+      ranges.push({ from: index + 1, to: stop, params: [] });
       index = close === -1 ? stop : close + 1;
       continue;
     }
@@ -161,9 +164,9 @@ export function markupFormulaRanges(doc: string): MarkupFormulaRange[] {
     tagStart.lastIndex = index;
     const tag = doc[index] === "<" ? tagStart.exec(doc) : null;
     if (!tag) {
-      // Skip `{= … }` in text whole, so a < inside isn't read as a tag.
-      if (doc[index] === "{" && doc[index + 1] === "=") {
-        const close = formulaClose(doc, index + 2, doc.length);
+      // Skip `{…}` in text whole, so a < inside isn't read as a tag.
+      if (doc[index] === "{") {
+        const close = formulaClose(doc, index + 1, doc.length);
         if (close !== -1) {
           index = close + 1;
           continue;
@@ -187,7 +190,7 @@ export function markupFormulaRanges(doc: string): MarkupFormulaRange[] {
       const valueStart = cursor + attribute[0].length;
       const close = doc.indexOf(attribute[2]!, valueStart);
       const valueEnd = close === -1 ? doc.length : close;
-      if (attribute[1]!.toLowerCase() === "formula") {
+      if (["formula", "show"].includes(attribute[1]!.toLowerCase())) {
         tagRanges.push({ from: valueStart, to: valueEnd, params: [] });
       } else {
         interpolatedFormulas(doc, valueStart, valueEnd, tagRanges);

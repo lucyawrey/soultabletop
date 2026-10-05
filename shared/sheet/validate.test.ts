@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ContentTypeRules } from "../content-schema";
 import { pathfinder2eMarkup, pathfinder2eSchemas } from "./fixtures/pathfinder2e";
+import type { FormulaNode } from "./formula";
 import { parseSheetMarkup } from "./parser";
 import { humanizeFieldName } from "./registry";
 import {
@@ -148,7 +149,7 @@ describe("valid sheets", () => {
     expect(node.attrs).toMatchObject({
       field: "hp",
       min: -3,
-      max: { path: "hpMax" },
+      max: { source: "hpMax", type: { kind: "number" } },
       step: 0.5,
       live: false,
       locked: true,
@@ -195,7 +196,7 @@ describe("bindings", () => {
       "error wrong-field-type: <Text> can't show \"attacks\": it's an array; use <List> or <Table>",
     ]);
     expect(messages(`<Field field="stats" />`)).toEqual([
-      "error wrong-field-type: <Field> can't show \"stats\": it's a struct; use a <Section> with fields inside",
+      "error wrong-field-type: <Field> can't show \"stats\": it's a struct; use a <Section> with fields inside, or a <List> over its entries",
     ]);
     expect(errorCodes(`<Table field="tags"><Column field="." /></Table>`)).toEqual(["wrong-field-type"]);
     expect(errorCodes(`<Tags field="attacks" />`)).toEqual(["wrong-field-type"]);
@@ -323,14 +324,12 @@ describe("paths", () => {
 
   it("checks {paths} in text and attributes", () => {
     expect(errorCodes(`<Note>{nope}</Note><Section title="{nope2}" />`)).toEqual(["unknown-field", "unknown-field"]);
-    expect(messages(`<Note>{stats}</Note>`)).toEqual([
-      "warning interpolates-object: {stats} is an object and will show as raw data",
-    ]);
+    expect(errorCodes(`<Note>{stats}</Note>`)).toEqual(["formula-result-type"]);
   });
 
   it("requires number attributes given as {path} to point at numbers", () => {
     expect(messages(`<Tracker field="hp" max="{notes}" />`)).toEqual([
-      "error invalid-attribute: max=\"{notes}\" must point at a number field, but it's a text field",
+      "error formula-result-type: max must be a number, but {notes} gives text",
     ]);
   });
 });
@@ -564,8 +563,8 @@ describe("formulas", () => {
     });
     const [syntax] = compile('<Value formula="hp + * 2" />').diagnostics;
     expect(syntax).toMatchObject({ code: "formula-syntax", loc: { start: { line: 1, column: 22 } } });
-    const [inText] = compile("<Note>HP {= hp +}</Note>").diagnostics;
-    expect(inText).toMatchObject({ code: "formula-syntax", loc: { start: { column: 17 } } });
+    const [inText] = compile("<Note>HP {hp +}</Note>").diagnostics;
+    expect(inText).toMatchObject({ code: "formula-syntax", loc: { start: { column: 15 } } });
   });
 
   it("reports type errors, unknown functions, arity, and dice", () => {
@@ -583,26 +582,26 @@ describe("formulas", () => {
     );
   });
 
-  it("compiles {= } in text and attributes", () => {
-    const { nodes, diagnostics } = compile('<Section title="HP {= hp * 2}">Max {= hpMax}</Section>');
+  it("compiles {} in text and attributes", () => {
+    const { nodes, diagnostics } = compile('<Section title="HP {hp * 2}">Max {hpMax}</Section>');
     expect(diagnostics).toEqual([]);
     const section = nodes[0] as ValidatedElement;
-    expect((section.attrs.title as unknown[])[1]).toMatchObject({ formula: " hp * 2", ast: { type: "binary" } });
+    expect((section.attrs.title as unknown[])[1]).toMatchObject({ formula: "hp * 2", ast: { type: "binary" } });
     expect(section.children[0]).toMatchObject({ type: "text", parts: ["Max ", { ast: { type: "path" } }] });
-    expect(errorCodes("<Note>{= tags}</Note>")).toEqual(["formula-result-type"]);
+    expect(errorCodes("<Note>{tags}</Note>")).toEqual(["formula-result-type"]);
   });
 
-  it("takes number attributes as {= formula}", () => {
-    expect(messages('<Tracker field="hp" max="{= hpMax + stats.str}" />')).toEqual([]);
-    const node = element('<Tracker field="hp" max="{= hpMax * 2}" />');
-    expect(node.attrs.max).toMatchObject({ source: " hpMax * 2", type: { kind: "number" } });
-    expect(messages('<Tracker field="hp" max="{= notes}" />')).toEqual([
-      "error formula-result-type: max must be a number, but {= notes} gives text",
+  it("takes number attributes as {formula}", () => {
+    expect(messages('<Tracker field="hp" max="{hpMax + stats.str}" />')).toEqual([]);
+    const node = element('<Tracker field="hp" max="{hpMax * 2}" />');
+    expect(node.attrs.max).toMatchObject({ source: "hpMax * 2", type: { kind: "number" } });
+    expect(messages('<Tracker field="hp" max="{notes}" />')).toEqual([
+      "error formula-result-type: max must be a number, but {notes} gives text",
     ]);
   });
 
   it("limits formulas per sheet", () => {
-    const many = Array.from({ length: 2_001 }, () => "{= 1}").join(" ");
+    const many = Array.from({ length: 2_001 }, () => "{1}").join(" ");
     expect(errorCodes(`<Note>${many}</Note>`)).toEqual(["formula-too-large"]);
   });
 });
@@ -701,36 +700,38 @@ describe("newSheetErrors", () => {
 });
 
 describe("show", () => {
-  it("takes one {= formula} or one {field}, on every tag but Column", () => {
-    expect(messages('<Section show="{= hp > 0}"><Note show="{alive}">x</Note></Section>')).toEqual([]);
-    expect(messages('<Tabs><Tab label="A" show="{= hp > 1}">a</Tab></Tabs>')).toEqual([]);
-    expect(messages('<Table field="attacks"><Column field="name" /><RowDetails show="{= bonus > 0}">x</RowDetails></Table>')).toEqual([]);
-    expect(messages('<Value field="hp" show=" {= hp > 1} " />')).toEqual([]);
-    expect(messages('<Table field="attacks"><Column field="name" show="{= true}" /></Table>')).toEqual([
+  it("takes a bare formula, on every tag but Column", () => {
+    expect(messages('<Section show="hp > 0"><Note show="alive">x</Note></Section>')).toEqual([]);
+    expect(messages('<Tabs><Tab label="A" show="hp > 1">a</Tab></Tabs>')).toEqual([]);
+    expect(messages('<Table field="attacks"><Column field="name" /><RowDetails show="bonus > 0">x</RowDetails></Table>')).toEqual([]);
+    expect(messages('<Value field="hp" show=" hp > 1 " />')).toEqual([]);
+    expect(messages('<Table field="attacks"><Column field="name" show="true" /></Table>')).toEqual([
       "error unknown-attribute: <Column> has no show attribute; use show on the Table, or a formula in the column",
     ]);
   });
 
-  it("rejects anything else", () => {
-    const rule = "error invalid-attribute: show must be one {= formula} or one {field}, like show=\"{= level >= 5}\"";
-    expect(messages('<Note show="true">x</Note>')).toEqual([rule]);
-    expect(messages('<Note show="{alive}{alive}">x</Note>')).toEqual([rule]);
-    expect(messages('<Note show="x {alive}">x</Note>')).toEqual([rule]);
+  it("rejects braces and an empty formula", () => {
+    expect(messages('<Note show="{alive}">x</Note>')).toEqual([
+      'error formula-syntax: Unexpected "{"; inside a formula, refer to fields by name, like level, without braces',
+    ]);
+    expect(messages('<Note show="">x</Note>')).toEqual([
+      'error invalid-attribute: show needs a formula, like show="level >= 5"',
+    ]);
   });
 
   it("needs true, false, or nothing", () => {
-    expect(messages('<Note show="{= hp}">x</Note>')).toEqual([
-      "error formula-result-type: show must give true or false, but {= hp} gives a number",
+    expect(messages('<Note show="hp">x</Note>')).toEqual([
+      "error formula-result-type: show must give true or false, but hp gives a number",
     ]);
-    expect(messages('<Note show="{notes}">x</Note>')[0]).toMatch(
-      /^error formula-result-type: show="\{notes\}" must point at a boolean field, but it's a text field/,
+    expect(messages('<Note show="notes">x</Note>')[0]).toMatch(
+      /^error formula-result-type: show must give true or false, but notes gives text/,
     );
-    expect(messages('<Note show="{= extra}">x</Note>')).toEqual([]);
+    expect(messages('<Note show="extra">x</Note>')).toEqual([]);
   });
 
   it("evaluates in the tag's scope and still validates hidden content", () => {
-    expect(messages('<List field="attacks"><Note show="{= bonus > 0}">{name}</Note></List>')).toEqual([]);
-    expect(errorCodes('<Section show="{= false}"><Number field="nope" /></Section>')).toEqual(["unknown-field"]);
+    expect(messages('<List field="attacks"><Note show="bonus > 0">{name}</Note></List>')).toEqual([]);
+    expect(errorCodes('<Section show="false"><Number field="nope" /></Section>')).toEqual(["unknown-field"]);
   });
 });
 
@@ -781,13 +782,13 @@ describe("formula types from the schema", () => {
 
 describe("dynamic number attributes", () => {
   it("take {…} only where they're computed when rendering", () => {
-    expect(messages('<Heading level="{= 2}">Hi</Heading>')).toEqual([
+    expect(messages('<Heading level="{2}">Hi</Heading>')).toEqual([
       "error invalid-attribute: level on <Heading> must be a plain number, not {…}",
     ]);
     expect(errorCodes('<Grid cols="{hp}">x</Grid>')).toEqual(["invalid-attribute"]);
-    expect(errorCodes('<Section span="{= 2}">x</Section>')).toEqual(["invalid-attribute"]);
-    expect(messages('<Number field="hp" min="{= 0}" max="{hpMax}" step="{= 1}" />')).toEqual([]);
-    expect(messages('<Tracker field="hp" max="{= hpMax}" />')).toEqual([]);
+    expect(errorCodes('<Section span="{2}">x</Section>')).toEqual(["invalid-attribute"]);
+    expect(messages('<Number field="hp" min="{0}" max="{hpMax}" step="{1}" />')).toEqual([]);
+    expect(messages('<Tracker field="hp" max="{hpMax}" />')).toEqual([]);
   });
 });
 
@@ -835,9 +836,189 @@ describe("review follow-ups", () => {
     ]);
   });
 
-  it("explains a quote that cuts a {= } attribute short", () => {
-    expect(messages('<Section title="{= concat("a", hp)}">x</Section>')).toContain(
+  it("explains a quote that cuts a {} attribute short", () => {
+    expect(messages('<Section title="{concat("a", hp)}">x</Section>')).toContain(
       "error formula-syntax: The formula ends at this \"; inside title=\"…\", write text in single quotes, like 'expert'",
     );
+  });
+});
+
+describe("choice fields", () => {
+  const ranks = [{ value: 0, label: "Untrained" }, { value: 2, label: "Expert" }];
+  const choiceSchemas: SheetSchemas = {
+    root: {
+      hasStrictSchema: true,
+      schema: {
+        size: { type: "string", options: [{ value: "s", label: "Small" }, { value: "m" }] },
+        rank: { type: "number", options: ranks },
+        level: { type: "number" },
+        notes: { type: "string" },
+        traits: { type: "array", itemType: { type: "string", options: [{ value: "brave" }] } },
+        lores: {
+          type: "array",
+          itemType: { type: "struct", entries: { name: { type: "string" }, rank: { type: "number", options: ranks } } },
+        },
+      },
+    },
+    types: {},
+  };
+  const choiceErrors = (markup: string) => errorCodes(markup, choiceSchemas);
+  const choiceMessages = (markup: string) => messages(markup, choiceSchemas);
+
+  it("takes a Select's options from the schema, also on number fields", () => {
+    expect(
+      choiceMessages(`
+        <Select field="size" />
+        <Select field="rank" />
+        <Field field="rank" />
+        <Field field="traits" />
+        <Value field="rank" />
+        <Table field="lores"><Column field="name" /><Column field="rank" /></Table>
+        <Value formula="rank * 2" />
+        <Number formula="rank + level" />
+      `),
+    ).toEqual([]);
+  });
+
+  it("ignores a Select's own list on a field with options, with a warning", () => {
+    expect(choiceMessages(`<Select field="size" options="a, b" />`)).toEqual([
+      'warning options-ignored: "size" has options in the schema, so this options list is ignored; remove it',
+    ]);
+  });
+
+  it("keeps a Select's own list on a text field without options, and needs one there", () => {
+    expect(choiceMessages(`<Select field="notes" options="a, b" />`)).toEqual([]);
+    expect(choiceMessages(`<Select field="notes" />`)).toEqual([
+      'error missing-attribute: <Select> needs an options attribute: "notes" has no options in the schema',
+    ]);
+    expect(choiceErrors(`<Select field="level" options="1, 2" />`)).toEqual(["wrong-field-type"]);
+  });
+
+  it("rejects free inputs on fields with options", () => {
+    for (const markup of [
+      `<Text field="size" />`,
+      `<Number field="rank" />`,
+      `<Number field="rank" formula="2" />`,
+      `<Tracker field="rank" max="4" />`,
+      `<Markdown field="size" />`,
+      `<Image field="size" />`,
+      `<Tags field="traits" />`,
+    ]) {
+      expect(choiceErrors(markup), markup).toEqual(["wrong-field-type"]);
+    }
+    expect(choiceMessages(`<Text field="size" />`)).toEqual([
+      'error wrong-field-type: <Text> can\'t show "size": it has options; use <Select> or <Field>',
+    ]);
+    expect(choiceErrors(`<Field field="rank" formula="2" />`)).toEqual(["invalid-attribute"]);
+  });
+
+  it("marks {path} text that shows a choice field's label", () => {
+    const { nodes } = compileSheet(`<Note>{size} {rank} {rank + 1} {level}</Note>`, choiceSchemas);
+    const parts = (first(nodes).children[0] as { parts: unknown[] }).parts;
+    const options = parts.map((part) => (typeof part === "object" ? (part as { options?: unknown }).options : null));
+    expect(options).toEqual([
+      choiceSchemas.root.schema.size!.type === "string" && choiceSchemas.root.schema.size!.options,
+      null,
+      ranks,
+      null,
+      undefined,
+      null,
+      undefined,
+    ]);
+  });
+});
+
+describe("repeating over a struct's entries", () => {
+  const rank = { type: "struct" as const, entries: { rank: { type: "number" as const } } };
+  const structSchemas: SheetSchemas = {
+    root: {
+      hasStrictSchema: true,
+      schema: {
+        skills: {
+          type: "struct",
+          entries: { acrobatics: rank, arcana: { ...rank, label: "Arcana Lore" } },
+        },
+        attributes: {
+          type: "struct",
+          entries: { str: { type: "number", label: "Str" }, dex: { type: "number", required: true } },
+        },
+        mixed: { type: "struct", entries: { a: { type: "number" }, b: { type: "string" } } },
+        attacks: { type: "array", itemType: { type: "struct", entries: { bonus: { type: "number" } } } },
+      },
+    },
+    types: {},
+  };
+  const structMessages = (markup: string) => messages(markup, structSchemas);
+  const structErrors = (markup: string) => errorCodes(markup, structSchemas);
+
+  it("binds Table and List to structs of alike entries, listing the entries", () => {
+    const { nodes, diagnostics } = compile(
+      `<Table field="skills">
+        <Column formula="itemLabel()" label="Skill" />
+        <Column field="rank" />
+        <Column formula="concat(itemKey(), ': ', text(rank))" />
+      </Table>
+      <List field="attributes"><Number field="." /></List>`,
+      structSchemas,
+    );
+    expect(diagnostics).toEqual([]);
+    const [table, list] = nodes.filter((node): node is ValidatedElement => node.type === "element");
+    expect(table!.entries).toEqual([
+      { key: "acrobatics", label: "Acrobatics" },
+      { key: "arcana", label: "Arcana Lore" },
+    ]);
+    expect(list!.entries).toEqual([
+      { key: "str", label: "Str" },
+      { key: "dex", label: "Dex" },
+    ]);
+    // `.` takes each row's label when rendered, not the first entry's.
+    expect((list!.children[0] as ValidatedElement).binding?.label).toBe("");
+  });
+
+  it("explains structs that can't be repeated over", () => {
+    expect(structMessages(`<Table field="attributes"><Column field="." /></Table>`)).toEqual([
+      'error wrong-field-type: <Table> can\'t show "attributes": its entries aren\'t structs; use <List>',
+    ]);
+    expect(structMessages(`<List field="mixed"><Value field="." /></List>`)).toEqual([
+      'error wrong-field-type: <List> can\'t repeat over "mixed": a struct\'s entries must all be alike (the same type and fields) and each a struct or a single value',
+    ]);
+    expect(structMessages(`<Field field="skills" />`)).toEqual([
+      'error wrong-field-type: <Field> can\'t show "skills": it\'s a struct; use a <Section> with fields inside, or a <List> or <Table> over its entries',
+    ]);
+  });
+
+  it("warns that addLabel does nothing on a struct List", () => {
+    expect(structMessages(`<List field="attributes" addLabel="Add"><Value field="." /></List>`)).toEqual([
+      "warning flag-no-effect: addLabel has no effect on a <List> of a struct's entries: its rows come from the schema",
+    ]);
+  });
+
+  it("types itemKey() and itemLabel() by the row, and rejects them outside one", () => {
+    // In a struct row the key is text; in an array row, a number.
+    expect(structErrors(`<Table field="skills"><Column formula="itemKey() + 1" /></Table>`)).toEqual(["formula-type"]);
+    expect(structErrors(`<Table field="attacks"><Column formula="itemKey() + 1" /></Table>`)).toEqual([]);
+    expect(structErrors(`<Value formula="sum(attacks, bonus + itemKey())" />`)).toEqual([]);
+    expect(structMessages(`<Value formula="itemKey()" />`)).toEqual([
+      "error formula-no-item: itemKey() works only in a List or Table row, or inside sum, count, any, or all",
+    ]);
+    expect(structErrors(`<Table field="skills"><Column field="rank" /></Table><Define name="k" formula="itemLabel()" /><Value formula="k()" />`)).toContain("formula-no-item");
+  });
+
+  it("lets per-item functions repeat over a struct's entries", () => {
+    const { nodes, diagnostics } = compile(
+      `<Value formula="count(skills, rank > 0)" /><Value formula="sum(attributes)" /><Value formula="sum(skills, length(itemLabel()))" />`,
+      structSchemas,
+    );
+    expect(diagnostics).toEqual([]);
+    const first = nodes[0] as ValidatedElement;
+    const call = first.formula!.ast as Extract<FormulaNode, { type: "call" }>;
+    expect(call.args[0]).toMatchObject({ type: "path", entries: [{ key: "acrobatics" }, { key: "arcana" }] });
+    expect(structErrors(`<Value formula="sum(mixed)" />`)).toEqual(["formula-type"]);
+  });
+
+  it("lets a definition named like the new functions keep working, with a warning", () => {
+    expect(structMessages(`<Define name="itemKey" formula="1" /><Value formula="itemKey()" />`)).toEqual([
+      expect.stringMatching(/^warning formula-shadows-builtin/),
+    ]);
   });
 });

@@ -17,7 +17,7 @@ export const formulaLimits = {
   maxArgs: 32,
   maxDefinitions: 200,
   maxParams: 8,
-  // Formulas (attributes, `{= }` parts, and `show`) in one sheet.
+  // Formulas (attributes, `{…}` parts, and `show`) in one sheet.
   maxSites: 2_000,
   // Per-item arguments inside per-item arguments (`sum(a, sum(b, x))` is 2).
   maxItemNesting: 2,
@@ -64,7 +64,9 @@ export type FormulaNode =
   | { type: "string"; value: string; loc: Loc }
   | { type: "boolean"; value: boolean; loc: Loc }
   | { type: "null"; loc: Loc }
-  | { type: "path"; path: SheetPath; text: string; loc: Loc }
+  // `entries`: set by the validator on a path to a struct that a per-item
+  // function like sum repeats over (its schema entries, in order).
+  | { type: "path"; path: SheetPath; text: string; loc: Loc; entries?: { key: string; label: string }[] }
   | { type: "param"; name: string; loc: Loc }
   | { type: "unary"; op: "-" | "not"; operand: FormulaNode; loc: Loc }
   | {

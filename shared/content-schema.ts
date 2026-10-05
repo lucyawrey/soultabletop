@@ -20,9 +20,19 @@ interface ContentFieldBase {
   description?: string;
 }
 
+// One allowed value of a choice field; `label` is what sheets show (the value
+// as text when absent).
+export interface ContentFieldOption<V extends string | number = string | number> {
+  value: V;
+  label?: string;
+}
+
 export type ContentFieldSchema = ContentFieldBase &
   (
-    | { type: "string" | "number" | "boolean" }
+    // `options` makes a choice field: only the listed values are valid.
+    | { type: "string"; options?: ContentFieldOption<string>[] }
+    | { type: "number"; options?: ContentFieldOption<number>[] }
+    | { type: "boolean" }
     // One string, number, boolean, or null (never an object or array).
     | { type: "scalar" }
     | { type: "array"; itemType: ContentFieldSchema }
@@ -39,6 +49,45 @@ export type ContentFieldSchema = ContentFieldBase &
   );
 
 export type ContentTypeSchema = Record<string, ContentFieldSchema>;
+
+export const MAX_FIELD_OPTIONS = 200;
+export const MAX_OPTION_LABEL_LENGTH = 100;
+
+// A choice field's options, or undefined for any other field.
+export function fieldOptions(
+  field: ContentFieldSchema | undefined,
+): ContentFieldOption[] | undefined {
+  if (field?.type !== "string" && field?.type !== "number") return undefined;
+  return field.options;
+}
+
+export function optionLabel(option: ContentFieldOption) {
+  return option.label ?? String(option.value);
+}
+
+// The label of `value` among `options`, or undefined if it isn't one of them.
+export function choiceLabel(options: ContentFieldOption[], value: unknown) {
+  const option = options.find((item) => item.value === value);
+  return option && optionLabel(option);
+}
+
+// Problems with a field's `options` beyond their shape (see
+// `contentTypeSchemaSchema`): count, label length, and duplicate values.
+export function fieldOptionsError(options: ContentFieldOption[]): string | undefined {
+  if (!options.length) return "needs at least one option";
+  if (options.length > MAX_FIELD_OPTIONS)
+    return `has more than ${MAX_FIELD_OPTIONS} options`;
+  const seen = new Set<string | number>();
+  for (const option of options) {
+    if (typeof option.value === "number" && !Number.isFinite(option.value))
+      return "has an option that isn't a finite number";
+    if (seen.has(option.value)) return `lists the option ${JSON.stringify(option.value)} twice`;
+    seen.add(option.value);
+    if (option.label !== undefined && (!option.label.trim() || option.label.length > MAX_OPTION_LABEL_LENGTH))
+      return `has an option label that is empty or longer than ${MAX_OPTION_LABEL_LENGTH} characters`;
+  }
+  return undefined;
+}
 
 export const NAME_FIELD = "name";
 
@@ -93,8 +142,8 @@ export function referencedContentTypeIds(
 }
 
 // Starting data for new Content created without data: required fields get
-// empty values ("", 0, false, null, [], {}; a struct with its own required
-// entries filled the same way). Resource links and content fields have no
+// empty values ("", 0, false, null, [], {}; a choice field its first option; a
+// struct with its own required entries filled the same way). Resource links and content fields have no
 // valid empty value, so they are left out for the user to fill in.
 export function defaultContentData(
   schema: ContentTypeSchema,
@@ -103,6 +152,11 @@ export function defaultContentData(
   const data: Record<string, unknown> = {};
   for (const [key, field] of Object.entries(schema)) {
     if (!field.required) continue;
+    const options = fieldOptions(field);
+    if (options?.length) {
+      data[key] = options[0]!.value;
+      continue;
+    }
     switch (field.type) {
       case "string":
         data[key] = "";
