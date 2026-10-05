@@ -50,6 +50,24 @@ export function requireName(value: unknown) {
   return value.trim();
 }
 
+export const MAX_DESCRIPTION_LENGTH = 20_000;
+
+// A resource's Markdown description: text up to MAX_DESCRIPTION_LENGTH
+// characters, or null (or blank text) for none.
+export function requireDescription(value: unknown): string | null {
+  if (value === null) return null;
+  if (typeof value !== "string") {
+    throw createError({ statusCode: 400, statusMessage: "description must be text or null" });
+  }
+  if (value.length > MAX_DESCRIPTION_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `description can be at most ${MAX_DESCRIPTION_LENGTH.toLocaleString("en-US")} characters`,
+    });
+  }
+  return value.trim() ? value : null;
+}
+
 export async function requireResourceEditor(
   user: Pick<User, "id" | "name">,
   resourceId: string,

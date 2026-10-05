@@ -2,7 +2,7 @@ import { and, count, eq, or, sql } from "drizzle-orm";
 import { alias, type PgColumn } from "drizzle-orm/pg-core";
 import { content, contentType, group, resource, sheet } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
-import { contentTypeListColumns } from "../../utils/list-columns";
+import { contentTypeListColumns, resourceListColumns } from "../../utils/list-columns";
 import { useDatabase } from "../../utils/database";
 import {
   listOrder,
@@ -80,7 +80,7 @@ export default defineEventHandler(async (event) => {
       const select = database
         .select({
           type: contentTypeListColumns,
-          resource,
+          resource: resourceListColumns,
           official: officialColumn,
           ownerReadableId: ownerReadableIdColumn,
           sheetCount: readableCount(sheet, sheet.contentTypeId, viewer),

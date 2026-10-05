@@ -1,3 +1,4 @@
+import { resourceListColumns } from "../../utils/list-columns";
 import { count, eq, sql } from "drizzle-orm";
 import { campaign, campaignMembership, group, resource } from "../../database/schema";
 import { requireAuthenticatedUser } from "../../utils/auth";
@@ -51,7 +52,7 @@ export default defineEventHandler(async (event) => {
       const select = database
         .select({
           campaign,
-          resource,
+          resource: resourceListColumns,
           official: officialColumn,
           ownerReadableId: ownerReadableIdColumn,
           memberCount: memberCount(),

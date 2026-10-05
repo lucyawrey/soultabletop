@@ -17,6 +17,7 @@ interface SystemDetail {
   canEdit: boolean;
   ownerGroupId: string | null;
   canChangeOwner: boolean;
+  description: string | null;
 }
 
 interface ContentTypeOption {
@@ -100,6 +101,11 @@ async function submitForm() {
   }
 }
 
+async function saveDescription(description: string | null) {
+  await $fetch(`/api/system/${id.value}`, { method: "PATCH", body: { description } });
+  await refresh();
+}
+
 const isDeleteOpen = ref(false);
 const deleteBusy = ref(false);
 const deleteError = ref("");
@@ -164,6 +170,13 @@ async function remove() {
       </DetailHeader>
 
       <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div class="space-y-6">
+        <ResourceDescription
+          :description="system.description"
+          :can-edit="system.canEdit"
+          :save="saveDescription"
+          kind="system"
+        />
         <DetailPanel title="Content Types">
           <template v-if="loggedIn" #actions>
             <UButton
@@ -208,6 +221,7 @@ async function remove() {
             No content types for this system yet.
           </p>
         </DetailPanel>
+        </div>
 
         <AboutPanel
           :facts="[

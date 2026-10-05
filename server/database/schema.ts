@@ -273,6 +273,9 @@ export const resource = pgTable(
     }),
     readableId: text("readable_id").notNull(),
     name: text("name").notNull(),
+    // Markdown shown on the resource's page; null for none. Left out of list
+    // endpoints (see `resourceListColumns`).
+    description: text("description"),
     isPubliclyReadable: boolean("is_publicly_readable")
       .default(false)
       .notNull(),

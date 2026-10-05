@@ -3,7 +3,7 @@ import { and, count, eq, exists, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { content, contentType, group, resource } from "../../database/schema";
 import { getAuthenticatedUser } from "../../utils/auth";
-import { contentListColumns } from "../../utils/list-columns";
+import { contentListColumns, resourceListColumns } from "../../utils/list-columns";
 import { useDatabase } from "../../utils/database";
 import { readableBy, type ListViewer } from "../../utils/resource-access-sql";
 import { requiresReadableType } from "../../utils/resource-list-filter";
@@ -106,7 +106,7 @@ export default defineEventHandler(async (event) => {
       const select = database
         .select({
           item: contentListColumns,
-          resource,
+          resource: resourceListColumns,
           systemId: contentType.systemId,
           official: officialColumn,
           ownerReadableId: ownerReadableIdColumn,
