@@ -29,14 +29,18 @@ import {
 import { formatFormulaNumber } from "./formula-functions";
 import type { TextPart } from "./parser";
 import {
+  entryScopes,
   findRef,
   isRecord,
+  itemScopes,
+  resolveSheetPath,
   type SheetRefs,
   type SheetScope,
 } from "./scope";
 import {
   isCompiledFormula,
   type AttrValue,
+  type ValidatedElement,
   type SheetComputedField,
   type SheetDefinition,
   type SheetSchemas,
@@ -195,11 +199,13 @@ function formulaEnv(
   scope: SheetScope,
   refs: SheetRefs,
   formulas: SheetFormulaDefinitions,
+  params?: Readonly<Record<string, FormulaValue>>,
 ): FormulaEnv {
   return {
     root,
     scope,
     refs,
+    params,
     editing: formulas.editing ?? false,
     budget: { steps: formulas.stepBudget ?? formulaBudget().steps },
     picked: new WeakMap(),
@@ -243,15 +249,62 @@ function formulaEnv(
   };
 }
 
-// A formula's value in `scope`. Never throws.
+// A formula's value in `scope`, with `params` (a Button's `amount`). Never
+// throws.
 export function evaluateSheetFormula(
   ast: FormulaNode,
   root: SheetScope,
   scope: SheetScope,
   refs: SheetRefs,
   formulas: SheetFormulaDefinitions = noDefinitions,
+  params?: Readonly<Record<string, FormulaValue>>,
 ): FormulaValue {
-  return evaluateFormula(ast, formulaEnv(root, scope, refs, formulas));
+  return evaluateFormula(ast, formulaEnv(root, scope, refs, formulas, params));
+}
+
+// One value a Button writes: `value` at `path`, which held `previous` (for
+// Undo). `undefined` removes the key.
+export interface SheetWrite {
+  path: (string | number)[];
+  value: unknown;
+  previous: unknown;
+}
+
+// What clicking a Button changes: each of its `<Set>`s computed from the data
+// as it is before the click, so the order of the Sets doesn't matter (a later
+// write to the same field wins). Fields reached through references to other
+// Content are skipped. If any formula fails, nothing is written and `error`
+// says why.
+export function sheetButtonWrites(
+  button: ValidatedElement,
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
+  amount?: number | null,
+): { writes: SheetWrite[] } | { error: string } {
+  if (button.attrs.amount === true && (amount === undefined || amount === null)) {
+    return { error: "Type an amount first" };
+  }
+  const params = button.attrs.amount === true ? { amount: amount ?? null } : undefined;
+  const writes: SheetWrite[] = [];
+  for (const child of button.children) {
+    if (child.type !== "element" || !child.target || !child.formula) continue;
+    const { list, path } = child.target;
+    const rows = list
+      ? child.entries
+        ? entryScopes(resolveSheetPath(list, root, scope, refs), child.entries)
+        : itemScopes(resolveSheetPath(list, root, scope, refs))
+      : [scope];
+    for (const row of rows) {
+      const target = resolveSheetPath(path, root, row, refs);
+      const value = evaluateSheetFormula(child.formula.ast, root, row, refs, formulas, params);
+      if (isFormulaError(value)) return { error: value.message };
+      if (!target.path) continue;
+      writes.push({ path: target.path, value: value ?? undefined, previous: target.value });
+    }
+  }
+  return { writes };
 }
 
 // The value of a definition without parameters, as calls see it (it may be a

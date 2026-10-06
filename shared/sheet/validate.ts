@@ -34,6 +34,7 @@ import { formulaLaterBuiltins, formulaReservedNames } from "./formula-functions"
 import {
   invalidPathMessage,
   isValidSheetPath,
+  usesReservedKey,
   parseSheetMarkup,
   parseSheetPath,
   type Loc,
@@ -93,12 +94,24 @@ export type AttrValue =
   | TextPart[] // text attributes
   | CompiledFormula; // `formula` and `show`, and number attributes given as {…}
 
+// What a `<Set>` changes: the field at `path`, or with `list`, the field at
+// `path` in every item of `list` (written `list.*.path`; `path` is empty for
+// the items themselves).
+export interface SetTarget {
+  path: SheetPath;
+  list?: SheetPath;
+  // The field, when the schema knows it.
+  field?: ContentFieldSchema;
+}
+
 export interface ValidatedElement {
   type: "element";
   tag: string; // canonical name, e.g. "Section"
   spec: TagSpec;
   attrs: Record<string, AttrValue>;
   binding?: Binding;
+  // A `<Set>`'s field.
+  target?: SetTarget;
   // The tag's `formula`, when it has a valid one.
   formula?: { ast: FormulaNode; type: FormulaType };
   // A List or Table bound to a struct: the struct's entries, one row each.
@@ -479,10 +492,11 @@ class Validator {
     return undefined;
   }
 
-  // Resolves a parsed path; `text` is how it is written, for messages.
-  private resolvePath(parsed: SheetPath, text: string, scope: Shape, loc: Loc): Shape | undefined {
+  // Resolves a parsed path; `text` is how it is written, for messages, and
+  // `walkedTo` how `scope` was reached, if not from the top or a row.
+  private resolvePath(parsed: SheetPath, text: string, scope: Shape, loc: Loc, walkedTo?: string): Shape | undefined {
     let shape: Shape | undefined = parsed.absolute ? this.rootShape : scope;
-    const walked: string[] = [];
+    const walked: string[] = walkedTo && !parsed.absolute ? [walkedTo] : [];
     for (const segment of parsed.segments) {
       shape = this.step(shape, segment, walked.join("."), text, loc);
       if (!shape) return undefined;
@@ -544,7 +558,7 @@ class Validator {
 
   // Formulas
 
-  private formulaHost(params?: readonly string[]): FormulaCheckHost<Shape> {
+  private formulaHost(params?: Readonly<Record<string, FormulaType>>): FormulaCheckHost<Shape> {
     return {
       resolve: (path, text, scope, loc) => {
         const shape = this.resolvePath(path, text, scope, loc);
@@ -565,7 +579,7 @@ class Validator {
         const definition = this.definitions.get(name);
         return definition && { params: definition.params, type: this.definitionType(definition) };
       },
-      params: params && Object.fromEntries(params.map((name) => [name, formulaTypes.any])),
+      params,
     };
   }
 
@@ -583,20 +597,21 @@ class Validator {
     return false;
   }
 
-  // Parses and checks one formula in `scope`. Undefined if it has errors
-  // (they are reported).
+  // Parses and checks one formula in `scope`, with `params` as names it can
+  // use (a Button's `amount`). Undefined if it has errors (they are reported).
   private compileFormula(
     source: string,
     start: Position,
     scope: Shape,
     loc: Loc,
+    params?: Readonly<Record<string, FormulaType>>,
   ): CompiledFormula | undefined {
     if (!this.countFormula(loc)) return undefined;
-    const parsed = parseFormula(source, start);
+    const parsed = parseFormula(source, start, { params: params ? Object.keys(params) : [] });
     this.diagnostics.push(...parsed.diagnostics);
     if (!parsed.ast) return undefined;
     const before = this.errorCount();
-    const checked = checkFormula(parsed.ast, this.formulaHost(), scope);
+    const checked = checkFormula(parsed.ast, this.formulaHost(params), scope);
     this.diagnostics.push(...checked.diagnostics);
     if (this.errorCount() > before) return undefined;
     return { source, loc, ast: parsed.ast, type: checked.type };
@@ -750,7 +765,8 @@ class Validator {
       this.diagnostics.push(...parsed.diagnostics);
       if (parsed.ast) {
         const before = this.errorCount();
-        const checked = checkFormula(parsed.ast, this.formulaHost(definition.params), this.rootShape);
+        const params = Object.fromEntries(definition.params.map((name) => [name, formulaTypes.any]));
+        const checked = checkFormula(parsed.ast, this.formulaHost(params), this.rootShape);
         this.diagnostics.push(...checked.diagnostics);
         definition.calls = checked.calls;
         definition.type = checked.type;
@@ -879,13 +895,21 @@ class Validator {
     if (spec.category === "definition") {
       return { type: "element", tag: spec.name, spec, attrs, children: [], loc: node.loc };
     }
+    if (spec.name === "Set") return this.setElement(node, spec, attrs, scope) ?? broken(`<Set> has errors`);
 
     // A formula attribute that didn't compile makes the tag unusable.
     const formulaAttr = attrNamed(node, "formula");
     const formula = isCompiledFormula(attrs.formula) ? attrs.formula : undefined;
     if (formulaAttr && spec.formula && !formula) return broken(`<${spec.name}> has errors`);
 
-    if (spec.category === "field") {
+    // A Column of buttons has no field or formula.
+    const buttonColumn =
+      spec.name === "Column" && node.children.some((child) => child.type === "element");
+    if (buttonColumn && (attrNamed(node, "field") || formulaAttr)) {
+      return invalid("invalid-attribute", "A <Column> with buttons takes no field or formula");
+    }
+
+    if (spec.category === "field" && !buttonColumn) {
       const hasField = typeof attrs.field === "string";
       // `Field` has no input of its own to compute without a field: its type
       // picks the input.
@@ -1033,6 +1057,17 @@ class Validator {
       );
     }
 
+    // A Button's Sets may use `amount` when it has one.
+    const outerParams = this.setParams;
+    if (spec.name === "Button") {
+      this.setParams = attrs.amount === true ? { amount: formulaTypes.number } : undefined;
+      if (!node.children.some((child) => child.type === "element")) {
+        this.error("missing-child", "<Button> needs a <Set> for each field it changes", node.loc);
+      }
+    }
+    const children = this.children(node.children, spec, childScope);
+    this.setParams = outerParams;
+
     return {
       type: "element",
       tag: spec.name,
@@ -1041,7 +1076,92 @@ class Validator {
       binding,
       ...(formula ? { formula: { ast: formula.ast, type: formula.type } } : {}),
       ...(entries ? { entries } : {}),
-      children: this.children(node.children, spec, childScope),
+      children,
+      loc: node.loc,
+    };
+  }
+
+  // The `amount` of the Button whose Sets are being checked.
+  private setParams: Readonly<Record<string, FormulaType>> | undefined;
+
+  // A `<Set>`: its field must hold a single value, and its formula (checked
+  // in the item's scope for `list.*.path`) must give what the field holds.
+  private setElement(
+    node: SheetElement,
+    spec: TagSpec,
+    attrs: Record<string, AttrValue>,
+    scope: Shape,
+  ): ValidatedElement | undefined {
+    const written = attrs.field as string;
+    const [listText, rest] = written.split(".*");
+    const itemText = rest?.slice(1) ?? "";
+    const list = rest === undefined ? undefined : parseSheetPath(listText!);
+    let targetScope = scope;
+    let entries: SheetEntry[] | undefined;
+    if (list) {
+      const listShape = this.resolvePath(list, listText!, scope, node.loc);
+      if (!listShape) return undefined;
+      const rows = listShape.kind === "field" ? structRows(listShape.field) : undefined;
+      const repeats =
+        listShape.kind === "unknown" ||
+        (listShape.kind === "field" && (listShape.field.type === "array" || rows));
+      if (!repeats) {
+        this.error(
+          "wrong-field-type",
+          `"${written}": "${listText}" is ${describeShape(listShape)}; * needs a list, or a struct whose entries are alike`,
+          node.loc,
+        );
+        return undefined;
+      }
+      entries = rows?.entries;
+      targetScope = this.itemShape(listShape);
+    }
+    const path = list ? { absolute: false, segments: itemText ? itemText.split(".") : [] } : parseSheetPath(written);
+    const shape = this.resolvePath(path, written, targetScope, node.loc, list ? `${listText}.*` : undefined);
+    if (!shape) return undefined;
+    const field = shape.kind === "field" ? shape.field : undefined;
+    const single = ["string", "number", "boolean", "scalar"];
+    if (shape.kind === "record" || (field && !single.includes(field.type))) {
+      this.error(
+        "wrong-field-type",
+        `<Set> can't change "${written}": it's ${describeShape(shape)}; a Set changes one text, number, or true/false value`,
+        node.loc,
+      );
+      return undefined;
+    }
+
+    const formulaAttr = attrNamed(node, "formula")!;
+    if (!formulaAttr.valueLoc) return undefined;
+    const formula = this.compileFormula(
+      formulaAttr.raw ?? "",
+      formulaAttr.valueLoc.start,
+      targetScope,
+      formulaAttr.valueLoc,
+      this.setParams,
+    );
+    if (!formula) return undefined;
+    const binding: Binding = { path, field, label: "" };
+    if (!this.formulaResultFits(spec, formula, binding)) return undefined;
+    const options = fieldOptions(field);
+    const ast = formula.ast;
+    if (options && (ast.type === "string" || ast.type === "number") && !options.some((option) => option.value === ast.value)) {
+      this.error(
+        "formula-result-type",
+        `${JSON.stringify(ast.value)} isn't one of the options of "${written}"`,
+        formula.loc,
+      );
+      return undefined;
+    }
+
+    return {
+      type: "element",
+      tag: spec.name,
+      spec,
+      attrs: { ...attrs, formula },
+      target: { path, ...(list ? { list } : {}), ...(field ? { field } : {}) },
+      formula: { ast: formula.ast, type: formula.type },
+      ...(entries ? { entries } : {}),
+      children: [],
       loc: node.loc,
     };
   }
@@ -1187,8 +1307,9 @@ class Validator {
 
     if (type.kind === "formula") {
       const raw = attr.raw ?? "";
-      // A definition's body is checked with the other definitions.
-      if (spec.category === "definition") return raw;
+      // A definition's body is checked with the other definitions, and a
+      // Set's in its own scope, with its Button's amount (see setElement).
+      if (spec.category === "definition" || spec.name === "Set") return raw;
       if (!attr.valueLoc) return fail(`${name} on <${spec.name}> needs a value`);
       return this.compileFormula(raw, attr.valueLoc.start, scope, attr.valueLoc);
     }
@@ -1257,6 +1378,21 @@ class Validator {
       case "field": {
         const path = raw.trim();
         return isValidSheetPath(path) ? path : fail(invalidPathMessage(path));
+      }
+      case "target": {
+        const path = raw.trim();
+        const [list, ...rest] = path.split(".*");
+        if (rest.length > 1) return fail(`"${path}" has more than one *; a Set changes the items of one list`);
+        const item = rest[0];
+        if (item !== undefined && item !== "" && !item.startsWith(".")) return fail(invalidPathMessage(path));
+        const itemPath = item?.slice(1);
+        if (!isValidSheetPath(list!) || list === "." || (itemPath && (!isValidSheetPath(itemPath) || itemPath.startsWith("/") || itemPath === ".")))
+          return fail(
+            path.includes("*") && !usesReservedKey(path)
+              ? `"${path}" isn't a valid field path; * stands for every item of a list, like spells.*.cast`
+              : invalidPathMessage(path),
+          );
+        return path;
       }
       case "list": {
         const items = raw.split(",").map((item) => item.trim()).filter(Boolean);
