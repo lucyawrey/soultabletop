@@ -1,0 +1,29 @@
+# Dice rolls: brief
+
+For sheet actions with `Roll` steps ([plan](../../plans/sheet-actions.md)). It decides how a roll looks: the result, the toast, the Recent rolls list, and how a rollable value looks on the sheet.
+
+## Requirements
+
+- Shown on a slice of the frozen PF2e sheet ([frozen.html](../pf2e-sheet/frozen.html)), Rogue only (Tessaly Quill): a short header (name, hero points), the Saves box, Strikes, and Skills with Perception and Initiative. Same tokens, density (compact), and section look as the frozen sheet.
+- What rolls:
+  - **Strikes:** the hit modifier and each MAP step (`d20 + 7`, `d20 + 2`, `d20 − 3`; agile `−4`/`−8`). Each attack entry offers the follow-ups **Damage**, **Damage + sneak**, and **Critical**. PF2e crits also happen when the attack beats AC by 10, so Critical is always offered; a natural 20 is marked on the entry instead of `show` hiding it.
+  - **Skills, Perception, Initiative, saves:** `d20 + mod`. Each check entry offers **Reroll (hero point)**, a follow-up with a `Set` (hero points − 1) and then a `Roll`, so it shows a follow-up that writes. It needs edit rights and a hero point.
+  - **Fortune:** a live toggle on the sheet; while it's on, checks roll `2d20kh1`, so the entry shows a kept and a dropped die.
+  - Damage follows the Thief racket (Dex to finesse melee damage): Rapier `1d6 + 4`, sneak attack `+ 1d6`, critical doubles the damage and adds the deadly die (`2 × (1d6 + 4) + 1d8`).
+- Each entry holds what the plan lists: action and roll labels, the expression with values filled in, each die (sides, face, kept or dropped), total, natural, source (character, sheet, action), who rolled, when, and its follow-ups. A follow-up's entry says which entry it came from.
+- Every rollable block is tagged with its tag and attributes (`data-tag`, `data-attrs`) and a sketch of its steps (`data-steps`); `Roll` and `FollowUp` don't exist yet, so they're marked `data-gap`.
+- Accessibility: results are announced (an `aria-live` region), state isn't shown by color alone (dropped dice are struck through and labeled), visible focus, a Contrast button with the live table. The animations are skipped under `prefers-reduced-motion`.
+- Desktop and phone widths both work.
+
+## Toggles
+
+- **Result look:** rolling number (the total counts through random values and settles), tumbling dice (die shapes tumble and land on their faces, then the total), or result card (a card with the dice and the sum laid out).
+- **Recent rolls:** a slide-over drawer opened from a Rolls button, a side panel beside the sheet (a drawer on phones), or a stack that grows under the toast.
+- **Toast position:** bottom right or top center.
+- **Roll target:** how a rollable value looks. *Die icon:* the value opens its breakdown as today and a small die beside it rolls (the plan's leaning for a value with `preview`). *Underline:* the value itself rolls, and the breakdown is shown in the entry. *Hover:* the value looks plain until hovered or focused, then shows the die and rolls on click.
+- **Entry detail:** compact (total and expression) or expanded (each die, kept or dropped, natural, source).
+- **Viewer (view control, kept after freezing):** Owner or Read-only. Read-only can still roll (roll-only actions are open to any viewer) but gets no Reroll (hero point), since it writes.
+
+## Content
+
+Tessaly Quill, level-1 Elf Rogue (Thief), from the frozen sheet: Dex +4, trained strikes (+7), Fortitude +4, Reflex +9, Will +6, Perception +6 (expert), Initiative with Stealth (+6, with the leather armor's −1). Rapier, Shortbow, Dagger (agile). The roller is shown as "you".
