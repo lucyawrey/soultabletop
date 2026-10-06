@@ -142,6 +142,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .dicerow .op { color: var(--st-ink-muted); font-weight: 700; align-self: center; }
 .dicerow .flat { font-weight: 800; font-variant-numeric: tabular-nums; align-self: center; }
 .big .die, .big .gdie { --sz: 40px; }
+.big .many .die, .big .many .gdie { --sz: 30px; }
+/* A group of dice from one term (2d6) sits together on a soft band, captioned when the roll has more than one die. */
+.dgroup { display: inline-grid; justify-items: center; gap: 2px; }
+.dgroup > span:first-child { display: inline-flex; flex-wrap: wrap; align-items: end; gap: 4px; }
+.dgroup.multi > span:first-child { padding: 3px 5px; border-radius: 8px; background: var(--st-panel-muted); }
+.dgroup > small { font-size: 10.5px; font-weight: 700; color: var(--st-ink-muted); letter-spacing: .02em; }
+.dicerow .rtotal { display: inline-flex; align-items: center; gap: 8px; align-self: center; }
+.dicerow .rtotal .eq { color: var(--st-ink-muted); font-size: 20px; }
+.dicerow .rtotal b { font-family: var(--st-font-display); font-weight: 700; font-size: 44px; line-height: .9; font-variant-numeric: lining-nums tabular-nums; }
 
 /* Roll entries (toast and Recent rolls). */
 .entry { display: grid; gap: 4px; padding: 8px 10px; font-size: 13px; }
@@ -239,7 +248,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.5 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.8 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
@@ -357,6 +366,17 @@ function damageSpec(i, kind) {
   const label = kind === "crit" ? "Critical damage" : kind === "sneak" ? "Damage + sneak" : "Damage";
   return { kind: "damage", name: kind === "crit" ? "crit" : "damage", action: st.name, label, path: `Strikes › ${st.name}`, dtype: st.type, terms, parts: [] };
 }
+// Mockup-only test rolls with several dice.
+const TESTS = [
+  ["Striking rapier", "Damage", [{ t: "d", n: 2, s: 6 }, { t: "m", v: 4 }], true],
+  ["Striking rapier", "Critical damage", [{ t: "x", k: 2, of: [{ t: "d", n: 2, s: 6 }, { t: "m", v: 4 }] }, { t: "d", n: 1, s: 8 }]],
+  ["Fireball", "Damage", [{ t: "d", n: 6, s: 6 }]],
+  ["Big hit", "Damage", [{ t: "d", n: 10, s: 6 }]],
+  ["Mixed", "Damage", [{ t: "d", n: 3, s: 8 }, { t: "d", n: 2, s: 6 }, { t: "m", v: 5 }]],
+  ["Ability score", "Roll", [{ t: "d", n: 4, s: 6, keep: ["h", 3] }]],
+  ["Every die", "Roll", [4, 6, 8, 10, 12, 20].map(s => ({ t: "d", n: 1, s }))],
+];
+const testSpec = i => { const [action, label, terms] = TESTS[i]; return { kind: "damage", name: "test", action, label, path: "Test rolls", terms, parts: [] }; };
 // Follow-ups each entry offers; a follow-up with a Set needs edit rights.
 function followUps(e) {
   if (e.kind === "attack") return [["Damage", "dmg"], ["Damage + sneak", "sneak"], ["Critical", "crit"]];
@@ -384,17 +404,24 @@ function dieHTML(f, { size } = {}) {
   }
   return `<span class="die d${f.s}${nat}${drop}" role="img" aria-label="${label}" title="${label}"><b>${f.v}</b></span>`;
 }
-// Dice laid out as the expression: each die (dropped ones labeled), then the flat numbers.
-function diceRow(terms, anim) {
+// Dice laid out as the expression: each term's dice grouped (captioned when there's more than one die), dropped ones labeled,
+// then the flat numbers; `tail` (the total) follows the last die so the sum reads left to right.
+function diceRow(terms, anim, tail = "") {
   let i = 0;
+  const all = (ts) => ts.flatMap(t => t.t === "d" ? t.faces : t.t === "x" ? all(t.of) : []);
+  const count = all(terms).length, multi = count > 1;
   const part = (ts) => ts.map((t, j) => {
     const op = j === 0 ? "" : `<span class="op">${t.t === "m" && t.v < 0 ? "−" : "+"}</span>`;
     if (t.t === "m") return `${op}<span class="flat">${Math.abs(t.v)}</span>`;
     if (t.t === "x") return `${op}<span class="op">${t.k} ×</span><span class="op">(</span>${part(t.of)}<span class="op">)</span>`;
-    return op + t.faces.map(f => { const d = anim ? `<span class="tumble" style="animation-delay:${i++ * 70}ms;display:inline-grid">${dieHTML(f)}</span>` : dieHTML(f);
-      return f.kept ? d : `<span class="dlabel">${d}<small>dropped</small></span>`; }).join("");
+    // Kept dice first, dropped ones last (struck through, muted outline); the caption says what was kept.
+    const dice = [...t.faces.filter(f => f.kept), ...t.faces.filter(f => !f.kept)]
+      .map(f => anim ? `<span class="tumble" style="animation-delay:${i++ * 60}ms;display:inline-grid">${dieHTML(f)}</span>` : dieHTML(f)).join("");
+    const keep = !t.keep ? "" : t.keep[1] === 1 && t.n === 2 ? ` · keep ${t.keep[0] === "h" ? "higher" : "lower"}` : ` · keep ${t.keep[0] === "h" ? "highest" : "lowest"} ${t.keep[1]}`;
+    const cap = `${t.n > 1 ? t.n : ""}d${t.s}${keep}`;
+    return `${op}<span class="dgroup${multi ? " multi" : ""}"><span>${dice}</span>${multi ? `<small>${cap}</small>` : ""}</span>`;
   }).join("");
-  return `<div class="dicerow">${part(terms)}</div>`;
+  return `<div class="dicerow${count > 6 ? " many" : ""}">${part(terms)}${tail}</div>`;
 }
 function natBadge(e) { return e.nat === 20 ? `<span class="natb n20">Natural 20</span>` : e.nat === 1 ? `<span class="natb">Natural 1</span>` : ""; }
 function fuButtons(e) {
@@ -439,7 +466,7 @@ function blendHTML(e, anim) {
   return `<div class="rcard bcard${anim ? " slidein" : ""}" data-impl="new: RollCard (compact)">
     <div class="chead"><span class="eact" style="font-weight:700">${e.action}</span><span class="elbl" style="color:var(--st-ink-muted)">${e.label}</span><time style="margin-left:auto;font-size:11.5px;color:var(--st-ink-muted)">${time(e.when)}</time></div>
     ${e.from ? `<div style="padding:6px 12px 0">${fromLine(e)}</div>` : ""}
-    <div class="bbody big">${diceRow(e.terms, anim)}<span class="btotal"><span class="eq">=</span><b class="${anim ? "pending" : ""}" data-total>${e.total}</b></span></div>
+    <div class="bbody big">${diceRow(e.terms, anim, `<span class="rtotal"><span class="eq">=</span><b class="${anim ? "pending" : ""}" data-total>${e.total}</b></span>`)}</div>
     <div class="bline"><span class="eexpr dim">${expr(e.terms)}</span>${natBadge(e)}</div>
     ${followUps(e).length ? `<div class="cfoot">${fuButtons(e)}</div>` : ""}</div>`;
 }
@@ -555,7 +582,9 @@ function renderSheet() {
     <div class="rows">${SKILLS.map(([n, k]) => skillRow(n, k, TRAINED[n] || "u")).join("")}</div>
     <div class="rows"${tag("Table", 'field="lore"')}>${skillRow("Underworld Lore", "Int", "t")}</div></section>`;
 
-  document.getElementById("sheet").innerHTML = head + skills + `<div class="right">${defs}${strikes}</div>`;
+  const tests = `<section class="sheet-section" data-gap="mockup only: rolls with several dice"><h2>Test rolls</h2><span class="aside">mockup only</span>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${TESTS.map(([a, l, t], i) => `<button class="fu" data-test="${i}">${a} · ${l} <span class="wr">${expr(t.map(x => x.t === "d" ? { ...x, faces: [] } : x.t === "x" ? { ...x, of: x.of.map(y => y.t === "d" ? { ...y, faces: [] } : y) } : x))}</span></button>`).join("")}</div></section>`;
+  document.getElementById("sheet").innerHTML = head + skills + `<div class="right">${defs}${strikes}${tests}</div>`;
 }
 
 // ---- Controls and clicks ----
@@ -576,6 +605,7 @@ document.addEventListener("click", ev => {
     const r = b.getBoundingClientRect(); pop.style.top = (r.bottom + scrollY + 4) + "px"; pop.style.left = Math.max(8, Math.min(r.left + scrollX, innerWidth - pop.offsetWidth - 8)) + "px"; return; }
   if (d.more) { const id = +d.more; S.exp.has(id) ? S.exp.delete(id) : S.exp.add(id); renderRolls(); renderToasts();
     document.querySelector(`#drawer [data-more="${id}"], #panel [data-more="${id}"]`)?.focus(); return; }
+  if (d.test) { show(roll(testSpec(+d.test))); return; }
   if (d.fu) { const [id, k] = d.fu.split(":"); runFollowUp(+id, k); return; }
   if ("closetoast" in d) { if (S.recent === "stack") S.stackOpen = false; else S.toastId = null; renderToasts(); return; }
   if ("rolls" in d) { if (S.recent === "stack") { S.stackOpen = !S.stackOpen; if (!S.toastId && ENTRIES[0]) S.toastId = ENTRIES[0].id; renderToasts(); }
