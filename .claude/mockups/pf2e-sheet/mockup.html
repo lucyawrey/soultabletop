@@ -184,6 +184,8 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .bmeter { position: relative; width: 90px; height: 7px; border: 1px solid var(--st-border-strong); border-radius: 3px; background: var(--st-panel-muted); }
 .bmeter i { position: absolute; inset: 0 auto 0 0; background: var(--st-primary); border-radius: 2px; }
 .bmeter b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--st-ink); }
+.chip .x { border: 0; background: none; padding: 0 0 0 2px; cursor: pointer; color: var(--st-ink-muted); font-size: 1.1em; line-height: 1; }
+select.langadd { width: auto; height: 20px; font-size: var(--d-lfs); padding: 0 4px; margin-left: 2px; }
 .moves { display: flex; gap: 4px; flex-wrap: wrap; }
 .badge { display: inline-flex; align-items: center; gap: 4px; font-size: var(--d-lfs); font-weight: 700; padding: 1px 7px 1px 5px; border: 1px solid var(--st-border-strong); border-radius: 999px; background: var(--st-panel); color: var(--st-ink); cursor: pointer; }
 .badge .act { font-size: 1.15em; }
@@ -323,6 +325,8 @@ const ICON = { "Attributes &amp; Defenses": "none", "Strikes": "crossed-swords",
   Class: "medal", Feats: "stars-stack", Spells: "spell-book", Inventory: "swap-bag", Biography: "quill-ink" };
 const ico = t => S.secicons === "on" && ICON[t] && ICON[t] !== "none" ? `<span data-attrs='icon="i-game-icons-${ICON[t]}"'>${svg(GI[ICON[t]], "gi sec")}</span>` : "";
 const h2 = t => `<h2>${ico(t)}${t}</h2>`;
+// Language options: a choice array field (common and uncommon Remaster languages; the import supplies the real list).
+const LANGS = ["Common", "Draconic", "Dwarven", "Elven", "Empyrean", "Fey", "Gnomish", "Goblin", "Halfling", "Jotun", "Orcish", "Sakvroth", "Chthonian", "Diabolic", "Necril", "Petran", "Pyric", "Sussuran", "Thalassic", "Muan", "Shadowtongue"];
 const sg = n => (n >= 0 ? "+" : "−") + Math.abs(n);
 const P = (r, L) => (r === "u" ? 0 : RANKS[r][2] + L);
 const tag = (t, a = "", gap = "") => ` data-tag="${t}"${a ? ` data-attrs='${a}'` : ""}${gap ? ` data-gap="${gap}"` : ""}`;
@@ -359,7 +363,9 @@ function render() {
       <div><div class="sheet-field-label">Size</div><span class="sheet-field-value word">${c.size}</span></div>
     </div>
     <div class="facts small"><span><span class="sheet-field-label">Traits</span> ${c.traits.map(t => `<span class="chip">${t}</span>`).join("")}</span>
-      ${c.senses ? `<span><span class="sheet-field-label">Senses</span> ${c.senses}</span>` : E() ? `<span${tag("Section", 'show="{editing or senses}"', "editing isn't visible to formulas yet")}><span class="sheet-field-label">Senses</span> <button class="pick">+ Add</button></span>` : ""}${c.otherSpeeds ? `<span><span class="sheet-field-label">Other speeds</span> ${c.otherSpeeds}</span>` : E() ? `<span${tag("Section", 'show="{editing or otherSpeeds}"', "editing isn't visible to formulas yet")}><span class="sheet-field-label">Other speeds</span> <button class="pick">+ Add</button></span>` : ""}<span><span class="sheet-field-label">Languages</span> ${c.languages}</span></div>
+      ${c.senses ? `<span><span class="sheet-field-label">Senses</span> ${c.senses}</span>` : E() ? `<span${tag("Section", 'show="{editing or senses}"', "editing isn't visible to formulas yet")}><span class="sheet-field-label">Senses</span> <button class="pick">+ Add</button></span>` : ""}${c.otherSpeeds ? `<span><span class="sheet-field-label">Other speeds</span> ${c.otherSpeeds}</span>` : E() ? `<span${tag("Section", 'show="{editing or otherSpeeds}"', "editing isn't visible to formulas yet")}><span class="sheet-field-label">Other speeds</span> <button class="pick">+ Add</button></span>` : ""}<span${tag("Field", 'field="languages"')}><span class="sheet-field-label">Languages</span> ${E()
+        ? c.languages.split(", ").map(l => `<span class="chip">${l} <button class="x" data-lang-rm="${l}" aria-label="Remove ${l}">×</button></span>`).join("") + `<select class="langadd" aria-label="Add language" data-lang-add><option value="">+ Add</option>${LANGS.filter(l => !c.languages.split(", ").includes(l)).map(l => `<option>${l}</option>`).join("")}</select>`
+        : c.languages}</span></div>
   </div></section>`;
 
   const attrs = `<div class="attrs"${tag("Grid", 'columns="3"')}>${ATTR.map(k => `<div class="box ${k === c.key ? "key" : ""}"${tag("Number", `field="attributes.${k.toLowerCase()}" signed`)}>
@@ -495,11 +501,12 @@ function render() {
   contrast();
   placeMath();
 }
-document.addEventListener("change", e => { if (e.target.matches("[data-shp]")) { PCS[S.pc].shield.cur = Math.max(0, Math.min(PCS[S.pc].shield.hp, +e.target.value || 0)); return render(); } if (e.target.matches(".rank-sel")) e.target.className = "rank-sel " + e.target.value.toLowerCase(); if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
+document.addEventListener("change", e => { if (e.target.dataset.langAdd !== undefined && e.target.value) { PCS[S.pc].languages += ", " + e.target.value; return render(); } if (e.target.matches("[data-shp]")) { PCS[S.pc].shield.cur = Math.max(0, Math.min(PCS[S.pc].shield.hp, +e.target.value || 0)); return render(); } if (e.target.matches(".rank-sel")) e.target.className = "rank-sel " + e.target.value.toLowerCase(); if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
 document.addEventListener("click", e => {
   const t = e.target;
   const b = t.closest("button"); if (!b) { if (S.open && !t.closest("#mathpop")) { S.open = null; render(); } return; }
   if (b.dataset.st) { PCS[S.pc].inv[+b.dataset.inv][3] = b.dataset.st; return render(); }
+  if (b.dataset.langRm) { const c = PCS[S.pc]; c.languages = c.languages.split(", ").filter(l => l !== b.dataset.langRm).join(", "); return render(); }
   if ("prep" in b.dataset) { const sp = PCS[S.pc].spells; sp.r1.forEach(x => x[2] = 0); sp.font[2] = 0; sp.focusUsed = 0; return render(); }
   if ("shield" in b.dataset) { S.shieldUp = !S.shieldUp; return render(); }
   if (b.dataset.hpdo) { const c = PCS[S.pc], n = Math.max(0, parseInt(document.querySelector("[data-amt]").value) || 0);
