@@ -432,6 +432,7 @@ const imageSize = computed(
         :editable="false"
         :image="false"
         :mention="false"
+        :ui="{ base: 'px-0 sm:px-0' }"
       />
       <span v-else class="text-dimmed">—</span>
     </template>

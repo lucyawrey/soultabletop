@@ -34,15 +34,15 @@ const generatedEmpty = computed(
     !generated.value.rows.length &&
     !generated.value.texts.length,
 );
-const compact = useSheetCompact();
 </script>
 
 <template>
   <!-- Carries the sheet's scope, so its CSS applies even outside the sheet
-    (a card floats outside it). -->
+    (a card floats outside it). Spaced tightly at any density, like the
+    generated view. -->
   <div
     v-if="card"
-    :class="[sheetClasses(card), compact ? 'space-y-2 text-sm' : 'space-y-4']"
+    :class="[sheetClasses(card), 'space-y-2 text-sm']"
     :data-sheet="context.scopeId.value"
     :data-density="context.density.value"
   >
