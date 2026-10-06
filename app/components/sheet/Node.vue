@@ -51,7 +51,8 @@ const visibility = computed(() =>
 
 const component = computed(() => {
   if (props.node.type !== "element") return undefined;
-  if (props.node.tag === "Column" && props.node.children.length) return SheetColumnButtons;
+  if (props.node.tag === "Column" && props.node.children.some((child) => child.type === "element" && child.tag === "Button"))
+    return SheetColumnButtons;
   if (props.node.spec.category === "field") return SheetField;
   return components[props.node.tag];
 });

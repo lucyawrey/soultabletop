@@ -160,7 +160,7 @@ What the Sheet system can't do yet (marked `data-gap` in the page). Each is in `
 2. ~~`live`: fields editable in play mode, saved at once.~~ `live` already existed; saving at once was built in #92.
 3. ~~`editing` visible to formulas.~~ Built in #92 as the function `editing()`: write `show="editing() or length(senses) > 0"`, not the page's `show="editing or senses"`.
 4. ~~A button that changes a field (Damage/Heal, Daily preparations, item moves).~~ Built in #93: `<Button>` with `<Set>` children (see `docs/sheet-system.md`, "Buttons"); compact became the default density in #94.
-5. Breakdown popovers on `Value` and boxes (AC, saves, skills, Strikes); `RowDetails` only expands table rows.
+5. ~~Breakdown popovers on `Value` and boxes (AC, saves, skills, Strikes).~~ Built in #95: `<Part>` children (see `docs/sheet-system.md`, "Breakdowns").
 6. Reference previews (the rules text of a linked spell, feat, item, or class feature).
 7. A list read from a referenced resource (class features from the class).
 8. Strikes reading hit and damage from the inventory item.

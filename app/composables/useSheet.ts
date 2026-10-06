@@ -20,6 +20,7 @@ import {
   formatSheetValue,
   interpolateSheetText,
   itemScopes,
+  sheetBreakdown,
   resolveSheetPath,
   sheetTextSegments,
   type SheetFormulaDefinitions,
@@ -258,6 +259,9 @@ export function useSheet() {
         context.refs.value,
         formulas(times),
       ),
+    // A tag's `<Part>`s and their sum, in the current scope.
+    breakdown: (node: ValidatedElement) =>
+      sheetBreakdown(node, context.root.value, scope.value, context.refs.value, formulas()),
     // A number attribute: a literal, or a {formula} computed now.
     number: (value: AttrValue | undefined) => {
       if (typeof value === "number") return value;
