@@ -12,10 +12,8 @@ Decided with the user on 2026-10-06. Gap 6 of the PF2e sheet mockup ([spec](../m
 
 ## Steps (one PR each)
 
-1. Require the `<Sheet>` root (#96).
+1. Require the `<Sheet>` root (#96, merged).
 2. Previews with the generated card and overrides (no fetching). Enough for the PF2e demo.
 3. `<Card>` in content-type sheets, fetched on first open.
 
-## Still open
-
-- Which tags can open a preview: only `Ref`, or also `Value`/`Column` names reached through a content field (`spell.name`), which is how the mockup's tables show names. Recommended: both. Ask before step 2.
+- **Triggers** (user, 2026-10-06): `preview` on `Ref`, and on `Value`/`Column` when the field is reached through a content field (`spell.name` previews `spell`), which is how the mockup's tables show names.
