@@ -26,8 +26,8 @@ Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The 
 
 Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the items below (density, `editing()`, and live fields saving at once were built in #92, buttons in #93), from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
 
-- **Sheet dice buttons** · feature · large · needs decision: how a roll looks
-  The dice half of "Sheet dice buttons and image uploads" (Phase 1). User's decisions: a roll's result shows in a toast with each die, and a "Recent rolls" list on the sheet page keeps this visit's rolls, until campaign dice logs exist. Still to design with the user: the visual element for rolling (e.g. an animated die, a rolling number, or a result card), plus the markup (a roll button tag and formula dice syntax).
+- **Sheet dice buttons** · feature · large · needs decision: how a roll looks (mockup)
+  The dice half of "Sheet dice buttons and image uploads" (Phase 1). User's decisions: a roll's result shows in a toast with each die, and a "Recent rolls" list on the sheet page keeps this visit's rolls, until campaign dice logs exist. Design (actions with ordered `Roll`/`Set` steps, `FollowUp`s, entries ready for campaign logs): [.claude/plans/sheet-actions.md](.claude/plans/sheet-actions.md). Next: a mockup of three result looks (rolling number, tumbling die glyphs, result card) for the user to pick.
 - **Onboarding structure** · feature
   The structure part of "Onboarding for new users" (Phase 4): a Getting Started panel explaining systems, content types, sheets, content, and campaigns, with links, and next-step suggestions in empty states and after creating something. All explanations and welcome text are placeholders in `content/copy.yml` for the team to write.
 
