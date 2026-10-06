@@ -64,9 +64,12 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 /* Header */
 .head { display: grid; grid-template-columns: 1fr auto; gap: var(--d-gap) 20px; align-items: start; }
 .head h1 { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); margin: 0; line-height: 1; }
-.refs { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 6px; }
-.refgroup { display: inline-flex; gap: 4px 6px; flex-wrap: nowrap; }
-.ref { display: inline-flex; gap: 5px; align-items: baseline; border: 1px solid var(--st-border-strong); border-radius: 999px; padding: 1px 8px; background: var(--st-panel-muted); }
+/* Core build choices: label above a larger value, like the identity fields of a paper sheet. */
+.refs { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-top: 8px; }
+.refgroup { display: inline-flex; gap: 6px 8px; flex-wrap: nowrap; }
+.ref { display: inline-grid; gap: 0; align-content: center; border: 1px solid var(--st-border-strong); border-radius: calc(var(--st-radius) * .8); padding: 3px 12px 4px; background: var(--st-panel-muted); }
+.ref .sheet-field-label { line-height: 1.2; }
+.ref .link { font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
 .meta { display: flex; border: 1px solid var(--st-border); border-radius: var(--st-radius); background: var(--st-panel-muted); }
 .meta > div { display: grid; grid-template-rows: auto calc(var(--d-big) * 1.3); align-items: center; justify-items: center; gap: 2px; padding: calc(var(--d-pad) * .6) calc(var(--d-pad) + 6px); }
 .meta > div + div { border-left: 1px solid var(--st-border); }

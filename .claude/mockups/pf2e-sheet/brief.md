@@ -72,3 +72,4 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - **Damage/Heal (user):** an amount input with Damage and Heal buttons on the HP line, between the current/max HP and Temp. Damage comes off temp HP first; Heal stops at the max. Needs a tag for a button that changes a field (gap).
 - **Header strip on desktop (user):** the Level / Hero Points / Speed / Size strip is centered vertically beside the whole header (name, chips, and the traits line, which no longer runs under it), with more padding and slightly larger values. Phones are unchanged.
 - **Class chips (user):** Class and its subclass (Doctrine, Racket) always sit on the same line; they wrap together.
+- **Build choices more prominent (user):** Ancestry, Heritage, Background, Class, and the subclass are small cards (label above a larger value) instead of pills; in edit mode the Change button sits under the value.
