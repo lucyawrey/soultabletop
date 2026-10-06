@@ -6,6 +6,8 @@ Each item is `- **Title** · type` (bug, feature, or chore), plus `· needs deci
 
 Quick, rough ideas go here, in any form. Nothing is built from them until they're sorted: when asked (or when the section has grown), an agent goes through them with the user one at a time, asks what each one means and what it's worth, writes it up in the item format, and moves it to the section the user picks. Until then, the user's wording stays as is.
 
+- "we want to support free archetype variant rules" (user, 2026-10-06, during the PF2e sheet mockup; Pathfinder 2e's Free Archetype variant adds an archetype feat slot at every even level)
+
 # In progress
 
 - **Pathfinder 2e demo system** · feature · on `docs` (`.claude/pf2e/`, `.claude/mockups/pf2e-sheet/`)
