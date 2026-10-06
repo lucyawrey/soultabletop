@@ -71,6 +71,9 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .refpick { display: inline-flex; align-items: baseline; gap: 4px; }
 .refpick .caret { font-size: .75em; color: var(--st-ink-muted); text-decoration: none; }
 .ref:has(.refpick) { border-style: dashed; }
+/* Edit: a soft ring around every editable control, so it reads as editable without changing size. */
+.sheet[data-mode="edit"] :is(.box input, .meta input, h1 input, select.rank-sel, .ref:has(.refpick), .refpick:not(.ref .refpick)) { outline: 2px solid color-mix(in srgb, var(--st-primary) 22%, transparent); outline-offset: 2px; }
+.sheet[data-mode="edit"] :is(.box input, .meta input, h1 input, select.rank-sel, .ref:has(.refpick), .refpick):focus-visible { outline: 2px solid var(--st-primary); }
 .pips { display: inline-flex; gap: 3px; vertical-align: middle; }
 .pips button { width: 13px; height: 13px; border: 1.5px solid var(--st-primary); border-radius: 50%; background: transparent; padding: 0; cursor: pointer; }
 .pips button.on { background: var(--st-primary); }
@@ -408,7 +411,7 @@ function render() {
     <div class="tabpanel" role="tabpanel">${T[S.tab]}</div></div>`;
 
   const el = document.getElementById("sheet");
-  el.dataset.density = S.density;
+  el.dataset.density = S.density; el.dataset.mode = S.mode;
   // Strikes and actions side by side at the same height in both layouts.
   el.innerHTML = head + top + `<div class="pair">${strikes}${actions}</div>` + (S.layout === "below"
     ? `<div class="mid"><div>${skills}</div><div>${profs}</div></div>` + tabs
