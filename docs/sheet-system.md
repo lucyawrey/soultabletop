@@ -164,8 +164,8 @@ View mode renders formatted values, edit mode renders the input.
 | `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
 | `Tags` | — | array of string (not of choices) | `UInputTags` |
 | `Tracker` | `max` (optional, at least 0), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max" |
-| `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
-| `Value` | `format`, `formula` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
+| `Ref` | `preview` (see "Reference previews") | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
+| `Value` | `format`, `formula`, `preview` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
@@ -250,7 +250,7 @@ required `resourceLink` or `content` entry without a default would be left empty
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
 | `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
-| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
+| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width`, `preview` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
 
 Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
 skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even
@@ -317,6 +317,54 @@ elsewhere, or Escape closes it, and it floats, so nothing moves (from the frozen
 - Rendered by `sheet/Breakdown.vue` (`UPopover`); `sheetBreakdown` in `runtime.ts` computes the parts and the sum.
   Hook class: `sheet-breakdown-trigger` on the number's button. The popover opens outside the sheet's element (inside
   it, the root's `contain: paint` would clip it), so Sheet CSS can't style it; it uses the site's theme.
+
+### Reference previews (decided 2026-10-06)
+`preview` on a `Ref`, `Value`, or `Column` makes its value a button (underlined) that opens a card at the bottom right
+(340px; full width less 16px on each side on a phone) with the referenced content: a spell, feat, item, or class
+feature's rules text (from the frozen PF2e sheet mockup; plan in `.claude/plans/reference-previews.md` on `docs`).
+
+```
+<Table field="spells">
+  <Column field="spell.name" label="Spell" preview />
+</Table>
+<Ref field="deity" preview>
+  <Card>
+    <Tags field="domains" />
+    <Markdown field="edicts" />
+  </Card>
+</Ref>
+```
+
+- **What it opens:** the last content field on the way to the tag's field (`spell.name` previews `spell`; in a Table
+  over an array of content, `name` previews the row). On a `Ref`, the field itself, which must be a `content` field
+  (a resource link has no card). Without a content field on the way, or without a `field`, it's an
+  `invalid-attribute` error. References and local data (custom copies) both open; a reference that isn't loaded
+  (missing or not readable) shows no button.
+- **The card:** the content's name as its title, an Open link (references only), and a Close button; Close, Escape, or
+  clicking the value again closes it, and clicking another value replaces it. One card at a time. Focus moves to the
+  card and goes back to the value when it closes. Hook classes: `sheet-preview-trigger` on the value's button,
+  `sheet-preview` on the card, `sheet-card` on its body.
+- **Generated card** (no `<Card>`): from the content type's top-level fields, in schema order (`generatedCard` in
+  `shared/sheet/card.ts`): arrays of text or choices as chips; other fields with a value as label/value rows (choice
+  labels, numbers, Yes/No, a content field's name); text over 120 characters or with a line break as Markdown under
+  its label, below the rows (decided: the schema has no Markdown type, so length decides). Structs, free-form
+  objects, resource links, other arrays, and empty values are left out. It isn't styled by Sheet CSS.
+- **`<Card>`**: the sheet's own card, directly inside the `preview` tag (decided: a child tag rather than bare
+  children, which would mix with a `Value`'s or `Column`'s `Part`s and `Button`s). Its paths are relative to the
+  referenced content, like a `List` row (`/…` still reaches the sheet's top level, and `<Define>`s work); the card's
+  title stays the content's name. It takes `class` and `show` (a hidden `<Card>` falls back to the generated card).
+  It is styled by the referencing sheet's CSS: its body carries the sheet's `data-sheet` and `data-density`.
+  Errors: `card-without-preview` (no `preview` on its tag), `duplicate-card` (two in one tag).
+- **Limits:** cards are always read-only (no inputs, whatever `live`; fields inside show as text unless they say
+  `display="box"`), so a `Button` inside is an error (`button-in-card`); and a card can't open another card
+  (`preview` inside a `<Card>` is `preview-in-card`).
+- **While editing:** an editable value (a `Ref`'s picker, a custom copy's fields) shows its input, not a button;
+  values that can't be edited keep their preview. `display="box"` doesn't box a value with a preview (a `Ref` keeps
+  its box with the button inside).
+- Rendering: `sheet/PreviewTrigger.vue` (the button), `sheet/PreviewCard.vue` (the card, teleported to the page body
+  so the sheet's `contain: paint` doesn't clip it), `sheetPreviewTarget` in `shared/sheet/card.ts` (what a tag opens).
+- Data: the content GET's `refs` already holds each referenced content's data; nothing more is fetched. A
+  `<Card>` in the referenced content type's own sheet is the next step (plan, step 3).
 
 ### Buttons (decided 2026-10-06)
 `<Button label="…">` changes fields when clicked, with one `<Set field="…" formula="…" />` child per change:

@@ -195,6 +195,12 @@ const overrideFormula: AttrSpec = {
     "Computes the value; with field, the field holds an optional manual value that wins, and clearing it goes back to the computed one",
 };
 
+// `preview` on Ref, Value, and Column: clicking opens a card of the content
+// the value comes from (see docs/sheet-system.md, "Reference previews").
+const previewAttr = bool(
+  "Clicking the value opens a card with the referenced content (the one its field is reached through, like spell for spell.name); a <Card> inside replaces the generated one",
+);
+
 const formatAttr = oneOf(
   ["plain", "signed"],
   "signed shows +2 for positive numbers (an editable input shows the sign too; the saved value stays a number)",
@@ -463,8 +469,9 @@ const tagList: TagSpec[] = [
     name: "Ref",
     category: "field",
     description: "A link to another resource or content",
-    attrs: { ...fieldAttrs },
-    children: "none",
+    attrs: { ...fieldAttrs, preview: previewAttr },
+    // The card its preview opens.
+    children: { only: ["Card"] },
     binds: ["resourceLink", "content"],
   },
   {
@@ -475,8 +482,9 @@ const tagList: TagSpec[] = [
       ...fieldAttrs,
       formula: readOnlyFormula,
       format: formatAttr,
+      preview: previewAttr,
     },
-    children: { only: ["Part"] },
+    children: { only: ["Part", "Card"] },
     binds: ["anyValue"],
     formula: "readOnly",
   },
@@ -539,9 +547,11 @@ const tagList: TagSpec[] = [
       formula: readOnlyFormula,
       format: formatAttr,
       width: oneOf(["auto", "xs", "sm", "md", "lg"], "Column width"),
+      preview: previewAttr,
     },
-    // Parts explaining its number, and Buttons: each row gets its own.
-    children: { only: ["Part", "Button"] },
+    // Parts explaining its number, Buttons (each row gets its own), and the
+    // card its preview opens.
+    children: { only: ["Part", "Button", "Card"] },
     parents: ["Table"],
     binds: ["string", "number", "boolean", "scalar", "resourceLink", "content"],
     formula: "readOnly",
@@ -565,6 +575,16 @@ const tagList: TagSpec[] = [
     formula: "readOnly",
     // Never rendered as an element of its own, so `class` would do nothing.
     noCommonAttrs: true,
+  },
+  {
+    name: "Card",
+    category: "layout",
+    description:
+      "The card a preview opens, instead of the generated one; paths inside are relative to the referenced content, and it is always read-only",
+    attrs: {},
+    children: "any",
+    parents: ["Ref", "Value", "Column"],
+    noFlagAttrs: true,
   },
   {
     name: "RowDetails",

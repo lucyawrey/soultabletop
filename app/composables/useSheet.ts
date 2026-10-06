@@ -10,6 +10,7 @@ import {
   type FormulaNode,
   type FormulaValue,
 } from "#shared/sheet/formula";
+import type { SheetPreviewTarget } from "#shared/sheet/card";
 import type { TextPart } from "#shared/sheet/parser";
 import type { SheetDensity, SheetDisplay } from "#shared/sheet/registry";
 import {
@@ -41,6 +42,15 @@ import {
   type ValidatedNode,
 } from "#shared/sheet/validate";
 
+// The reference preview card that is open (see SheetPreviewCard): what it
+// shows, and the `<Card>` the tag that opened it wrote, if any. `key` tells
+// which tag and row opened it, so clicking that again closes it.
+export interface SheetPreview {
+  key: string;
+  target: SheetPreviewTarget;
+  card?: ValidatedElement;
+}
+
 // Shared by every component of one rendered Sheet (see SheetRenderer.vue).
 export interface SheetContext {
   root: Ref<SheetScope>;
@@ -67,6 +77,8 @@ export interface SheetContext {
   addLink: (id: string, link: SheetLink) => void;
   // `locked` fields unlocked with their pencil button, for this page view.
   unlocked: Set<string>;
+  // The open reference preview card.
+  preview: Ref<SheetPreview | null>;
 }
 
 // `live` / `locked` / `display` in effect, inherited from enclosing tags.
@@ -88,6 +100,15 @@ const flagsKey: InjectionKey<Ref<SheetFlags>> = Symbol("sheet-flags");
 // How many times this part of the sheet is repeated (the item counts of the
 // enclosing Lists and Table rows, multiplied).
 const repeatKey: InjectionKey<Ref<number>> = Symbol("sheet-repeat");
+// Inside a reference preview card, where nothing can be edited.
+const readOnlyKey: InjectionKey<boolean> = Symbol("sheet-read-only");
+
+// Makes everything inside read-only (a preview card), shown as plain text
+// unless a tag inside says `display="box"`.
+export function provideSheetReadOnly() {
+  provide(readOnlyKey, true);
+  provide(flagsKey, ref(defaultFlags()));
+}
 
 export function provideSheetContext(context: SheetContext) {
   provide(contextKey, context);
@@ -158,12 +179,14 @@ export function useSheetEditable(
 ) {
   const { context } = useSheet();
   const flags = inject(flagsKey, ref(defaultFlags()));
+  const readOnly = inject(readOnlyKey, false);
   const unlockKey = computed(
     () => `${node().loc.start.offset}:${JSON.stringify(path())}`,
   );
   const unlocked = computed(() => context.unlocked.has(unlockKey.value));
   const allowed = computed(
     () =>
+      !readOnly &&
       context.canEdit.value &&
       path() !== null &&
       node().tag !== "Value" &&

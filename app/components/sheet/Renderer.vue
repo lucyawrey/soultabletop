@@ -102,6 +102,10 @@ const formulas = computed<SheetFormulaDefinitions>(() => {
   };
 });
 
+// The reference preview card that is open; one at a time.
+const preview = ref<SheetPreview | null>(null);
+watch(compiled, () => (preview.value = null));
+
 provideSheetContext({
   root,
   refs: computed(() => props.refs),
@@ -117,6 +121,7 @@ provideSheetContext({
   addRef: (id, ref) => emit("addRef", id, ref),
   addLink: (id, link) => emit("addLink", id, link),
   unlocked: reactive(new Set<string>()),
+  preview,
 });
 </script>
 
@@ -129,5 +134,16 @@ provideSheetContext({
     :data-density="density"
   >
     <SheetNodes :nodes="compiled.nodes" />
+    <!-- Moved out of the sheet's box, which would clip a fixed card. -->
+    <Teleport to="body">
+      <SheetPreviewCard
+        v-if="preview"
+        :key="preview.key"
+        :preview="preview"
+        :scope-id="scopeId ?? undefined"
+        :density="density"
+        @close="preview = null"
+      />
+    </Teleport>
   </div>
 </template>

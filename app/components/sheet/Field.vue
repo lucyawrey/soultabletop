@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sheetPreviewTarget } from "#shared/sheet/card";
 import { isFormulaError } from "#shared/sheet/formula";
 import {
   findRef,
@@ -79,16 +80,42 @@ const { editable, lockedEditable, unlock, boxed } = useSheetEditable(
   () => (display.value === "value" ? null : resolved.value.path),
 );
 
+// `preview`: the content a click opens a card of (none while the field is
+// editable, or when it isn't loaded).
+const previewTarget = computed(() =>
+  props.node.preview && !editable.value
+    ? sheetPreviewTarget(props.node, context.root.value, scope.value, context.refs.value)
+    : undefined,
+);
+const previewKey = computed(
+  () =>
+    `${props.node.loc.start.offset}:${JSON.stringify(previewTarget.value?.scope.path)}:${previewTarget.value?.id ?? ""}`,
+);
+const previewOpen = computed(() => context.preview.value?.key === previewKey.value);
+function togglePreview() {
+  const target = previewTarget.value;
+  if (!target) return;
+  if (previewOpen.value) {
+    context.preview.value = null;
+    return;
+  }
+  const card = props.node.children.find(
+    (child): child is ValidatedElement => child.type === "element" && child.tag === "Card",
+  );
+  context.preview.value = { key: previewKey.value, target, card };
+}
+
 // `display="box"` shows a non-editable field as its disabled input. Value tags
 // and images keep their normal view, and references show their link in a box
-// so they stay clickable.
+// so they stay clickable; so do values that open a preview.
 const boxedView = computed(
   () =>
     !editable.value &&
     boxed.value &&
     !resolved.value.unavailable &&
     display.value !== "value" &&
-    display.value !== "image",
+    display.value !== "image" &&
+    (!previewTarget.value || display.value === "ref"),
 );
 // Laid out like an input: label above, no stat styling.
 const asInput = computed(() => editable.value || boxedView.value);
@@ -293,6 +320,7 @@ const imageSize = computed(
 
     <span v-else-if="display === 'number'" class="tabular-nums">
       <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+      <SheetPreviewTrigger v-else-if="previewTarget && text" :open="previewOpen" @click="togglePreview">{{ text }}</SheetPreviewTrigger>
       <template v-else>{{ text || "—" }}</template>
     </span>
 
@@ -355,8 +383,17 @@ const imageSize = computed(
           : ''
       "
     >
+      <SheetPreviewTrigger
+        v-if="refInfo && previewTarget"
+        class="text-primary decoration-primary/40 hover:decoration-primary"
+        :open="previewOpen"
+        @click="togglePreview"
+      >
+        {{ refInfo.name }}
+        <span v-if="refInfo.custom" class="text-xs text-muted">(custom)</span>
+      </SheetPreviewTrigger>
       <NuxtLink
-        v-if="refInfo?.to"
+        v-else-if="refInfo?.to"
         :to="refInfo.to"
         class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
       >
@@ -401,6 +438,7 @@ const imageSize = computed(
 
     <span v-else :class="text ? '' : 'text-dimmed'">
       <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+      <SheetPreviewTrigger v-else-if="previewTarget && text" :open="previewOpen" @click="togglePreview">{{ text }}</SheetPreviewTrigger>
       <template v-else>{{ text || "—" }}</template>
     </span>
     </div>
