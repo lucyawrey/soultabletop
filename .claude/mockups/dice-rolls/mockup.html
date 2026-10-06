@@ -115,20 +115,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .mathpop[hidden] { display: none; }
 .mathpop b { color: var(--st-ink); }
 
-/* Dice: CSS shapes. The outline is the shape in primary, with the face inset over it. */
-.die { --sz: 30px; width: var(--sz); height: var(--sz); position: relative; display: inline-grid; place-items: center; flex: none; font-weight: 800; font-variant-numeric: tabular-nums; font-size: calc(var(--sz) * .4); color: var(--st-ink); }
-.die::before, .die::after { content: ""; position: absolute; clip-path: var(--cp); }
-.die::before { inset: 0; background: var(--st-primary); }
-.die::after { inset: 2.5px; background: var(--st-panel); }
+/* Dice: simple outlined shapes (inline SVG), one stroke width and rounded joins for every die. */
+.die { --sz: 30px; width: var(--sz); height: var(--sz); position: relative; display: inline-grid; place-items: center; flex: none; font-weight: 800; font-variant-numeric: tabular-nums; font-size: calc(var(--sz) * .36); color: var(--st-ink); }
+.die svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.die svg * { fill: var(--st-panel); stroke: var(--st-primary); stroke-width: 2px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .die b { position: relative; z-index: 1; line-height: 1; }
-.die.d4 { --cp: polygon(50% 2%, 98% 94%, 2% 94%); } .die.d4 b { transform: translateY(22%); font-size: .85em; }
-.die.d6 { --cp: inset(4% round 18%); }
-.die.d8 { --cp: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); } .die.d8 b { font-size: .9em; }
-.die.d10 { --cp: polygon(50% 0, 100% 44%, 50% 100%, 0 44%); } .die.d10 b { font-size: .85em; transform: translateY(-6%); }
-.die.d12 { --cp: polygon(50% 0, 99% 36%, 80% 97%, 20% 97%, 1% 36%); } .die.d12 b { transform: translateY(8%); }
-.die.d20 { --cp: polygon(50% 0, 94% 25%, 94% 75%, 50% 100%, 6% 75%, 6% 25%); }
-.die.nat::after { background: var(--st-primary); } .die.nat b { color: var(--st-on-primary); }
-.die.dropped::before { background: var(--st-border-strong); } .die.dropped::after { background: var(--st-panel-muted); }
+.die.d4 b { transform: translateY(20%); font-size: .85em; }
+.die.d10 b { transform: translateY(-8%); }
+.die.d12 b { transform: translateY(6%); }
+.die.nat svg * { fill: var(--st-primary); } .die.nat b { color: var(--st-on-primary); }
+.die.dropped svg * { fill: var(--st-panel-muted); stroke: var(--st-border-strong); }
 .die.dropped b, .gdie.dropped b { color: var(--st-ink-muted); text-decoration: line-through; text-decoration-thickness: 2px; }
 /* Dice: game-icons.net, with the face on a badge (a d6 shows its pips instead). */
 .gdie { --sz: 30px; width: var(--sz); height: var(--sz); position: relative; display: inline-grid; place-items: center; flex: none; color: var(--st-ink); }
@@ -143,10 +139,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .dicerow .flat { font-weight: 800; font-variant-numeric: tabular-nums; align-self: center; }
 .big .die, .big .gdie { --sz: 40px; }
 .big .many .die, .big .many .gdie { --sz: 30px; }
-/* A group of dice from one term (2d6) sits together on a soft band, captioned when the roll has more than one die. */
+/* A group of dice from one term (2d6) sits close together, captioned when the roll has more than one die. */
 .dgroup { display: inline-grid; justify-items: center; gap: 2px; }
-.dgroup > span:first-child { display: inline-flex; flex-wrap: wrap; align-items: end; gap: 4px; }
-.dgroup.multi > span:first-child { padding: 3px 5px; border-radius: 8px; background: var(--st-panel-muted); }
+.dgroup > span:first-child { display: inline-flex; flex-wrap: wrap; align-items: end; gap: 3px; }
+
 .dgroup > small { font-size: 10.5px; font-weight: 700; color: var(--st-ink-muted); letter-spacing: .02em; }
 .dicerow .rtotal { display: inline-flex; align-items: center; gap: 8px; align-self: center; }
 .dicerow .rtotal .eq { color: var(--st-ink-muted); font-size: 20px; }
@@ -248,7 +244,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.8 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.9 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
@@ -393,6 +389,9 @@ function runFollowUp(id, k) {
 }
 
 // ---- Rendering dice ----
+// Outlines in a 100×100 box, each filling about the same area.
+const SHAPE = { 4: '<polygon points="50,5 96,88 4,88"/>', 6: '<rect x="9" y="9" width="82" height="82" rx="5"/>', 8: '<polygon points="50,2 98,50 50,98 2,50"/>',
+  10: '<polygon points="50,2 98,40 50,98 2,40"/>', 12: '<polygon points="50,3 97,37 79,95 21,95 3,37"/>', 20: '<polygon points="50,2 94,26 94,74 50,98 6,74 6,26"/>' };
 const D6 = ["", "one", "two", "three", "four", "five", "six"];
 function dieHTML(f, { size } = {}) {
   const nat = f.kept && f.s === 20 && (f.v === 20 || f.v === 1) ? " nat" : "", drop = f.kept ? "" : " dropped";
@@ -402,7 +401,7 @@ function dieHTML(f, { size } = {}) {
     const badge = !(f.s === 6 || (f.s === 20 && (f.v === 1 || f.v === 20)));
     return `<span class="gdie${nat}${drop}" role="img" aria-label="${label}" title="${label}">${svg(icon)}${badge ? `<b>${f.v}</b>` : ""}</span>`;
   }
-  return `<span class="die d${f.s}${nat}${drop}" role="img" aria-label="${label}" title="${label}"><b>${f.v}</b></span>`;
+  return `<span class="die d${f.s}${nat}${drop}" role="img" aria-label="${label}" title="${label}"><svg viewBox="0 0 100 100" aria-hidden="true">${SHAPE[f.s]}</svg><b>${f.v}</b></span>`;
 }
 // Dice laid out as the expression: each term's dice grouped (captioned when there's more than one die), dropped ones labeled,
 // then the flat numbers; `tail` (the total) follows the last die so the sum reads left to right.
