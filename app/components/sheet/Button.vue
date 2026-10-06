@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { sheetButtonWrites } from "#shared/sheet/runtime";
+import { sheetButtonWrites, sheetValueAt } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // <Button>: clicking it writes its <Set>s' values (see sheetButtonWrites),
@@ -53,9 +53,28 @@ function click() {
               label: "Undo",
               color: "neutral",
               variant: "outline",
-              // Last write first, so a field written twice gets its first value back.
+              // Last write first, so a field written twice gets its first
+              // value back. A value changed since (edited, or its row moved)
+              // is left as it is.
               onClick: () => {
-                for (const write of [...writes].reverse()) context.update(write.path, write.previous);
+                let skipped = 0;
+                const written = new Map(writes.map((write) => [JSON.stringify(write.path), write.value]));
+                for (const write of [...writes].reverse()) {
+                  const key = JSON.stringify(write.path);
+                  if (sheetValueAt(context.root.value.value, write.path) !== written.get(key)) {
+                    skipped += 1;
+                    continue;
+                  }
+                  context.update(write.path, write.previous);
+                  written.set(key, write.previous);
+                }
+                if (skipped) {
+                  toast.add({
+                    title: `Undo left ${skipped === 1 ? "1 value" : `${skipped} values`} as they are`,
+                    description: "They changed after the click.",
+                    color: "warning",
+                  });
+                }
               },
             },
           ],

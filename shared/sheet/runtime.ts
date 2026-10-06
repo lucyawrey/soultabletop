@@ -262,6 +262,41 @@ export function evaluateSheetFormula(
   return evaluateFormula(ast, formulaEnv(root, scope, refs, formulas, params));
 }
 
+// Why a Set's result can't go in its field, if it can't. The content save
+// checks this too; checking it on the click means a Button never leaves data
+// that can't be saved.
+function setValueProblem(field: ContentFieldSchema | undefined, value: FormulaValue, path: string) {
+  if (!field) return undefined;
+  if (value === null) {
+    return field.required ? `"${path}" is required, so it can't be left empty` : undefined;
+  }
+  const wanted: Record<string, [string, string]> = {
+    string: ["string", "text"],
+    number: ["number", "a number"],
+    boolean: ["boolean", "true or false"],
+  };
+  const [kind, description] = wanted[field.type] ?? [];
+  if (kind && typeof value !== kind) {
+    return `"${path}" holds ${description}, but the formula gave ${JSON.stringify(value)}`;
+  }
+  const options = fieldOptions(field);
+  if (options && !options.some((option) => option.value === value)) {
+    return `${JSON.stringify(value)} isn't one of the options of "${path}"`;
+  }
+  return undefined;
+}
+
+// The value at `path` in `root` (own properties only), or undefined.
+export function sheetValueAt(root: unknown, path: readonly (string | number)[]): unknown {
+  let current = root;
+  for (const key of path) {
+    if (typeof current !== "object" || current === null) return undefined;
+    const container = current as Record<string | number, unknown>;
+    current = Object.hasOwn(container, key) ? container[key] : undefined;
+  }
+  return current;
+}
+
 // One value a Button writes: `value` at `path`, which held `previous` (for
 // Undo). `undefined` removes the key.
 export interface SheetWrite {
@@ -301,6 +336,8 @@ export function sheetButtonWrites(
       const value = evaluateSheetFormula(child.formula.ast, root, row, refs, formulas, params);
       if (isFormulaError(value)) return { error: value.message };
       if (!target.path) continue;
+      const problem = setValueProblem(child.target.field, value, child.attrs.field as string);
+      if (problem) return { error: problem };
       writes.push({ path: target.path, value: value ?? undefined, previous: target.value });
     }
   }

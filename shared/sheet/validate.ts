@@ -1119,6 +1119,13 @@ class Validator {
     const path = list ? { absolute: false, segments: itemText ? itemText.split(".") : [] } : parseSheetPath(written);
     const shape = this.resolvePath(path, written, targetScope, node.loc, list ? `${listText}.*` : undefined);
     if (!shape) return undefined;
+    if (shape.depth > targetScope.depth) {
+      this.warn(
+        "set-through-content",
+        `"${written}" goes through a content field: the Set changes it only where that content is stored in this one (local data), never referenced content`,
+        node.loc,
+      );
+    }
     const field = shape.kind === "field" ? shape.field : undefined;
     const single = ["string", "number", "boolean", "scalar"];
     if (shape.kind === "record" || (field && !single.includes(field.type))) {

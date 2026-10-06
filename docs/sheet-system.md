@@ -301,7 +301,7 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
   message in a toast. A result of nothing removes the key.
 - `field` is a path to one text, number, true/false, or scalar field (not a struct, array, or reference); the
   formula's result must fit it, and a literal written to a choice field must be one of its options (other values are
-  checked when the content is saved). One `*` segment changes every item of an array, or every entry of a struct whose
+  checked on the click). A path through a `content` field is a warning: only local data there can change. One `*` segment changes every item of an array, or every entry of a struct whose
   entries are alike (`spells.*.cast`, `slots.*.used`); its formula then runs once per item, with relative paths being
   the item's like in a `List` (`<Set field="slots.*.left" formula="max" />`), and `/` the top level. Without `*` the
   formula runs in the Button's scope (a `List` or `Table` row, or the top level). Fields reached through a reference
@@ -313,7 +313,11 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
 - Who can use it (decided): only viewers who can edit the content see Buttons (and the amount box). With Edit on they
   work; with Edit off only `live` ones (on the Button or inherited) do, the rest are disabled. Writes go into the draft
   like any edit, so they save the way a `live` field does with Edit off (at once) and like other edits with Edit on.
+- Results are checked against their fields on the click, as the save would: the field's type, a choice field's
+  options, and nothing for a required field. A result that doesn't fit writes nothing and says why.
 - After a click a toast names the Button with an **Undo** action that writes back the previous values (decided).
+  A value changed since the click (edited, or its row moved) is left as it is, and the toast says how many.
+- `locked` doesn't stop a Button: it guards a field's own input, while a Button is its own action.
 - In a `Table`, a `Column` with `Button` children instead of a `field` or `formula` gives each row its buttons
   (a Column with both is an error). Such columns are left out for viewers who can't edit.
 - Rendered by `sheet/Button.vue` (`UButton`, outline, `xs` in compact sheets), `sheet/ButtonGroup.vue` (the shared

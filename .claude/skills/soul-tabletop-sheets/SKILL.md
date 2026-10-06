@@ -120,7 +120,7 @@ A `Button` changes fields when clicked, one `Set` per field. Use it for actions 
 </Table>
 ```
 
-- Every `Set` reads the data from before the click (so Damage above uses the old `hp.temp` in both), then all write together. A formula that fails writes nothing. A result of nothing (`null`) removes the value.
+- Every `Set` reads the data from before the click (so Damage above uses the old `hp.temp` in both), then all write together. A formula that fails, or a result the field can't hold (wrong type, not an option, nothing for a required field), writes nothing. A result of nothing (`null`) removes the value of an optional field. `locked` doesn't stop a Button.
 - `field` must be one text, number, true/false, or scalar field. One `*` changes every item of an array or every entry of a struct of alike entries; then the formula runs per item, with paths relative to the item (`formula="max"` reads that slot's `max`). Without `*`, paths are relative to the Button's row (inside a `List`/`Table`) or the top level.
 - A literal written to a choice field must be one of its options (`'Worn'`).
 - `amount` shows a number box; adjacent Buttons with `amount` share one box. `amount` in their formulas is the number typed (`/amount` reaches a field named so). Without `amount` on the Button, `amount` is an ordinary path.

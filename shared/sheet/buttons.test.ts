@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sheetButtonWrites, setSheetValue, type SheetScope } from "./runtime";
+import { sheetButtonWrites, sheetValueAt, setSheetValue, type SheetScope } from "./runtime";
 import { compileSheet, type SheetSchemas, type ValidatedElement, type ValidatedNode } from "./validate";
 
 // <Button> and <Set>: sheet buttons that change fields.
@@ -14,6 +14,8 @@ const schemas: SheetSchemas = {
         entries: { value: { type: "number" }, temp: { type: "number" }, max: { type: "number" } },
       },
       focus: { type: "number" },
+      level: { type: "number", required: true },
+      flag: { type: "boolean" },
       notes: { type: "string" },
       tags: { type: "array", itemType: { type: "string" } },
       spells: {
@@ -140,6 +142,22 @@ describe("Button and Set validation", () => {
     ]);
   });
 
+  it("warns that a Set through a content field changes only local data", () => {
+    expect(messages(`<Button label="X"><Set field="class.hp" formula="1" /></Button>`)).toEqual([
+      'warning set-through-content: "class.hp" goes through a content field: the Set changes it only where that content is stored in this one (local data), never referenced content',
+    ]);
+  });
+
+  it("accepts arrays of single values, indexes, and top-level paths in a * Set", () => {
+    expect(
+      messages(`<Button label="X">
+        <Set field="tags.*" formula="'x'" />
+        <Set field="spells.0.cast" formula="true" />
+        <Set field="spells.*.uses" formula="/focus" />
+      </Button>`),
+    ).toEqual([]);
+  });
+
   it("places Buttons and Sets", () => {
     expect(messages(`<Button label="X" />`)).toEqual([
       "error missing-child: <Button> needs a <Set> for each field it changes",
@@ -229,6 +247,29 @@ describe("clicking a Button", () => {
     const data = { hp: { value: 20, temp: "x", max: 30 } };
     expect(click(damage!, data, 5)).toEqual({ error: expect.stringContaining("number") });
     expect(data.hp).toEqual({ value: 20, temp: "x", max: 30 });
+  });
+
+  it("writes nothing when a result doesn't fit its field", () => {
+    const [mixed, lost, cleared] = buttons(`
+      <Button label="Mixed"><Set field="focus" formula="if(flag, 1, 'a')" /></Button>
+      <List field="inventory">
+        <Button label="Lose"><Set field="state" formula="if(/flag, 'Held', 'Lost')" /></Button>
+      </List>
+      <Button label="Clear"><Set field="level" formula="null" /></Button>`);
+    const data = { flag: false, focus: 2, level: 3, inventory: [{ name: "Mace", state: "Held" }] };
+    expect(click(mixed!, data)).toEqual({ error: '"focus" holds a number, but the formula gave "a"' });
+    const row: SheetScope = { value: data.inventory[0], path: ["inventory", 0] };
+    expect(click(lost!, data, undefined, row)).toEqual({ error: '"Lost" isn\'t one of the options of "state"' });
+    expect(click(cleared!, data)).toEqual({ error: '"level" is required, so it can\'t be left empty' });
+    expect(data).toEqual({ flag: false, focus: 2, level: 3, inventory: [{ name: "Mace", state: "Held" }] });
+  });
+
+  it("reads values by path for Undo", () => {
+    const data = { spells: [{ cast: true }], hp: { value: 3 } };
+    expect(sheetValueAt(data, ["spells", 0, "cast"])).toBe(true);
+    expect(sheetValueAt(data, ["hp", "temp"])).toBeUndefined();
+    expect(sheetValueAt(data, ["hp", "value", "x"])).toBeUndefined();
+    expect(sheetValueAt(data, ["constructor"])).toBeUndefined();
   });
 
   it("needs an amount typed in", () => {
