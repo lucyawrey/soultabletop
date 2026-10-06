@@ -19,7 +19,6 @@ import {
 import { FormulaError, formulaLimits, parseFormula, type FormulaValue } from "./formula";
 import { pathfinder2eMarkup, pathfinder2eSchemas } from "./fixtures/pathfinder2e";
 import {
-  compileSheet,
   isCompiledFormula,
   parseSheetPath,
   sheetStepBudget,
@@ -28,6 +27,7 @@ import {
   type ValidatedElement,
   type ValidatedText,
 } from "./validate";
+import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
 
 const refs: SheetRefs = {
   "rope-id": { name: "Rope", contentTypeId: "item", data: { weight: 5 } },

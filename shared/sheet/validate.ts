@@ -351,6 +351,9 @@ class Validator {
   // What each formula path resolved to, for `{path}` text showing labels.
   private pathShapes = new WeakMap<SheetPath, Shape>();
   private readonly rootShape: Shape;
+  // Whether the markup has its `<Sheet>` root; without one, the rest is
+  // checked as if it were inside it, so the missing root is the only new error.
+  private hasRoot = false;
   formulaSites = 0;
 
   constructor(private readonly schemas: SheetSchemas) {
@@ -365,7 +368,22 @@ class Validator {
 
   validate(nodes: SheetNode[]): ValidatedNode[] {
     this.collectDefinitions(nodes);
+    this.checkRoot(nodes);
     return this.children(nodes, null, this.rootShape);
+  }
+
+  // Every sheet is one `<Sheet>` root, with `<Define>`s beside it or inside it.
+  private checkRoot(nodes: SheetNode[]) {
+    const roots = nodes.filter(
+      (node): node is SheetElement => node.type === "element" && findTag(node.tag)?.name === "Sheet",
+    );
+    this.hasRoot = roots.length > 0;
+    if (!this.hasRoot) {
+      const first = nodes[0]?.loc.start ?? { line: 1, column: 1, offset: 0 };
+      this.error("missing-sheet", "Wrap the sheet in <Sheet>…</Sheet>", { start: first, end: first });
+    }
+    for (const extra of roots.slice(1))
+      this.error("duplicate-sheet", "A sheet has only one <Sheet>", extra.loc);
   }
 
   private error(code: string, message: string, loc: Loc) {
@@ -834,6 +852,10 @@ class Validator {
     const result: ValidatedNode[] = [];
     for (const node of nodes) {
       if (node.type === "text") {
+        if (!parent && this.hasRoot) {
+          this.error("text-not-allowed", "Text must be inside <Sheet>", node.loc);
+          continue;
+        }
         if (rule === "none" || typeof rule === "object") {
           this.error("text-not-allowed", `<${parent!.name}> can't contain text`, node.loc);
           continue;
@@ -875,6 +897,8 @@ class Validator {
       const allowed = rule.only.map((name) => `<${name}>`).join(" and ");
       return invalid("child-not-allowed", `<${parent!.name}> can only contain ${allowed}`);
     }
+    if (!parent && this.hasRoot && spec.name !== "Sheet" && !spec.topLevel)
+      return invalid("misplaced-tag", `<${spec.name}> must be inside <Sheet>`);
     if (spec.parents) {
       if (!spec.parents.length && parent)
         return invalid("misplaced-tag", `<${spec.name}> must be the outermost tag`);

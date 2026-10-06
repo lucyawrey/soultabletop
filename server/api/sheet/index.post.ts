@@ -139,7 +139,7 @@ export default defineEventHandler(async (event) => {
   let markup = body.markup;
   if (markup === undefined) {
     const schemas = await loadSheetSchemas(body.contentTypeId);
-    markup = schemas ? generateSheetMarkup(schemas) : "";
+    markup = schemas ? generateSheetMarkup(schemas) : "<Sheet>\n</Sheet>\n";
   } else {
     await assertValidSheetMarkup(markup, body.contentTypeId);
   }

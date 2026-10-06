@@ -205,7 +205,7 @@ const tagList: TagSpec[] = [
   {
     name: "Sheet",
     category: "layout",
-    description: "Optional root wrapping the whole sheet",
+    description: "The root wrapping the whole sheet (required)",
     attrs: {
       density: oneOf(
         SHEET_DENSITIES,
