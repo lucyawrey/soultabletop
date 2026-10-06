@@ -25,7 +25,7 @@ Sections: 1. markup language + parser → 2. tag catalog → 3. validation again
 ## 1. Markup language & parser
 
 ### Pipeline (all in `shared/sheet/`, used by server and client)
-1. `parseSheetMarkup(source) → { nodes, diagnostics }` (top-level nodes; `<Sheet>` is optional) — syntax only, knows nothing about tags. Error-recovering: collects all
+1. `parseSheetMarkup(source) → { nodes, diagnostics }` (top-level nodes) — syntax only, knows nothing about tags. Error-recovering: collects all
    errors with line/column instead of stopping at the first.
 2. `validate(nodes, registry, contentTypeSchema) → { tree, diagnostics }` — checks tags/attrs/children/field bindings,
    coerces attribute strings to typed props, outputs a normalized tree the renderer consumes.
@@ -100,7 +100,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 ### Layout
 | Tag | Attrs | Children | Renders |
 |---|---|---|---|
-| `Sheet` | `density` (compact/roomy, default compact) | any | root wrapper; optional (implicit if omitted); top level only |
+| `Sheet` | `density` (compact/roomy, default compact) | any | root wrapper; required: every sheet is one `<Sheet>`, with only `<Define>`s beside it (decided 2026-10-06, so other views of the content, like reference preview cards, can sit beside it) |
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
@@ -114,7 +114,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 
 `density` (decided 2026-10-06, from the [PF2e sheet mockup](../.claude/mockups/pf2e-sheet/spec.md); compact made the
 default the same day, since it reliably looks like a character sheet): `roomy` is the site's form spacing, written
-`<Sheet density="roomy">`; `compact`, the default (writing it stays valid, so a sheet can name it if more densities come) (also for sheets without a `<Sheet>` root, and generated sheets), is
+`<Sheet density="roomy">`; `compact`, the default (writing it stays valid, so a sheet can name it if more densities come) (also for generated sheets), is
 dense, with no custom CSS: the smallest inputs (Nuxt UI size
 `xs`), small uppercase field labels, smaller stats, tighter Section padding and Table cells, and every gap one step
 tighter (`Grid`/`Stack` `gap="md"` is `gap-2`; `sheetGapCompact` in `app/utils/sheet-layout.ts`). The sheet root
@@ -266,7 +266,7 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
 
 ### Definitions and conditional display
 - `<Define name="prof" params="rank" formula="…" />`: a reusable formula, called as `prof(x)` (one without
-  parameters as `pb()`) from any formula in the sheet. Only at the top level or directly inside `<Sheet>`; order
+  parameters as `pb()`) from any formula in the sheet. Only beside the `<Sheet>` root or directly inside it; order
   doesn't matter; renders nothing. See "Formulas".
 - `show="expr"`, a bare formula like `formula=` (`show="hp > 0"`, `show="hasShield"`; no braces): `true` shows the tag, `false` or nothing hides it and
   everything in it, in every mode; the data is never cleared. It is evaluated in the tag's scope (a `List` or `Table`
@@ -386,7 +386,9 @@ edits counts errors only. Switching a content type from strict to non-strict tur
 it (server: `resolveShowSheetWarnings` in `shared/content-schema.ts`; the form pre-sets it).
 
 Structural (errors): unknown tag; unknown attr; missing required attr; attr value not coercible (e.g. `cols="abc"`,
-enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Divider`).
+enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Divider`). Root: no `<Sheet>` (`missing-sheet`; the
+rest is still checked as if inside one), a second one (`duplicate-sheet`), or a tag or text beside it other than a
+`<Define>` (`misplaced-tag`, `text-not-allowed`).
 
 Formulas (errors unless noted; codes in parentheses):
 | Case | Result |
@@ -443,7 +445,7 @@ with edit access to the sheet, and is omitted for everyone else; valid nodes ren
 
 Generator: `generateSheetMarkup(schema)` in `shared/sheet/generate.ts`, a pure function (unit-tested) producing
 ordinary markup, so it goes through the same parse/validate/render path as authored sheets:
-- Top-level simple fields → one "Details" `Section` with `<Grid cols="2">`, starting with `<Text field="name" />`
+- Everything inside one `<Sheet>` root. Top-level simple fields → one "Details" `Section` with `<Grid cols="2">`, starting with `<Text field="name" />`
   (the page header already shows the name, so no heading), then a `<Field>` per field.
 - `struct` field → its own `Section` titled by label, recursing. Free-form `object` → a `Section` with a `<Field>` (JSON editor).
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.

@@ -76,8 +76,9 @@ function join(prefix: string, key: string) {
 
 export function generateSheetMarkup(schemas: SheetSchemas): string {
   const lines: string[] = [];
+  // Everything sits inside the `<Sheet>` root, one level in.
   const add = (depth: number, text: string) =>
-    lines.push(`${"  ".repeat(depth)}${text}`);
+    lines.push(`${"  ".repeat(depth + 1)}${text}`);
 
   // A grid of the simple fields, then a Section per complex field.
   function fields(
@@ -177,5 +178,5 @@ export function generateSheetMarkup(schemas: SheetSchemas): string {
   for (const [key, field] of Object.entries(root)) {
     if (!isSimple(field)) complex(key, field, key, 0);
   }
-  return `${lines.join("\n")}\n`;
+  return `<Sheet>\n${lines.join("\n")}\n</Sheet>\n`;
 }
