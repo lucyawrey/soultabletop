@@ -78,3 +78,4 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - **Action glyphs back to text (user):** ◆ ↺ ◇ as text, as before (now with spoken labels); the game-icons and own-SVG glyph toggle is gone. Section and tab icons stay, centered inline with their labels.
 - **Icon choices:** `icons.html` in this folder shows 6–7 game-icons candidates per section label and tab, drawn as the sheet draws them; the user picks one per label.
 - **Larger action glyphs (user):** the text glyphs are about 1.45× the row text in Strikes, Actions, and Feats, and 1.2× inline in Spells.
+- **Icon picker in the mockup (user):** a small picker under the sheet (shown while Icons is on) with the same candidates as `icons.html`; clicking one changes that label's icon on the sheet at once, and a "Picks:" line lists the current choices to copy. Picks aren't saved across reloads.
