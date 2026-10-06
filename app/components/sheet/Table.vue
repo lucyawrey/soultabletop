@@ -43,6 +43,41 @@ const details = computed(() =>
   ),
 );
 
+// Expanded rows: their RowDetails (the chevron), and the previews their
+// Columns opened (any number), by row key.
+const detailsOpen = ref(new Set<string | number>());
+const rowPreviews = ref(new Map<string | number, SheetPreview[]>());
+const rowKey = (row: SheetScope, index: number) => row.item?.key ?? index;
+function toggleDetails(row: SheetScope, index: number) {
+  const key = rowKey(row, index);
+  const open = new Set(detailsOpen.value);
+  if (!open.delete(key)) open.add(key);
+  detailsOpen.value = open;
+}
+provideSheetRowPreviews({
+  isOpen: (row, key) => !!rowPreviews.value.get(row)?.some((preview) => preview.key === key),
+  toggle: (row, preview) => {
+    const previews = new Map(rowPreviews.value);
+    const current = previews.get(row) ?? [];
+    const next = current.some((item) => item.key === preview.key)
+      ? current.filter((item) => item.key !== preview.key)
+      : [...current, preview];
+    if (next.length) previews.set(row, next);
+    else previews.delete(row);
+    rowPreviews.value = previews;
+  },
+});
+const expanded = computed<Record<string, boolean>>(() =>
+  Object.fromEntries(
+    rows.value.flatMap((row, index) => {
+      const key = rowKey(row, index);
+      const shown =
+        (detailsOpen.value.has(key) && rowDetails(row).shown) || rowPreviews.value.has(key);
+      return shown ? [[String(index), true]] : [];
+    }),
+  ),
+);
+
 // RowDetails' `show`, per row: a row whose details are hidden can't expand.
 const rowDetails = (row: SheetScope) =>
   details.value
@@ -136,6 +171,7 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
     <UTable
       :data="rows"
       :columns="columns"
+      :expanded="expanded"
       class="w-full"
       tabindex="0"
       :aria-label="label || undefined"
@@ -177,9 +213,10 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
           color="neutral"
           variant="ghost"
           size="xs"
-          :icon="row.getIsExpanded() ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
-          :aria-label="row.getIsExpanded() ? 'Collapse row' : 'Expand row'"
-          @click="row.toggleExpanded()"
+          :icon="detailsOpen.has(rowKey(row.original, row.index)) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+          :aria-label="detailsOpen.has(rowKey(row.original, row.index)) ? 'Collapse row' : 'Expand row'"
+          :aria-expanded="detailsOpen.has(rowKey(row.original, row.index))"
+          @click="toggleDetails(row.original, row.index)"
         />
       </template>
       <template
@@ -199,8 +236,15 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
         </SheetScope>
       </template>
       <template #expanded="{ row }">
+        <div
+          v-for="preview in rowPreviews.get(rowKey(row.original, row.index)) ?? []"
+          :key="preview.key"
+          class="mb-2 last:mb-0"
+        >
+          <SheetPreviewExpanded :preview="preview" />
+        </div>
         <SheetScope
-          v-if="details && rowDetails(row.original).shown"
+          v-if="details && detailsOpen.has(rowKey(row.original, row.index)) && rowDetails(row.original).shown"
           :scope="row.original"
           :repeat="rows.length"
         >
