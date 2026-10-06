@@ -17,6 +17,8 @@ const props = defineProps<{ node: ValidatedElement; compact?: boolean }>();
 
 const { context, scope, resolve, format, formatFormula, evaluate, number } = useSheet();
 const attrText = useSheetAttrText();
+// Compact sheets: small uppercase labels and smaller stats.
+const compactSheet = useSheetCompact();
 
 // A formula-only field has no place in the data, so it can't be edited.
 const resolved = computed<SheetScope>(() =>
@@ -195,7 +197,8 @@ const imageSize = computed(
       move the input either. -->
     <div
       v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || isEditableOverride"
-      class="flex min-h-4 items-center gap-1 text-xs font-medium text-muted"
+      class="flex min-h-4 items-center gap-1 text-muted"
+      :class="compactSheet ? 'text-[0.6875rem] font-semibold tracking-wide uppercase' : 'text-xs font-medium'"
     >
       <span v-if="shownLabel && !compact" class="sheet-field-label">{{
         shownLabel
@@ -256,7 +259,10 @@ const imageSize = computed(
     </template>
 
     <template v-else-if="display === 'stat'">
-      <div class="text-3xl font-bold text-highlighted tabular-nums">
+      <div
+        class="font-bold text-highlighted tabular-nums"
+        :class="compactSheet ? 'text-2xl' : 'text-3xl'"
+      >
         {{ text || "—" }}
       </div>
     </template>

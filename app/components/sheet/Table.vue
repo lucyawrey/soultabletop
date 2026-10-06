@@ -63,6 +63,14 @@ const narrowUi = {
   tr: "max-sm:flex max-sm:flex-wrap max-sm:px-3 max-sm:gap-x-3 max-sm:gap-y-2 max-sm:py-3",
   td: "max-sm:block max-sm:w-auto max-sm:min-w-28 max-sm:flex-1 max-sm:p-0 max-sm:whitespace-normal",
 };
+const compact = useSheetCompact();
+// Compact sheets: tighter cells (on phones the stacked rows keep their own
+// spacing, set in narrowUi).
+const tableUi = computed(() =>
+  compact.value
+    ? { ...narrowUi, th: "px-2 py-1.5", td: `px-2 py-1 ${narrowUi.td}` }
+    : narrowUi,
+);
 
 const columns = computed<TableColumn<SheetScope>[]>(() => [
   ...(details.value
@@ -122,7 +130,7 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
       class="w-full"
       tabindex="0"
       :aria-label="label || undefined"
-      :ui="narrowUi"
+      :ui="tableUi"
     >
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
@@ -187,7 +195,7 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
           :scope="row.original"
           :repeat="rows.length"
         >
-          <div :class="[sheetClasses(details), 'space-y-3']">
+          <div :class="[sheetClasses(details), compact ? 'space-y-2' : 'space-y-3']">
             <SheetFormulaWarning
               v-if="rowDetails(row.original).error && context.showInvalid.value"
               :message="`show: ${rowDetails(row.original).error}`"

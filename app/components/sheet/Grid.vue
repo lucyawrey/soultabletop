@@ -6,8 +6,9 @@ const props = defineProps<{ node: ValidatedElement }>();
 const cols = computed(
   () => sheetGridCols[(props.node.attrs.cols as number | undefined) ?? 2],
 );
+const compact = useSheetCompact();
 const gap = computed(
-  () => sheetGap[(props.node.attrs.gap as string | undefined) ?? "md"],
+  () => (compact.value ? sheetGapCompact : sheetGap)[(props.node.attrs.gap as string | undefined) ?? "md"],
 );
 </script>
 
