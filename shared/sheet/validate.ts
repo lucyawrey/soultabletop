@@ -53,6 +53,7 @@ import {
   noShowTags,
   type AttrSpec,
   type BindKind,
+  type SheetPreviewMode,
   type TagSpec,
 } from "./registry";
 
@@ -116,10 +117,10 @@ export interface ValidatedElement {
   formula?: { ast: FormulaNode; type: FormulaType };
   // A List or Table bound to a struct: the struct's entries, one row each.
   entries?: SheetEntry[];
-  // `preview` on Ref, Value, or Column: the content field the value is
-  // reached through (relative to the tag's scope, like its field), and its
-  // content type. A `<Card>` child, if any, is in `children`.
-  preview?: { path: SheetPath; contentTypeId: string };
+  // `preview` on Ref, Value, or Column: expanded or in a card, the content
+  // field the value is reached through (relative to the tag's scope, like its
+  // field), and its content type. A `<Card>` child, if any, is in `children`.
+  preview?: { mode: SheetPreviewMode; path: SheetPath; contentTypeId: string };
   children: ValidatedNode[];
   loc: Loc;
 }
@@ -1022,7 +1023,7 @@ class Validator {
     // Cards are read-only and can't open other cards.
     if (this.cardDepth && spec.name === "Button")
       return invalid("button-in-card", "<Button> can't be in a <Card>: cards are read-only");
-    if (this.cardDepth && attrs.preview === true)
+    if (this.cardDepth && typeof attrs.preview === "string")
       return invalid("preview-in-card", "A card can't open another card; remove preview");
 
     let binding: Binding | undefined;
@@ -1136,13 +1137,13 @@ class Validator {
 
     let preview: ValidatedElement["preview"];
     let card: CardScope;
-    if (attrs.preview === true) {
+    if (typeof attrs.preview === "string") {
       const found = this.previewTarget(spec, binding, trail, node.loc);
       if (typeof found === "string") {
         this.error("invalid-attribute", found, attrNamed(node, "preview")!.loc);
         card = "broken";
       } else {
-        preview = found.preview;
+        preview = { mode: attrs.preview as SheetPreviewMode, ...found.preview };
         card = { shape: found.shape };
       }
     }
@@ -1197,7 +1198,7 @@ class Validator {
     binding: Binding | undefined,
     trail: Shape[],
     loc: Loc,
-  ): { preview: NonNullable<ValidatedElement["preview"]>; shape: Shape } | string {
+  ): { preview: Omit<NonNullable<ValidatedElement["preview"]>, "mode">; shape: Shape } | string {
     if (!binding) return `preview needs a field: <${spec.name}> previews the content its field is reached through`;
     const isContent = (shape: Shape | undefined) =>
       shape?.kind === "field" && shape.field.type === "content";
@@ -1445,6 +1446,7 @@ class Validator {
     };
 
     if (attr.value === true) {
+      if (type.kind === "enum" && type.bare) return type.bare;
       return type.kind === "boolean"
         ? true
         : fail(`${name} on <${spec.name}> needs a value, like ${name}="…"`);

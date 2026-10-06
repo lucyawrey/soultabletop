@@ -42,9 +42,9 @@ import {
   type ValidatedNode,
 } from "#shared/sheet/validate";
 
-// The reference preview card that is open (see SheetPreviewCard): what it
-// shows, and the `<Card>` the tag that opened it wrote, if any. `key` tells
-// which tag and row opened it, so clicking that again closes it.
+// An expanded reference preview (see SheetPreviewBody): what it shows, and
+// the `<Card>` the tag that opened it wrote, if any. `key` tells which tag
+// opened it, so clicking that again closes it.
 export interface SheetPreview {
   key: string;
   target: SheetPreviewTarget;
@@ -77,8 +77,9 @@ export interface SheetContext {
   addLink: (id: string, link: SheetLink) => void;
   // `locked` fields unlocked with their pencil button, for this page view.
   unlocked: Set<string>;
-  // The open reference preview card.
-  preview: Ref<SheetPreview | null>;
+  // The scope ID of the Sheet's CSS (`[data-sheet="…"]`), for content
+  // rendered outside the sheet's element (preview cards).
+  scopeId: Ref<string | undefined>;
 }
 
 // `live` / `locked` / `display` in effect, inherited from enclosing tags.
@@ -102,6 +103,22 @@ const flagsKey: InjectionKey<Ref<SheetFlags>> = Symbol("sheet-flags");
 const repeatKey: InjectionKey<Ref<number>> = Symbol("sheet-repeat");
 // Inside a reference preview card, where nothing can be edited.
 const readOnlyKey: InjectionKey<boolean> = Symbol("sheet-read-only");
+
+// A Table's previews expanded under its rows, by row key: its Columns'
+// `preview`s open there instead of in their cell.
+export interface SheetRowPreviews {
+  isOpen: (row: string | number, key: string) => boolean;
+  toggle: (row: string | number, preview: SheetPreview) => void;
+}
+const rowPreviewsKey: InjectionKey<SheetRowPreviews> = Symbol("sheet-row-previews");
+
+export function provideSheetRowPreviews(previews: SheetRowPreviews) {
+  provide(rowPreviewsKey, previews);
+}
+
+export function useSheetRowPreviews() {
+  return inject(rowPreviewsKey, undefined);
+}
 
 // Makes everything inside read-only (a preview card), shown as plain text
 // unless a tag inside says `display="box"`.

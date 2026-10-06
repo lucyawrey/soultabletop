@@ -87,22 +87,33 @@ const previewTarget = computed(() =>
     ? sheetPreviewTarget(props.node, context.root.value, scope.value, context.refs.value)
     : undefined,
 );
-const previewKey = computed(
-  () =>
-    `${props.node.loc.start.offset}:${JSON.stringify(previewTarget.value?.scope.path)}:${previewTarget.value?.id ?? ""}`,
+const previewMode = computed(() => props.node.preview?.mode ?? "expand");
+const previewCard = computed(() =>
+  props.node.children.find(
+    (child): child is ValidatedElement => child.type === "element" && child.tag === "Card",
+  ),
 );
-const previewOpen = computed(() => context.preview.value?.key === previewKey.value);
+// An expanded preview opens under this tag, or for a Column under its row.
+const rowPreviews = props.node.tag === "Column" ? useSheetRowPreviews() : undefined;
+const previewKey = `${props.node.loc.start.offset}`;
+const expandedHere = ref(false);
+const previewOpen = computed(() => {
+  const row = scope.value.item?.key;
+  return rowPreviews && row !== undefined ? rowPreviews.isOpen(row, previewKey) : expandedHere.value;
+});
+// What is expanded under this tag (not under a row).
+const expandedPreview = computed<SheetPreview | undefined>(() =>
+  previewTarget.value && previewOpen.value && !rowPreviews && previewMode.value === "expand"
+    ? { key: previewKey, target: previewTarget.value, card: previewCard.value }
+    : undefined,
+);
 function togglePreview() {
   const target = previewTarget.value;
   if (!target) return;
-  if (previewOpen.value) {
-    context.preview.value = null;
-    return;
-  }
-  const card = props.node.children.find(
-    (child): child is ValidatedElement => child.type === "element" && child.tag === "Card",
-  );
-  context.preview.value = { key: previewKey.value, target, card };
+  const row = scope.value.item?.key;
+  if (rowPreviews && row !== undefined)
+    rowPreviews.toggle(row, { key: previewKey, target, card: previewCard.value });
+  else expandedHere.value = !expandedHere.value;
 }
 
 // `display="box"` shows a non-editable field as its disabled input. Value tags
@@ -320,7 +331,7 @@ const imageSize = computed(
 
     <span v-else-if="display === 'number'" class="tabular-nums">
       <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-      <SheetPreviewTrigger v-else-if="previewTarget && text" :open="previewOpen" @click="togglePreview">{{ text }}</SheetPreviewTrigger>
+      <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
       <template v-else>{{ text || "—" }}</template>
     </span>
 
@@ -386,8 +397,11 @@ const imageSize = computed(
       <SheetPreviewTrigger
         v-if="refInfo && previewTarget"
         class="text-primary decoration-primary/40 hover:decoration-primary"
+        :mode="previewMode"
+        :target="previewTarget"
+        :card="previewCard"
         :open="previewOpen"
-        @click="togglePreview"
+        @toggle="togglePreview"
       >
         {{ refInfo.name }}
         <span v-if="refInfo.custom" class="text-xs text-muted">(custom)</span>
@@ -438,11 +452,12 @@ const imageSize = computed(
 
     <span v-else :class="text ? '' : 'text-dimmed'">
       <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-      <SheetPreviewTrigger v-else-if="previewTarget && text" :open="previewOpen" @click="togglePreview">{{ text }}</SheetPreviewTrigger>
+      <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
       <template v-else>{{ text || "—" }}</template>
     </span>
     </div>
 
+    <SheetPreviewExpanded v-if="expandedPreview" :preview="expandedPreview" class="mt-1" />
     <p v-if="showHint" class="mt-1 text-xs text-dimmed">{{ hint }}</p>
     <div
       v-if="showStatLabel"

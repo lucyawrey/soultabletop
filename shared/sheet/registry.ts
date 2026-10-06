@@ -11,7 +11,9 @@ export type AttrType =
   | { kind: "number"; min?: number; max?: number; integer?: boolean; dynamic?: boolean }
   // Bare attribute, "true", or "false".
   | { kind: "boolean" }
-  | { kind: "enum"; values: readonly string[] }
+  // With `bare`, the value when written without one (`preview` means
+  // `preview="expand"`).
+  | { kind: "enum"; values: readonly string[]; bare?: string }
   // A field path, resolved against the schema.
   | { kind: "field" }
   // A field path that may have one `*` segment, for every item of a list or
@@ -195,11 +197,16 @@ const overrideFormula: AttrSpec = {
     "Computes the value; with field, the field holds an optional manual value that wins, and clearing it goes back to the computed one",
 };
 
-// `preview` on Ref, Value, and Column: clicking opens a card of the content
-// the value comes from (see docs/sheet-system.md, "Reference previews").
-const previewAttr = bool(
-  "Clicking the value opens a card with the referenced content (the one its field is reached through, like spell for spell.name); a <Card> inside replaces the generated one",
-);
+// `preview` on Ref, Value, and Column: clicking shows the content the value
+// comes from, expanded in place or in a card (see docs/sheet-system.md,
+// "Reference previews").
+export const SHEET_PREVIEW_MODES = ["expand", "card"] as const;
+export type SheetPreviewMode = (typeof SHEET_PREVIEW_MODES)[number];
+const previewAttr: AttrSpec = {
+  type: { kind: "enum", values: SHEET_PREVIEW_MODES, bare: "expand" },
+  description:
+    "Clicking the value shows the referenced content (the one its field is reached through, like spell for spell.name): expanded below it (preview, or preview=\"expand\"), or in a card at the bottom right (preview=\"card\"); a <Card> inside replaces the generated view",
+};
 
 const formatAttr = oneOf(
   ["plain", "signed"],
@@ -580,7 +587,7 @@ const tagList: TagSpec[] = [
     name: "Card",
     category: "layout",
     description:
-      "The card a preview opens, instead of the generated one; paths inside are relative to the referenced content, and it is always read-only",
+      "What a preview shows (expanded or in a card), instead of the generated view; paths inside are relative to the referenced content, and it is always read-only",
     attrs: {},
     children: "any",
     parents: ["Ref", "Value", "Column"],

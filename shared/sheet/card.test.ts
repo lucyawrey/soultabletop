@@ -71,21 +71,26 @@ function tag(markup: string, name: string): ValidatedElement {
 describe("preview validation", () => {
   it("previews the content field a path goes through", () => {
     expect(tag(`<Ref field="deity" preview />`, "Ref").preview).toEqual({
+      mode: "expand",
       path: { absolute: false, segments: ["deity"] },
       contentTypeId: "deity",
     });
-    expect(tag(`<Value field="deity.name" preview />`, "Value").preview).toEqual({
+    expect(tag(`<Value field="deity.name" preview="card" />`, "Value").preview).toEqual({
+      mode: "card",
       path: { absolute: false, segments: ["deity"] },
       contentTypeId: "deity",
     });
     // The last content field on the way: the item, not its material.
     expect(
       tag(`<Table field="inventory"><Column field="item.bulk" preview /></Table>`, "Column").preview,
-    ).toEqual({ path: { absolute: false, segments: ["item"] }, contentTypeId: "item" });
+    ).toEqual({ mode: "expand", path: { absolute: false, segments: ["item"] }, contentTypeId: "item" });
     // A row that is content previews the row itself.
     expect(
       tag(`<Table field="spells"><Column field="name" preview /></Table>`, "Column").preview,
-    ).toEqual({ path: { absolute: false, segments: [] }, contentTypeId: "spell" });
+    ).toEqual({ mode: "expand", path: { absolute: false, segments: [] }, contentTypeId: "spell" });
+    expect(messages(`<Ref field="deity" preview="popup" />`)).toEqual([
+      "error invalid-attribute: preview on <Ref> must be one of: expand, card",
+    ]);
   });
 
   it("needs a content field on the way", () => {
