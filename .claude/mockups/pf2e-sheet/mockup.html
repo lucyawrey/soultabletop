@@ -65,6 +65,7 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .head { display: grid; grid-template-columns: 1fr auto; gap: var(--d-gap) 20px; align-items: start; }
 .head h1 { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); margin: 0; line-height: 1; }
 .refs { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 6px; }
+.refgroup { display: inline-flex; gap: 4px 6px; flex-wrap: nowrap; }
 .ref { display: inline-flex; gap: 5px; align-items: baseline; border: 1px solid var(--st-border-strong); border-radius: 999px; padding: 1px 8px; background: var(--st-panel-muted); }
 .meta { display: flex; border: 1px solid var(--st-border); border-radius: var(--st-radius); background: var(--st-panel-muted); }
 .meta > div { display: grid; grid-template-rows: auto calc(var(--d-big) * 1.3); align-items: center; justify-items: center; gap: 2px; padding: calc(var(--d-pad) * .6) calc(var(--d-pad) + 6px); }
@@ -255,8 +256,10 @@ function render() {
 
   const head = `<section class="sheet-section"${tag("Section")}><h2>Character</h2><div class="head">
     <div><h1${tag("Text", 'field="name"')}>${E() ? `<input value="${c.name}" aria-label="Name" style="font:inherit;height:auto;width:min(100%,420px)">` : c.name}</h1>
-      <div class="refs">${[["Ancestry",c.ancestry,"ancestry"],["Heritage",c.heritage,"heritage"],["Background",c.background,"background"],["Class",c.cls,"class"],[c.subLabel,c.sub,"subclass"]].map(([l,v,f]) =>
-        `<span class="ref">${l ? `<span class="sheet-field-label">${l}</span>` : ""}${ref(v, f)}</span>`).join("")}</div></div>
+      <div class="refs">${(() => { const chip = ([l, v, f]) => `<span class="ref"><span class="sheet-field-label">${l}</span>${ref(v, f)}</span>`;
+        // Class and its subclass wrap together, never apart.
+        return [["Ancestry",c.ancestry,"ancestry"],["Heritage",c.heritage,"heritage"],["Background",c.background,"background"]].map(chip).join("")
+          + `<span class="refgroup">${chip(["Class",c.cls,"class"])}${chip([c.subLabel,c.sub,"subclass"])}</span>`; })()}</div></div>
     <div class="meta">
       <div><div class="sheet-field-label">Level</div><span class="sheet-field-value"${tag("Number", 'field="level"')}>${E() ? `<input type="number" value="${L}" style="width:48px" aria-label="Level">` : L}</span></div>
       <div><div class="sheet-field-label">Hero points</div>${live(pips(c.hero, 3, "", "Hero point"), 'Tracker field="heroPoints" max="3" style="pips"')}</div>
