@@ -27,7 +27,7 @@ Direction (to confirm in the mockup step): a built-in density setting for the wh
 
 1. **Before the reset:** export `pf2e-test` (content type schemas, sheet markup and CSS, and the two test characters' data) through the API into `.claude/pf2e/legacy/`.
 2. **Content types:** design character, ancestry, background, class, feat, spell, and item from the Foundry data. Save the schemas in `.claude/pf2e/content-types/`.
-3. **Mockup:** the character sheet in compact density, plus a roomy comparison of one section. Get it approved.
+3. **Mockup:** the character sheet in compact density, plus a roomy comparison of one section. Get it approved. Done: approved and frozen 2026-10-06 ([frozen.html](../mockups/pf2e-sheet/frozen.html), [spec.md](../mockups/pf2e-sheet/spec.md)).
 4. **Density in the Sheet system,** if the mockup confirms it: its own small PR, with `docs/sheet-system.md` updated.
 5. **Import script** (`.claude/pf2e/import.mjs`): reads the Foundry packs, keeps the ORC Remaster items in the slice, maps them to our content types, and posts them through the API with `SOUL_TABLETOP_API_KEY`. It can be rerun after a reset.
 6. **Character sheet:** port the `pf2e-test` sheet onto the new schema and the approved mockup. Use references and formulas, and check it with the `soul-tabletop-sheets` skill.
