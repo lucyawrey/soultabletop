@@ -5,7 +5,6 @@ import type { FormulaNode } from "./formula";
 import { parseSheetMarkup } from "./parser";
 import { humanizeFieldName } from "./registry";
 import {
-  compileSheet,
   hasErrors,
   newSheetErrors,
   parseSheetPath,
@@ -14,6 +13,8 @@ import {
   type ValidatedElement,
   type ValidatedNode,
 } from "./validate";
+import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
+import { compileSheet as compileAsWritten } from "./validate";
 
 const itemType: ContentTypeRules = {
   hasStrictSchema: true,
@@ -451,6 +452,29 @@ describe("placement", () => {
   });
 });
 
+describe("the <Sheet> root", () => {
+  const written = (markup: string) =>
+    compileAsWritten(markup, schemas).diagnostics.map((item) => `${item.code}: ${item.message}`);
+
+  it("is required, with definitions beside it or inside it", () => {
+    expect(written('<Define name="d" formula="1" /><Sheet><Value formula="d()" /></Sheet>')).toEqual([]);
+    expect(written("")).toEqual(["missing-sheet: Wrap the sheet in <Sheet>…</Sheet>"]);
+    // Without a root, the tags are still checked as if they were inside one.
+    expect(written('<Number field="hp" /><Number field="mana" />')).toEqual([
+      "missing-sheet: Wrap the sheet in <Sheet>…</Sheet>",
+      'unknown-field: "mana": the schema has no field "mana"',
+    ]);
+  });
+
+  it("is the only tag or text at the top level besides definitions", () => {
+    expect(written('<Sheet /><Number field="hp" />loose<Sheet />')).toEqual([
+      "misplaced-tag: <Number> must be inside <Sheet>",
+      "text-not-allowed: Text must be inside <Sheet>",
+      "duplicate-sheet: A sheet has only one <Sheet>",
+    ]);
+  });
+});
+
 describe("compileSheet", () => {
   it("merges parser and validator diagnostics in source order", () => {
     const result = compile(`<Nope />\n<Grid cols=2></Grid>\n<Number field="mana" />`);
@@ -463,7 +487,7 @@ describe("compileSheet", () => {
   });
 
   it("validates already-parsed nodes", () => {
-    const { nodes } = parseSheetMarkup(`<Number field="hp" />`);
+    const { nodes } = parseSheetMarkup(`<Sheet><Number field="hp" /></Sheet>`);
     expect(validateSheet(nodes, schemas).diagnostics).toEqual([]);
   });
 });
@@ -570,10 +594,10 @@ describe("formulas", () => {
       code: "unknown-field",
       loc: { start: { line: 3, column: 5 }, end: { line: 3, column: 9 } },
     });
-    const [syntax] = compile('<Value formula="hp + * 2" />').diagnostics;
-    expect(syntax).toMatchObject({ code: "formula-syntax", loc: { start: { line: 1, column: 22 } } });
-    const [inText] = compile("<Note>HP {hp +}</Note>").diagnostics;
-    expect(inText).toMatchObject({ code: "formula-syntax", loc: { start: { column: 15 } } });
+    const [syntax] = compile('<Sheet><Value formula="hp + * 2" /></Sheet>').diagnostics;
+    expect(syntax).toMatchObject({ code: "formula-syntax", loc: { start: { line: 1, column: 29 } } });
+    const [inText] = compile("<Sheet><Note>HP {hp +}</Note></Sheet>").diagnostics;
+    expect(inText).toMatchObject({ code: "formula-syntax", loc: { start: { column: 22 } } });
   });
 
   it("reports type errors, unknown functions, arity, and dice", () => {
@@ -618,9 +642,11 @@ describe("formulas", () => {
 describe("definitions", () => {
   it("collects definitions in any order, with params and types", () => {
     const { diagnostics, definitions } = compile(`
-      <Value formula="double(hp) + base()" />
       <Define name="double" params="x" formula="x * 2" />
-      <Sheet><Define name="base" formula="hpMax + /stats.str" /></Sheet>
+      <Sheet>
+        <Value formula="double(hp) + base()" />
+        <Define name="base" formula="hpMax + /stats.str" />
+      </Sheet>
     `);
     expect(diagnostics).toEqual([]);
     expect(definitions.get("double")).toMatchObject({ params: ["x"], broken: false, type: { kind: "number" } });

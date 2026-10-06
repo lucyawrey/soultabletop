@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { sheetButtonWrites, sheetValueAt, setSheetValue, type SheetScope } from "./runtime";
-import { compileSheet, type SheetSchemas, type ValidatedElement, type ValidatedNode } from "./validate";
+import type { SheetSchemas, ValidatedElement, ValidatedNode } from "./validate";
+import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
 
 // <Button> and <Set>: sheet buttons that change fields.
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ValidatedElement } from "#shared/sheet/validate";
 
-// <Sheet>: the optional root.
+// <Sheet>: the root every sheet has.
 const props = defineProps<{ node: ValidatedElement }>();
 const compact = useSheetCompact();
 </script>

@@ -88,73 +88,75 @@ describe("generateSheetMarkup", () => {
   it("lays out fields in schema order: details first, then a section per complex field", () => {
     const markup = generateSheetMarkup(schemas);
     expect(markup).toMatchInlineSnapshot(`
-      "<Section title="Details">
-        <Grid cols="2">
-          <Text field="name" />
-          <Field field="hp" />
-          <Field field="notes" />
-          <Field field="alive" />
-          <Field field="tags" />
-          <Field field="extra" />
-          <Field field="link" />
-        </Grid>
-      </Section>
-      <Section title="Stats">
-        <Grid cols="2">
-          <Field field="stats.str" />
-        </Grid>
-        <Section title="Saves">
+      "<Sheet>
+        <Section title="Details">
           <Grid cols="2">
-            <Field field="stats.saves.fort" />
+            <Text field="name" />
+            <Field field="hp" />
+            <Field field="notes" />
+            <Field field="alive" />
+            <Field field="tags" />
+            <Field field="extra" />
+            <Field field="link" />
           </Grid>
         </Section>
-      </Section>
-      <Section title="Attacks">
-        <Table field="attacks">
-          <Column field="name" />
-          <Column field="bonus" />
-        </Table>
-      </Section>
-      <Section title="Inventory">
-        <Table field="inventory">
-          <Column field="item" />
-          <Column field="qty" />
-        </Table>
-      </Section>
-      <Section title="Spells">
-        <List field="spells">
+        <Section title="Stats">
           <Grid cols="2">
-            <Field field="name" />
-            <Field field="components" />
+            <Field field="stats.str" />
           </Grid>
-        </List>
-      </Section>
-      <Section title="Rolls">
-        <List field="rolls">
-          <Field field="." />
-        </List>
-      </Section>
-      <Section title="Grid">
-        <Value field="grid" />
-      </Section>
-      <Section title="Feats">
-        <List field="feats">
-          <Collapsible title="{name}">
-            <Ref field="." />
+          <Section title="Saves">
             <Grid cols="2">
-              <Field field="weight" />
-              <Field field="tags" />
+              <Field field="stats.saves.fort" />
             </Grid>
-          </Collapsible>
-        </List>
-      </Section>
-      <Section title="Main Hand">
-        <Ref field="mainHand" />
-        <Grid cols="2">
-          <Field field="mainHand.weight" />
-          <Field field="mainHand.tags" />
-        </Grid>
-      </Section>
+          </Section>
+        </Section>
+        <Section title="Attacks">
+          <Table field="attacks">
+            <Column field="name" />
+            <Column field="bonus" />
+          </Table>
+        </Section>
+        <Section title="Inventory">
+          <Table field="inventory">
+            <Column field="item" />
+            <Column field="qty" />
+          </Table>
+        </Section>
+        <Section title="Spells">
+          <List field="spells">
+            <Grid cols="2">
+              <Field field="name" />
+              <Field field="components" />
+            </Grid>
+          </List>
+        </Section>
+        <Section title="Rolls">
+          <List field="rolls">
+            <Field field="." />
+          </List>
+        </Section>
+        <Section title="Grid">
+          <Value field="grid" />
+        </Section>
+        <Section title="Feats">
+          <List field="feats">
+            <Collapsible title="{name}">
+              <Ref field="." />
+              <Grid cols="2">
+                <Field field="weight" />
+                <Field field="tags" />
+              </Grid>
+            </Collapsible>
+          </List>
+        </Section>
+        <Section title="Main Hand">
+          <Ref field="mainHand" />
+          <Grid cols="2">
+            <Field field="mainHand.weight" />
+            <Field field="mainHand.tags" />
+          </Grid>
+        </Section>
+      </Sheet>
       "
     `);
   });
@@ -176,7 +178,8 @@ describe("generateSheetMarkup", () => {
     const markup = generateSheetMarkup(tricky);
     const result = compileSheet(markup, tricky);
     expect(result.diagnostics).toEqual([]);
-    const parsed = parseSheetMarkup(markup).nodes[1];
+    const [root] = parseSheetMarkup(markup).nodes;
+    const parsed = root?.type === "element" ? root.children[1] : undefined;
     expect(parsed?.type === "element" && parsed.attrs[0]?.value).toEqual([
       "Stats \"&\" {bonus} <x> \\",
     ]);
@@ -186,7 +189,7 @@ describe("generateSheetMarkup", () => {
     const empty: SheetSchemas = { root: { hasStrictSchema: true, schema: {} }, types: {} };
     const markup = generateSheetMarkup(empty);
     expect(markup).toBe(
-      "<Section title=\"Details\">\n  <Grid cols=\"2\">\n    <Text field=\"name\" />\n  </Grid>\n</Section>\n",
+      "<Sheet>\n  <Section title=\"Details\">\n    <Grid cols=\"2\">\n      <Text field=\"name\" />\n    </Grid>\n  </Section>\n</Sheet>\n",
     );
     expect(compileSheet(markup, empty).diagnostics).toEqual([]);
   });
@@ -245,13 +248,13 @@ describe("generated sheets with structs of alike structs", () => {
       types: {},
     };
     const markup = generateSheetMarkup(structSchemas);
-    expect(markup).toContain(`<Section title="Skills">
-  <Table field="skills">
-    <Column formula="itemLabel()" />
-    <Column field="rank" />
-    <Column field="notes" />
-  </Table>
-</Section>`);
+    expect(markup).toContain(`  <Section title="Skills">
+    <Table field="skills">
+      <Column formula="itemLabel()" />
+      <Column field="rank" />
+      <Column field="notes" />
+    </Table>
+  </Section>`);
     expect(compileSheet(markup, structSchemas).diagnostics).toEqual([]);
   });
 });
