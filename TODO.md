@@ -144,6 +144,8 @@ Playing campaigns online, sharing, and discovery.
 
 - **Landing page drift from the frozen redesign** · bug
   Found by comparing the signed-out landing page with `.claude/mockups/ui-redesign/frozen.html` (2026-10-05): the sidebar nav lists Content before Characters; the sign-in tabs' text is smaller than in the mockup; the Sign in button looks disabled until the form is filled. Some of these may be intentional changes by the user: ask about each one before changing anything. Then fix it to match the frozen page, or record it as a decision in `.claude/mockups/ui-redesign/spec.md` ("Decided after the mockup"); compare with `.claude/scripts/compare-mockup.mjs`.
+- **First-visit dashboard doesn't match the regular dashboard** · bug
+  From the user (2026-10-06): "first visit dashboard does not match the design of the dashboard after the user has any content". The new-user dashboard (the `dashboard.newHeading` and `dashboard.welcome` placeholders above four start cards; see "Onboarding for new users") should follow the regular dashboard's design. Compare both with `.claude/mockups/ui-redesign/frozen.html` and decide with the user which parts change.
 
 # Low priority
 
