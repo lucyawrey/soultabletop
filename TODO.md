@@ -26,8 +26,8 @@ Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The 
 
 Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the first four items (density, `editing()`, and live fields saving at once were built in #92), from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
 
-- **Sheet breakdown popovers** · feature · needs decision: the markup (how a number lists its parts)
-  Clicking a computed number (a `Value`, or a box like AC and saves) shows its parts in a popover under it, without moving the layout; click again, click elsewhere, or Escape closes it. `RowDetails` only expands table rows.
+- **Sheet breakdown popovers** · feature · depends on: PR #93 (both change `Column`'s children)
+  Clicking a computed number shows its parts in a popover under it, without moving the layout; click again, click elsewhere, or Escape closes it (the frozen mockup's look: "Wis **+3** · Expert **+4** · Armor **−1** = **+6**", DCs with "10 base" first). User's decisions (2026-10-06): `<Part label="…" formula="…" />` children, with `{…}` allowed in `label` and `show` on a Part; a tag with parts and no formula of its own shows their sum (other formulas can't read it; use a `<Define>`). On `Value`, `Column` (per row, beside Button children), and `Number` with a formula (the popover shows the computed parts, even while a manual value wins). An agent reviewer checks the PR before the user does.
 - **Sheet reference previews** · feature
   Clicking a referenced spell, feat, item, or class feature shows its rules text in a card, in play and edit, read from the referenced resource.
 - **Sheet dice buttons** · feature · large · needs decision: how a roll looks
