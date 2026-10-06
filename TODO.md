@@ -18,9 +18,6 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
   Plan: [.claude/plans/pf2e-demo.md](.claude/plans/pf2e-demo.md) (decisions, references and their rules, density, steps).
   A small slice of the Pathfinder 2e system for the demo, and a head start on the official one (Phase 2): content types (character, ancestry, background, class, feat, spell, item) and a polished character sheet using formulas, choice fields, struct tables, list functions, and defaults. Agents design the types and sheets, reading the Foundry pf2e data for reference (`~/Developer/foundry-pf2e`); an import script loads a small ORC Remaster slice of content through the API with the user's API key, never agent-written content (see "Data sources and import scripts for official content"). Keep a copy of the schemas, sheets, and script in `.claude/` until the authoring CLI exists. The system's description credits the data source and states the ORC license notice from the start. Replaces the old `pf2e-test` system, which the reset removes.
 
-- **Sheet reference previews** · feature · steps 1 and 2 merged (#96, #97); step 3 (`<Preview>` beside `<Sheet>` in content-type sheets) in review (#98)
-  Clicking a referenced spell, feat, item, or class feature shows its rules text in a card, in play and edit, read from the referenced resource. Design (user, 2026-10-06): [.claude/plans/reference-previews.md](.claude/plans/reference-previews.md).
-
 # Next up
 
 The exact order: do these one at a time, top first.
