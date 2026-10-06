@@ -81,6 +81,12 @@ describe("Part validation", () => {
     expect(messages(`<Text field="name2"><Part label="Dex" formula="dex" /></Text>`)).toEqual([
       "error child-not-allowed: <Text> can't contain other tags",
     ]);
+    expect(messages(`<Value field="dex"><Part label="Dex" formula="dex" /></Value>`)).toEqual([
+      "error invalid-attribute: <Value> with parts takes no field: without a formula it shows their sum (with a formula, parts explain it)",
+    ]);
+    expect(messages(`<Value><Part label="Dex" formula="dex" class="x" /></Value>`)[0]).toContain(
+      "error unknown-attribute: <Part> has no class attribute",
+    );
     expect(messages(`<Value><Part formula="dex" /></Value>`)).toEqual([
       "error missing-attribute: <Part> needs a label attribute",
     ]);
@@ -116,6 +122,11 @@ describe("sheetBreakdown", () => {
       ],
       total: 10,
     });
+  });
+
+  it("gives nothing when no part is left", () => {
+    const [value] = tags(`<Value><Part label="Shield" formula="2" show="shieldRaised" /></Value>`, "Value");
+    expect(run(value!, { shieldRaised: false })).toEqual({ parts: [], total: null });
   });
 
   it("makes the sum an error when a part fails", () => {

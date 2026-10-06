@@ -300,12 +300,13 @@ elsewhere, or Escape closes it, and it floats, so nothing moves (from the frozen
 - Child tags rather than a `parts` list naming a formula's terms, or a breakdown made from the formula itself, so
   labels are written for players and can be formulas (`{rankName(rank)}`, per row in a `Table`) (decided).
 - `Part` is only directly inside `Value`, `Column`, or `Number`, takes `label` (required, text with `{…}`),
-  `formula` (required, must give a number), and of the common attributes `class` and `show`.
-- A `Value` or `Column` with parts and no `formula` (or `field`) shows their sum, so nothing is written twice. Other
+  `formula` (required, must give a number), and `show` (no other common attributes: it's never rendered on its own).
+- A `Value` or `Column` with parts and no `formula` shows their sum (it then takes no `field`), so nothing is written twice. Other
   formulas can't read that sum: a total other formulas need goes in a `<Define>`, and the parts can call it. With a
   `formula`, the formula gives the number and the parts only explain it (nothing checks that they add up). A `Number`
   takes parts only with a `formula` (an override): the popover shows the computed parts even while a typed value wins.
-- A part hidden by `show`, or whose value is nothing, is left out of the list and the sum. A part that fails makes
+- A part hidden by `show`, or whose value is nothing, is left out of the list and the sum; with none left, the sum
+  is nothing ("—"). A part that fails makes
   the sum fail ("—", like any formula).
 - The popover shows part values signed, except the first when the number itself isn't `format="signed"` (a base,
   like 10 for AC or a DC); the total is the number as shown.

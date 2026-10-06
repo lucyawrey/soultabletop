@@ -311,7 +311,7 @@ export function hasSheetParts(node: ValidatedElement) {
 
 // A tag's `<Part>`s in `scope`, and their sum. Parts hidden by `show`, or
 // whose value is nothing, are left out. A part that fails, or isn't a number,
-// makes the sum that error.
+// makes the sum that error. With no parts left, the sum is nothing.
 export function sheetBreakdown(
   node: ValidatedElement,
   root: SheetScope,
@@ -333,7 +333,7 @@ export function sheetBreakdown(
     else if (typeof value === "number") total += value;
     else total = new FormulaError("type", `${label || "A part"} isn't a number`);
   }
-  return { parts, total };
+  return { parts, total: parts.length ? total : null };
 }
 
 // One value a Button writes: `value` at `path`, which held `previous` (for

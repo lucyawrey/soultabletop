@@ -6,7 +6,7 @@
 defineProps<{
   parts: { label: string; text: string }[];
   total: string;
-  // Names the button for screen readers.
+  // The number's label, for screen readers.
   label: string;
 }>();
 </script>
@@ -16,9 +16,9 @@ defineProps<{
     <button
       type="button"
       class="sheet-breakdown-trigger cursor-pointer underline decoration-dotted decoration-1 underline-offset-4 hover:decoration-solid"
-      :aria-label="`${label}: show its parts`"
     >
-      <slot />
+      <!-- The number stays the button's text, so screen readers read it. -->
+      <slot /><span class="sr-only">, show parts{{ label ? ` of ${label}` : "" }}</span>
     </button>
     <template #content>
       <p class="sheet-breakdown max-w-90 px-2 py-1 text-xs text-muted">

@@ -558,11 +558,13 @@ const tagList: TagSpec[] = [
         required: true,
         description: "The part's value, a number; nothing leaves the part out",
       },
+      show: commonAttrs.show!,
     },
     children: "none",
     parents: ["Value", "Number", "Column"],
     formula: "readOnly",
-    noFlagAttrs: true,
+    // Never rendered as an element of its own, so `class` would do nothing.
+    noCommonAttrs: true,
   },
   {
     name: "RowDetails",

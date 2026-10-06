@@ -910,6 +910,12 @@ class Validator {
     );
     const hasParts = childTags.includes("part");
     const buttonsOnly = spec.name === "Column" && childTags.includes("button") && !hasParts;
+    if (hasParts && (spec.name === "Value" || spec.name === "Column") && attrNamed(node, "field") && !formulaAttr) {
+      return invalid(
+        "invalid-attribute",
+        `<${spec.name}> with parts takes no field: without a formula it shows their sum (with a formula, parts explain it)`,
+      );
+    }
     if (spec.name === "Number" && hasParts && !formulaAttr) {
       return invalid("missing-attribute", "<Number> with parts needs a formula; its parts explain it (use <Value> to show their sum)");
     }

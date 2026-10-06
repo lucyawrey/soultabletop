@@ -82,7 +82,7 @@ In edit mode a `List` or `Table` of an array gets add, remove, and reorder contr
 
 | Tag | Attributes | Children | Notes |
 |---|---|---|---|
-| `Part` | `label` (req, text with `{…}`), `formula` (req, a number); common: `class`, `show` | none | Only directly inside `Value`, `Column`, or `Number` (a `Number` needs a `formula`). Clicking the number lists the parts in a popover; a `Value`/`Column` without a formula shows their sum. Parts that give nothing are left out |
+| `Part` | `label` (req, text with `{…}`), `formula` (req, a number), `show` (no other common attributes) | none | Only directly inside `Value`, `Column`, or `Number` (a `Number` needs a `formula`). Clicking the number lists the parts in a popover; a `Value`/`Column` without a formula shows their sum. Parts that give nothing are left out |
 
 ## Buttons
 

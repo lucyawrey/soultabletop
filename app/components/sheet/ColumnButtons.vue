@@ -17,7 +17,8 @@ const buttons = computed(() =>
 </script>
 
 <template>
-  <div :class="[sheetClasses(node), 'flex flex-wrap items-center gap-1']">
+  <!-- With a value, its Field carries the Column's classes. -->
+  <div :class="[hasValue ? [] : sheetClasses(node), 'flex flex-wrap items-center gap-1']">
     <SheetField v-if="hasValue" :node="node" compact />
     <SheetNodes v-if="context.canEdit.value" :nodes="buttons" />
   </div>
