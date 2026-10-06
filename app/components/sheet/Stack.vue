@@ -3,9 +3,10 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 
 const props = defineProps<{ node: ValidatedElement }>();
 
+const compact = useSheetCompact();
 const classes = computed(() => [
   props.node.attrs.direction === "row" ? "flex-row" : "flex-col",
-  sheetGap[(props.node.attrs.gap as string | undefined) ?? "md"],
+  (compact.value ? sheetGapCompact : sheetGap)[(props.node.attrs.gap as string | undefined) ?? "md"],
   sheetAlign[props.node.attrs.align as string],
   props.node.attrs.wrap === true ? "flex-wrap" : undefined,
 ]);

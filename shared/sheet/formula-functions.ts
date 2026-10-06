@@ -31,6 +31,8 @@ export interface FormulaCallContext {
   // The row the call is in (a List or Table row, or a per-item function's
   // item), if any.
   item(): { key: string | number; label?: string } | undefined;
+  // Whether the sheet is being edited (Edit on, for a viewer who can edit).
+  editing(): boolean;
   // The items of the list in argument `listIndex`, or with `exprIndex`, that
   // argument evaluated with each item as its scope. Nulls are left in.
   items(listIndex: number, exprIndex?: number): FormulaValue[] | FormulaError;
@@ -419,6 +421,16 @@ const functionList: FormulaFunction[] = [
       "The current struct entry's label (its schema label, else its humanized key); nothing in an array row",
     result: () => formulaTypes.any,
     special: (call) => call.item()?.label ?? null,
+  },
+  {
+    name: "editing",
+    minArgs: 0,
+    maxArgs: 0,
+    signature: "editing()",
+    description:
+      "Whether the sheet is being edited: true with Edit on for someone who can edit, else false",
+    result: () => formulaTypes.boolean,
+    special: (call) => call.editing(),
   },
   aggregate("any", {
     signature: "any(list, cond)",
@@ -855,6 +867,7 @@ export const formulaLaterBuiltins: readonly string[] = [
   "sort",
   "first",
   "at",
+  "editing",
 ];
 
 // Names a `<Define>` can't use.

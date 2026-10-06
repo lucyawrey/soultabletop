@@ -3,6 +3,7 @@ import type { ContentFieldSchema } from "../content-schema";
 import {
   defaultSheetValue,
   entryScopes,
+  evaluateSheetDefinition,
   evaluateSheetFormula,
   setSheetValue,
   sheetCondition,
@@ -656,5 +657,18 @@ describe("struct entry rows", () => {
     });
     const node = compiled.nodes[0] as ValidatedElement;
     expect(evaluateSheetFormula(node.formula!.ast, root, root, refs)).toBe(1);
+  });
+  it("tells formulas whether the sheet is being edited with editing()", () => {
+    const compiled = compileSheet(`<Value formula="editing()" /><Define name="mode" formula="if(editing(), 'edit', 'play')" />`, {
+      root: { hasStrictSchema: true, schema: {} },
+      types: {},
+    });
+    const node = compiled.nodes[0] as ValidatedElement;
+    expect(compiled.diagnostics).toEqual([]);
+    expect(evaluateSheetFormula(node.formula!.ast, root, root, refs)).toBe(false);
+    const formulas = { definitions: compiled.definitions, editing: true };
+    expect(evaluateSheetFormula(node.formula!.ast, root, root, refs, formulas)).toBe(true);
+    expect(evaluateSheetDefinition("mode", root, refs, formulas)).toBe("edit");
+    expect(evaluateSheetDefinition("mode", root, refs, { ...formulas, editing: false })).toBe("play");
   });
 });

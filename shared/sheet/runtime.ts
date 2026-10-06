@@ -184,6 +184,8 @@ export interface SheetFormulaDefinitions {
   // Override fields at the top level by path (ValidationResult.computedFields):
   // a formula that reads one with nothing stored gets its computed value.
   computedFields?: ReadonlyMap<string, SheetComputedField>;
+  // Whether the sheet is being edited, for `editing()`.
+  editing?: boolean;
 }
 
 const noDefinitions: SheetFormulaDefinitions = { definitions: new Map() };
@@ -198,6 +200,7 @@ function formulaEnv(
     root,
     scope,
     refs,
+    editing: formulas.editing ?? false,
     budget: { steps: formulas.stepBudget ?? formulaBudget().steps },
     picked: new WeakMap(),
     hasDefinition: (name) => formulas.definitions.has(name),
@@ -263,6 +266,7 @@ export function evaluateSheetDefinition(
     definitions: formulas.definitions,
     stepBudget: formulas.stepBudget,
     computedFields: formulas.computedFields,
+    editing: formulas.editing,
   });
   try {
     return env.call(name, []) ?? null;

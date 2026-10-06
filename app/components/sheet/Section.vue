@@ -15,6 +15,7 @@ const span = computed(() => {
   const value = props.node.attrs.span;
   return typeof value === "number" ? sheetColSpan[value] : undefined;
 });
+const compact = useSheetCompact();
 const hasHeader = computed(
   () => !!(title.value || description.value || icon.value || collapsible.value),
 );
@@ -25,7 +26,11 @@ const hasHeader = computed(
        clips anything drawn outside a box that sits flush with its edge. -->
   <UCard
     :class="[sheetClasses(node), span]"
-    :ui="{ root: 'border border-default ring-0', body: open ? undefined : 'hidden' }"
+    :ui="{
+      root: 'border border-default ring-0',
+      header: compact ? 'px-3 py-2 sm:px-3' : undefined,
+      body: [open ? '' : 'hidden', compact ? 'p-3 sm:p-3' : ''].join(' ') || undefined,
+    }"
   >
     <template v-if="hasHeader" #header>
       <component
@@ -35,7 +40,7 @@ const hasHeader = computed(
         :aria-expanded="collapsible ? open : undefined"
         @click="collapsible && (open = !open)"
       >
-        <UIcon v-if="icon" :name="icon" class="mt-0.5 size-5 text-primary" />
+        <UIcon v-if="icon" :name="icon" class="mt-0.5 text-primary" :class="compact ? 'size-4' : 'size-5'" />
         <div class="min-w-0 flex-1">
           <h2 v-if="title" class="font-semibold text-highlighted">{{ title }}</h2>
           <p v-if="description" class="text-sm text-muted">{{ description }}</p>
@@ -48,7 +53,7 @@ const hasHeader = computed(
         />
       </component>
     </template>
-    <div v-if="open" class="space-y-4">
+    <div v-if="open" :class="compact ? 'space-y-2' : 'space-y-4'">
       <SheetNodes :nodes="node.children" />
     </div>
   </UCard>

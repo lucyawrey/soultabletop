@@ -121,6 +121,11 @@ const icon: AttrSpec = {
 export const SHEET_DISPLAYS = ["text", "box"] as const;
 export type SheetDisplay = (typeof SHEET_DISPLAYS)[number];
 
+// How tightly a sheet is laid out (`<Sheet density>`): roomy, the site's form
+// spacing, or compact, smaller inputs and gaps for dense character sheets.
+export const SHEET_DENSITIES = ["roomy", "compact"] as const;
+export type SheetDensity = (typeof SHEET_DENSITIES)[number];
+
 // Accepted by every tag.
 export const commonAttrs: Record<string, AttrSpec> = {
   class: {
@@ -194,7 +199,12 @@ const tagList: TagSpec[] = [
     name: "Sheet",
     category: "layout",
     description: "Optional root wrapping the whole sheet",
-    attrs: {},
+    attrs: {
+      density: oneOf(
+        SHEET_DENSITIES,
+        "roomy (the default) uses the site's form spacing; compact uses smaller inputs, labels, and gaps",
+      ),
+    },
     children: "any",
     parents: [],
   },

@@ -11,7 +11,7 @@ import {
   type FormulaValue,
 } from "#shared/sheet/formula";
 import type { TextPart } from "#shared/sheet/parser";
-import type { SheetDisplay } from "#shared/sheet/registry";
+import type { SheetDensity, SheetDisplay } from "#shared/sheet/registry";
 import {
   entryScopes,
   evaluateSheetFormula,
@@ -56,6 +56,8 @@ export interface SheetContext {
   editMode: Ref<boolean>;
   // How fields look when they can't be edited, before any `display` attribute.
   defaultDisplay: Ref<SheetDisplay>;
+  // `<Sheet density>`.
+  density: Ref<SheetDensity>;
   // Writes a value into the Content's draft data.
   update: (path: (string | number)[], value: unknown) => void;
   // Makes referenced Content picked while editing displayable before saving.
@@ -368,6 +370,13 @@ export function sheetClasses(node: ValidatedElement) {
     `sheet-${node.tag.toLowerCase()}`,
     ...(Array.isArray(extra) ? (extra as string[]) : []),
   ];
+}
+
+// Whether the sheet is compact (`<Sheet density="compact">`): smaller inputs,
+// labels, and gaps.
+export function useSheetCompact() {
+  const { context } = useSheet();
+  return computed(() => context.density.value === "compact");
 }
 
 // Literal text of a text attribute, interpolated.

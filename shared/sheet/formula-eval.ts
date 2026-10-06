@@ -42,6 +42,8 @@ export interface FormulaEnv {
   root: SheetScope;
   scope: SheetScope;
   refs: SheetRefs;
+  // Whether the sheet is being edited (`editing()`).
+  editing?: boolean;
   // Inside a definition: its arguments by parameter name.
   params?: Readonly<Record<string, FormulaValue>>;
   // Calls the sheet's definition `name`, or returns undefined if the sheet has
@@ -238,6 +240,7 @@ function callBuiltin(
     refs: env.refs,
     value: (index) => evaluateNode(node.args[index]!, env),
     item: () => env.scope.item,
+    editing: () => env.editing ?? false,
     items: (listIndex, exprIndex) => {
       const values: FormulaValue[] = [];
       const error = context.each(listIndex, exprIndex, (_, value) => {

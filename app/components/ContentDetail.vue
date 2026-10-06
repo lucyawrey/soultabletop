@@ -193,12 +193,13 @@ watch(
 const {
   draft,
   dirty,
+  liveSaving,
   status: saveStatus,
   error: saveError,
   save,
   discard,
   reset: resetDraft,
-} = useContentDraft(item, autosave);
+} = useContentDraft(item, autosave, computed(() => !editMode.value));
 
 async function reload() {
   await refresh();
@@ -219,7 +220,7 @@ function addRef(id: string, ref: SheetRefs[string]) {
 
 const statusText = computed(() => {
   if (saveStatus.value === "saving") return "Saving…";
-  if (dirty.value) return autosave.value ? "Unsaved changes…" : "Unsaved changes";
+  if (dirty.value) return autosave.value || liveSaving.value ? "Unsaved changes…" : "Unsaved changes";
   if (saveStatus.value === "saved") return "Saved";
   return "";
 });
@@ -438,7 +439,7 @@ function printPage() {
       <div
         v-if="
           item.canEdit &&
-          ((dirty && !autosave) ||
+          ((dirty && !autosave && !liveSaving) ||
             saveStatus === 'error' ||
             saveStatus === 'conflict')
         "
