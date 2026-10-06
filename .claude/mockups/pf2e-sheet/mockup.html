@@ -95,6 +95,9 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .hp { text-align: left; grid-template-columns: 1fr auto; gap: 3px 8px; }
 .hp .now { display: flex; align-items: baseline; gap: 4px; }
 .hp .now input { width: 58px; height: calc(var(--d-hero) + 4px); font-size: var(--d-hero); font-weight: 700; }
+.hp .max { font-size: calc(var(--d-hero) * .7); font-weight: 700; color: var(--st-ink-muted); }
+.hp .temp { display: flex; align-items: center; gap: 6px; align-self: center; }
+.hp .temp input { width: 48px; height: calc(var(--d-big) + 6px); font-size: var(--d-big); font-weight: 700; text-align: center; }
 .meter { grid-column: 1 / -1; height: 6px; background: var(--st-panel-muted); border: 1px solid var(--st-border); border-radius: 3px; overflow: hidden; } .meter i { display: block; height: 100%; background: var(--st-primary); }
 .death { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; }
 .box .parts { text-align: left; }
@@ -265,8 +268,8 @@ function render() {
   const defs = `<div style="min-width:0"><div class="defs">
     <div class="box key hero-n ac"${tag("Value", 'formula="{10 + min(dex, armor.dexCap) + prof(armor.rank) + armor.ac + (shieldRaised ? shield.ac : 0)}"', "breakdown on a box")}><span class="sheet-field-label">Armor Class</span>${ac.btn}<span class="small dim">${c.armor.name}</span>${ac.parts}</div>
     <div class="box hp"${tag("Tracker", 'field="hp" max="{ancestry.hp + (class.hp + con) * level}" live', "live attribute doesn't exist yet")}>
-      <span class="sheet-field-label">Hit Points</span><span class="small dim">max ${c.hpMax}</span>
-      <span class="now"><input aria-label="Current HP" value="${c.hp}"><span class="dim">/ ${c.hpMax}</span></span><span class="small"><span class="sheet-field-label">Temp</span> <input aria-label="Temp HP" value="${c.temp}" style="width:34px;height:20px;text-align:center"></span>
+      <span class="sheet-field-label" style="grid-column:1/-1">Hit Points</span>
+      <span class="now"><input aria-label="Current HP" value="${c.hp}"><span class="max">/ ${c.hpMax}</span></span><span class="temp"><span class="sheet-field-label">Temp</span><input aria-label="Temp HP" value="${c.temp}"></span>
       <div class="meter"><i style="width:${c.hp / c.hpMax * 100}%"></i></div>
       <div class="death small"><span><span class="sheet-field-label">Dying</span> ${pips(c.dying, 4, "bad", "Dying")}</span><span><span class="sheet-field-label">Wounded</span> ${pips(c.wounded, 3, "bad sq", "Wounded")}</span><span><span class="sheet-field-label">Doomed</span> ${pips(c.doomed, 3, "bad sq", "Doomed")}</span></div>
     </div>
