@@ -371,14 +371,15 @@ function render() {
     ${init}<div class="cols2" style="--half:${half}">${all.map(skillRow).join("")}</div></section>`;
 
   const profs = `<section class="sheet-section"${tag("Grid", 'columns="2"')}>${h2("Proficiencies")}
-    <div class="profrows">${Object.entries(c.profs).map(([g, list]) => `<span class="sheet-field-label">${g}</span><div>${list.map(([n, r]) => `<span style="white-space:nowrap">${rank(r)} <span class="small">${n}</span></span>`).join("")}</div>`).join("")}
-      <span class="sheet-field-label">Class DC</span><div><span><b>${10 + a[c.key] + P(c.classDC, L)}</b> ${rank(c.classDC)}</span></div></div></section>`;
+    <div class="profrows">${Object.entries(c.profs).map(([g, list]) => `<span class="sheet-field-label">${g}</span><div>${list.map(([n, r]) => `<span style="white-space:nowrap">${rank(r)} <span class="small">${n}</span></span>`).join("")}</div>`).join("")}</div></section>`;
 
   // Long lists in tabs.
   const feats = `<div class="feats"${tag("List", 'field="feats" item="Ref"')}>${c.feats.map(([ty, n, src, g]) => `<div class="feat"><button class="link plain" data-prev="${n}">${n}</button> ${g ? glyph(g) : ""}<span class="small">${ty} · ${src === "Background" ? "from background" : "level " + src}</span></div>`).join("")}
     ${E() ? c.upcoming.map(([lv, ty]) => `<div class="feat empty"${tag("Section", 'show="{editing}"', "editing isn't visible to formulas yet")}><button class="pick">Choose ${ty.toLowerCase()}</button><span class="small">level ${lv}</span></div>`).join("") : ""}</div>`;
   const dz = c.deity;
-  const klass = `<div class="tabcols"><div class="rows"${tag("List", 'field="class.features" item="Ref"', "a list read from the referenced class")}><div class="row th" style="grid-template-columns:52px 1fr"><span>Level</span><span>Class feature</span></div>
+  const cdc = mod("classdc", [["Key " + c.key, a[c.key]], [RANKS[c.classDC][1], P(c.classDC, L)]], 10);
+  const klass = `<div class="strip small" style="margin:0 0 var(--d-gap)"${tag("Value", 'formula="{10 + key + prof(classDC)}"')}><b>${c.cls}</b><span><span class="sheet-field-label">Class DC</span> ${cdc.btn} ${rank(c.classDC)}</span><span><span class="sheet-field-label">Key attribute</span> <b>${c.key}</b></span>${cdc.parts}</div>
+    <div class="tabcols"><div class="rows"${tag("List", 'field="class.features" item="Ref"', "a list read from the referenced class")}><div class="row th" style="grid-template-columns:52px 1fr"><span>Level</span><span>Class feature</span></div>
       ${c.features.map(([lv, n]) => `<div class="row ${+lv > L ? "untrained" : ""}" style="grid-template-columns:52px 1fr"><span class="small">${lv}</span><button class="link plain" data-prev="${n}">${n}</button></div>`).join("")}</div>
     ${dz ? `<div${tag("Section", 'field="deity"')}><div class="kv small"><span class="sheet-field-label">Deity</span><span>${ref(dz.name, "deity")}</span>
         ${[["Divine font", dz.font], ["Sanctification", dz.sanct], ["Divine skill", dz.skill], ["Favored weapon", dz.weapon], ["Domains", dz.domains], ["Divine attributes", dz.attrs]].map(([k, v]) => `<span class="sheet-field-label">${k}</span><span>${v}</span>`).join("")}
