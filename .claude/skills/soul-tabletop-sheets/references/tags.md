@@ -82,7 +82,7 @@ In edit mode a `List` or `Table` of an array gets add, remove, and reorder contr
 
 | Tag | Attributes | Children | Notes |
 |---|---|---|---|
-| `Button` | `label` (req), `icon`, `amount` (boolean) | only `Set`, at least one | Shown only to viewers who can edit; with Edit off usable only if `live`. Adjacent Buttons with `amount` share one number box; `amount` in their `Set` formulas is the number typed. A click writes all `Set`s (computed from the data before it) and offers Undo |
+| `Button` | `label` (req), `icon`, `amount` (boolean), `toast` (boolean, off by default) | only `Set`, at least one | Shown only to viewers who can edit; with Edit off usable only if `live`. Adjacent Buttons with `amount` share one number box; `amount` in their `Set` formulas is the number typed. A click writes all `Set`s (computed from the data before it); with `toast`, a toast offers Undo. Errors always show a toast |
 | `Set` | `field` (req; one text, number, true/false, or scalar field; one `*` segment for every item of an array or entry of a struct of alike entries), `formula` (req) | none | Only directly inside `Button`. With `*` the formula runs per item, paths relative to the item; nothing (`null`) removes the value; a literal written to a choice field must be an option |
 
 ## Definitions

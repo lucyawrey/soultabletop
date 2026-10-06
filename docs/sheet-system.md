@@ -281,7 +281,7 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
   <Set field="hp.temp" formula="max(0, hp.temp - amount)" />
   <Set field="hp.value" formula="max(0, hp.value - max(0, amount - hp.temp))" />
 </Button>
-<Button label="Daily preparations" icon="i-lucide-sunrise" live>
+<Button label="Daily preparations" icon="i-lucide-sunrise" live toast>
   <Set field="spells.*.cast" formula="false" />
 </Button>
 <Table field="inventory">
@@ -292,7 +292,7 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
 </Table>
 ```
 
-- `Button` takes `label` (required), `icon`, `amount`, and of the common attributes `class`, `show`, and `live`
+- `Button` takes `label` (required), `icon`, `amount`, `toast`, and of the common attributes `class`, `show`, and `live`
   (`locked` and `display` don't apply). It contains only `Set`s, at least one; `Set` is only directly inside a
   `Button` and takes no common attributes. Child tags rather than one `set="field: formula; …"` attribute, so each
   formula is a whole attribute like everywhere else and its errors point at its own tag (decided).
@@ -315,8 +315,11 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
   like any edit, so they save the way a `live` field does with Edit off (at once) and like other edits with Edit on.
 - Results are checked against their fields on the click, as the save would: the field's type, a choice field's
   options, and nothing for a required field. A result that doesn't fit writes nothing and says why.
-- After a click a toast names the Button with an **Undo** action that writes back the previous values (decided).
-  A value changed since the click (edited, or its row moved) is left as it is, and the toast says how many.
+- `toast` (off by default, decided: toasts distract in play, so they're for large actions like Daily preparations):
+  after a click a toast names the Button with an **Undo** action that writes back the previous values. A value
+  changed since the click (edited, or its row moved) is left as it is, and a second toast says how many. Without
+  `toast` a click just changes the fields. A click that writes nothing because of an error always shows a toast
+  saying why.
 - `locked` doesn't stop a Button: it guards a field's own input, while a Button is its own action.
 - In a `Table`, a `Column` with `Button` children instead of a `field` or `formula` gives each row its buttons
   (a Column with both is an error). Such columns are left out for viewers who can't edit.

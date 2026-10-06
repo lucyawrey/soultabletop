@@ -52,7 +52,7 @@ The full list of attributes and children is in `references/tags.md` (verified ag
 - Layout: `Sheet`, `Section` (card; `title`, `description`, `icon`, `span`, `collapsible`, `collapsed`), `Grid` (`cols` 1-12, `gap`), `Stack` (`direction`, `gap`, `align`, `wrap`), `Tabs` (only `Tab` children) and `Tab` (`label` required), `Divider`, `Heading` (`level` 1-4), `Note`, `Callout`, `Badge`, `Collapsible` (`title` required).
 - Fields (need `field`, or `formula` where allowed; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (the field's schema options, else its own `options` list), `Tags`, `Tracker` (`max` optional), `Ref`, `Value` (never editable), `Markdown`, `Image`.
 - Repeaters: `List` (repeats its children per array item, or per entry of a struct whose entries are alike), `Table` (only `Column` and `RowDetails` children; `Column` takes `field` or `formula`, and `format`).
-- Buttons: `Button` (`label` required, `icon`, `amount`; only `Set` children) and `Set` (`field`, `formula`, both required). See "Buttons" below.
+- Buttons: `Button` (`label` required, `icon`, `amount`, `toast`; only `Set` children) and `Set` (`field`, `formula`, both required). See "Buttons" below.
 - Definitions: `Define` (`name`, `params`, `formula`; top level or directly inside `Sheet`; renders nothing).
 - Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Button` takes `class`, `show`, and `live` only; `Define` and `Set` take none.
 
@@ -107,7 +107,7 @@ A `Button` changes fields when clicked, one `Set` per field. Use it for actions 
 <Button label="Heal" amount live>
   <Set field="hp.value" formula="min(hp.value + amount, hpMax)" />
 </Button>
-<Button label="Daily preparations" icon="i-lucide-sunrise" live>
+<Button label="Daily preparations" icon="i-lucide-sunrise" live toast>
   <Set field="spells.*.cast" formula="false" />
   <Set field="slots.*.left" formula="max" />
 </Button>
@@ -124,7 +124,7 @@ A `Button` changes fields when clicked, one `Set` per field. Use it for actions 
 - `field` must be one text, number, true/false, or scalar field. One `*` changes every item of an array or every entry of a struct of alike entries; then the formula runs per item, with paths relative to the item (`formula="max"` reads that slot's `max`). Without `*`, paths are relative to the Button's row (inside a `List`/`Table`) or the top level.
 - A literal written to a choice field must be one of its options (`'Worn'`).
 - `amount` shows a number box; adjacent Buttons with `amount` share one box. `amount` in their formulas is the number typed (`/amount` reaches a field named so). Without `amount` on the Button, `amount` is an ordinary path.
-- Only viewers who can edit the content see Buttons. They work with Edit on; with Edit off only if `live` (put `live` on the Button, or on a Section or Column around it). A click saves like a `live` field change, and a toast offers Undo.
+- Only viewers who can edit the content see Buttons. They work with Edit on; with Edit off only if `live` (put `live` on the Button, or on a Section or Column around it). A click saves like a `live` field change. `toast` adds a toast with Undo after the click; leave it off for quick, frequent actions (damage, item moves) and use it for large ones (daily preparations, a rest). Errors always show a toast.
 - In a `Table`, put Buttons in a `Column` that has no `field` or `formula`: each row gets its own.
 
 ## CSS

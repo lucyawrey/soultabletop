@@ -2,8 +2,9 @@
 import { sheetButtonWrites, sheetValueAt } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
-// <Button>: clicking it writes its <Set>s' values (see sheetButtonWrites),
-// then a toast offers Undo. Shown only to viewers who can edit the Content;
+// <Button>: clicking it writes its <Set>s' values (see sheetButtonWrites);
+// with `toast`, a toast then offers Undo. A click that writes nothing because
+// of an error always says why. Shown only to viewers who can edit the Content;
 // with Edit off it's disabled unless `live`. With `amount`, it reads the
 // number box of its SheetButtonGroup. (Not disabled while the box is empty:
 // the box only takes what's typed when it loses focus, which clicking the
@@ -43,6 +44,7 @@ function click() {
   const { writes } = result;
   for (const write of writes) context.update(write.path, write.value);
   if (usesAmount.value) amount.value = null;
+  if (props.node.attrs.toast !== true) return;
   toast.add({
     title: label.value,
     icon: icon.value,

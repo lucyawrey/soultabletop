@@ -566,6 +566,9 @@ const tagList: TagSpec[] = [
       amount: bool(
         "Shows a number box before the button (adjacent buttons with amount share one); amount in its Set formulas is the number typed",
       ),
+      toast: bool(
+        "After a click, shows a toast naming the button, with Undo; for large actions (off by default)",
+      ),
     },
     children: { only: ["Set"] },
     liveOnly: true,
