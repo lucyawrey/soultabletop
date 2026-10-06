@@ -49,6 +49,7 @@ import {
 export {
   entryScopes,
   findRef,
+  isRecord,
   itemScopes,
   ownProperty,
   refRecord,
