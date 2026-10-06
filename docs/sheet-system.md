@@ -585,7 +585,9 @@ to everyone, and to people who can edit the sheet also a small warning icon whos
 Display of non-editable fields (decided): `display="text" | "box"`, allowed on any tag except `Tab` and `RowDetails`, and inherited like `live`/`locked`.
 - `text` shows the plain value (good for stat blocks like a spell); `box` shows the field's edit control, disabled, so a
   sheet looks the same with Edit on and off (good for character sheets). It applies wherever a field isn't editable:
-  Edit off, `locked` fields before their unlock click, viewers without edit access, and values reached through references.
+  Edit off, `locked` fields before their unlock click, and viewers without edit access. Values reached through a
+  reference (a linked spell's `range`) always show as text (decided 2026-10-06: they can never become editable on
+  this sheet, so a disabled input would look locked; a local entry's fields next to them keep their box).
 - Not every field has a useful disabled control: `Value` and `Image` keep their normal view in `box`, and `Ref` /
   `content` / `resourceLink` fields show their link inside an input-style box so it stays clickable.
 - The starting value comes from the sheet: new `sheet` column `defaultDisplay` (`sheet_display` enum, `text` | `box`,

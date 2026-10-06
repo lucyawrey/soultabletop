@@ -219,8 +219,10 @@ export function useSheetEditable(
       () => allowed.value && flags.value.locked && !unlocked.value,
     ),
     unlock: () => context.unlocked.add(unlockKey.value),
-    // Shown as a disabled input when not editable (`display="box"`).
-    boxed: computed(() => flags.value.display === "box"),
+    // Shown as a disabled input when not editable (`display="box"`). Values
+    // reached through a reference never are: they can't become editable, so
+    // they show as text rather than look locked.
+    boxed: computed(() => flags.value.display === "box" && path() !== null),
   };
 }
 
