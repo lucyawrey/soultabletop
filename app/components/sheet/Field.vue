@@ -2,6 +2,7 @@
 import { isFormulaError } from "#shared/sheet/formula";
 import {
   findRef,
+  hasSheetParts,
   ownProperty,
   resourceLinkPath,
   sheetOverride,
@@ -15,7 +16,7 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 // the field's value wins when it has one.
 const props = defineProps<{ node: ValidatedElement; compact?: boolean }>();
 
-const { context, scope, resolve, format, formatFormula, evaluate, number } = useSheet();
+const { context, scope, resolve, format, formatFormula, evaluate, number, breakdown } = useSheet();
 const attrText = useSheetAttrText();
 // Compact sheets: small uppercase labels and smaller stats.
 const compactSheet = useSheetCompact();
@@ -24,8 +25,10 @@ const compactSheet = useSheetCompact();
 const resolved = computed<SheetScope>(() =>
   props.node.binding ? resolve(props.node.binding.path) : { value: undefined, path: null },
 );
+// `<Part>`s explain the number; without a formula, their sum is the value.
+const parts = computed(() => (hasSheetParts(props.node) ? breakdown(props.node) : undefined));
 const computedValue = computed(() =>
-  props.node.formula ? evaluate(props.node.formula.ast) : undefined,
+  props.node.formula ? evaluate(props.node.formula.ast) : parts.value?.total,
 );
 const formulaError = computed(() =>
   isFormulaError(computedValue.value) ? computedValue.value.message : undefined,
@@ -137,6 +140,22 @@ const tags = computed(() =>
     : [],
 );
 
+// The breakdown popover's text: the first part plain when the number isn't
+// signed (a base, like 10 for a DC), the others signed.
+const breakdownView = computed(() => {
+  if (!parts.value) return undefined;
+  const signed = props.node.attrs.format === "signed";
+  return {
+    parts: parts.value.parts.map((part, index) => ({
+      label: part.label,
+      text: isFormulaError(part.value)
+        ? "—"
+        : formatFormula(part.value, index === 0 && !signed ? "plain" : "signed"),
+    })),
+    total: text.value || "—",
+  };
+});
+
 // A computed maximum can be anything; keep it a whole number of at least 0.
 // 0 (or no `max`) shows just the count.
 const trackerMax = computed(() => Math.max(Math.floor(number(props.node.attrs.max) ?? 0), 0));
@@ -196,7 +215,7 @@ const imageSize = computed(
       row even without a label, so the reset button coming and going doesn't
       move the input either. -->
     <div
-      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || isEditableOverride"
+      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || isEditableOverride || (breakdownView && asInput && !compact)"
       class="flex min-h-4 items-center gap-1 text-muted"
       :class="compactSheet ? 'text-[0.6875rem] font-semibold tracking-wide uppercase' : 'text-xs font-medium'"
     >
@@ -224,6 +243,10 @@ const imageSize = computed(
         :aria-label="`Edit ${label}`"
         @click="unlock"
       />
+      <!-- An input's parts open from a small button beside its label. -->
+      <SheetBreakdown v-if="breakdownView && asInput && !compact" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">
+        <UIcon name="i-lucide-sigma" class="size-3.5 align-middle" />
+      </SheetBreakdown>
     </div>
 
     <div class="sheet-field-value">
@@ -263,12 +286,14 @@ const imageSize = computed(
         class="font-bold text-highlighted tabular-nums"
         :class="compactSheet ? 'text-2xl' : 'text-3xl'"
       >
-        {{ text || "—" }}
+        <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+        <template v-else>{{ text || "—" }}</template>
       </div>
     </template>
 
     <span v-else-if="display === 'number'" class="tabular-nums">
-      {{ text || "—" }}
+      <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+      <template v-else>{{ text || "—" }}</template>
     </span>
 
     <span
@@ -374,7 +399,10 @@ const imageSize = computed(
       class="overflow-x-auto text-xs font-mono"
     >{{ value === undefined ? "—" : JSON.stringify(value, null, 2) }}</pre>
 
-    <span v-else :class="text ? '' : 'text-dimmed'">{{ text || "—" }}</span>
+    <span v-else :class="text ? '' : 'text-dimmed'">
+      <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+      <template v-else>{{ text || "—" }}</template>
+    </span>
     </div>
 
     <p v-if="showHint" class="mt-1 text-xs text-dimmed">{{ hint }}</p>

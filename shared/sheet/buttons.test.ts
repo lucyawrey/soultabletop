@@ -158,7 +158,7 @@ describe("Button and Set validation", () => {
     ).toEqual([]);
   });
 
-  it("places Buttons and Sets", () => {
+  it("places Buttons and Sets (a Column may show a field beside its Buttons)", () => {
     expect(messages(`<Button label="X" />`)).toEqual([
       "error missing-child: <Button> needs a <Set> for each field it changes",
     ]);
@@ -173,7 +173,7 @@ describe("Button and Set validation", () => {
     );
     expect(
       messages(`<Table field="inventory"><Column field="name"><Button label="X"><Set field="name" formula="'a'" /></Button></Column></Table>`),
-    ).toEqual(["error invalid-attribute: A <Column> with buttons takes no field or formula"]);
+    ).toEqual([]);
   });
 });
 

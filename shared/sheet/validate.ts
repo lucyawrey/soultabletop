@@ -303,6 +303,7 @@ function isCollection(type: FormulaType) {
 const formulaResults: Record<string, { kinds: readonly FormulaBaseKind[]; wanted: string }> = {
   Number: { kinds: ["number"], wanted: "a number" },
   Tracker: { kinds: ["number"], wanted: "a number" },
+  Part: { kinds: ["number"], wanted: "a number" },
   Text: { kinds: ["string"], wanted: "text" },
   Checkbox: { kinds: ["boolean"], wanted: "true or false" },
   Column: { kinds: ["number", "string", "boolean"], wanted: "a single value" },
@@ -902,14 +903,24 @@ class Validator {
     const formula = isCompiledFormula(attrs.formula) ? attrs.formula : undefined;
     if (formulaAttr && spec.formula && !formula) return broken(`<${spec.name}> has errors`);
 
-    // A Column of buttons has no field or formula.
-    const buttonColumn =
-      spec.name === "Column" && node.children.some((child) => child.type === "element");
-    if (buttonColumn && (attrNamed(node, "field") || formulaAttr)) {
-      return invalid("invalid-attribute", "A <Column> with buttons takes no field or formula");
+    // Parts (`<Part>`) explain a number; without a formula, a Value or Column
+    // shows their sum. A Column may hold only Buttons instead of a field.
+    const childTags = node.children.flatMap((child) =>
+      child.type === "element" ? [child.tag.toLowerCase()] : [],
+    );
+    const hasParts = childTags.includes("part");
+    const buttonsOnly = spec.name === "Column" && childTags.includes("button") && !hasParts;
+    if (hasParts && (spec.name === "Value" || spec.name === "Column") && attrNamed(node, "field") && !formulaAttr) {
+      return invalid(
+        "invalid-attribute",
+        `<${spec.name}> with parts takes no field: without a formula it shows their sum (with a formula, parts explain it)`,
+      );
+    }
+    if (spec.name === "Number" && hasParts && !formulaAttr) {
+      return invalid("missing-attribute", "<Number> with parts needs a formula; its parts explain it (use <Value> to show their sum)");
     }
 
-    if (spec.category === "field" && !buttonColumn) {
+    if (spec.category === "field") {
       const hasField = typeof attrs.field === "string";
       // `Field` has no input of its own to compute without a field: its type
       // picks the input.
@@ -920,7 +931,7 @@ class Validator {
           "<Field> with a formula needs a field attribute; use <Value> to show a computed value",
         );
       }
-      if (!hasField && !formula) {
+      if (!hasField && !formula && !hasParts && !buttonsOnly) {
         // A field attribute that was written but is invalid is reported already.
         if (attrNamed(node, "field")) return broken(`<${spec.name}> has errors`);
         return invalid(
