@@ -73,3 +73,4 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - **Header strip on desktop (user):** the Level / Hero Points / Speed / Size strip is centered vertically beside the whole header (name, chips, and the traits line, which no longer runs under it), with more padding and slightly larger values. Phones are unchanged.
 - **Class chips (user):** Class and its subclass (Doctrine, Racket) always sit on the same line; they wrap together.
 - **Build choices more prominent (user):** Ancestry, Heritage, Background, Class, and the subclass are small cards (label above a larger value) instead of pills; in edit mode the Change button sits under the value.
+- **Strikes and Actions grow together (user):** each panel grows with its rows, and the shorter one always stretches to the taller one's height (desktop; on a phone they stack and size separately). Edit mode has "+ Add strike" and "+ Add action" to try it.

@@ -237,6 +237,10 @@ const PCS = {
     inv: [["Rapier",1,1,"Held",0],["Shortbow",1,1,"Worn",0],["Arrows",0.1,20,"Worn",0],["Leather armor",1,1,"Worn",0],["Thieves' toolkit",0.1,1,"Worn",0],["Backpack",0.1,1,"Worn",0],["Bedroll",0.1,1,"Stowed",0]],
     coins: { pp: 0, gp: 2, sp: 7, cp: 5 } },
 };
+const MORE = {
+  strikes: [["◆","Dagger","Dex","t",0,"1d4 P","Agile · Finesse · Thrown 10 ft"],["◆","Fist","Str","t",0,"1d4 B","Agile · Nonlethal · Unarmed"],["◆","Javelin","Dex","t",0,"1d6 P","Thrown 30 ft"]],
+  actions: [["◆","Seek","Perception"],["◆◆","Demoralize","Intimidation"],["◆","Recall Knowledge","Lore or skill"],["◆","Take Cover","+2 circumstance to AC"],["↺","Aid","Prepare with ◆"]],
+};
 const sg = n => (n >= 0 ? "+" : "−") + Math.abs(n);
 const P = (r, L) => (r === "u" ? 0 : RANKS[r][2] + L);
 const tag = (t, a = "", gap = "") => ` data-tag="${t}"${a ? ` data-attrs='${a}'` : ""}${gap ? ` data-gap="${gap}"` : ""}`;
@@ -306,10 +310,11 @@ function render() {
     <div class="rows"><div class="row th"><span></span><span>Weapon</span><span>Hit · MAP</span><span>Damage</span><span>Traits</span></div>
     ${c.strikes.map(([g, n, k, r, item, d, t]) => { const m = mod("s" + n, [[k, a[k]], [RANKS[r][1], P(r, L)], ["Item", item]]);
       return `<div class="row"><span class="act" aria-label="One action">${g}</span><button class="link plain" data-prev="${n}">${n}</button><span><span data-gap="roll button">${m.btn}</span> <span class="mapcell">${sg(m.total - 5)} ${sg(m.total - 10)}</span></span><span class="dt"><span>${d}${c.sneak ? ` <span class="dim small">+${c.sneak} sneak</span>` : ""}</span><span>${t.split(" · ").map(x => `<span class="chip">${x}</span>`).join("")}</span></span>${m.parts}</div>`; }).join("")}
-    </div></section>`;
+    ${E() ? `<div class="row"><button class="pick" style="justify-self:start;grid-column:1/-1" data-add="strikes">+ Add strike</button></div>` : ""}</div></section>`;
 
   const actions = `<section class="sheet-section acts"${tag("List", 'field="actions" item="Ref"')}><h2>Actions &amp; Reactions</h2>
-    <div class="rows">${c.actions.map(([g, n, d]) => `<div class="row"><span class="act">${g}</span><button class="link plain" data-prev="${n}">${n}</button><span class="small dim">${d}</span></div>`).join("")}</div></section>`;
+    <div class="rows">${c.actions.map(([g, n, d]) => `<div class="row"><span class="act">${g}</span><button class="link plain" data-prev="${n}">${n}</button><span class="small dim">${d}</span></div>`).join("")}
+    ${E() ? `<div class="row"><button class="pick" style="justify-self:start;grid-column:1/-1" data-add="actions">+ Add action</button></div>` : ""}</div></section>`;
 
   const skillRow = ([n, k, r]) => { const parts = [[k, a[k]], [RANKS[r][1], P(r, L)]]; if (CHECK[n] && penalty) parts.push(["Armor", penalty]);
     const m = mod("k" + n, parts);
@@ -383,6 +388,7 @@ document.addEventListener("click", e => {
     return render(); }
   const g = b.closest("[data-ctl]");
   if (g) S[g.dataset.ctl] = b.dataset.v;
+  else if (b.dataset.add) { const list = PCS[S.pc][b.dataset.add], next = MORE[b.dataset.add].find(x => !list.some(y => y[1] === x[1])); if (next) list.push(next); }
   else if (b.dataset.tab) S.tab = b.dataset.tab;
   else if (b.dataset.open) S.open = S.open === b.dataset.open ? null : b.dataset.open;
   else if (b.dataset.prev) S.preview = b.dataset.prev;
