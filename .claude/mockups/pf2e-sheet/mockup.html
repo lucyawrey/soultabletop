@@ -92,11 +92,23 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .saves .srow .mod { font-size: calc(var(--d-big) * .8); border-bottom: 1px dotted var(--st-border-strong); }
 .saves .parts { margin-top: 2px; }
 .hero-n .sheet-field-value, .hero-n .mod { font-size: var(--d-hero); }
-.hp { text-align: left; grid-template-columns: 1fr auto; gap: 3px 8px; }
+/* HP: current, temp, and damage/heal on the left; death track on the right; defenses against damage below. */
+.hp { text-align: left; grid-template-columns: 1fr auto; gap: 4px calc(var(--d-pad) + 4px); align-content: stretch; }
+.hp .main { display: grid; gap: 5px; align-content: start; }
+.hp .line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .hp .now { display: flex; align-items: baseline; gap: 4px; }
-.hp .now input { width: 58px; height: calc(var(--d-hero) + 4px); font-size: var(--d-hero); font-weight: 700; }
-.meter { grid-column: 1 / -1; height: 6px; background: var(--st-panel-muted); border: 1px solid var(--st-border); border-radius: 3px; overflow: hidden; } .meter i { display: block; height: 100%; background: var(--st-primary); }
-.death { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; }
+.hp .now input { width: 64px; height: calc(var(--d-hero) + 6px); font-size: var(--d-hero); font-weight: 700; }
+.hp .now .mod { font-size: var(--d-fs); }
+.hp .adj { display: flex; gap: 4px; align-items: center; }
+.hp .adj input { width: 46px; height: 22px; text-align: center; }
+.hp .adj button { height: 22px; padding: 0 8px; border: 1px solid var(--st-border-strong); border-radius: 4px; background: var(--st-panel); cursor: pointer; font-size: var(--d-lfs); font-weight: 700; }
+.hp .meter { height: 8px; }
+.death { display: grid; grid-template-columns: auto auto; gap: 5px 8px; align-content: start; align-items: center; border-left: 1px solid var(--st-border); padding-left: calc(var(--d-pad) + 4px); }
+.death .pips button { width: 15px; height: 15px; }
+.death .note { grid-column: 1 / -1; color: var(--st-ink-muted); }
+.hp .dmg { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2px 14px; border-top: 1px solid var(--st-border); padding-top: 4px; }
+.meter { height: 6px; background: var(--st-panel-muted); border: 1px solid var(--st-border); border-radius: 3px; overflow: hidden; } .meter i { display: block; height: 100%; background: var(--st-primary); }
+
 .box .parts { text-align: left; }
 .strip { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; margin-top: var(--d-gap); }
 
@@ -187,7 +199,7 @@ const SKILLS = [["Acrobatics","Dex"],["Arcana","Int"],["Athletics","Str"],["Craf
 const CHECK = { Acrobatics: 1, Athletics: 1, Stealth: 1, Thievery: 1 };
 const PCS = {
   cleric: { name: "Maren Ashvale", level: 1, ancestry: "Human", heritage: "Versatile Human", background: "Acolyte", cls: "Cleric", subLabel: "Doctrine", sub: "Cloistered Cleric", key: "Wis",
-    attr: { Str: 0, Dex: 1, Con: 1, Int: 0, Wis: 4, Cha: 2 }, hpMax: 17, hp: 17, temp: 0, hero: 1, dying: 0, wounded: 0, doomed: 0, speed: 25, size: "Medium",
+    attr: { Str: 0, Dex: 1, Con: 1, Int: 0, Wis: 4, Cha: 2 }, hpMax: 17, ancHp: 8, clsHp: 8, hp: 17, temp: 0, hero: 1, dying: 0, wounded: 0, doomed: 0, speed: 25, size: "Medium",
     traits: ["Human", "Humanoid"], senses: "", languages: "Common, Empyrean",
     armor: { name: "No armor", ac: 0, cap: 99, check: 0, rank: "t" }, shield: { name: "Wooden shield", ac: 2, hard: 3, hp: 12, bt: 6 },
     perc: "t", init: "Perception", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","t"], Will: ["Wis","e"] }, classDC: "t",
@@ -203,7 +215,7 @@ const PCS = {
     inv: [["Mace",1,1,"Held",0],["Sling",0.1,1,"Worn",0],["Wooden shield",1,1,"Held",0],["Religious symbol",0.1,1,"Worn",0],["Healer's toolkit",1,1,"Worn",0],["Backpack",0.1,1,"Worn",0],["Bedroll",0.1,1,"Stowed",0],["Rations (1 week)",0.1,1,"Stowed",0]],
     coins: { pp: 0, gp: 4, sp: 3, cp: 0 } },
   rogue: { name: "Tessaly Quill", level: 1, ancestry: "Elf", heritage: "Woodland Elf", background: "Criminal", cls: "Rogue", subLabel: "Racket", sub: "Thief", key: "Dex",
-    attr: { Str: 0, Dex: 4, Con: 1, Int: 1, Wis: 1, Cha: 1 }, hpMax: 15, hp: 9, temp: 0, hero: 2, dying: 0, wounded: 1, doomed: 0, speed: 30, size: "Medium",
+    attr: { Str: 0, Dex: 4, Con: 1, Int: 1, Wis: 1, Cha: 1 }, hpMax: 15, ancHp: 6, clsHp: 8, resist: "", hp: 9, temp: 0, hero: 2, dying: 0, wounded: 1, doomed: 0, speed: 30, size: "Medium",
     traits: ["Elf", "Humanoid"], senses: "Low-light vision", languages: "Common, Elven, Sylvan",
     armor: { name: "Leather armor", ac: 1, cap: 4, check: -1, rank: "t" },
     perc: "e", init: "Stealth", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","e"], Will: ["Wis","e"] }, classDC: "t",
@@ -225,10 +237,10 @@ const E = () => S.mode === "edit";
 const rank = (r, id) => E() ? `<select class="rank-sel" aria-label="Proficiency">${Object.entries(RANKS).map(([k, v]) => `<option ${k === r ? "selected" : ""}>${v[0]}</option>`).join("")}</select>`
   : `<span class="rank ${r}" title="${RANKS[r][1]}" aria-label="${RANKS[r][1]}">${RANKS[r][0]}</span>`;
 // A modifier that opens its breakdown; parts are [label, value].
-function mod(id, parts, base = 0) {
+function mod(id, parts, base = 0, plain = !!base) {
   const total = base + parts.reduce((s, [, v]) => s + v, 0);
-  return { total, btn: `<button class="mod" aria-expanded="${S.open === id}" data-open="${id}">${base ? total : sg(total)}</button>`,
-    parts: S.open === id ? `<div class="parts">${base ? `<b>${base}</b> base · ` : ""}${parts.map(([l, v]) => `${l} <b>${sg(v)}</b>`).join(" · ")} = <b>${base ? total : sg(total)}</b></div>` : "" };
+  return { total, btn: `<button class="mod" aria-expanded="${S.open === id}" data-open="${id}">${plain ? total : sg(total)}</button>`,
+    parts: S.open === id ? `<div class="parts">${base ? `<b>${base}</b> base · ` : ""}${parts.map(([l, v]) => `${l} <b>${sg(v)}</b>`).join(" · ")} = <b>${plain ? total : sg(total)}</b></div>` : "" };
 }
 const pips = (n, max, cls = "", label) => `<span class="pips ${cls}" role="group" aria-label="${label}">${Array.from({ length: max }, (_, i) => `<button class="${i < n ? "on" : ""}" aria-pressed="${i < n}" aria-label="${label} ${i + 1}"></button>`).join("")}</span>`;
 const ref = (v, field) => E() ? `<span class="link">${v}</span> <button class="pick"${tag("Ref", `field="${field}"`)}>Change</button>` : `<button class="link" data-prev="${v}">${v}</button>`;
@@ -257,6 +269,7 @@ function render() {
 
   const shieldUp = S.shieldUp && c.shield;
   const ac = mod("ac", [["Dex" + (c.armor.cap < 99 ? ` (cap ${sg(c.armor.cap)})` : ""), Math.min(a.Dex, c.armor.cap)], [RANKS[c.armor.rank][1], P(c.armor.rank, L)], ["Armor", c.armor.ac], ...(shieldUp ? [["Shield raised", c.shield.ac]] : [])], 10);
+  const hpm = mod("hpmax", [["Ancestry", c.ancHp], ["Class", c.clsHp], ["Con × level", a.Con * L]], 0, true);
   const perc = mod("perc", [["Wis", a.Wis], [RANKS[c.perc][1], P(c.perc, L)]]);
   const saveRows = Object.entries(c.saves).map(([n, [k, r]]) => ({ n, k, m: mod(n, [[k, a[k]], [RANKS[r][1], P(r, L)]]), r }));
   const saves = `<div class="box saves"${tag("Table", 'field="saves" rows="fixed"', "breakdown on a box")}><span class="sheet-field-label">Saving Throws</span>
@@ -265,16 +278,21 @@ function render() {
   const defs = `<div style="min-width:0"><div class="defs">
     <div class="box key hero-n ac"${tag("Value", 'formula="{10 + min(dex, armor.dexCap) + prof(armor.rank) + armor.ac + (shieldRaised ? shield.ac : 0)}"', "breakdown on a box")}><span class="sheet-field-label">Armor Class</span>${ac.btn}<span class="small dim">${c.armor.name}</span>${ac.parts}</div>
     <div class="box hp"${tag("Tracker", 'field="hp" max="{ancestry.hp + (class.hp + con) * level}" live', "live attribute doesn't exist yet")}>
-      <span class="sheet-field-label">Hit Points</span><span class="small dim">max ${c.hpMax}</span>
-      <span class="now"><input aria-label="Current HP" value="${c.hp}"><span class="dim">/ ${c.hpMax}</span></span><span class="small"><span class="sheet-field-label">Temp</span> <input aria-label="Temp HP" value="${c.temp}" style="width:34px;height:20px;text-align:center"></span>
-      <div class="meter"><i style="width:${c.hp / c.hpMax * 100}%"></i></div>
-      <div class="death small"><span><span class="sheet-field-label">Dying</span> ${pips(c.dying, 4, "bad", "Dying")}</span><span><span class="sheet-field-label">Wounded</span> ${pips(c.wounded, 3, "bad sq", "Wounded")}</span><span><span class="sheet-field-label">Doomed</span> ${pips(c.doomed, 3, "bad sq", "Doomed")}</span></div>
+      <div class="main"><span class="sheet-field-label">Hit Points</span>
+        <div class="line"><span class="now"><input aria-label="Current HP" value="${c.hp}"><span class="dim">/</span>${hpm.btn}</span>
+          <span class="small"><span class="sheet-field-label">Temp</span> <input aria-label="Temp HP" value="${c.temp}" style="width:38px;height:22px;text-align:center"></span></div>
+        <div class="meter"><i style="width:${c.hp / c.hpMax * 100}%"></i></div>${hpm.parts}
+        <span class="adj"${tag("Button", 'action="damage(hp, tempHp)" live', "no tag yet for a button that changes a field")}><input aria-label="Amount" placeholder="0"><button>Damage</button><button>Heal</button></span></div>
+      <div class="death small"><span class="sheet-field-label">Dying</span>${pips(c.dying, 4 - c.doomed, "bad", "Dying")}
+        <span class="sheet-field-label">Wounded</span>${pips(c.wounded, 3, "bad sq", "Wounded")}
+        <span class="sheet-field-label">Doomed</span>${pips(c.doomed, 3, "bad sq", "Doomed")}
+        <span class="note">Recovery DC ${10 + c.dying} · dies at dying ${4 - c.doomed}</span></div>
+      <div class="dmg small"${tag("Grid", 'columns="3"')}><span><span class="sheet-field-label">Resistances</span> <span class="dim">${c.resist || "none"}</span></span><span><span class="sheet-field-label">Weaknesses</span> <span class="dim">none</span></span><span><span class="sheet-field-label">Immunities</span> <span class="dim">none</span></span></div>
     </div>
     ${saves}
   </div>
   <div class="strip small">
     ${c.shield ? `<span${tag("Toggle", 'field="shieldRaised" live', "live attribute doesn't exist yet")}><label><input type="checkbox" ${shieldUp ? "checked" : ""} data-shield style="height:auto"> <b>${c.shield.name}</b> raised</label> <span class="dim">Hardness ${c.shield.hard} · HP ${c.shield.hp} · BT ${c.shield.bt}</span></span>` : ""}
-    <span><span class="sheet-field-label">Resist / weak</span> <span class="dim">none</span></span>
     <span${tag("Tags", 'field="conditions" live', "conditions don't change the numbers")}><span class="sheet-field-label">Conditions</span> ${S.pc === "rogue" ? `<span class="chip">Frightened 1</span>` : `<span class="dim">none</span>`} <button class="pick">+ Add</button></span>
   </div></div>`;
 
