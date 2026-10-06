@@ -251,7 +251,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.12 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.13 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
@@ -401,7 +401,7 @@ function runFollowUp(id, k) {
 
 // ---- Rendering dice ----
 // Outlines in a 100×100 box, each filling about the same area.
-const SHAPE = { 4: '<polygon points="50,5 96,88 4,88"/>', 6: '<rect x="9" y="9" width="82" height="82" rx="5"/>', 8: '<polygon points="50,2 98,50 50,98 2,50"/>',
+const SHAPE = { 4: '<polygon points="50,5 96,88 4,88"/>', 6: '<rect x="9" y="9" width="82" height="82"/>', 8: '<polygon points="50,2 98,50 50,98 2,50"/>',
   10: '<polygon points="50,1 99,38 50,99 1,38"/>', 12: '<polygon points="50,1 99,36 81,97 19,97 1,36"/>', 20: '<polygon points="50,2 94,26 94,74 50,98 6,74 6,26"/>' };
 const D6 = ["", "one", "two", "three", "four", "five", "six"];
 function dieHTML(f, { size } = {}) {
