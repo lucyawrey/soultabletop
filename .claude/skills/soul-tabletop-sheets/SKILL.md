@@ -51,7 +51,8 @@ The full list of attributes and children is in `references/tags.md` (verified ag
 
 - Layout: `Sheet`, `Section` (card; `title`, `description`, `icon`, `span`, `collapsible`, `collapsed`), `Grid` (`cols` 1-12, `gap`), `Stack` (`direction`, `gap`, `align`, `wrap`), `Tabs` (only `Tab` children) and `Tab` (`label` required), `Divider`, `Heading` (`level` 1-4), `Note`, `Callout`, `Badge`, `Collapsible` (`title` required).
 - Fields (need `field`, or `formula` where allowed; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (the field's schema options, else its own `options` list), `Tags`, `Tracker` (`max` optional), `Ref`, `Value` (never editable), `Markdown`, `Image`.
-- Repeaters: `List` (repeats its children per array item, or per entry of a struct whose entries are alike), `Table` (only `Column` and `RowDetails` children; `Column` takes `field` or `formula`, and `format`).
+- Repeaters: `List` (repeats its children per array item, or per entry of a struct whose entries are alike), `Table` (only `Column` and `RowDetails` children; `Column` takes `field` or `formula`, and `format`, and may hold `Part` and `Button` children).
+- Breakdowns: `Part` (`label`, `formula`) inside `Value`, `Column`, or `Number`. See "Breakdowns" below.
 - Buttons: `Button` (`label` required, `icon`, `amount`, `toast`; only `Set` children) and `Set` (`field`, `formula`, both required). See "Buttons" below.
 - Definitions: `Define` (`name`, `params`, `formula`; top level or directly inside `Sheet`; renders nothing).
 - Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Button` takes `class`, `show`, and `live` only; `Define` and `Set` take none.
@@ -94,6 +95,30 @@ Boolean (`live`, `locked`) or enum (`display`) attributes on any tag except `Tab
 - `locked`: read-only even in Edit mode until the user clicks the field's pencil button. Use it for things that rarely change: ability scores, level.
 - They compose: editable when the user can edit and (Edit is on, or `live`), and if `locked`, after the unlock click. `live locked` = editable in view mode after unlocking.
 - `display="text"` shows non-editable fields as plain values (stat blocks, spell cards); `display="box"` shows their input, disabled, so the sheet looks the same in edit and view mode (character sheets). It defaults to the Sheet's "Non-editable fields" setting (new sheets: `box` for player characters, `text` otherwise). `Value` and `Image` look the same in both.
+
+## Breakdowns
+
+Clicking a number with `Part` children opens a popover listing them ("Base 10 · Dex +3 · Trained +3 · Item +2 = 18"). Use it for anything players ask "where does this come from?": AC, saves, skills, Perception, attack bonuses, DCs.
+
+```
+<Value label="Armor Class">
+  <Part label="Base" formula="10" />
+  <Part label="Dex" formula="min(dex, armor.dexCap)" />
+  <Part label="{rankName(armor.rank)}" formula="prof(armor.rank)" />
+  <Part label="Shield" formula="shield.ac" show="shieldRaised" />
+</Value>
+<Table field="skills">
+  <Column label="Mod" format="signed">
+    <Part label="Dex" formula="/dex" />
+    <Part label="{rankName(rank)}" formula="prof(rank)" />
+  </Column>
+</Table>
+```
+
+- `Part` goes directly inside `Value`, `Column`, or `Number`; `label` (text, `{…}` allowed) and `formula` (a number) are required; `show` hides a part. A part that gives nothing is left out.
+- A `Value` or `Column` with parts and no `formula` shows their sum: don't repeat the sum in a formula. Other formulas can't read that sum; if they need it, compute it in a `<Define>` and give the tag `formula="ac()"` plus the parts.
+- A `Number` takes parts only with a `formula` (an override).
+- Part values show signed, except the first when the number isn't `format="signed"` (a base like 10). Give modifiers `format="signed"`.
 
 ## Buttons
 

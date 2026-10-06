@@ -297,6 +297,45 @@ export function sheetValueAt(root: unknown, path: readonly (string | number)[]):
   return current;
 }
 
+// A part of a number, as its breakdown popover lists it.
+export interface SheetBreakdownPart {
+  label: string;
+  value: FormulaValue;
+}
+
+// Whether a tag has `<Part>`s, which explain its number (and are summed when
+// it has no formula).
+export function hasSheetParts(node: ValidatedElement) {
+  return node.children.some((child) => child.type === "element" && child.tag === "Part");
+}
+
+// A tag's `<Part>`s in `scope`, and their sum. Parts hidden by `show`, or
+// whose value is nothing, are left out. A part that fails, or isn't a number,
+// makes the sum that error. With no parts left, the sum is nothing.
+export function sheetBreakdown(
+  node: ValidatedElement,
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions = noDefinitions,
+): { parts: SheetBreakdownPart[]; total: FormulaValue } {
+  const parts: SheetBreakdownPart[] = [];
+  let total: FormulaValue = 0;
+  for (const child of node.children) {
+    if (child.type !== "element" || child.tag !== "Part" || !child.formula) continue;
+    if (!sheetCondition(child.attrs.show, root, scope, refs, formulas).shown) continue;
+    const value = evaluateSheetFormula(child.formula.ast, root, scope, refs, formulas);
+    if (value === null) continue;
+    const label = interpolateSheetText(child.attrs.label as TextPart[], root, scope, refs, formulas);
+    parts.push({ label, value });
+    if (isFormulaError(total)) continue;
+    if (isFormulaError(value)) total = value;
+    else if (typeof value === "number") total += value;
+    else total = new FormulaError("type", `${label || "A part"} isn't a number`);
+  }
+  return { parts, total: parts.length ? total : null };
+}
+
 // One value a Button writes: `value` at `path`, which held `previous` (for
 // Undo). `undefined` removes the key.
 export interface SheetWrite {
