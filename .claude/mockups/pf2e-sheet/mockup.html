@@ -61,7 +61,17 @@ input, select { font: inherit; color: var(--st-ink); height: var(--d-h); box-siz
 .parts b { color: var(--st-ink); }
 .rank { display: inline-grid; place-items: center; width: 20px; height: 17px; border-radius: 4px; font-size: 10.5px; font-weight: 700; border: 1px solid var(--st-border-strong); color: var(--st-ink-muted); }
 .rank.t, .rank.e, .rank.m, .rank.l { background: var(--st-primary); color: var(--st-on-primary); border-color: var(--st-primary); }
-select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; font-size: var(--d-lfs); }
+select.rank-sel { appearance: none; -webkit-appearance: none; width: 20px; height: 17px; padding: 0; border: 1px dashed var(--st-primary); border-radius: 4px; font-size: 10.5px; font-weight: 700; text-align: center; text-align-last: center; color: var(--st-ink-muted); cursor: pointer; vertical-align: middle; }
+select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { background: var(--st-primary); color: var(--st-on-primary); border-color: var(--st-ink); }
+/* Edit inputs keep the size of the values they replace. */
+.box input, .meta input { border-style: dashed; padding: 0 2px; }
+.attrs .box input { height: calc(var(--d-big) * 1.2 + 6px); font-size: calc(var(--d-big) * 1.2); }
+.meta input { height: calc(var(--d-big) * 1.15 + 4px); font-size: calc(var(--d-big) * 1.15); font-weight: 700; text-align: center; }
+/* In edit, a build card's Change sits beside its label, so the card keeps its height. */
+.refs .ref { grid-template-columns: auto auto; column-gap: 10px; }
+.ref > .sheet-field-label { grid-row: 1; grid-column: 1; }
+.ref > .link { grid-row: 2; grid-column: 1 / -1; }
+.ref > .pick { grid-row: 1; grid-column: 2; justify-self: end; font-size: 9.5px; line-height: 1.25; padding: 0 4px; }
 .pips { display: inline-flex; gap: 3px; vertical-align: middle; }
 .pips button { width: 13px; height: 13px; border: 1.5px solid var(--st-primary); border-radius: 50%; background: transparent; padding: 0; cursor: pointer; }
 .pips button.on { background: var(--st-primary); }
@@ -269,7 +279,7 @@ const sg = n => (n >= 0 ? "+" : "−") + Math.abs(n);
 const P = (r, L) => (r === "u" ? 0 : RANKS[r][2] + L);
 const tag = (t, a = "", gap = "") => ` data-tag="${t}"${a ? ` data-attrs='${a}'` : ""}${gap ? ` data-gap="${gap}"` : ""}`;
 const E = () => S.mode === "edit";
-const rank = (r, id) => E() ? `<select class="rank-sel" aria-label="Proficiency">${Object.entries(RANKS).map(([k, v]) => `<option ${k === r ? "selected" : ""}>${v[0]}</option>`).join("")}</select>`
+const rank = (r, id) => E() ? `<select class="rank-sel ${r}" aria-label="Proficiency">${Object.entries(RANKS).map(([k, v]) => `<option ${k === r ? "selected" : ""}>${v[0]}</option>`).join("")}</select>`
   : `<span class="rank ${r}" title="${RANKS[r][1]}" aria-label="${RANKS[r][1]}">${RANKS[r][0]}</span>`;
 // A modifier that opens its breakdown; parts are [label, value].
 function mod(id, parts, base = 0) {
@@ -302,7 +312,7 @@ function render() {
   </div></section>`;
 
   const attrs = `<div class="attrs"${tag("Grid", 'columns="3"')}>${ATTR.map(k => `<div class="box ${k === c.key ? "key" : ""}"${tag("Number", `field="attributes.${k.toLowerCase()}" signed`)}>
-      ${k === c.key ? `<span class="keytag">Key</span>` : ""}<span class="sheet-field-label">${k}</span>${E() ? `<input type="number" value="${a[k]}" aria-label="${k}">` : `<span class="sheet-field-value">${sg(a[k])}</span>`}</div>`).join("")}</div>`;
+      ${k === c.key ? `<span class="keytag">Key</span>` : ""}<span class="sheet-field-label">${k}</span>${E() ? `<input value="${sg(a[k])}" inputmode="numeric" aria-label="${k}">` : `<span class="sheet-field-value">${sg(a[k])}</span>`}</div>`).join("")}</div>`;
 
   const shieldUp = S.shieldUp && c.shield;
   const ac = mod("ac", [["Dex" + (c.armor.cap < 99 ? ` (cap ${sg(c.armor.cap)})` : ""), Math.min(a.Dex, c.armor.cap)], [RANKS[c.armor.rank][1], P(c.armor.rank, L)], ["Armor", c.armor.ac], ...(shieldUp ? [["Shield raised", c.shield.ac]] : [])], 10);
@@ -401,7 +411,7 @@ function render() {
   document.querySelectorAll("[data-ctl]").forEach(g => g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", S[g.dataset.ctl] === b.dataset.v)));
   contrast();
 }
-document.addEventListener("change", e => { if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
+document.addEventListener("change", e => { if (e.target.matches(".rank-sel")) e.target.className = "rank-sel " + e.target.value.toLowerCase(); if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
 document.addEventListener("click", e => {
   const t = e.target;
   if (t.matches("[data-shield]")) { S.shieldUp = t.checked; return render(); }
