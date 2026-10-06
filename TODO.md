@@ -22,14 +22,8 @@ The exact order: do these one at a time, top first.
 
 Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The items below, in this order.
 
-Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the first seven items, from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
+Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the first four items (density, `editing()`, and live fields saving at once were built in #92), from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
 
-- **Sheet density setting** · feature
-  `<Sheet density="compact|roomy">` sets sizes, gaps, and label styles for the whole sheet through tokens, so a dense sheet needs no custom CSS; roomy is today's look. The spec's "Tokens" table has the mockup's values. Step 4 of the PF2e plan; its own small PR.
-- **Sheet play mode with `live` fields** · feature · large · needs decision: the details of the agreed design (which tags take `live`, how a live save works with Autosave off and with conflicts)
-  Edit off is play; tags marked `live` (Tracker, Checkbox, Toggle, Number, Select, Tags) stay editable in play for viewers who can edit, and a change saves at once whatever the Autosave setting. Character sheets keep starting in edit mode (`shared/sheet/generate.ts`); only advanced sheets turn it off. Design agreed in the mockup brief ([brief.md](.claude/mockups/pf2e-sheet/brief.md), "Review notes", 1). Design with Opus, together with the next item.
-- **`editing` in Sheet formulas** · feature · small
-  Formulas can read whether the sheet is in edit mode, so a sheet shows empty choice slots and Add buttons only while editing (`show="editing or senses"`).
 - **Sheet buttons that change a field** · feature · needs decision: the markup (a tag, its action syntax, and which changes are allowed)
   Damage and Heal on HP (temp HP first, heal stops at the max), Daily preparations (refresh spell slots and trackers), and an inventory item's move badges (set its state). Usable in play for viewers who can edit, like `live` fields.
 - **Sheet breakdown popovers** · feature · needs decision: the markup (how a number lists its parts)
