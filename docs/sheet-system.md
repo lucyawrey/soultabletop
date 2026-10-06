@@ -100,7 +100,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 ### Layout
 | Tag | Attrs | Children | Renders |
 |---|---|---|---|
-| `Sheet` | `density` (roomy/compact, default roomy) | any | root wrapper; optional (implicit if omitted); top level only |
+| `Sheet` | `density` (compact/roomy, default compact) | any | root wrapper; optional (implicit if omitted); top level only |
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
@@ -112,8 +112,10 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 | `Badge` | `color` | text | `UBadge` |
 | `Collapsible` | `title` (req), `subtitle`, `icon`, `open` | any | `UCollapsible`: clickable header, children shown on expand (e.g. one per `List` item) |
 
-`density` (decided 2026-10-06, from the [PF2e sheet mockup](../.claude/mockups/pf2e-sheet/spec.md)): `roomy` is the
-site's form spacing; `compact` is for dense character sheets, with no custom CSS: the smallest inputs (Nuxt UI size
+`density` (decided 2026-10-06, from the [PF2e sheet mockup](../.claude/mockups/pf2e-sheet/spec.md); compact made the
+default the same day, since it reliably looks like a character sheet): `roomy` is the site's form spacing, written
+`<Sheet density="roomy">`; `compact`, the default (writing it stays valid, so a sheet can name it if more densities come) (also for sheets without a `<Sheet>` root, and generated sheets), is
+dense, with no custom CSS: the smallest inputs (Nuxt UI size
 `xs`), small uppercase field labels, smaller stats, tighter Section padding and Table cells, and every gap one step
 tighter (`Grid`/`Stack` `gap="md"` is `gap-2`; `sheetGapCompact` in `app/utils/sheet-layout.ts`). The sheet root
 carries `data-density="compact"` (or `roomy`) for Sheet CSS. Components read it through `useSheetCompact()`.

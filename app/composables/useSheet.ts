@@ -398,7 +398,7 @@ export function sheetClasses(node: ValidatedElement) {
   ];
 }
 
-// Whether the sheet is compact (`<Sheet density="compact">`): smaller inputs,
+// Whether the sheet is compact (the default; not `<Sheet density="roomy">`): smaller inputs,
 // labels, and gaps.
 export function useSheetCompact() {
   const { context } = useSheet();
