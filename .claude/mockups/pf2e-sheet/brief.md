@@ -58,3 +58,11 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - v3 changes after review: the tabs are full width below the columns, with a fixed height so switching tabs doesn't move the page; the contrast table opens from a Contrast button in the bar.
 - **Layout toggle (added after v3):** Tabs right (default: Strikes and Actions side by side, then skills and proficiencies on the left and the tabs on the right, filling that column's height) or Tabs below (the v3 layout). Phones stack both the same way.
 - Icons: action glyphs drawn as our own SVGs; other icons from game-icons.net (see "Game icons in sheets", PR #91).
+
+## Mockup v4 (user, 2026-10-05)
+
+- Strikes and Actions & Reactions sit side by side in one full-width row, in both layouts, with equal heights and roomier rows.
+- Attribute boxes are all the same size and larger. The key attribute gets a "Key" tag on its top border and a doubled outline, so its box keeps the same size as the others.
+- Perception is a normal-size box, no longer a hero number.
+- Level, Hero Points, Speed, and Size form one strip of equal cells, with labels on one line and values on one line.
+- The user iterates on the mockup until they say it's done.
