@@ -79,3 +79,4 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - **Icon choices:** `icons.html` in this folder shows 6–7 game-icons candidates per section label and tab, drawn as the sheet draws them; the user picks one per label.
 - **Larger action glyphs (user):** the text glyphs are about 1.45× the row text in Strikes, Actions, and Feats, and 1.2× inline in Spells.
 - **Icon picker in the mockup (user):** a small picker under the sheet (shown while Icons is on) with the same candidates as `icons.html`; clicking one changes that label's icon on the sheet at once, and a "Picks:" line lists the current choices to copy. Picks aren't saved across reloads.
+- **No "Character" label (user):** the header panel has no folio-tab label (and no icon); the name heads it.
