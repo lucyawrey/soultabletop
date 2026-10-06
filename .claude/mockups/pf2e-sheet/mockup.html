@@ -171,7 +171,7 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .lst .row.grp > span:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink); }
 .lst .row.grp .gaside { font-size: var(--d-lfs); color: var(--st-ink-muted); display: inline-flex; align-items: center; gap: 6px; }
 .lst .rows > .row.grp:first-child, .lst > .row.grp:first-child { margin-top: 0; }
-.feat-rows .row:not(.grp) { grid-template-columns: 52px 1fr auto; }
+.feat-rows .row:not(.grp) { grid-template-columns: 40px 40px 1fr 90px; }
 .feature-rows .row:not(.grp) { grid-template-columns: 52px 1fr; }
 .kv-rows .row:not(.grp) { grid-template-columns: 130px 1fr; }
 .kv-rows textarea, .kv-rows input { width: 100%; font: inherit; }
@@ -418,13 +418,15 @@ function render() {
 
   // Tabs use the same rows as Strikes and Actions: glyph or level column, underlined name, muted detail.
   const grp = (label, aside = "") => `<div class="row grp"><span>${label}</span>${aside ? `<span class="gaside">${aside}</span>` : ""}</div>`;
-  const FEAT_TYPES = ["Ancestry", "Class", "Skill", "General"];
-  const feats = `<div class="tabcols lst"${tag("List", 'field="feats" item="Ref"')}>${FEAT_TYPES.map(ty => {
-      const have = c.feats.filter(f => f[0] === ty), next = E() ? c.upcoming.filter(u => u[1] === ty + " feat") : [];
-      return `<div class="rows feat-rows">${grp(ty + " feats")}
-        ${have.map(([, n, src, g]) => `<div class="row">${g ? glyph(g) : "<span></span>"}<button class="link plain" data-prev="${n}">${n}</button><span class="small dim">${src === "Background" ? "background" : "level " + src}</span></div>`).join("")}
-        ${next.map(([lv]) => `<div class="row"${tag("Section", 'show="{editing}"', "editing isn't visible to formulas yet")}><span></span><button class="pick" style="justify-self:start">Choose ${ty.toLowerCase()} feat</button><span class="small dim">level ${lv}</span></div>`).join("")}
-        ${!have.length && !next.length ? `<div class="row"><span></span><span class="small dim">None yet.</span><span></span></div>` : ""}</div>`; }).join("")}</div>`;
+  // Feats: one list by level, the type as a chip; empty slots for coming levels sit in order in edit.
+  const FEAT_ORDER = { Ancestry: 0, Class: 1, Skill: 2, General: 3 };
+  const featList = [...c.feats.map(([ty, n, src, g]) => ({ ty, n, g, lv: src === "Background" ? 1.5 : +src })),
+    ...(E() ? c.upcoming.filter(u => u[1].endsWith(" feat")).map(([lv, t]) => ({ ty: t.replace(" feat", ""), lv: +lv, empty: true })) : [])]
+    .sort((x, y) => x.lv - y.lv || FEAT_ORDER[x.ty] - FEAT_ORDER[y.ty]);
+  const feats = `<div class="rows lst feat-rows"${tag("List", 'field="feats" item="Ref"')}><div class="row th"><span>Level</span><span></span><span>Feat</span><span>Type</span></div>
+    ${featList.map(f => f.empty
+      ? `<div class="row"${tag("Section", 'show="{editing}"', "editing isn't visible to formulas yet")}><span class="small dim">${f.lv}</span><span></span><button class="pick" style="justify-self:start">Choose ${f.ty.toLowerCase()} feat</button><span><span class="chip">${f.ty}</span></span></div>`
+      : `<div class="row"><span class="small dim">${f.lv === 1.5 ? "bg" : f.lv}</span>${f.g ? glyph(f.g) : "<span></span>"}<button class="link plain" data-prev="${f.n}">${f.n}</button><span><span class="chip">${f.ty}</span></span></div>`).join("")}</div>`;
   const dz = c.deity;
   const cdc = mod("classdc", [["Key " + c.key, a[c.key]], [RANKS[c.classDC][1], P(c.classDC, L)]], 10);
   const klass = `<div class="strip small" style="margin:0 0 var(--d-gap)"${tag("Value", 'formula="{10 + key + prof(classDC)}"')}><b>${c.cls}</b><span><span class="sheet-field-label">Class DC</span> ${cdc.btn} ${rank(c.classDC)}</span><span><span class="sheet-field-label">Key attribute</span> <b>${c.key}</b></span>${cdc.parts}</div>
