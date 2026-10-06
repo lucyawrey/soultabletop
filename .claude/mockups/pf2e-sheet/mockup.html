@@ -109,6 +109,10 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 /* One row grid for both columns, so rows line up across them. */
 .skills .cols2 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(var(--half), auto); grid-auto-flow: column; column-gap: calc(var(--d-gap) * 3); }
 .skills .row { grid-template-columns: 1fr 30px 46px 42px; }
+.skills .init { grid-template-columns: auto 1fr 42px; border-bottom: 2px solid var(--st-border-strong); margin-bottom: calc(var(--d-gap) * .5); }
+.skills .init > b { font-family: var(--st-font-display); font-size: var(--d-h2); }
+.skills .init select { justify-self: end; width: auto; }
+.skills .init .mod { font-size: calc(var(--d-big) * .8); }
 .strikes .row { grid-template-columns: 26px 1.1fr 118px 1fr 1.6fr; }
 .strikes .dt { display: contents; }
 .mapcell { font-size: var(--d-lfs); color: var(--st-ink-muted); white-space: nowrap; }
@@ -187,7 +191,7 @@ const PCS = {
     attr: { Str: 0, Dex: 1, Con: 1, Int: 0, Wis: 4, Cha: 2 }, hpMax: 17, hp: 17, temp: 0, hero: 1, dying: 0, wounded: 0, doomed: 0, speed: 25, size: "Medium",
     traits: ["Human", "Humanoid"], senses: "", languages: "Common, Empyrean",
     armor: { name: "No armor", ac: 0, cap: 99, check: 0, rank: "t" }, shield: { name: "Wooden shield", ac: 2, hard: 3, hp: 12, bt: 6 },
-    perc: "t", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","t"], Will: ["Wis","e"] }, classDC: "t",
+    perc: "t", init: "Perception", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","t"], Will: ["Wis","e"] }, classDC: "t",
     profs: { Attacks: [["Unarmed","t"],["Simple","t"],["Martial","u"],["Advanced","u"]], Defenses: [["Unarmored","t"],["Light","u"],["Medium","u"],["Heavy","u"]] },
     skills: { Religion: "t", Medicine: "t", Diplomacy: "t", Society: "t", Nature: "t" }, lore: [["Scribing Lore","Int","t"]],
     strikes: [["◆","Mace","Str","t",0,"1d6 B","Shove"],["◆","Sling","Dex","t",0,"1d6 B","Propulsive · 50 ft"]],
@@ -203,7 +207,7 @@ const PCS = {
     attr: { Str: 0, Dex: 4, Con: 1, Int: 1, Wis: 1, Cha: 1 }, hpMax: 15, hp: 9, temp: 0, hero: 2, dying: 0, wounded: 1, doomed: 0, speed: 30, size: "Medium",
     traits: ["Elf", "Humanoid"], senses: "Low-light vision", languages: "Common, Elven, Sylvan",
     armor: { name: "Leather armor", ac: 1, cap: 4, check: -1, rank: "t" },
-    perc: "e", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","e"], Will: ["Wis","e"] }, classDC: "t",
+    perc: "e", init: "Stealth", saves: { Fortitude: ["Con","t"], Reflex: ["Dex","e"], Will: ["Wis","e"] }, classDC: "t",
     profs: { Attacks: [["Unarmed","t"],["Simple","t"],["Martial","u"],["Advanced","u"],["Rapier, sap, shortbow, …","t"]], Defenses: [["Unarmored","t"],["Light","t"],["Medium","u"],["Heavy","u"]] },
     skills: { Acrobatics: "t", Athletics: "t", Deception: "t", Stealth: "t", Thievery: "t", Society: "t", Intimidation: "t", Crafting: "t", Diplomacy: "t" }, lore: [["Underworld Lore","Int","t"]],
     strikes: [["◆","Rapier","Dex","t",0,"1d6+4 P","Deadly d8 · Disarm · Finesse"],["◆","Shortbow","Dex","t",0,"1d6 P","Deadly d10 · 60 ft"]],
@@ -267,7 +271,7 @@ function render() {
       <div class="meter"><i style="width:${c.hp / c.hpMax * 100}%"></i></div>
       <div class="death small"><span><span class="sheet-field-label">Dying</span> ${pips(c.dying, 4, "bad", "Dying")}</span><span><span class="sheet-field-label">Wounded</span> ${pips(c.wounded, 3, "bad sq", "Wounded")}</span><span><span class="sheet-field-label">Doomed</span> ${pips(c.doomed, 3, "bad sq", "Doomed")}</span></div>
     </div>
-    <div class="box perc"${tag("Value", 'formula="{wis + prof(perception)}"')}><span class="sheet-field-label">Perception</span>${perc.btn}<span>${rank(c.perc)} <span class="small dim">Initiative</span></span>${perc.parts}</div>
+    <div class="box perc"${tag("Value", 'formula="{wis + prof(perception)}"')}><span class="sheet-field-label">Perception</span>${perc.btn}<span>${rank(c.perc)}</span>${perc.parts}</div>
     ${saves}
   </div>
   <div class="strip small">
@@ -290,10 +294,14 @@ function render() {
   const skillRow = ([n, k, r]) => { const parts = [[k, a[k]], [RANKS[r][1], P(r, L)]]; if (CHECK[n] && penalty) parts.push(["Armor", penalty]);
     const m = mod("k" + n, parts);
     return `<div class="row ${r === "u" ? "untrained" : ""}"><span>${n}</span><span class="small dim">${k}</span>${rank(r)}${m.btn}${m.parts}</div>`; };
+  const skillMod = n => { if (n === "Perception") return a.Wis + P(c.perc, L); const [, k] = SKILLS.find(x => x[0] === n); const r = c.skills[n] || "u"; return a[k] + P(r, L) + (CHECK[n] && penalty ? penalty : 0); };
+  const im = mod("init", [[c.init, skillMod(c.init)], ...(c.initBonus || [])]);
+  const init = `<div class="row init"${tag("Value", `formula="{switch(initiative.roll, 'perception', perception, get(skills, initiative.roll)) + initiative.bonus}"`)}><b>Initiative</b>
+    <span${tag("Select", 'field="initiative.roll" live', "live attribute doesn't exist yet")} style="justify-self:end"><select aria-label="Initiative rolls with">${["Perception", ...SKILLS.map(x => x[0])].map(n => `<option ${n === c.init ? "selected" : ""}>${n}</option>`).join("")}</select></span>${im.btn}${im.parts}</div>`;
   const all = [...SKILLS.map(([n, k]) => [n, k, c.skills[n] || "u"]), ...c.lore];
   const half = Math.ceil(all.length / 2);
   const skills = `<section class="sheet-section skills"${tag("Table", 'field="skills" rows="fixed"')}><h2>Skills</h2><span class="aside">${penalty ? `armor ${penalty} on Str/Dex skills` : ""}</span>
-    <div class="cols2" style="--half:${half}">${all.map(skillRow).join("")}</div></section>`;
+    ${init}<div class="cols2" style="--half:${half}">${all.map(skillRow).join("")}</div></section>`;
 
   const profs = `<section class="sheet-section"${tag("Grid", 'columns="2"')}><h2>Proficiencies</h2>
     <div class="profrows">${Object.entries(c.profs).map(([g, list]) => `<span class="sheet-field-label">${g}</span><div>${list.map(([n, r]) => `<span style="white-space:nowrap">${rank(r)} <span class="small">${n}</span></span>`).join("")}</div>`).join("")}
@@ -343,6 +351,7 @@ function render() {
   document.querySelectorAll("[data-ctl]").forEach(g => g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", S[g.dataset.ctl] === b.dataset.v)));
   contrast();
 }
+document.addEventListener("change", e => { if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
 document.addEventListener("click", e => {
   const t = e.target;
   if (t.matches("[data-shield]")) { S.shieldUp = t.checked; return render(); }

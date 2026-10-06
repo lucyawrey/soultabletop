@@ -66,3 +66,4 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - Perception is a normal-size box, no longer a hero number.
 - Level, Hero Points, Speed, and Size form one strip of equal cells, with labels on one line and values on one line.
 - The user iterates on the mockup until they say it's done.
+- **Initiative (user's decision):** a "rolls with" picker (Perception by default, or any skill), stored on the character and live in play, plus initiative-only bonuses; the number is that roll plus the bonuses (`switch`/`get` in a formula). It sits as its own row at the top of the Skills section (borrowed from Pathbuilder). Later, an exploration activity field could set the picker (Avoid Notice → Stealth) on top of this.
