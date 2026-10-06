@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sheetPreviewTarget } from "#shared/sheet/card";
 import { isFormulaError } from "#shared/sheet/formula";
 import {
   findRef,
@@ -79,16 +80,55 @@ const { editable, lockedEditable, unlock, boxed } = useSheetEditable(
   () => (display.value === "value" ? null : resolved.value.path),
 );
 
+// `preview`: the content a click opens a card of (none while the field is
+// editable, or when it isn't loaded).
+const previewTarget = computed(() =>
+  props.node.preview && !editable.value
+    ? sheetPreviewTarget(props.node, context.root.value, scope.value, context.refs.value)
+    : undefined,
+);
+const previewMode = computed(() => props.node.preview?.mode ?? "expand");
+const previewCard = computed(() =>
+  props.node.children.find(
+    (child): child is ValidatedElement => child.type === "element" && child.tag === "Preview",
+  ),
+);
+// An expanded preview opens under this tag, or for a Column under its row.
+const rowPreviews = props.node.tag === "Column" ? useSheetRowPreviews() : undefined;
+const previewKey = `${props.node.loc.start.offset}`;
+const expandedHere = ref(false);
+const previewOpen = computed(() => {
+  const row = scope.value.item?.key;
+  return rowPreviews && row !== undefined ? rowPreviews.isOpen(row, previewKey) : expandedHere.value;
+});
+// What is expanded under this tag (not under a row).
+const expandedPreview = computed<SheetPreview | undefined>(() =>
+  previewTarget.value && previewOpen.value && !rowPreviews && previewMode.value === "expand"
+    ? { key: previewKey, target: previewTarget.value, card: previewCard.value }
+    : undefined,
+);
+// A boxed Ref's card lines up with the box rather than the name in it.
+const refBox = useTemplateRef<HTMLElement>("refBox");
+function togglePreview() {
+  const target = previewTarget.value;
+  if (!target) return;
+  const row = scope.value.item?.key;
+  if (rowPreviews && row !== undefined)
+    rowPreviews.toggle(row, { key: previewKey, target, card: previewCard.value });
+  else expandedHere.value = !expandedHere.value;
+}
+
 // `display="box"` shows a non-editable field as its disabled input. Value tags
 // and images keep their normal view, and references show their link in a box
-// so they stay clickable.
+// so they stay clickable; so do values that open a preview.
 const boxedView = computed(
   () =>
     !editable.value &&
     boxed.value &&
     !resolved.value.unavailable &&
     display.value !== "value" &&
-    display.value !== "image",
+    display.value !== "image" &&
+    (!previewTarget.value || display.value === "ref"),
 );
 // Laid out like an input: label above, no stat styling.
 const asInput = computed(() => editable.value || boxedView.value);
@@ -293,6 +333,7 @@ const imageSize = computed(
 
     <span v-else-if="display === 'number'" class="tabular-nums">
       <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+      <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
       <template v-else>{{ text || "—" }}</template>
     </span>
 
@@ -349,14 +390,28 @@ const imageSize = computed(
 
     <div
       v-else-if="display === 'ref'"
+      ref="refBox"
       :class="
         boxedView
           ? 'min-h-8 rounded-md bg-default px-2.5 py-1.5 text-sm ring ring-accented ring-inset'
           : ''
       "
     >
+      <SheetPreviewTrigger
+        v-if="refInfo && previewTarget"
+        class="text-primary decoration-primary/40 hover:decoration-primary"
+        :mode="previewMode"
+        :target="previewTarget"
+        :card="previewCard"
+        :open="previewOpen"
+        :anchor="boxedView ? refBox : undefined"
+        @toggle="togglePreview"
+      >
+        {{ refInfo.name }}
+        <span v-if="refInfo.custom" class="text-xs text-muted">(custom)</span>
+      </SheetPreviewTrigger>
       <NuxtLink
-        v-if="refInfo?.to"
+        v-else-if="refInfo?.to"
         :to="refInfo.to"
         class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
       >
@@ -377,6 +432,7 @@ const imageSize = computed(
         :editable="false"
         :image="false"
         :mention="false"
+        :ui="{ base: 'px-0 sm:px-0' }"
       />
       <span v-else class="text-dimmed">—</span>
     </template>
@@ -401,10 +457,12 @@ const imageSize = computed(
 
     <span v-else :class="text ? '' : 'text-dimmed'">
       <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+      <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
       <template v-else>{{ text || "—" }}</template>
     </span>
     </div>
 
+    <SheetPreviewExpanded v-if="expandedPreview" :preview="expandedPreview" class="mt-1" />
     <p v-if="showHint" class="mt-1 text-xs text-dimmed">{{ hint }}</p>
     <div
       v-if="showStatLabel"

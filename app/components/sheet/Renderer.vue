@@ -117,6 +117,7 @@ provideSheetContext({
   addRef: (id, ref) => emit("addRef", id, ref),
   addLink: (id, link) => emit("addLink", id, link),
   unlocked: reactive(new Set<string>()),
+  scopeId: computed(() => props.scopeId ?? undefined),
 });
 </script>
 

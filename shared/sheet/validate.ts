@@ -53,6 +53,7 @@ import {
   noShowTags,
   type AttrSpec,
   type BindKind,
+  type SheetPreviewMode,
   type TagSpec,
 } from "./registry";
 
@@ -116,6 +117,10 @@ export interface ValidatedElement {
   formula?: { ast: FormulaNode; type: FormulaType };
   // A List or Table bound to a struct: the struct's entries, one row each.
   entries?: SheetEntry[];
+  // `preview` on Ref, Value, or Column: expanded or in a card, the content
+  // field the value is reached through (relative to the tag's scope, like its
+  // field), and its content type. A `<Preview>` child, if any, is in `children`.
+  preview?: { mode: SheetPreviewMode; path: SheetPath; contentTypeId: string };
   children: ValidatedNode[];
   loc: Loc;
 }
@@ -190,6 +195,9 @@ type Shape = (
   | { kind: "field"; field: ContentFieldSchema; strict: boolean; depth: number }
   | { kind: "unknown"; depth: number }
 ) & { item?: "array" | "struct" | "unknown" };
+
+// What a `<Preview>` child is checked against (see Validator.card).
+type CardScope = { shape: Shape } | "broken" | undefined;
 
 // Field types a struct's entries can have for a List, Table, or per-item
 // function to repeat over them.
@@ -512,20 +520,30 @@ class Validator {
   }
 
   // Resolves a parsed path; `text` is how it is written, for messages, and
-  // `walkedTo` how `scope` was reached, if not from the top or a row.
-  private resolvePath(parsed: SheetPath, text: string, scope: Shape, loc: Loc, walkedTo?: string): Shape | undefined {
+  // `walkedTo` how `scope` was reached, if not from the top or a row. With
+  // `trail`, collects the shape before each segment and the last one.
+  private resolvePath(
+    parsed: SheetPath,
+    text: string,
+    scope: Shape,
+    loc: Loc,
+    walkedTo?: string,
+    trail?: Shape[],
+  ): Shape | undefined {
     let shape: Shape | undefined = parsed.absolute ? this.rootShape : scope;
     const walked: string[] = walkedTo && !parsed.absolute ? [walkedTo] : [];
     for (const segment of parsed.segments) {
+      trail?.push(shape);
       shape = this.step(shape, segment, walked.join("."), text, loc);
       if (!shape) return undefined;
       walked.push(segment);
     }
+    trail?.push(shape);
     return shape;
   }
 
-  private resolve(path: string, scope: Shape, loc: Loc): Shape | undefined {
-    return this.resolvePath(parseSheetPath(path), path, scope, loc);
+  private resolve(path: string, scope: Shape, loc: Loc, trail?: Shape[]): Shape | undefined {
+    return this.resolvePath(parseSheetPath(path), path, scope, loc, undefined, trail);
   }
 
   private bindKinds(shape: Shape): Set<BindKind> | "all" {
@@ -985,12 +1003,37 @@ class Validator {
       }
     }
 
+    // A `<Preview>` is checked against the content its tag's preview opens.
+    if (spec.name === "Preview") {
+      const card = this.card;
+      if (!card) {
+        return invalid(
+          "preview-tag-without-preview",
+          `<Preview> is shown by a preview; add preview to its <${parent!.name}>`,
+        );
+      }
+      if (card === "broken") return broken("<Preview> has errors");
+      this.card = undefined;
+      this.cardDepth += 1;
+      const children = this.children(node.children, spec, card.shape);
+      this.cardDepth -= 1;
+      this.card = card;
+      return { type: "element", tag: spec.name, spec, attrs, children, loc: node.loc };
+    }
+    // Previews are read-only and can't open other previews.
+    if (this.cardDepth && spec.name === "Button")
+      return invalid("button-in-preview", "<Button> can't be in a <Preview>: previews are read-only");
+    if (this.cardDepth && typeof attrs.preview === "string")
+      return invalid("preview-in-preview", "A preview can't open another preview; remove preview");
+
     let binding: Binding | undefined;
     let childScope = scope;
     let entries: SheetEntry[] | undefined;
+    // The shapes along `field`, for `preview`.
+    const trail: Shape[] = [];
     if (typeof attrs.field === "string") {
       const path = attrs.field;
-      const shape = this.resolve(path, scope, node.loc);
+      const shape = this.resolve(path, scope, node.loc, trail);
       if (!shape) return broken(`Can't find field "${path}"`);
       const kinds = this.bindKinds(shape);
       if (kinds !== "all" && !spec.binds?.some((kind) => kinds.has(kind))) {
@@ -1092,6 +1135,24 @@ class Validator {
       );
     }
 
+    let preview: ValidatedElement["preview"];
+    let card: CardScope;
+    if (typeof attrs.preview === "string") {
+      const found = this.previewTarget(spec, binding, trail, node.loc);
+      if (typeof found === "string") {
+        this.error("invalid-attribute", found, attrNamed(node, "preview")!.loc);
+        card = "broken";
+      } else {
+        preview = { mode: attrs.preview as SheetPreviewMode, ...found.preview };
+        card = { shape: found.shape };
+      }
+    }
+    const cards = node.children.filter(
+      (child) => child.type === "element" && child.tag.toLowerCase() === "preview",
+    );
+    for (const extra of cards.slice(1))
+      this.error("duplicate-preview", `<${spec.name}> has only one <Preview>`, extra.loc);
+
     // A Button's Sets may use `amount` when it has one.
     const outerParams = this.setParams;
     if (spec.name === "Button") {
@@ -1100,7 +1161,10 @@ class Validator {
         this.error("missing-child", "<Button> needs a <Set> for each field it changes", node.loc);
       }
     }
+    const outerCard = this.card;
+    this.card = card;
     const children = this.children(node.children, spec, childScope);
+    this.card = outerCard;
     this.setParams = outerParams;
 
     return {
@@ -1111,6 +1175,7 @@ class Validator {
       binding,
       ...(formula ? { formula: { ast: formula.ast, type: formula.type } } : {}),
       ...(entries ? { entries } : {}),
+      ...(preview ? { preview } : {}),
       children,
       loc: node.loc,
     };
@@ -1118,6 +1183,47 @@ class Validator {
 
   // The `amount` of the Button whose Sets are being checked.
   private setParams: Readonly<Record<string, FormulaType>> | undefined;
+  // What a `<Preview>` child of the tag being checked shows: the shape of the
+  // content its preview opens, "broken" when that preview has errors
+  // (already reported), or undefined without a preview.
+  private card: CardScope;
+  // How many `<Preview>`s the tag being checked is inside.
+  private cardDepth = 0;
+
+  // The content a `preview` opens: the last content field on the way to the
+  // tag's field (the row itself when it is one, like a Table over spells), or
+  // the field itself on a Ref. A message when there is none.
+  private previewTarget(
+    spec: TagSpec,
+    binding: Binding | undefined,
+    trail: Shape[],
+    loc: Loc,
+  ): { preview: Omit<NonNullable<ValidatedElement["preview"]>, "mode">; shape: Shape } | string {
+    if (!binding) return `preview needs a field: <${spec.name}> previews the content its field is reached through`;
+    const isContent = (shape: Shape | undefined) =>
+      shape?.kind === "field" && shape.field.type === "content";
+    let at = trail.length - 1;
+    if (spec.name !== "Ref") while (at >= 0 && !isContent(trail[at])) at -= 1;
+    const shape = trail[at];
+    if (!shape || shape.kind !== "field" || shape.field.type !== "content") {
+      return spec.name === "Ref"
+        ? "preview on <Ref> needs a content field (a resource link has no card)"
+        : `preview needs a field reached through a content field, like spell.name`;
+    }
+    // A field the path goes on from was entered (and reported) already.
+    const rules = this.schemas.types[shape.field.contentTypeId];
+    const entered =
+      at === trail.length - 1
+        ? this.enter(shape, binding.path.segments.join(".") || ".", loc)
+        : rules && { kind: "record" as const, fields: rules.schema, strict: rules.hasStrictSchema, hasName: true, depth: shape.depth + 1 };
+    return {
+      preview: {
+        path: { ...binding.path, segments: binding.path.segments.slice(0, at) },
+        contentTypeId: shape.field.contentTypeId,
+      },
+      shape: entered ?? { kind: "unknown", depth: shape.depth + 1 },
+    };
+  }
 
   // A `<Set>`: its field must hold a single value, and its formula (checked
   // in the item's scope for `list.*.path`) must give what the field holds.
@@ -1340,6 +1446,7 @@ class Validator {
     };
 
     if (attr.value === true) {
+      if (type.kind === "enum" && type.bare) return type.bare;
       return type.kind === "boolean"
         ? true
         : fail(`${name} on <${spec.name}> needs a value, like ${name}="…"`);
