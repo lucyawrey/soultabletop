@@ -390,7 +390,8 @@ const tagList: TagSpec[] = [
         "stat shows a large number with a small label",
       ),
     },
-    children: "none",
+    // Parts that explain its formula (needs one).
+    children: { only: ["Part"] },
     binds: ["number"],
     formula: "override",
   },
@@ -469,13 +470,13 @@ const tagList: TagSpec[] = [
   {
     name: "Value",
     category: "field",
-    description: "Shows a value; never editable",
+    description: "Shows a value; never editable. With Part tags and no formula, shows their sum",
     attrs: {
       ...fieldAttrs,
       formula: readOnlyFormula,
       format: formatAttr,
     },
-    children: "none",
+    children: { only: ["Part"] },
     binds: ["anyValue"],
     formula: "readOnly",
   },
@@ -532,18 +533,38 @@ const tagList: TagSpec[] = [
   {
     name: "Column",
     category: "field",
-    description: "One column of a Table: a field, a formula, or Button tags",
+    description: "One column of a Table: a field, a formula, or Part tags (their sum), and Button tags",
     attrs: {
       ...fieldAttrs,
       formula: readOnlyFormula,
       format: formatAttr,
       width: oneOf(["auto", "xs", "sm", "md", "lg"], "Column width"),
     },
-    // Buttons instead of a field or formula: each row gets its own.
-    children: { only: ["Button"] },
+    // Parts explaining its number, and Buttons: each row gets its own.
+    children: { only: ["Part", "Button"] },
     parents: ["Table"],
     binds: ["string", "number", "boolean", "scalar", "resourceLink", "content"],
     formula: "readOnly",
+  },
+  {
+    name: "Part",
+    category: "field",
+    description:
+      "One part of a number, listed in the popover that clicking the number opens; a tag with parts and no formula shows their sum",
+    attrs: {
+      label: text("What the part is, like Dex or {rankName(rank)}", true),
+      formula: {
+        type: { kind: "formula" },
+        required: true,
+        description: "The part's value, a number; nothing leaves the part out",
+      },
+      show: commonAttrs.show!,
+    },
+    children: "none",
+    parents: ["Value", "Number", "Column"],
+    formula: "readOnly",
+    // Never rendered as an element of its own, so `class` would do nothing.
+    noCommonAttrs: true,
   },
   {
     name: "RowDetails",
