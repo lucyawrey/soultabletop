@@ -7,12 +7,6 @@
       "skillPath": "skills/nuxt-ui/SKILL.md",
       "computedHash": "8464b84fce4b31f45156168aaa3da2831db3ca234ad2295734b8599707534199"
     },
-    "playwright-cli": {
-      "source": "microsoft/playwright-cli",
-      "sourceType": "github",
-      "skillPath": "skills/playwright-cli/SKILL.md",
-      "computedHash": "ffbd59a973d4e2c19c6ecc31254a14497069c362f1d1820b6a6cfbe62de34a73"
-    },
     "vue-best-practices": {
       "source": "vuejs-ai/skills",
       "sourceType": "github",

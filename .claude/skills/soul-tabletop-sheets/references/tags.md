@@ -22,7 +22,7 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 
 | Tag | Attributes | Children | Notes |
 |---|---|---|---|
-| `Sheet` | none | any | Optional root; top level only |
+| `Sheet` | none | any | Required root: every sheet is one, with only `Define`s beside it |
 | `Section` | `title`, `description`, `icon`, `span` (1-12), `collapsible`, `collapsed` | any | A card. `span` is columns inside a `Grid`. `collapsed` implies `collapsible` |
 | `Grid` | `cols` (1-12, default 2), `gap` (`none` \| `sm` \| `md` \| `lg`, default `md`) | any | One column on phones |
 | `Stack` | `direction` (`row` \| `column`, default column), `gap`, `align` (`start` \| `center` \| `end` \| `stretch`), `wrap` | any | Flex container |
@@ -54,11 +54,11 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Select` | `options` (comma-separated; only on a text field without schema options) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
 | `Tags` | none | array of strings | |
 | `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value |
-| `Ref` | none | resourceLink, content | Link to the referenced resource or Content |
-| `Value` | `formula`, `format` (`plain` \| `signed`) | any value | Never editable; `formula` (read-only) instead of `field`; with `Part` children and no formula, shows their sum |
+| `Ref` | `preview` (`expand` \| `card`; bare = `expand`) | resourceLink, content | Link to the referenced resource or Content; with `preview` (content fields only), clicking shows it instead (see "Reference previews"); may hold one `Preview` |
+| `Value` | `formula`, `format` (`plain` \| `signed`), `preview` (`expand` \| `card`) | any value | Never editable; `formula` (read-only) instead of `field`; with `Part` children and no formula, shows their sum; `preview` (see "Reference previews") |
 | `Markdown` | none | string | Formatted long text |
 | `Image` | `alt`, `size` (`sm` \| `md` \| `lg` \| `full`, default md) | string | The string must be an https URL |
-| `Column` | `formula`, `format` (`plain` \| `signed`), `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class`; `formula` (read-only) is computed per row; it may hold `Part` children (a breakdown; their sum without a formula) and `Button` children (each row gets them, after the value; a column of only Buttons is hidden from viewers who can't edit) |
+| `Column` | `formula`, `format` (`plain` \| `signed`), `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`), `preview` (`expand` \| `card`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class`; `formula` (read-only) is computed per row; it may hold `Part` children (a breakdown; their sum without a formula) and `Button` children (each row gets them, after the value; a column of only Buttons is hidden from viewers who can't edit) |
 
 `formula`: read-only on `Value`, `Column`, `Tracker` (instead of `field`; never both). On `Number`, `Text`, and
 `Checkbox` it may stand alone (read-only) or go with `field` (an override: the field's value wins when it has one; the
@@ -83,6 +83,14 @@ In edit mode a `List` or `Table` of an array gets add, remove, and reorder contr
 | Tag | Attributes | Children | Notes |
 |---|---|---|---|
 | `Part` | `label` (req, text with `{…}`), `formula` (req, a number), `show` (no other common attributes) | none | Only directly inside `Value`, `Column`, or `Number` (a `Number` needs a `formula`). Clicking the number lists the parts in a popover; a `Value`/`Column` without a formula shows their sum. Parts that give nothing are left out |
+
+## Reference previews
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Preview` | `class`, `show` only | any | What a preview shows instead of the generated view (chips, rows, long text). Two places, at most one each: beside `<Sheet>` at the top level, for every preview of this content type from other sheets (paths read this content's top level; `<Define>`s work; styled by this sheet's CSS; never shown on the content's own page); or directly inside a `Ref`, `Value`, or `Column` with `preview`, overriding it for that tag (paths relative to the referenced content, `/` still reaches the top level; styled by the referencing sheet's CSS). Always read-only, so no `Button`s and no `preview` inside. Class `sheet-preview` |
+
+`preview` shows the last content field on the way to the tag's field (`spell.name` shows `spell`; in a `Table` over an array of content, the row). Plain `preview` expands below the value (under the row for a `Column`; any number open): use it for spells, feats, and other content read in full. `preview="card"` floats a card under the value: use it for minor things with no inline place, like a background.
 
 ## Buttons
 

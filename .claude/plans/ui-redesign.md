@@ -2,7 +2,7 @@
 
 Planned with the user on 2026-10-02. Built by the main agent, one PR at a time, with no parallel subagents on UI work. Each PR goes on its own branch off an up-to-date `main` and merges through a PR the user reviews.
 
-Visual reference: `.claude/plans/ui-directions.html` (also the artifact https://claude.ai/artifact/L13k29RioJAPhFtZZrRBX8). The chosen direction is **D · Folio**, the `.app[data-dir="folio"]` token block. Keep the page and all four directions; it is the reference when the theme changes later.
+Visual reference: `.claude/mockups/ui-redesign/` (moved from `.claude/plans/ui-directions.html` on 2026-10-05): `mockup.html` is the original page with all four directions, `frozen.html` the approved design locked to the chosen options, and `spec.md` its decisions and measurements. The chosen direction is **D · Folio**, the `.app[data-dir="folio"]` token block.
 
 ## Decisions (settled with the user)
 
@@ -115,7 +115,7 @@ These go into PR 2 (signed-out sidebar, landing page) and PR 4 (dashboard and it
 - An automated accessibility pass: run axe-core through Playwright on the main pages, logged in and out, and fix what it finds.
 - Skeletons and loading states in the new layouts; modal and dropdown styling; toasts.
 - Screenshots of every page at desktop and phone widths for the user's review.
-- To compare with the mockup, screenshot `.claude/plans/ui-directions.html` with Playwright (`file://` URL; click `[data-v="list"|"detail"|"form"|"landing"|"dashboard"]`, `button[data-v="2"]` for option 2, `[data-v="new"]` for the new-user dashboard) at 1238×641.
+- To compare with the mockup, screenshot `.claude/mockups/ui-redesign/frozen.html` (see "Comparing the site with it" in its `spec.md`).
 
 ## TODO.md changes as PRs land
 

@@ -14,6 +14,7 @@ Moved out of `CLAUDE.md` so it is read only when needed. `CLAUDE.md` keeps the s
 
 ## Migrations
 
+- In a worktree (no `.env.local` there), `pnpm db:generate` works, but `pnpm db:migrate` fails with an empty `url`. Run drizzle-kit with the main checkout's env instead: `.claude/scripts/agent-run.sh node --env-file=<main checkout>/.env.local node_modules/drizzle-kit/bin.cjs migrate`. Never copy or move `.env.local`.
 - The migrations start from one baseline, `0000_baseline` (the database was reset on 2026-10-05). Its end is hand-written: the `owner_readable_id` triggers and the `soul` system group's row, which drizzle-kit doesn't model; a later migration that changes them hand-writes its own steps the same way.
 - Always read generated migrations before applying them:
   - **Renames**: `drizzle-kit generate` stops to ask whether a column was renamed or dropped and recreated, and that prompt can't be answered non-interactively. Hand-write the migration (`ALTER TABLE ... RENAME COLUMN`, rename indexes/constraints), the matching `meta/NNNN_snapshot.json` and `_journal.json` entry, then run `pnpm db:generate` and confirm it reports "No schema changes".

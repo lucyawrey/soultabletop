@@ -1,0 +1,218 @@
+{
+  "id": "f427c59b-b8f3-4004-8792-52a5a871e883",
+  "readableId": "test-cleric",
+  "isPubliclyReadable": false,
+  "name": "Test Cleric",
+  "ownerUserId": "3ao1kH4IPthg00lm5GrIfBO0JQuQXKN8",
+  "ownerGroupId": null,
+  "ownerReadableId": "lucyawrey",
+  "source": "you",
+  "canChangeOwner": true,
+  "createdAt": "2026-10-04T19:30:49.905Z",
+  "updatedAt": "2026-10-04T19:43:24.281Z",
+  "resourceId": "f427c59b-b8f3-4004-8792-52a5a871e883",
+  "contentTypeId": "c52ca66a-8403-42fa-abe8-010499870fd3",
+  "sheetId": "42aef140-569f-47ef-a31b-d403305a7d62",
+  "data": {
+    "hp": {
+      "temp": 0,
+      "bonus": 0,
+      "dying": 0,
+      "current": 22,
+      "wounded": 0,
+      "ancestry": 10,
+      "classPerLevel": 8
+    },
+    "xp": 256,
+    "armor": {
+      "name": "Hide Armor",
+      "rank": "trained",
+      "dexCap": 2,
+      "strength": 2,
+      "itemBonus": 3,
+      "checkPenalty": -2,
+      "speedPenalty": -5
+    },
+    "class": "Cleric",
+    "feats": [
+      {
+        "name": "Domain Initiate",
+        "type": "class",
+        "level": 1,
+        "notes": "Healing domain."
+      },
+      {
+        "name": "Unburdened Iron",
+        "type": "ancestry",
+        "level": 1,
+        "notes": ""
+      },
+      {
+        "name": "Communal Healing",
+        "type": "class",
+        "level": 2,
+        "notes": ""
+      },
+      {
+        "name": "Fleet",
+        "type": "general",
+        "level": 3,
+        "notes": ""
+      }
+    ],
+    "level": 0,
+    "lores": [
+      {
+        "name": "Scribing Lore",
+        "rank": "trained"
+      }
+    ],
+    "notes": "",
+    "saves": {
+      "will": {
+        "rank": "expert"
+      },
+      "reflex": {
+        "rank": "trained"
+      },
+      "fortitude": {
+        "rank": "trained"
+      }
+    },
+    "speed": 20,
+    "shield": {},
+    "skills": {
+      "society": {
+        "rank": "trained"
+      },
+      "medicine": {
+        "rank": "trained"
+      },
+      "religion": {
+        "rank": "trained"
+      },
+      "athletics": {
+        "rank": "trained"
+      },
+      "diplomacy": {
+        "rank": "trained"
+      }
+    },
+    "spells": [
+      {
+        "name": "Divine Lance",
+        "rank": 0,
+        "notes": "",
+        "actions": "2"
+      },
+      {
+        "name": "Shield",
+        "rank": 0,
+        "notes": "",
+        "actions": "1"
+      },
+      {
+        "name": "Heal",
+        "rank": 1,
+        "notes": "Divine font: 4 extra slots of *heal*.",
+        "actions": "1–3"
+      },
+      {
+        "name": "Bless",
+        "rank": 1,
+        "notes": "",
+        "actions": "2"
+      },
+      {
+        "name": "Spiritual Armament",
+        "rank": 2,
+        "notes": "",
+        "actions": "2"
+      }
+    ],
+    "strikes": [
+      {
+        "name": "Mace",
+        "rank": "trained",
+        "agile": false,
+        "traits": "shove",
+        "attribute": "str",
+        "itemBonus": 0,
+        "damageDice": "1d6",
+        "damageType": "B",
+        "damageAttribute": "str"
+      }
+    ],
+    "ancestry": "Dwarf",
+    "currency": {
+      "cp": 3,
+      "gp": 8,
+      "pp": 0,
+      "sp": 7
+    },
+    "heritage": "Rock Dwarf",
+    "inventory": [
+      {
+        "qty": 1,
+        "item": "3e229543-5710-4cb6-a6f6-2c62132d1c71"
+      },
+      {
+        "qty": 1,
+        "item": "427d8975-0375-4dbb-a733-76db98c52ea4"
+      }
+    ],
+    "attributes": {
+      "cha": 1,
+      "con": 2,
+      "dex": 0,
+      "int": 0,
+      "str": 1,
+      "wis": 4
+    },
+    "background": "Acolyte",
+    "conditions": [],
+    "heroPoints": 0,
+    "spellSlots": [
+      {
+        "left": 2,
+        "rank": 1,
+        "total": 3
+      },
+      {
+        "left": 2,
+        "rank": 2,
+        "total": 2
+      }
+    ],
+    "classDcRank": "trained",
+    "keyAttribute": "wis",
+    "spellcasting": {
+      "rank": "trained",
+      "focusMax": 1,
+      "attribute": "wis",
+      "tradition": "divine",
+      "focusPoints": 1
+    },
+    "perceptionRank": "untrained"
+  },
+  "contentCategory": "playerCharacter",
+  "systemId": "681d589d-b3b7-44fd-a91a-e63e2ed0c600",
+  "canEdit": true,
+  "refs": {
+    "427d8975-0375-4dbb-a733-76db98c52ea4": {
+      "name": "Rope",
+      "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+      "data": {
+        "bulk": 0.1
+      }
+    },
+    "3e229543-5710-4cb6-a6f6-2c62132d1c71": {
+      "name": "Backpack",
+      "contentTypeId": "b35c747e-d4fd-46a3-b4a1-00cce41f8e29",
+      "data": {
+        "bulk": 0.1
+      }
+    }
+  },
+  "links": {}
+}

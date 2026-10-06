@@ -262,23 +262,25 @@ A compact card. Shows a `Callout` filled from a field with `{…}`, and `List fi
 ```
 
 ```xml
-<Section class="spell-card" title="{/name}" description="Level {level} {school}">
-  <Grid cols="3" gap="sm">
-    <Value field="castingTime" />
-    <Value field="range" />
-    <Value field="duration" />
-  </Grid>
-  <Checkbox field="concentration" />
-  <Divider label="Effect" />
-  <Markdown field="description" hideLabel />
-  <Callout color="warning" icon="i-lucide-arrow-up" title="Higher levels">{higherLevels}</Callout>
-  <Divider label="Classes" />
-  <Stack direction="row" wrap gap="sm">
-    <List field="classes" layout="grid" cols="4">
-      <Badge color="neutral">{.}</Badge>
-    </List>
-  </Stack>
-</Section>
+<Sheet>
+  <Section class="spell-card" title="{/name}" description="Level {level} {school}">
+    <Grid cols="3" gap="sm">
+      <Value field="castingTime" />
+      <Value field="range" />
+      <Value field="duration" />
+    </Grid>
+    <Checkbox field="concentration" />
+    <Divider label="Effect" />
+    <Markdown field="description" hideLabel />
+    <Callout color="warning" icon="i-lucide-arrow-up" title="Higher levels">{higherLevels}</Callout>
+    <Divider label="Classes" />
+    <Stack direction="row" wrap gap="sm">
+      <List field="classes" layout="grid" cols="4">
+        <Badge color="neutral">{.}</Badge>
+      </List>
+    </Stack>
+  </Section>
+</Sheet>
 ```
 
 ```css
