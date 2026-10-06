@@ -67,11 +67,10 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .box input, .meta input { border-style: dashed; padding: 0 2px; }
 .attrs .box input { height: calc(var(--d-big) * 1.2 + 6px); font-size: calc(var(--d-big) * 1.2); }
 .meta input { height: calc(var(--d-big) * 1.15 + 4px); font-size: calc(var(--d-big) * 1.15); font-weight: 700; text-align: center; }
-/* In edit, a build card's Change sits beside its label, so the card keeps its height. */
-.refs .ref { grid-template-columns: auto auto; column-gap: 10px; }
-.ref > .sheet-field-label { grid-row: 1; grid-column: 1; }
-.ref > .link { grid-row: 2; grid-column: 1 / -1; }
-.ref > .pick { grid-row: 1; grid-column: 2; justify-self: end; font-size: 9.5px; line-height: 1.25; padding: 0 4px; }
+/* In edit, a reference is itself the picker: same size as in play, dashed edge and a ▾. */
+.refpick { display: inline-flex; align-items: baseline; gap: 4px; }
+.refpick .caret { font-size: .75em; color: var(--st-ink-muted); text-decoration: none; }
+.ref:has(.refpick) { border-style: dashed; }
 .pips { display: inline-flex; gap: 3px; vertical-align: middle; }
 .pips button { width: 13px; height: 13px; border: 1.5px solid var(--st-primary); border-radius: 50%; background: transparent; padding: 0; cursor: pointer; }
 .pips button.on { background: var(--st-primary); }
@@ -288,7 +287,7 @@ function mod(id, parts, base = 0) {
     parts: S.open === id ? `<div class="parts">${base ? `<b>${base}</b> base · ` : ""}${parts.map(([l, v]) => `${l} <b>${sg(v)}</b>`).join(" · ")} = <b>${base ? total : sg(total)}</b></div>` : "" };
 }
 const pips = (n, max, cls = "", label) => `<span class="pips ${cls}" role="group" aria-label="${label}">${Array.from({ length: max }, (_, i) => `<button class="${i < n ? "on" : ""}" aria-pressed="${i < n}" aria-label="${label} ${i + 1}"></button>`).join("")}</span>`;
-const ref = (v, field) => E() ? `<span class="link">${v}</span> <button class="pick"${tag("Ref", `field="${field}"`)}>Change</button>` : `<button class="link" data-prev="${v}">${v}</button>`;
+const ref = (v, field) => E() ? `<button class="link refpick" aria-label="Change ${field}: ${v}"${tag("Ref", `field="${field}"`)}>${v}<span class="caret" aria-hidden="true">▾</span></button>` : `<button class="link" data-prev="${v}">${v}</button>`;
 const live = (html, a) => `<span${tag(a.split(" ")[0], a.slice(a.indexOf(" ") + 1) + " live", "live attribute doesn't exist yet")}>${html}</span>`;
 
 function render() {
