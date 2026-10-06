@@ -117,6 +117,8 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .shieldrow { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .raise { display: inline-flex; align-items: center; gap: 6px; height: calc(var(--d-h) + 4px); padding: 0 12px; border: 1px solid var(--st-primary); border-radius: calc(var(--st-radius) * .66); background: var(--st-panel); color: var(--st-primary); font-weight: 700; cursor: pointer; }
 .raise .act { font-size: 1.1em; }
+/* Both labels share one cell, so the button keeps the wider one's width. */
+.raise .lbl { display: grid; } .raise .lbl > span { grid-area: 1 / 1; } .raise .lbl > .off { visibility: hidden; }
 .raise[aria-pressed="true"] { background: var(--st-primary); color: var(--st-on-primary); }
 .raise[aria-pressed="true"] .act { color: var(--st-on-primary); }
 .ac .up { color: var(--st-primary); }
@@ -339,7 +341,7 @@ function render() {
     ${saves}
   </div>
   <div class="strip small">
-    ${c.shield ? `<span class="shieldrow"${tag("Toggle", 'field="shieldRaised" live', "live attribute doesn't exist yet")}><button class="raise" aria-pressed="${!!shieldUp}" data-shield><span class="act" aria-label="One action">◆</span> ${shieldUp ? "Shield Raised" : "Raise Shield"}</button>
+    ${c.shield ? `<span class="shieldrow"${tag("Toggle", 'field="shieldRaised" live', "live attribute doesn't exist yet")}><button class="raise" aria-pressed="${!!shieldUp}" data-shield><span class="act" aria-label="One action">◆</span><span class="lbl"><span${shieldUp ? ' class="off"' : ""}>Raise Shield</span><span${shieldUp ? "" : ' class="off"'}>Shield Raised</span></span></button>
       <span class="dim" title="${c.shield.name}">${c.shield.name} · Hardness ${c.shield.hard} · HP ${c.shield.hp} · BT ${c.shield.bt}</span></span>` : ""}
     <span><span class="sheet-field-label">Resist / weak</span> <span class="dim">none</span></span>
     <span${tag("Tags", 'field="conditions" live', "conditions don't change the numbers")}><span class="sheet-field-label">Conditions</span> ${S.pc === "rogue" ? `<span class="chip">Frightened 1</span>` : `<span class="dim">none</span>`} <button class="pick">+ Add</button></span>
