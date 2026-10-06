@@ -274,8 +274,8 @@ function glyph(g, small = false) {
   return `<span class="act${small ? " small" : ""}" role="img" aria-label="${ACT_LABEL[k]}">${g}</span>`;
 }
 // Section and tab icons (Section, Tab icon="i-game-icons-…").
-const ICON = { "Attributes &amp; Defenses": "none", "Strikes": "crossed-swords", "Actions &amp; Reactions": "sprint", "Skills": "skills", "Proficiencies": "upgrade",
-  Class: "star-medal", Feats: "stars-stack", Spells: "spell-book", Inventory: "knapsack", Biography: "quill-ink" };
+const ICON = { "Attributes &amp; Defenses": "none", "Strikes": "crossed-swords", "Actions &amp; Reactions": "hand", "Skills": "skills", "Proficiencies": "diploma",
+  Class: "medal", Feats: "stars-stack", Spells: "spell-book", Inventory: "swap-bag", Biography: "quill-ink" };
 const ico = t => S.secicons === "on" && ICON[t] && ICON[t] !== "none" ? `<span data-attrs='icon="i-game-icons-${ICON[t]}"'>${svg(GI[ICON[t]], "gi sec")}</span>` : "";
 const h2 = t => `<h2>${ico(t)}${t}</h2>`;
 const sg = n => (n >= 0 ? "+" : "−") + Math.abs(n);
