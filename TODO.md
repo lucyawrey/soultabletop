@@ -22,10 +22,24 @@ The exact order: do these one at a time, top first.
 
 Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The items below, in this order.
 
+Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the first seven items, from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
+
+- **Sheet density setting** · feature
+  `<Sheet density="compact|roomy">` sets sizes, gaps, and label styles for the whole sheet through tokens, so a dense sheet needs no custom CSS; roomy is today's look. The spec's "Tokens" table has the mockup's values. Step 4 of the PF2e plan; its own small PR.
+- **Sheet play mode with `live` fields** · feature · large · needs decision: the details of the agreed design (which tags take `live`, how a live save works with Autosave off and with conflicts)
+  Edit off is play; tags marked `live` (Tracker, Checkbox, Toggle, Number, Select, Tags) stay editable in play for viewers who can edit, and a change saves at once whatever the Autosave setting. Character sheets keep starting in edit mode (`shared/sheet/generate.ts`); only advanced sheets turn it off. Design agreed in the mockup brief ([brief.md](.claude/mockups/pf2e-sheet/brief.md), "Review notes", 1). Design with Opus, together with the next item.
+- **`editing` in Sheet formulas** · feature · small
+  Formulas can read whether the sheet is in edit mode, so a sheet shows empty choice slots and Add buttons only while editing (`show="editing or senses"`).
+- **Sheet buttons that change a field** · feature · needs decision: the markup (a tag, its action syntax, and which changes are allowed)
+  Damage and Heal on HP (temp HP first, heal stops at the max), Daily preparations (refresh spell slots and trackers), and an inventory item's move badges (set its state). Usable in play for viewers who can edit, like `live` fields.
+- **Sheet breakdown popovers** · feature · needs decision: the markup (how a number lists its parts)
+  Clicking a computed number (a `Value`, or a box like AC and saves) shows its parts in a popover under it, without moving the layout; click again, click elsewhere, or Escape closes it. `RowDetails` only expands table rows.
+- **Sheet reference previews** · feature
+  Clicking a referenced spell, feat, item, or class feature shows its rules text in a card, in play and edit, read from the referenced resource.
+- **Sheet dice buttons** · feature · large · needs decision: how a roll looks
+  The dice half of "Sheet dice buttons and image uploads" (Phase 1). User's decisions: a roll's result shows in a toast with each die, and a "Recent rolls" list on the sheet page keeps this visit's rolls, until campaign dice logs exist. Still to design with the user: the visual element for rolling (e.g. an animated die, a rolling number, or a result card), plus the markup (a roll button tag and formula dice syntax).
 - **Onboarding structure** · feature
   The structure part of "Onboarding for new users" (Phase 4): a Getting Started panel explaining systems, content types, sheets, content, and campaigns, with links, and next-step suggestions in empty states and after creating something. All explanations and welcome text are placeholders in `content/copy.yml` for the team to write.
-- **Sheet dice buttons** · feature · large · needs decision: how a roll looks
-  The dice half of "Sheet dice buttons and image uploads" (Phase 1), if time allows before the demo. User's decisions: a roll's result shows in a toast with each die, and a "Recent rolls" list on the sheet page keeps this visit's rolls, until campaign dice logs exist. Still to design with the user: the visual element for rolling (e.g. an animated die, a rolling number, or a result card), plus the markup (a roll button tag and formula dice syntax).
 
 # Phase 1: Sheets ready for real systems
 
@@ -38,13 +52,7 @@ What official systems like Pathfinder 2e and D&D 2024 need from the Sheet system
   Found while building the Pathfinder 2e test sheet with formulas (2026-10-04; `lucyawrey`'s `pf2e-test` system, characters Test Fighter and Test Cleric). Formulas covered every derived number (proficiency, skills with armor check penalty, saves, AC with a raised shield, class and spell DCs, Strikes with the multiple attack penalty and damage text, max HP, Speed with armor penalties, Bulk and encumbrance). What they and the Sheet tags couldn't do:
   - **Conditions with effects**: conditions are free tags; frightened, clumsy, and the like can't feed the numbers they change (a status penalty on checks and DCs). Encumbered's Speed penalty could be computed but isn't.
   - **Linking strikes to inventory**: a Strike's item bonus and damage dice are typed by hand rather than read from the weapon in the inventory.
-  Found in the Pathfinder 2e demo sheet mockup (frozen 2026-10-06; the `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html), details in its [spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"). Conditions with effects, linking strikes to inventory, and roll buttons ("Sheet dice buttons", Next up) are needed there too; the rest are new:
-  - **Density setting**: `<Sheet density="compact|roomy">` sets sizes, gaps, and label styles for the whole sheet through tokens, so a dense sheet needs no custom CSS. The spec's "Tokens" table has the mockup's values. Step 4 of the PF2e plan; its own small PR, with `docs/sheet-system.md` updated.
-  - **Play mode with `live` fields**: Edit off is play; tags marked `live` (Tracker, Checkbox, Toggle, Number, Select, Tags) stay editable in play for viewers who can edit, and save at once whatever the Autosave setting. Design agreed in the mockup brief ("Review notes", 1).
-  - **`editing` in formulas**: a sheet can show empty choice slots and Add buttons only while editing (`show="editing or senses"`).
-  - **A button that changes a field**: Damage and Heal on HP (temp HP first, heal stops at the max), Daily preparations (refresh slots and trackers), and an item's move badges (set its state).
-  - **Breakdown popovers**: clicking a computed number (on `Value`, or a box like AC and saves) shows its parts in a popover, without moving the layout; `RowDetails` only expands table rows.
-  - **Reference previews**: clicking a referenced spell, feat, item, or class feature shows its rules text, in play and edit.
+  Found in the Pathfinder 2e demo sheet mockup (frozen 2026-10-06; the `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html), details in its [spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"). Conditions with effects and linking strikes to inventory are needed there too. Density, play mode, `editing` in formulas, buttons that change a field, breakdown popovers, reference previews, and roll buttons moved to Next up (2026-10-06). Left for after the demo:
   - **Lists read from a referenced resource**: class features listed from the character's class, not copied into the character.
   - **Tracker over a computed value**: Bulk as a meter from a formula, with a mark at the encumbered threshold.
 - **Content pickers for arrays in Sheets** · feature · needs decision: the design, after formulas and the Pathfinder 2e test
