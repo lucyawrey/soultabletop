@@ -165,10 +165,31 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .mapcell { font-size: var(--d-lfs); color: var(--st-ink-muted); white-space: nowrap; }
 .acts .row { grid-template-columns: 76px 1fr auto; }
 .pair { display: grid; grid-template-columns: 1.5fr 1fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
-.pair .row { min-height: calc(var(--d-h) + 6px); }
-.pair .row:not(.th) .link { font-size: calc(var(--d-fs) + 1px); }
+.pair .row, .lst .row { min-height: calc(var(--d-h) + 6px); }
+.pair .row:not(.th) .link, .lst .row:not(.th) .link { font-size: calc(var(--d-fs) + 1px); }
+/* Group headers inside a tab list: the column-header style, on a tinted band. */
+.lst .row.grp { min-height: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 3px 6px; margin-top: calc(var(--d-gap) * .8); background: var(--st-panel-muted); border-radius: 4px; border-bottom: 0; }
+.lst .row.grp > span:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink); }
+.lst .row.grp .gaside { font-size: var(--d-lfs); color: var(--st-ink-muted); display: inline-flex; align-items: center; gap: 6px; }
+.lst .rows > .row.grp:first-child, .lst > .row.grp:first-child { margin-top: 0; }
+.feat-rows .row:not(.grp) { grid-template-columns: 52px 1fr auto; }
+.feature-rows .row:not(.grp) { grid-template-columns: 52px 1fr; }
+.kv-rows .row:not(.grp) { grid-template-columns: 130px 1fr; }
+.kv-rows textarea, .kv-rows input { width: 100%; font: inherit; }
+.kv-rows textarea { height: auto; padding: 4px 6px; border: 1px solid var(--st-border-strong); border-radius: calc(var(--st-radius) * .66); }
+.class-stack { display: grid; gap: calc(var(--d-gap) * .8); }
+.spell-rows .row:not(.grp) { grid-template-columns: 22px 64px minmax(120px, 1fr) 110px 90px 1.4fr; }
+.spell-rows .sd { display: contents; }
+.inv .row:not(.grp) { grid-template-columns: 36px 1fr 44px 92px 30px; }
+.inv select { height: 22px; }
+input.coin { width: 44px; height: 22px; text-align: center; font-weight: 700; }
+.bio { display: grid; grid-template-columns: 140px 1fr; gap: calc(var(--d-gap) * 2); align-items: start; }
+.portrait { aspect-ratio: 3 / 4; border: 1px dashed var(--st-border-strong); border-radius: var(--st-radius); display: grid; place-content: center; justify-items: center; gap: 6px; background: var(--st-panel-muted); }
+@media (max-width: 900px) { .bio { grid-template-columns: 1fr; } .portrait { max-width: 160px; }
+  .spell-rows .row.th { display: none; } .spell-rows .row:not(.grp) { grid-template-columns: 22px 64px 1fr; row-gap: 0; }
+  .spell-rows .sd { display: flex; flex-wrap: wrap; gap: 0 8px; grid-column: 3; } .spell-rows .sd > :empty { display: none; } }
 .mapcell { margin-left: 6px; word-spacing: 4px; }
-.inv .row { grid-template-columns: 1fr 40px 40px 66px 30px; }
+
 .mid { display: grid; grid-template-columns: 1.35fr 1fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: start; }
 .mid > div { display: grid; gap: calc(var(--d-gap) + 10px); }
 /* Tabs right: skills keep one column of rows; the tabs take the wider side. */
@@ -266,6 +287,10 @@ const PCS = {
     inv: [["Rapier",1,1,"Held",0],["Shortbow",1,1,"Worn",0],["Arrows",0.1,20,"Worn",0],["Leather armor",1,1,"Worn",0],["Thieves' toolkit",0.1,1,"Worn",0],["Backpack",0.1,1,"Worn",0],["Bedroll",0.1,1,"Stowed",0]],
     coins: { pp: 0, gp: 2, sp: 7, cp: 5 } },
 };
+// Range, defense, and a short effect per spell: placeholders until the import loads the real text.
+const SPELL_INFO = { Bless: ["15-ft emanation", "", "Allies +1 status to attack rolls"], Command: ["30 ft", "Will", "Target obeys a one-word command"],
+  Heal: ["Touch or 30 ft", "Fort (undead)", "Restores 1d8 HP per action spent"], "Divine Lance": ["30 ft", "AC", "2d4 spirit damage"], Guidance: ["30 ft", "", "+1 status to one check"],
+  Light: ["Touch", "", "Object sheds light 20 ft"], Shield: ["Self", "", "+1 circumstance to AC"], Stabilize: ["30 ft", "", "Dying creature loses dying"] };
 const MORE = {
   strikes: [["◆","Dagger","Dex","t",0,"1d4 P","Agile · Finesse · Thrown 10 ft"],["◆","Fist","Str","t",0,"1d4 B","Agile · Nonlethal · Unarmed"],["◆","Javelin","Dex","t",0,"1d6 P","Thrown 30 ft"]],
   actions: [["◆","Seek","Perception"],["◆◆","Demoralize","Intimidation"],["◆","Recall Knowledge","Lore or skill"],["◆","Take Cover","+2 circumstance to AC"],["↺","Aid","Prepare with ◆"]],
@@ -376,33 +401,50 @@ function render() {
   const profs = `<section class="sheet-section"${tag("Grid", 'columns="2"')}>${h2("Proficiencies")}
     <div class="profrows">${Object.entries(c.profs).map(([g, list]) => `<span class="sheet-field-label">${g}</span><div>${list.map(([n, r]) => `<span style="white-space:nowrap">${rank(r)} <span class="small">${n}</span></span>`).join("")}</div>`).join("")}</div></section>`;
 
-  // Long lists in tabs.
-  const feats = `<div class="feats"${tag("List", 'field="feats" item="Ref"')}>${c.feats.map(([ty, n, src, g]) => `<div class="feat"><button class="link plain" data-prev="${n}">${n}</button> ${g ? glyph(g) : ""}<span class="small">${ty} · ${src === "Background" ? "from background" : "level " + src}</span></div>`).join("")}
-    ${E() ? c.upcoming.map(([lv, ty]) => `<div class="feat empty"${tag("Section", 'show="{editing}"', "editing isn't visible to formulas yet")}><button class="pick">Choose ${ty.toLowerCase()}</button><span class="small">level ${lv}</span></div>`).join("") : ""}</div>`;
+  // Tabs use the same rows as Strikes and Actions: glyph or level column, underlined name, muted detail.
+  const grp = (label, aside = "") => `<div class="row grp"><span>${label}</span>${aside ? `<span class="gaside">${aside}</span>` : ""}</div>`;
+  const FEAT_TYPES = ["Ancestry", "Class", "Skill", "General"];
+  const feats = `<div class="tabcols lst"${tag("List", 'field="feats" item="Ref"')}>${FEAT_TYPES.map(ty => {
+      const have = c.feats.filter(f => f[0] === ty), next = E() ? c.upcoming.filter(u => u[1] === ty + " feat") : [];
+      return `<div class="rows feat-rows">${grp(ty + " feats")}
+        ${have.map(([, n, src, g]) => `<div class="row">${g ? glyph(g) : "<span></span>"}<button class="link plain" data-prev="${n}">${n}</button><span class="small dim">${src === "Background" ? "background" : "level " + src}</span></div>`).join("")}
+        ${next.map(([lv]) => `<div class="row"${tag("Section", 'show="{editing}"', "editing isn't visible to formulas yet")}><span></span><button class="pick" style="justify-self:start">Choose ${ty.toLowerCase()} feat</button><span class="small dim">level ${lv}</span></div>`).join("")}
+        ${!have.length && !next.length ? `<div class="row"><span></span><span class="small dim">None yet.</span><span></span></div>` : ""}</div>`; }).join("")}</div>`;
   const dz = c.deity;
   const cdc = mod("classdc", [["Key " + c.key, a[c.key]], [RANKS[c.classDC][1], P(c.classDC, L)]], 10);
   const klass = `<div class="strip small" style="margin:0 0 var(--d-gap)"${tag("Value", 'formula="{10 + key + prof(classDC)}"')}><b>${c.cls}</b><span><span class="sheet-field-label">Class DC</span> ${cdc.btn} ${rank(c.classDC)}</span><span><span class="sheet-field-label">Key attribute</span> <b>${c.key}</b></span>${cdc.parts}</div>
-    <div class="tabcols"><div class="rows"${tag("List", 'field="class.features" item="Ref"', "a list read from the referenced class")}><div class="row th" style="grid-template-columns:52px 1fr"><span>Level</span><span>Class feature</span></div>
-      ${c.features.map(([lv, n]) => `<div class="row ${+lv > L ? "untrained" : ""}" style="grid-template-columns:52px 1fr"><span class="small">${lv}</span><button class="link plain" data-prev="${n}">${n}</button></div>`).join("")}</div>
-    ${dz ? `<div${tag("Section", 'field="deity"')}><div class="kv small"><span class="sheet-field-label">Deity</span><span>${ref(dz.name, "deity")}</span>
-        ${[["Divine font", dz.font], ["Sanctification", dz.sanct], ["Divine skill", dz.skill], ["Favored weapon", dz.weapon], ["Domains", dz.domains], ["Divine attributes", dz.attrs]].map(([k, v]) => `<span class="sheet-field-label">${k}</span><span>${v}</span>`).join("")}
-        <span class="sheet-field-label">Edicts</span><span class="dim">From the imported deity's text.</span><span class="sheet-field-label">Anathema</span><span class="dim">From the imported deity's text.</span></div></div>` : ""}</div>`;
+    <div class="lst class-stack"><div class="rows feature-rows"${tag("List", 'field="class.features" item="Ref"', "a list read from the referenced class")}>${grp("Class features")}
+      ${c.features.map(([lv, n]) => `<div class="row ${+lv > L ? "untrained" : ""}"><span class="small dim">${lv}</span><button class="link plain" data-prev="${n}">${n}</button></div>`).join("")}</div>
+    ${dz ? `<div class="rows kv-rows"${tag("Section", 'field="deity"')}>${grp("Deity")}
+        <div class="row"><span class="sheet-field-label">Deity</span><span>${ref(dz.name, "deity")}</span></div>
+        ${[["Divine font", dz.font], ["Sanctification", dz.sanct], ["Divine skill", dz.skill], ["Favored weapon", dz.weapon], ["Domains", dz.domains], ["Divine attributes", dz.attrs], ["Edicts", "<span class=\"dim\">From the imported deity's text.</span>"], ["Anathema", "<span class=\"dim\">From the imported deity's text.</span>"]].map(([k, v]) => `<div class="row"><span class="sheet-field-label">${k}</span><span>${v}</span></div>`).join("")}</div>` : ""}</div>`;
   const sp = c.spells;
-  const spells = sp ? (() => { const dc = 10 + a[sp.attr] + P("t", L), atk = a[sp.attr] + P("t", L);
+  // One row per spell: cast mark (prepared slot), actions, name, range, defense, effect.
+  const spellRow = ([n, g, used], slot) => { const [rng, def, eff] = SPELL_INFO[n] || ["", "", ""];
+    return `<div class="row">${slot ? live(pips(used, 1, "sq", n + " cast"), 'Checkbox field="slots.cast"') : "<span></span>"}${glyph(g)}<button class="link plain" data-prev="${n}">${n}</button><span class="sd"><span class="small">${rng}</span><span class="small">${def || '<span class="dim">—</span>'}</span><span class="small dim">${eff}</span></span></div>`; };
+  const spells = sp ? (() => { const dc = 10 + a[sp.attr] + P("t", L), atk = a[sp.attr] + P("t", L), r1left = sp.r1.filter(x => !x[2]).length;
     return `<div class="strip small" style="margin:0 0 var(--d-gap)"><b>${sp.trad} prepared</b><span><span class="sheet-field-label">Spell DC</span> <b>${dc}</b></span><span><span class="sheet-field-label">Attack</span> <b>${sg(atk)}</b></span></div>
-    <div class="rows"><div class="row th" style="grid-template-columns:70px 1fr"><span>Rank</span><span>Spells</span></div>
-      <div class="row" style="grid-template-columns:70px 1fr"><span class="sheet-field-label">Cantrips</span><span>${sp.cantrips.map(([n, g]) => `<button class="link plain" data-prev="${n}">${n}</button> ${glyph(g, true)}`).join(" &nbsp; ")}</span></div>
-      <div class="row" style="grid-template-columns:70px 1fr"><span class="sheet-field-label">1</span><span>${sp.r1.map(([n, g, used]) => `<span style="white-space:nowrap">${live(pips(used, 1, "sq", n + " cast"), 'Checkbox field="slots.r1.cast"')} <button class="link plain" data-prev="${n}">${n}</button> ${glyph(g, true)}</span>`).join(" &nbsp; ")}</span></div>
-      <div class="row" style="grid-template-columns:70px 1fr"><span class="sheet-field-label">Font</span><span>${live(pips(sp.font[2], sp.font[1], "sq", "Divine Font used"), 'Tracker field="divineFont" max="4"')} <button class="link plain" data-prev="${sp.font[0]}">${sp.font[0]}</button> ${glyph("◆–◆◆◆", true)} <span class="dim small">${sp.font[1] - sp.font[2]} left</span></span></div>
+    <div class="rows lst spell-rows"${tag("Table", 'field="spells" item="Ref"')}>
+      <div class="row th"><span></span><span></span><span>Spell</span><span>Range</span><span>Defense</span><span>Effect</span></div>
+      ${grp("Rank 1", `${sp.r1.length} slots · ${r1left} left`)}${sp.r1.map(x => spellRow(x, true)).join("")}
+      ${grp("Divine Font", `${live(pips(sp.font[2], sp.font[1], "sq", "Divine Font used"), 'Tracker field="divineFont" max="4"')} ${sp.font[1] - sp.font[2]} of ${sp.font[1]} left`)}${spellRow([sp.font[0], "◆–◆◆◆", 0], false)}
+      ${grp("Cantrips", "heightened to rank 1 · at will")}${sp.cantrips.map(x => spellRow(x, false)).join("")}
     </div>`; })() : "";
-  const bulk = c.inv.reduce((s, [, b, q]) => s + (b === 0.1 ? 0 : b * q), 0), lights = c.inv.filter(([, b]) => b === 0.1).length;
-  const inv = `<div class="strip small" style="margin:0 0 var(--d-gap)"${tag("Grid")}><span><span class="sheet-field-label">Bulk</span> <b>${bulk + Math.floor(lights / 10)}${lights % 10 ? `, ${lights % 10} L` : ""}</b> <span class="dim">/ ${5 + a.Str} (max ${10 + a.Str})</span></span>
+  const bulk = c.inv.reduce((s, [, b, q]) => s + (b === 0.1 ? 0 : b * q), 0), lights = c.inv.filter(([, b]) => b === 0.1).length, total = bulk + Math.floor(lights / 10);
+  const STATES = ["Held", "Worn", "Stowed"];
+  const invRow = ([n, b, q, st, invd], i) => `<div class="row"><span>${q}</span><button class="link plain" data-prev="${n}">${n}</button><span class="dim">${b === 0.1 ? "L" : b}</span>
+      <span${tag("Select", 'field="inventory.state" live', "live attribute doesn't exist yet")}><select class="small" aria-label="State of ${n}" data-inv="${i}">${STATES.map(x => `<option ${x === st ? "selected" : ""}>${x}</option>`).join("")}</select></span><span>${invd ? "✓" : ""}</span></div>`;
+  const inv = `<div class="strip small" style="margin:0 0 var(--d-gap)"${tag("Grid")}><span><span class="sheet-field-label">Bulk</span> <b>${total}${lights % 10 ? `, ${lights % 10} L` : ""}</b> <span class="dim">/ ${5 + a.Str} (max ${10 + a.Str})</span>${total > 5 + a.Str ? ` <span class="chip" style="color:var(--ui-error);border-color:var(--ui-error)">Encumbered</span>` : ""}</span>
       <span><span class="sheet-field-label">Invested</span> <b>${c.inv.filter(x => x[4]).length}</b> <span class="dim">/ 10</span></span>
-      ${Object.entries(c.coins).map(([k, v]) => `<span><span class="sheet-field-label">${k}</span> ${E() ? `<input value="${v}" aria-label="${k}" style="width:40px;height:20px">` : `<b>${v}</b>`}</span>`).join("")}</div>
-    <div class="rows inv"${tag("Table", 'field="inventory" item="Ref"')}><div class="row th"><span>Item</span><span>Qty</span><span>Bulk</span><span>State</span><span title="Invested">Inv</span></div>
-    ${c.inv.map(([n, b, q, st, invd]) => `<div class="row"><button class="link plain" data-prev="${n}">${n}</button><span>${q}</span><span class="dim">${b === 0.1 ? "L" : b}</span><span class="small">${E() ? `<select aria-label="State" style="height:20px"><option>${st}</option></select>` : st}</span><span>${invd ? "✓" : ""}</span></div>`).join("")}
-    ${E() ? `<div class="row"><button class="pick" style="justify-self:start">+ Add item</button></div>` : ""}</div>`;
-  const bio = `<div class="kv" style="max-width:760px"${tag("Grid", 'columns="2"')}>${["Pronouns", "Age", "Appearance", "Personality", "Notes"].map(k => `<span class="sheet-field-label">${k}</span>${E() ? `<input aria-label="${k}" style="width:100%">` : `<span class="dim">—</span>`}`).join("")}</div>`;
+      ${Object.entries(c.coins).map(([k, v]) => `<span${tag("Number", `field="coins.${k}" live`, "live attribute doesn't exist yet")}><span class="sheet-field-label">${k}</span> <input value="${v}" aria-label="${k}" class="coin"></span>`).join("")}</div>
+    <div class="rows lst inv"${tag("Table", 'field="inventory" item="Ref"')}><div class="row th"><span>Qty</span><span>Item</span><span>Bulk</span><span>State</span><span title="Invested">Inv</span></div>
+    ${STATES.map(st => { const items = c.inv.map((x, i) => [x, i]).filter(([x]) => x[3] === st); return items.length ? grp(st) + items.map(([x, i]) => invRow(x, i)).join("") : ""; }).join("")}
+    ${E() ? `<div class="row"><span></span><button class="pick" style="justify-self:start">+ Add item</button></div>` : ""}</div>`;
+  const BIO = [["Pronouns"], ["Age"], ["Height"], ["Weight"], ["Ethnicity"], ["Nationality"], ["Birthplace"], ["Appearance", 1], ["Personality", 1], ["Beliefs", 1], ["Likes"], ["Dislikes"], ["Catchphrases"], ["Allies"], ["Enemies"], ["Organizations"]];
+  const bioRow = ([k, long]) => `<div class="row"><span class="sheet-field-label">${k}</span>${E() ? (long ? `<textarea aria-label="${k}" rows="2"></textarea>` : `<input aria-label="${k}">`) : `<span class="dim">—</span>`}</div>`;
+  const bio = `<div class="bio"${tag("Grid", 'columns="2"')}><div class="portrait"${tag("Image", 'field="portrait"')}><span class="small dim">No portrait</span>${E() ? `<button class="pick">Set image URL</button>` : ""}</div>
+      <div class="tabcols lst"><div class="rows kv-rows">${grp("Details")}${BIO.slice(0, 7).map(bioRow).join("")}</div><div class="rows kv-rows">${grp("Personality")}${BIO.slice(7, 13).map(bioRow).join("")}</div><div class="rows kv-rows">${grp("Relationships")}${BIO.slice(13).map(bioRow).join("")}</div></div></div>
+    <div class="rows lst kv-rows" style="margin-top:var(--d-gap)"${tag("Markdown", 'field="notes"')}>${grp("Notes")}<div class="row">${E() ? `<textarea aria-label="Notes" rows="4" style="grid-column:1/-1"></textarea>` : `<span class="dim" style="grid-column:1/-1">—</span>`}</div></div>`;
   const T = { Class: klass, Feats: feats, ...(sp ? { Spells: spells } : {}), Inventory: inv, Biography: bio };
   if (!T[S.tab]) S.tab = "Class";
   const tabs = `<div${tag("Tabs")}><div class="tabs" role="tablist">${Object.keys(T).map(k => `<button role="tab" aria-selected="${k === S.tab}" data-tab="${k}">${ico(k)}${k}</button>`).join("")}</div>
@@ -421,7 +463,7 @@ function render() {
   document.querySelectorAll("[data-ctl]").forEach(g => g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", S[g.dataset.ctl] === b.dataset.v)));
   contrast();
 }
-document.addEventListener("change", e => { if (e.target.matches(".rank-sel")) e.target.className = "rank-sel " + e.target.value.toLowerCase(); if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
+document.addEventListener("change", e => { if (e.target.dataset.inv) { PCS[S.pc].inv[+e.target.dataset.inv][3] = e.target.value; return render(); } if (e.target.matches(".rank-sel")) e.target.className = "rank-sel " + e.target.value.toLowerCase(); if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
 document.addEventListener("click", e => {
   const t = e.target;
   const b = t.closest("button"); if (!b) return;
@@ -442,7 +484,12 @@ document.addEventListener("click", e => {
   // clicking the highest filled one lowers the value by one.
   else if (b.closest(".pips")) { const all = [...b.closest(".pips").children], i = all.indexOf(b);
     const n = b.classList.contains("on") && !all[i + 1]?.classList.contains("on") ? i : i + 1;
-    all.forEach((x, j) => { x.classList.toggle("on", j < n); x.setAttribute("aria-pressed", j < n); }); return; }
+    all.forEach((x, j) => { x.classList.toggle("on", j < n); x.setAttribute("aria-pressed", j < n); });
+    // Spell slots and Divine Font keep their counts in the data, so the "left" counts update.
+    const lab = b.closest(".pips").getAttribute("aria-label"), sp = PCS[S.pc].spells;
+    if (sp && lab.endsWith(" cast")) { const x = sp.r1.find(r => r[0] + " cast" === lab); if (x) { x[2] = n; render(); } }
+    if (sp && lab === "Divine Font used") { sp.font[2] = n; render(); }
+    return; }
   else return;
   render();
 });

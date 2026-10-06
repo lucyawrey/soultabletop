@@ -99,3 +99,9 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
   - Strikes read hit and damage from the inventory item instead of typed values.
   - Conditions that change the numbers.
   - Roll buttons.
+- **Tab content (user, 2026-10-06):** every tab uses the Strikes/Actions row style (same row height, glyph or level column, underlined name, muted detail) with tinted group-header bands, so the tabs match each other and the panels above.
+  - **Class:** the class line (class, Class DC, key attribute), then class features, then the deity below them (stacked, not side by side, on every width).
+  - **Feats:** grouped by type (Ancestry, Class, Skill, General) in two columns; each feat shows its action glyph and level or "background"; edit adds "Choose … feat" rows for coming levels.
+  - **Spells:** one row per spell (cast mark, actions, name, range, defense, short effect) grouped as Rank 1 (slot count and how many are left), Divine Font (tracker), and Cantrips (heightened rank); on a phone each spell is two lines. The short effects are placeholders until the import loads real text. The earlier inline name lists were too dense to read.
+  - **Inventory:** grouped by Held, Worn, Stowed; an item's state and the coins can be changed in play (live); Bulk shows an Encumbered tag past 5 + Str.
+  - **Biography:** a portrait (Image) beside Details (pronouns, age, height, weight, ethnicity, nationality, birthplace), Personality (appearance, personality, beliefs, likes, dislikes, catchphrases), and Relationships (allies, enemies, organizations), then Notes (Markdown).
