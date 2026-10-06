@@ -2,8 +2,10 @@
 import type { Component } from "vue";
 import type { ValidatedNode } from "#shared/sheet/validate";
 import SheetBadge from "./Badge.vue";
+import SheetButton from "./Button.vue";
 import SheetCallout from "./Callout.vue";
 import SheetCollapsible from "./Collapsible.vue";
+import SheetColumnButtons from "./ColumnButtons.vue";
 import SheetDivider from "./Divider.vue";
 import SheetField from "./Field.vue";
 import SheetGrid from "./Grid.vue";
@@ -23,7 +25,8 @@ const props = defineProps<{ node: ValidatedNode; compact?: boolean }>();
 const { context, segments, condition } = useSheet();
 provideSheetFlags(() => props.node);
 
-// Tags not listed here (Tab, Column, RowDetails) are rendered by their parent.
+// Tags not listed here (Tab, Column, RowDetails, Set) are rendered by their
+// parent, or not at all.
 const components: Record<string, Component> = {
   Sheet: SheetWrapper,
   Section: SheetSection,
@@ -36,6 +39,7 @@ const components: Record<string, Component> = {
   Callout: SheetCallout,
   Badge: SheetBadge,
   Collapsible: SheetCollapsible,
+  Button: SheetButton,
   List: SheetList,
   Table: SheetTable,
 };
@@ -47,6 +51,7 @@ const visibility = computed(() =>
 
 const component = computed(() => {
   if (props.node.type !== "element") return undefined;
+  if (props.node.tag === "Column" && props.node.children.length) return SheetColumnButtons;
   if (props.node.spec.category === "field") return SheetField;
   return components[props.node.tag];
 });

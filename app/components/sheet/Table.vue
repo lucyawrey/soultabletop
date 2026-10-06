@@ -21,10 +21,13 @@ const editing = useSheetListEditing(() => props.node, list);
 const { unlock, remove, move } = editing;
 const editable = computed(() => editing.editable.value && !props.node.entries);
 const lockedEditable = computed(() => editing.lockedEditable.value && !props.node.entries);
+// Columns of Buttons only show to viewers who can edit, like the Buttons.
 const columnNodes = computed(() =>
   props.node.children.filter(
     (child): child is ValidatedElement =>
-      child.type === "element" && child.tag === "Column",
+      child.type === "element" &&
+      child.tag === "Column" &&
+      (context.canEdit.value || !child.children.length),
   ),
 );
 const details = computed(() =>
