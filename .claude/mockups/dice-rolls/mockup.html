@@ -181,6 +181,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .fu { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 2px 9px; border: 1px solid var(--st-primary); border-radius: 999px; background: var(--st-panel); color: var(--st-primary); cursor: pointer; }
 .fu:hover { background: var(--st-primary); color: var(--st-on-primary); }
 .fu .wr { font-size: 10.5px; font-weight: 600; }
+.fu.used { border-style: dashed; }
 .efrom { font-size: 11.5px; color: var(--st-ink-muted); }
 .efrom b { color: var(--st-ink); font-weight: 600; }
 .child { border-left: 3px solid var(--st-border-strong); }
@@ -251,7 +252,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.14 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.15 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
@@ -388,11 +389,13 @@ const testSpec = i => { const [action, label, terms, , hi] = TESTS[i]; return { 
 // Follow-ups each entry offers; a follow-up with a Set needs edit rights.
 function followUps(e) {
   if (e.kind === "attack") return [["Damage", "dmg"], ["Damage + sneak", "sneak"], ["Critical", "crit"]];
-  if (e.kind === "check" && !e.reroll && S.viewer === "owner" && S.hero > 0) return [["Reroll", "reroll", true]];
+  // label="Reroll ({heroPoints} left)": the label's formula is read live, like show="heroPoints > 0".
+  if (e.kind === "check" && !e.reroll && S.viewer === "owner" && S.hero > 0) return [[`Reroll (${S.hero} left)`, "reroll"]];
   return [];
 }
 function runFollowUp(id, k) {
   const e = byId(id); if (!e) return;
+  (e.used ||= new Set()).add(k); // Stays clickable; marked used after the first click.
   let n;
   if (k === "reroll") { S.hero = Math.max(0, S.hero - 1); // <Set field="heroPoints" formula="heroPoints - 1" />, then the Roll
     n = roll({ ...e.make(), label: e.label + " · reroll", reroll: true }, e); renderSheet(); }
@@ -437,7 +440,8 @@ function diceRow(terms, anim, tail = "") {
 function natBadge(e) { return e.nat === 20 ? `<span class="natb n20">Natural 20</span>` : e.nat === 1 ? `<span class="natb">Natural 1</span>` : ""; }
 function fuButtons(e) {
   const fus = followUps(e); if (!fus.length) return "";
-  return `<div class="efu"${tag("FollowUp", "", "FollowUp doesn't exist yet")}>${fus.map(([l, k, wr]) => `<button class="fu" data-fu="${e.id}:${k}">${l}${wr ? ` <span class="wr">(hero point · ${S.hero} left)</span>` : ""}</button>`).join("")}</div>`;
+  return `<div class="efu"${tag("FollowUp", "", "FollowUp doesn't exist yet")}>${fus.map(([l, k]) => { const used = e.used && e.used.has(k);
+      return `<button class="fu${used ? " used" : ""}" data-fu="${e.id}:${k}">${used ? `<span aria-hidden="true">✓</span>` : ""}${l}${used ? `<span class="sr-only"> (used)</span>` : ""}</button>`; }).join("")}</div>`;
 }
 function metaHTML(e) {
   const rows = [];
@@ -551,7 +555,7 @@ function target(id, text, label, parts, make, { noBreakdown = false, minor = fal
 }
 const rank = r => `<span class="rank ${r}" title="${RANKS[r][1]}" aria-label="${RANKS[r][1]}">${RANKS[r][0]}</span>`;
 const total = parts => parts.reduce((s, [, v]) => s + v, 0);
-const CHECK_STEPS = (f) => `<Roll name="check" label="${f}" formula="if(fortune, 2d20kh1, d20) + value" /> <FollowUp label="Reroll" show="heroPoints > 0"><Set field="heroPoints" formula="heroPoints - 1" /><Roll formula="if(fortune, 2d20kh1, d20) + value" /></FollowUp>`;
+const CHECK_STEPS = (f) => `<Roll name="check" label="${f}" formula="if(fortune, 2d20kh1, d20) + value" /> <FollowUp label="Reroll ({heroPoints} left)" show="heroPoints > 0"><Set field="heroPoints" formula="heroPoints - 1" /><Roll formula="if(fortune, 2d20kh1, d20) + value" /></FollowUp>`;
 
 function renderSheet() {
   const ro = S.viewer === "reader";
@@ -643,7 +647,7 @@ function contrast() {
 
 document.getElementById("rollsicon").innerHTML = svg("rolling-dices", "w-4 h-4");
 // A few rolls already made, so the lists aren't empty.
-(() => { const a = roll(attackSpec(0, 0)); roll(damageSpec(0, "sneak"), a); S.fortune = true; roll(checkSpec("Stealth", "Check", "Skills", [["Dex", 4], ["Trained", 3], ["Armor", -1]])); S.fortune = false; })();
+(() => { const a = roll(attackSpec(0, 0)); a.used = new Set(["sneak"]); roll(damageSpec(0, "sneak"), a); S.fortune = true; roll(checkSpec("Stealth", "Check", "Skills", [["Dex", 4], ["Trained", 3], ["Armor", -1]])); S.fortune = false; })();
 renderAll();
 </script>
 </body>
