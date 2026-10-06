@@ -114,7 +114,7 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .box .mod { font-size: var(--d-big); border-bottom: 0; text-align: center; }
 .box.key { border: 2px solid var(--st-primary); }
 /* Raise Shield: a toggle in the AC box; pressed shows filled. */
-.shieldrow { display: grid; justify-items: center; gap: 3px; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--st-border); }
+.shieldrow { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .raise { display: inline-flex; align-items: center; gap: 6px; height: calc(var(--d-h) + 4px); padding: 0 12px; border: 1px solid var(--st-primary); border-radius: calc(var(--st-radius) * .66); background: var(--st-panel); color: var(--st-primary); font-weight: 700; cursor: pointer; }
 .raise .act { font-size: 1.1em; }
 .raise[aria-pressed="true"] { background: var(--st-primary); color: var(--st-on-primary); }
@@ -328,9 +328,7 @@ function render() {
     <div class="srows">${saveRows.map(({ n, k, m, r }) => `<div class="srow"${tag("Value", `formula="{${k.toLowerCase()} + prof(saves.${n.toLowerCase()})}"`)}><span>${n}</span>${m.btn}${rank(r)}</div>`).join("")}</div>
     ${saveRows.map(x => x.m.parts).join("")}</div>`;
   const defs = `<div style="min-width:0"><div class="defs">
-    <div class="box key hero-n ac"${tag("Value", 'formula="{10 + min(dex, armor.dexCap) + prof(armor.rank) + armor.ac + (shieldRaised ? shield.ac : 0)}"', "breakdown on a box")}><span class="sheet-field-label">Armor Class</span>${ac.btn}<span class="small dim">${c.armor.name}${shieldUp ? ` · <b class="up">+${c.shield.ac} shield</b>` : ""}</span>${ac.parts}
-      ${c.shield ? `<div class="shieldrow"${tag("Toggle", 'field="shieldRaised" live', "live attribute doesn't exist yet")}><button class="raise" aria-pressed="${!!shieldUp}" data-shield><span class="act" aria-label="One action">◆</span> ${shieldUp ? "Shield Raised" : "Raise Shield"}</button>
-        <span class="small dim" title="${c.shield.name}" style="white-space:nowrap">Hardness ${c.shield.hard} · HP ${c.shield.hp} · BT ${c.shield.bt}</span></div>` : ""}</div>
+    <div class="box key hero-n ac"${tag("Value", 'formula="{10 + min(dex, armor.dexCap) + prof(armor.rank) + armor.ac + (shieldRaised ? shield.ac : 0)}"', "breakdown on a box")}><span class="sheet-field-label">Armor Class</span>${ac.btn}<span class="small dim">${c.armor.name}${shieldUp ? ` · <b class="up">+${c.shield.ac} shield</b>` : ""}</span>${ac.parts}</div>
     <div class="box hp"${tag("Tracker", 'field="hp" max="{ancestry.hp + (class.hp + con) * level}" live', "live attribute doesn't exist yet")}>
       <span class="sheet-field-label" style="grid-column:1/-1">Hit Points</span>
       <div class="hpline"><span class="now"><input aria-label="Current HP" value="${c.hp}"><span class="max">/ ${c.hpMax}</span></span>
@@ -341,6 +339,8 @@ function render() {
     ${saves}
   </div>
   <div class="strip small">
+    ${c.shield ? `<span class="shieldrow"${tag("Toggle", 'field="shieldRaised" live', "live attribute doesn't exist yet")}><button class="raise" aria-pressed="${!!shieldUp}" data-shield><span class="act" aria-label="One action">◆</span> ${shieldUp ? "Shield Raised" : "Raise Shield"}</button>
+      <span class="dim" title="${c.shield.name}">${c.shield.name} · Hardness ${c.shield.hard} · HP ${c.shield.hp} · BT ${c.shield.bt}</span></span>` : ""}
     <span><span class="sheet-field-label">Resist / weak</span> <span class="dim">none</span></span>
     <span${tag("Tags", 'field="conditions" live', "conditions don't change the numbers")}><span class="sheet-field-label">Conditions</span> ${S.pc === "rogue" ? `<span class="chip">Frightened 1</span>` : `<span class="dim">none</span>`} <button class="pick">+ Add</button></span>
   </div></div>`;
