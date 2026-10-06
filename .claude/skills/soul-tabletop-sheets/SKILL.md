@@ -34,7 +34,7 @@ Read these when in doubt; this skill is a summary and the code wins if they disa
 ## Markup syntax
 
 - Tags are HTML-like: `<Section title="Abilities">...</Section>` or self-closing `<Number field="hp" />`. Names are PascalCase; matching is case-insensitive.
-- The `<Sheet>` root is optional (top level only). Any number of top-level nodes is fine. `<Sheet density="compact">` makes the whole sheet dense (small inputs, labels, and gaps) without custom CSS; the default is `roomy`.
+- The `<Sheet>` root is optional (top level only). Any number of top-level nodes is fine. Sheets are compact by default (small inputs, labels, and gaps, like a character sheet); `<Sheet density="roomy">` uses the site's roomier form spacing instead (`density="compact"` is still valid).
 - Attributes: `name="value"` or `name='value'`. A bare `name` means true (booleans only). Unquoted values are an error. A duplicate attribute is an error. Attribute names are `[A-Za-z_][A-Za-z0-9_-]*`.
 - Text goes directly inside layout tags and renders as a paragraph; whitespace collapses like HTML. `<Grid>`, `<Section>`, etc. accept text; `Heading`, `Note`, `Callout`, `Badge` accept only text; `Divider` and field tags accept nothing.
 - Formulas: every `{…}` in text and in text attribute values is a formula (see "Formulas" below); `{hp}` shows what the `hp` field displays, computed value included. A missing value is empty. Booleans show Yes/No; numbers are plain; arrays are comma-joined; a reference to other Content shows its name. `{}` and `{= …}` are errors, and so is a formula that gives a struct, object, or list.
