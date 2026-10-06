@@ -11,7 +11,9 @@ export type AttrType =
   | { kind: "number"; min?: number; max?: number; integer?: boolean; dynamic?: boolean }
   // Bare attribute, "true", or "false".
   | { kind: "boolean" }
-  | { kind: "enum"; values: readonly string[] }
+  // With `bare`, the value when written without one (`preview` means
+  // `preview="expand"`).
+  | { kind: "enum"; values: readonly string[]; bare?: string }
   // A field path, resolved against the schema.
   | { kind: "field" }
   // A field path that may have one `*` segment, for every item of a list or
@@ -195,6 +197,17 @@ const overrideFormula: AttrSpec = {
     "Computes the value; with field, the field holds an optional manual value that wins, and clearing it goes back to the computed one",
 };
 
+// `preview` on Ref, Value, and Column: clicking shows the content the value
+// comes from, expanded in place or in a card (see docs/sheet-system.md,
+// "Reference previews").
+export const SHEET_PREVIEW_MODES = ["expand", "card"] as const;
+export type SheetPreviewMode = (typeof SHEET_PREVIEW_MODES)[number];
+const previewAttr: AttrSpec = {
+  type: { kind: "enum", values: SHEET_PREVIEW_MODES, bare: "expand" },
+  description:
+    "Clicking the value shows the referenced content (the one its field is reached through, like spell for spell.name): expanded below it (preview, or preview=\"expand\"), or in a card floating under it (preview=\"card\"); a <Preview> inside replaces the generated view",
+};
+
 const formatAttr = oneOf(
   ["plain", "signed"],
   "signed shows +2 for positive numbers (an editable input shows the sign too; the saved value stays a number)",
@@ -205,7 +218,7 @@ const tagList: TagSpec[] = [
   {
     name: "Sheet",
     category: "layout",
-    description: "Optional root wrapping the whole sheet",
+    description: "The root wrapping the whole sheet (required)",
     attrs: {
       density: oneOf(
         SHEET_DENSITIES,
@@ -463,8 +476,9 @@ const tagList: TagSpec[] = [
     name: "Ref",
     category: "field",
     description: "A link to another resource or content",
-    attrs: { ...fieldAttrs },
-    children: "none",
+    attrs: { ...fieldAttrs, preview: previewAttr },
+    // The card its preview opens.
+    children: { only: ["Preview"] },
     binds: ["resourceLink", "content"],
   },
   {
@@ -475,8 +489,9 @@ const tagList: TagSpec[] = [
       ...fieldAttrs,
       formula: readOnlyFormula,
       format: formatAttr,
+      preview: previewAttr,
     },
-    children: { only: ["Part"] },
+    children: { only: ["Part", "Preview"] },
     binds: ["anyValue"],
     formula: "readOnly",
   },
@@ -539,9 +554,11 @@ const tagList: TagSpec[] = [
       formula: readOnlyFormula,
       format: formatAttr,
       width: oneOf(["auto", "xs", "sm", "md", "lg"], "Column width"),
+      preview: previewAttr,
     },
-    // Parts explaining its number, and Buttons: each row gets its own.
-    children: { only: ["Part", "Button"] },
+    // Parts explaining its number, Buttons (each row gets its own), and the
+    // card its preview opens.
+    children: { only: ["Part", "Button", "Preview"] },
     parents: ["Table"],
     binds: ["string", "number", "boolean", "scalar", "resourceLink", "content"],
     formula: "readOnly",
@@ -565,6 +582,17 @@ const tagList: TagSpec[] = [
     formula: "readOnly",
     // Never rendered as an element of its own, so `class` would do nothing.
     noCommonAttrs: true,
+  },
+  {
+    name: "Preview",
+    category: "layout",
+    description:
+      "What a preview shows (expanded or in a card), instead of the generated view: beside <Sheet> for every preview of this content type, or inside a preview tag for that tag alone; paths inside are relative to the previewed content, and it is always read-only",
+    attrs: {},
+    children: "any",
+    parents: ["Ref", "Value", "Column"],
+    topLevel: true,
+    noFlagAttrs: true,
   },
   {
     name: "RowDetails",

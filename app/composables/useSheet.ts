@@ -10,6 +10,7 @@ import {
   type FormulaNode,
   type FormulaValue,
 } from "#shared/sheet/formula";
+import type { SheetPreviewTarget } from "#shared/sheet/card";
 import type { TextPart } from "#shared/sheet/parser";
 import type { SheetDensity, SheetDisplay } from "#shared/sheet/registry";
 import {
@@ -41,6 +42,50 @@ import {
   type ValidatedNode,
 } from "#shared/sheet/validate";
 
+// An expanded reference preview (see SheetPreviewBody): what it shows, and
+// the `<Preview>` the tag that opened it wrote, if any. `key` tells which tag
+// opened it, so clicking that again closes it.
+export interface SheetPreview {
+  key: string;
+  target: SheetPreviewTarget;
+  card?: ValidatedElement;
+}
+
+// A content type's own `<Preview>` (beside `<Sheet>` in its default sheet),
+// as loaded for previews of its content: "none" when it has none or the
+// viewer can't read that sheet, so previews use the generated view.
+export type SheetOwnPreview =
+  | { status: "loading" }
+  | { status: "none" }
+  | {
+      status: "ready";
+      sheet: { id: string; markup: string; css: string; defaultDisplay: SheetDisplay };
+      schemas: SheetSchemas;
+    };
+
+// Loads each content type's own preview when first asked for, once per
+// rendered Sheet.
+export function createSheetOwnPreviews() {
+  const loaded = new Map<string, Ref<SheetOwnPreview>>();
+  return (contentTypeId: string): Ref<SheetOwnPreview> => {
+    const known = loaded.get(contentTypeId);
+    if (known) return known;
+    const state = shallowRef<SheetOwnPreview>({ status: "loading" });
+    loaded.set(contentTypeId, state);
+    $fetch<{
+      sheet: Extract<SheetOwnPreview, { status: "ready" }>["sheet"] | null;
+      schemas: SheetSchemas | null;
+    }>(`/api/content-type/${contentTypeId}/preview`)
+      .then(({ sheet, schemas }) => {
+        state.value = sheet && schemas ? { status: "ready", sheet, schemas } : { status: "none" };
+      })
+      .catch(() => {
+        state.value = { status: "none" };
+      });
+    return state;
+  };
+}
+
 // Shared by every component of one rendered Sheet (see SheetRenderer.vue).
 export interface SheetContext {
   root: Ref<SheetScope>;
@@ -67,6 +112,11 @@ export interface SheetContext {
   addLink: (id: string, link: SheetLink) => void;
   // `locked` fields unlocked with their pencil button, for this page view.
   unlocked: Set<string>;
+  // The scope ID of the Sheet's CSS (`[data-sheet="…"]`), for content
+  // rendered outside the sheet's element (preview cards).
+  scopeId: Ref<string | undefined>;
+  // A content type's own preview, loaded on first use (createSheetOwnPreviews).
+  ownPreview: (contentTypeId: string) => Ref<SheetOwnPreview>;
 }
 
 // `live` / `locked` / `display` in effect, inherited from enclosing tags.
@@ -88,6 +138,31 @@ const flagsKey: InjectionKey<Ref<SheetFlags>> = Symbol("sheet-flags");
 // How many times this part of the sheet is repeated (the item counts of the
 // enclosing Lists and Table rows, multiplied).
 const repeatKey: InjectionKey<Ref<number>> = Symbol("sheet-repeat");
+// Inside a reference preview card, where nothing can be edited.
+const readOnlyKey: InjectionKey<boolean> = Symbol("sheet-read-only");
+
+// A Table's previews expanded under its rows, by row key: its Columns'
+// `preview`s open there instead of in their cell.
+export interface SheetRowPreviews {
+  isOpen: (row: string | number, key: string) => boolean;
+  toggle: (row: string | number, preview: SheetPreview) => void;
+}
+const rowPreviewsKey: InjectionKey<SheetRowPreviews> = Symbol("sheet-row-previews");
+
+export function provideSheetRowPreviews(previews: SheetRowPreviews) {
+  provide(rowPreviewsKey, previews);
+}
+
+export function useSheetRowPreviews() {
+  return inject(rowPreviewsKey, undefined);
+}
+
+// Makes everything inside read-only (a preview card), shown as plain text
+// unless a tag inside says `display="box"`.
+export function provideSheetReadOnly() {
+  provide(readOnlyKey, true);
+  provide(flagsKey, ref(defaultFlags()));
+}
 
 export function provideSheetContext(context: SheetContext) {
   provide(contextKey, context);
@@ -158,12 +233,14 @@ export function useSheetEditable(
 ) {
   const { context } = useSheet();
   const flags = inject(flagsKey, ref(defaultFlags()));
+  const readOnly = inject(readOnlyKey, false);
   const unlockKey = computed(
     () => `${node().loc.start.offset}:${JSON.stringify(path())}`,
   );
   const unlocked = computed(() => context.unlocked.has(unlockKey.value));
   const allowed = computed(
     () =>
+      !readOnly &&
       context.canEdit.value &&
       path() !== null &&
       node().tag !== "Value" &&
@@ -179,8 +256,10 @@ export function useSheetEditable(
       () => allowed.value && flags.value.locked && !unlocked.value,
     ),
     unlock: () => context.unlocked.add(unlockKey.value),
-    // Shown as a disabled input when not editable (`display="box"`).
-    boxed: computed(() => flags.value.display === "box"),
+    // Shown as a disabled input when not editable (`display="box"`). Values
+    // reached through a reference never are: they can't become editable, so
+    // they show as text rather than look locked.
+    boxed: computed(() => flags.value.display === "box" && path() !== null),
   };
 }
 

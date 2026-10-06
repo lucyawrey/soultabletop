@@ -25,7 +25,7 @@ Sections: 1. markup language + parser → 2. tag catalog → 3. validation again
 ## 1. Markup language & parser
 
 ### Pipeline (all in `shared/sheet/`, used by server and client)
-1. `parseSheetMarkup(source) → { nodes, diagnostics }` (top-level nodes; `<Sheet>` is optional) — syntax only, knows nothing about tags. Error-recovering: collects all
+1. `parseSheetMarkup(source) → { nodes, diagnostics }` (top-level nodes) — syntax only, knows nothing about tags. Error-recovering: collects all
    errors with line/column instead of stopping at the first.
 2. `validate(nodes, registry, contentTypeSchema) → { tree, diagnostics }` — checks tags/attrs/children/field bindings,
    coerces attribute strings to typed props, outputs a normalized tree the renderer consumes.
@@ -100,7 +100,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 ### Layout
 | Tag | Attrs | Children | Renders |
 |---|---|---|---|
-| `Sheet` | `density` (compact/roomy, default compact) | any | root wrapper; optional (implicit if omitted); top level only |
+| `Sheet` | `density` (compact/roomy, default compact) | any | root wrapper; required: every sheet is one `<Sheet>`, with only `<Define>`s beside it (decided 2026-10-06, so other views of the content, like reference preview cards, can sit beside it) |
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
@@ -114,7 +114,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 
 `density` (decided 2026-10-06, from the [PF2e sheet mockup](../.claude/mockups/pf2e-sheet/spec.md); compact made the
 default the same day, since it reliably looks like a character sheet): `roomy` is the site's form spacing, written
-`<Sheet density="roomy">`; `compact`, the default (writing it stays valid, so a sheet can name it if more densities come) (also for sheets without a `<Sheet>` root, and generated sheets), is
+`<Sheet density="roomy">`; `compact`, the default (writing it stays valid, so a sheet can name it if more densities come) (also for generated sheets), is
 dense, with no custom CSS: the smallest inputs (Nuxt UI size
 `xs`), small uppercase field labels, smaller stats, tighter Section padding and Table cells, and every gap one step
 tighter (`Grid`/`Stack` `gap="md"` is `gap-2`; `sheetGapCompact` in `app/utils/sheet-layout.ts`). The sheet root
@@ -164,8 +164,8 @@ View mode renders formatted values, edit mode renders the input.
 | `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
 | `Tags` | — | array of string (not of choices) | `UInputTags` |
 | `Tracker` | `max` (optional, at least 0), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max" |
-| `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
-| `Value` | `format`, `formula` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
+| `Ref` | `preview` (see "Reference previews") | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
+| `Value` | `format`, `formula`, `preview` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
@@ -250,7 +250,7 @@ required `resourceLink` or `content` entry without a default would be left empty
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
 | `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
-| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
+| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width`, `preview` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
 
 Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
 skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even
@@ -266,7 +266,7 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
 
 ### Definitions and conditional display
 - `<Define name="prof" params="rank" formula="…" />`: a reusable formula, called as `prof(x)` (one without
-  parameters as `pb()`) from any formula in the sheet. Only at the top level or directly inside `<Sheet>`; order
+  parameters as `pb()`) from any formula in the sheet. Only beside the `<Sheet>` root or directly inside it; order
   doesn't matter; renders nothing. See "Formulas".
 - `show="expr"`, a bare formula like `formula=` (`show="hp > 0"`, `show="hasShield"`; no braces): `true` shows the tag, `false` or nothing hides it and
   everything in it, in every mode; the data is never cleared. It is evaluated in the tag's scope (a `List` or `Table`
@@ -317,6 +317,87 @@ elsewhere, or Escape closes it, and it floats, so nothing moves (from the frozen
 - Rendered by `sheet/Breakdown.vue` (`UPopover`); `sheetBreakdown` in `runtime.ts` computes the parts and the sum.
   Hook class: `sheet-breakdown-trigger` on the number's button. The popover opens outside the sheet's element (inside
   it, the root's `contain: paint` would clip it), so Sheet CSS can't style it; it uses the site's theme.
+
+### Reference previews (decided 2026-10-06)
+`preview` on a `Ref`, `Value`, or `Column` makes its value an underlined button that shows the referenced content, such as a
+spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.claude/plans/reference-previews.md` on
+`docs`). Two ways to show it (decided):
+
+- **Expanded** (`preview`, or `preview="expand"`, the default): clicking shows it below the value, and clicking again
+  hides it. On a `Column`, it opens as an expanded row under the table row, above the row's `RowDetails` if that is
+  open too. Any number can be open at once. Use it for content players read in full, like spells and feats.
+- **Card** (`preview="card"`): a card floating under the value (a popover, 340px wide at most), with the content's name
+  and closed by clicking again, clicking elsewhere, or Escape. Use it for minor things that have no inline place on
+  the sheet and only need a glance, like a background.
+
+```
+<Table field="spells">
+  <Column field="spell.name" label="Spell" preview />
+</Table>
+<Ref field="background" preview="card">
+  <Preview>
+    <Tags field="traits" />
+    <Markdown field="description" />
+  </Preview>
+</Ref>
+```
+
+- **What it shows:** the last content field on the way to the tag's field (`spell.name` shows `spell`; in a Table
+  over an array of content, `name` shows the row's content). On a `Ref`, the field itself, which must be a `content` field
+  (a resource link has no preview). Without a content field on the way, or without a `field`, it's an
+  `invalid-attribute` error. References and local data (custom copies) both work; a reference that isn't loaded
+  (missing or not readable) shows no button. References get an Open link to their page.
+- **Generated view** (no `<Preview>` of either kind): from the content type's top-level fields, in schema order (`generatedCard` in
+  `shared/sheet/card.ts`): arrays of text or choices as chips; other fields with a value as label/value rows (choice
+  labels, numbers, Yes/No, a content field's name); text over 120 characters or with a line break as Markdown under
+  its label, below the rows (decided: the schema has no Markdown type, so length decides; a short row stays plain
+  text). Structs, free-form objects, resource links, other arrays, and empty values are left out. It isn't styled by Sheet CSS.
+- **What shows, in order:** the tag's own `<Preview>` (an override, below); else the `<Preview>` beside `<Sheet>` in the
+  previewed content type's default sheet; else the generated view. A `<Preview>` hidden by its `show` gives way to the
+  next.
+- **`<Preview>` beside `<Sheet>`** (decided): a content type's sheet can say how its content looks in every preview
+  from other sheets, with a `<Preview>` at the top level next to `<Sheet>` (at most one, `duplicate-preview`). It is
+  never shown on the content's own page. Its paths are read against the content's top level, and the sheet's
+  `<Define>`s work in it; the same limits apply (`button-in-preview`, `preview-in-preview`). It is styled by its own
+  sheet's CSS and density, and used for references and local data of that type alike.
+  ```
+  <Sheet>…</Sheet>
+  <Preview>
+    <Value formula="concat('Rank ', rank)" />
+    <Markdown field="description" />
+  </Preview>
+  ```
+  Field formulas inside it (`<Number field formula>`) show only there: they don't stand in for the field elsewhere.
+  An expanded one sits inside the referencing sheet, so that sheet's broad selectors (`p`, `.x` under its scope) can
+  reach it too.
+  Loading (decided): it is fetched when a preview of that type first opens, once per content type per rendered sheet
+  (a failure falls back to the generated view until the page reloads), from
+  `GET /api/content-type/<id>/preview` (`resolvePreviewSheet` in `server/utils/sheet-schemas.ts`). That returns the type's
+  default Sheet and the schemas to compile it with only when the viewer can read both the content type and that Sheet
+  and the markup has a `<Preview>` beside `<Sheet>`; otherwise `sheet` is null and the generated view is used. The
+  preview renders through `SheetRenderer` with `previewOf`, its own sheet context with the previewed content as the
+  top level, read-only. The page's `refs` are passed along, so references inside it show names when the page already
+  has them.
+- **`<Preview>` in a preview tag** (an override): the sheet's own view, directly inside the `preview` tag, used for both ways (decided: a child tag rather than bare
+  children, which would mix with a `Value`'s or `Column`'s `Part`s and `Button`s). Its paths are relative to the
+  referenced content, like a `List` row (`/…` still reaches the sheet's top level, and `<Define>`s work). It takes
+  `class` and `show` (a hidden one gives way to the type's own `<Preview>` or the generated view). It is styled by the referencing sheet's
+  CSS: its element carries the sheet's `data-sheet` and `data-density`, also in a floating card.
+  Errors: `preview-tag-without-preview` (no `preview` on its tag), `duplicate-preview` (two in one tag).
+- **Limits:** previews are always read-only (no inputs, whatever `live`; fields inside show as text unless they say
+  `display="box"`), so a `Button` inside a `<Preview>` is an error (`button-in-preview`); and a preview can't open another
+  (`preview` inside a `<Preview>` is `preview-in-preview`).
+- **While editing:** an editable value (a `Ref`'s picker, a custom copy's fields) shows its input, not a button;
+  values that can't be edited keep their preview. `display="box"` doesn't box a value with a preview (a `Ref` keeps
+  its box with the button inside).
+- Hook classes: `sheet-preview-trigger` on the value's button, `sheet-preview-frame` on the expanded box or the card,
+  `sheet-preview` on what's inside it (a `<Preview>` also gets its `class`).
+- Rendering: `sheet/PreviewTrigger.vue` (the button; the card's `UPopover`), `sheet/PreviewExpanded.vue` (the
+  expanded box, under a field by `Field.vue` or under a row by `Table.vue`, through `provideSheetRowPreviews`),
+  `sheet/PreviewBody.vue` (the `<Preview>` or generated view, read-only through `provideSheetReadOnly`),
+  `sheetPreviewTarget` in `shared/sheet/card.ts` (what a tag shows).
+- Data: the content GET's `refs` already holds each referenced content's data; only a type's own `<Preview>` is
+  fetched (above).
 
 ### Buttons (decided 2026-10-06)
 `<Button label="…">` changes fields when clicked, with one `<Set field="…" formula="…" />` child per change:
@@ -386,7 +467,9 @@ edits counts errors only. Switching a content type from strict to non-strict tur
 it (server: `resolveShowSheetWarnings` in `shared/content-schema.ts`; the form pre-sets it).
 
 Structural (errors): unknown tag; unknown attr; missing required attr; attr value not coercible (e.g. `cols="abc"`,
-enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Divider`).
+enum out of range); child not allowed (e.g. non-`Tab` in `Tabs`, children in `Divider`). Root: no `<Sheet>` (`missing-sheet`; the
+rest is still checked as if inside one), a second one (`duplicate-sheet`), or a tag or text beside it other than a
+`<Define>` (`misplaced-tag`, `text-not-allowed`).
 
 Formulas (errors unless noted; codes in parentheses):
 | Case | Result |
@@ -443,7 +526,7 @@ with edit access to the sheet, and is omitted for everyone else; valid nodes ren
 
 Generator: `generateSheetMarkup(schema)` in `shared/sheet/generate.ts`, a pure function (unit-tested) producing
 ordinary markup, so it goes through the same parse/validate/render path as authored sheets:
-- Top-level simple fields → one "Details" `Section` with `<Grid cols="2">`, starting with `<Text field="name" />`
+- Everything inside one `<Sheet>` root. Top-level simple fields → one "Details" `Section` with `<Grid cols="2">`, starting with `<Text field="name" />`
   (the page header already shows the name, so no heading), then a `<Field>` per field.
 - `struct` field → its own `Section` titled by label, recursing. Free-form `object` → a `Section` with a `<Field>` (JSON editor).
 - Array of objects → `Table` when all item fields are primitive, else `List` with a nested layout.
@@ -527,7 +610,9 @@ to everyone, and to people who can edit the sheet also a small warning icon whos
 Display of non-editable fields (decided): `display="text" | "box"`, allowed on any tag except `Tab` and `RowDetails`, and inherited like `live`/`locked`.
 - `text` shows the plain value (good for stat blocks like a spell); `box` shows the field's edit control, disabled, so a
   sheet looks the same with Edit on and off (good for character sheets). It applies wherever a field isn't editable:
-  Edit off, `locked` fields before their unlock click, viewers without edit access, and values reached through references.
+  Edit off, `locked` fields before their unlock click, and viewers without edit access. Values reached through a
+  reference (a linked spell's `range`) always show as text (decided 2026-10-06: they can never become editable on
+  this sheet, so a disabled input would look locked; a local entry's fields next to them keep their box).
 - Not every field has a useful disabled control: `Value` and `Image` keep their normal view in `box`, and `Ref` /
   `content` / `resourceLink` fields show their link inside an input-style box so it stays clickable.
 - The starting value comes from the sheet: new `sheet` column `defaultDisplay` (`sheet_display` enum, `text` | `box`,

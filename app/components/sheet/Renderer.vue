@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ComputedRef, EffectScope } from "vue";
+import { sheetOwnPreview, type SheetPreviewTarget } from "#shared/sheet/card";
 import type { FormulaValue } from "#shared/sheet/formula";
 import {
   evaluateSheetDefinition,
@@ -35,6 +36,10 @@ const props = defineProps<{
   // How fields look when they can't be edited, unless the markup's `display`
   // says otherwise (the Sheet's setting).
   defaultDisplay?: SheetDisplay;
+  // Render only the sheet's own `<Preview>` (beside `<Sheet>`), read-only,
+  // for this content: a preview opened from another sheet. `data` is the
+  // target's record.
+  previewOf?: SheetPreviewTarget;
 }>();
 
 useHead({
@@ -117,17 +122,30 @@ provideSheetContext({
   addRef: (id, ref) => emit("addRef", id, ref),
   addLink: (id, link) => emit("addLink", id, link),
   unlocked: reactive(new Set<string>()),
+  scopeId: computed(() => props.scopeId ?? undefined),
+  ownPreview: createSheetOwnPreviews(),
 });
+
+// Top-level `<Preview>` shows only in previews, never on the sheet itself.
+const nodes = computed(() =>
+  compiled.value.nodes.filter((node) => node.type !== "element" || node.tag !== "Preview"),
+);
+const ownPreview = computed(() => sheetOwnPreview(compiled.value.nodes));
+const previewTarget = computed(() =>
+  props.previewOf ? { ...props.previewOf, scope: root.value } : undefined,
+);
 </script>
 
 <template>
+  <SheetPreviewBody v-if="previewTarget" :target="previewTarget" :card="ownPreview" own />
   <!-- `contain: paint` keeps Sheet CSS (even position: fixed) inside this box. -->
   <div
+    v-else
     class="sheet-root isolate [contain:paint]"
     :class="density === 'compact' ? 'space-y-2 text-sm' : 'space-y-4'"
     :data-sheet="scopeId ?? undefined"
     :data-density="density"
   >
-    <SheetNodes :nodes="compiled.nodes" />
+    <SheetNodes :nodes="nodes" />
   </div>
 </template>
