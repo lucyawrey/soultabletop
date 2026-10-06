@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { generatedCard, markupHasOwnPreview, sheetOwnPreview, sheetPreviewTarget } from "./card";
 import type { SheetRefs, SheetScope } from "./runtime";
-import type { SheetSchemas, ValidatedElement, ValidatedNode } from "./validate";
+import { compileSheet as compileWithoutRoot, type SheetSchemas, type ValidatedElement, type ValidatedNode } from "./validate";
 import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
 
 // Reference previews: `preview` on Ref, Value, and Column, and `<Preview>`.
@@ -156,6 +156,21 @@ describe("preview validation", () => {
     expect(
       messages(`<Preview /><Sheet><Ref field="deity" preview><Preview><Tags field="domains" /></Preview></Ref></Sheet>`),
     ).toEqual([]);
+  });
+
+  it("keeps a Preview's field formulas out of the sheet's computed fields", () => {
+    const compiled = compileSheet(
+      `<Sheet><Number field="level" formula="1" /></Sheet><Preview><Number field="level" formula="2" /></Preview>`,
+      schemas,
+    );
+    expect(compiled.diagnostics).toEqual([]);
+    expect(compiled.computedFields.get("level")?.source).toBe("1");
+    expect(compileSheet(`<Sheet /><Preview><Number field="level" formula="2" /></Preview>`, schemas).computedFields.size).toBe(0);
+  });
+
+  it("reports a Preview beside a missing Sheet only once", () => {
+    const { diagnostics } = compileWithoutRoot(`<Preview><Value field="level" /></Preview>`, schemas);
+    expect(diagnostics.map((item) => item.code)).toEqual(["missing-sheet"]);
   });
 
   it("finds a Preview beside Sheet in markup", () => {

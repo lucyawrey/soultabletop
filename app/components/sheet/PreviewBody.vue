@@ -26,6 +26,13 @@ const card = computed(() => {
 const ownPreview = computed(() =>
   card.value || props.own ? undefined : context.ownPreview(props.target.contentTypeId).value,
 );
+// When it is this sheet's own, the sheet's CSS is already on the page (and
+// in the Sheet editor, newer than the saved copy).
+const ownCss = computed(() =>
+  ownPreview.value?.status === "ready" && ownPreview.value.sheet.id !== context.scopeId.value
+    ? ownPreview.value.sheet.css
+    : undefined,
+);
 const generated = computed(() =>
   card.value || (ownPreview.value && ownPreview.value.status !== "none")
     ? undefined
@@ -68,7 +75,7 @@ const generatedEmpty = computed(
     :data="target.record"
     :refs="context.refs.value"
     :links="context.links.value"
-    :css="ownPreview.sheet.css"
+    :css="ownCss"
     :scope-id="ownPreview.sheet.id"
     :default-display="ownPreview.sheet.defaultDisplay"
     :preview-of="target"

@@ -367,7 +367,11 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.c
     <Markdown field="description" />
   </Preview>
   ```
-  Loading (decided): it is fetched when a preview of that type first opens, once per content type per page, from
+  Field formulas inside it (`<Number field formula>`) show only there: they don't stand in for the field elsewhere.
+  An expanded one sits inside the referencing sheet, so that sheet's broad selectors (`p`, `.x` under its scope) can
+  reach it too.
+  Loading (decided): it is fetched when a preview of that type first opens, once per content type per rendered sheet
+  (a failure falls back to the generated view until the page reloads), from
   `GET /api/content-type/<id>/preview` (`resolvePreviewSheet` in `server/utils/sheet-schemas.ts`). That returns the type's
   default Sheet and the schemas to compile it with only when the viewer can read both the content type and that Sheet
   and the markup has a `<Preview>` beside `<Sheet>`; otherwise `sheet` is null and the generated view is used. The

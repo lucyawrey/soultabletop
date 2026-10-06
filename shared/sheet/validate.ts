@@ -1121,8 +1121,9 @@ class Validator {
       return broken(`<${spec.name}> has errors`);
     }
     // Inside a List or Table row the formula reads the row, so only top-level
-    // overrides can stand in for their field elsewhere.
-    if (formula && binding && spec.formula === "override" && scope === this.rootShape) {
+    // overrides can stand in for their field elsewhere; one in a `<Preview>`
+    // (even beside `<Sheet>`, which reads the top level) shows only there.
+    if (formula && binding && spec.formula === "override" && scope === this.rootShape && !this.cardDepth) {
       const key = binding.path.segments.join(".");
       const existing = this.computedFields.get(key);
       if (!existing) {
