@@ -2,11 +2,11 @@
 
 One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use and update this file; check it against git before relying on it.
 
-**Last updated:** 2026-10-06 (late afternoon)
+**Last updated:** 2026-10-06 (evening)
 
-- **Done:** #95 (breakdown popovers) merged; its test data deleted, worktree and branch removed.
-- **Usage changes (2026-10-06):** global rules in `claude-config` (read ranges, one full check per PR, PRs don't address the user); here `.claude/sheet-code-map.md`, `.claude/scripts/test-sheet.mjs`, a slimmer SKILL.md, and a shorter CLAUDE.md. Not yet carried to `main`: open a docs-only PR when the user wants.
-- **Next:** reference previews, then dice buttons (needs a design decision), then the PF2e character sheet build (`.claude/plans/pf2e-demo.md`, step 6).
+- **In progress:** reference previews, designed with the user ([plan](plans/reference-previews.md)). Step 1, #96 (`<Sheet>` root required; worktree `../soultabletop-worktrees/require-sheet-root`), is open and waiting on the user's review (Tier B). Full check and browser check passed; its throwaway test data was deleted.
+- **Next:** after #96 merges, ask which tags open a preview (the plan's "Still open"), then step 2 in a new worktree. Then dice buttons, then the PF2e character sheet (`.claude/plans/pf2e-demo.md`, step 6).
+- **On `docs`, not yet on `main`:** the usage changes (`sheet-code-map.md`, `test-sheet.mjs`, the slimmer SKILL.md) and the skill's notes on the required root. Open a docs-only PR when the user wants.
 - **Not yet seen by the user:** compact density on a real, full sheet (only test sheets so far).
 - **Waiting on the user:** keep or delete `icons.html` in the mockup folder; whether the Initiative "rolls with" picker should offer Lore skills.
 - The nine reference content types in `.claude/pf2e/content-types/` are drafted but not validated against the API or reviewed.

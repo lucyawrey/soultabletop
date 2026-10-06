@@ -16,6 +16,9 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
   Plan: [.claude/plans/pf2e-demo.md](.claude/plans/pf2e-demo.md) (decisions, references and their rules, density, steps).
   A small slice of the Pathfinder 2e system for the demo, and a head start on the official one (Phase 2): content types (character, ancestry, background, class, feat, spell, item) and a polished character sheet using formulas, choice fields, struct tables, list functions, and defaults. Agents design the types and sheets, reading the Foundry pf2e data for reference (`~/Developer/foundry-pf2e`); an import script loads a small ORC Remaster slice of content through the API with the user's API key, never agent-written content (see "Data sources and import scripts for official content"). Keep a copy of the schemas, sheets, and script in `.claude/` until the authoring CLI exists. The system's description credits the data source and states the ORC license notice from the start. Replaces the old `pf2e-test` system, which the reset removes.
 
+- **Sheet reference previews** · feature · #96 (required `<Sheet>` root, step 1 of 3)
+  Clicking a referenced spell, feat, item, or class feature shows its rules text in a card, in play and edit, read from the referenced resource. Design (user, 2026-10-06): [.claude/plans/reference-previews.md](.claude/plans/reference-previews.md).
+
 # Next up
 
 The exact order: do these one at a time, top first.
@@ -24,8 +27,6 @@ Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The 
 
 Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the items below (density, `editing()`, and live fields saving at once were built in #92, buttons in #93), from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
 
-- **Sheet reference previews** · feature
-  Clicking a referenced spell, feat, item, or class feature shows its rules text in a card, in play and edit, read from the referenced resource.
 - **Sheet dice buttons** · feature · large · needs decision: how a roll looks
   The dice half of "Sheet dice buttons and image uploads" (Phase 1). User's decisions: a roll's result shows in a toast with each die, and a "Recent rolls" list on the sheet page keeps this visit's rolls, until campaign dice logs exist. Still to design with the user: the visual element for rolling (e.g. an animated die, a rolling number, or a result card), plus the markup (a roll button tag and formula dice syntax).
 - **Onboarding structure** · feature

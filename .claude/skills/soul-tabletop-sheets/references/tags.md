@@ -22,7 +22,7 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 
 | Tag | Attributes | Children | Notes |
 |---|---|---|---|
-| `Sheet` | none | any | Optional root; top level only |
+| `Sheet` | none | any | Required root: every sheet is one, with only `Define`s beside it |
 | `Section` | `title`, `description`, `icon`, `span` (1-12), `collapsible`, `collapsed` | any | A card. `span` is columns inside a `Grid`. `collapsed` implies `collapsible` |
 | `Grid` | `cols` (1-12, default 2), `gap` (`none` \| `sm` \| `md` \| `lg`, default `md`) | any | One column on phones |
 | `Stack` | `direction` (`row` \| `column`, default column), `gap`, `align` (`start` \| `center` \| `end` \| `stretch`), `wrap` | any | Flex container |
