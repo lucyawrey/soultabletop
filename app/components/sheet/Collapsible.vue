@@ -6,6 +6,7 @@ const props = defineProps<{ node: ValidatedElement }>();
 const attrText = useSheetAttrText();
 const title = computed(() => attrText(props.node.attrs.title));
 const subtitle = computed(() => attrText(props.node.attrs.subtitle));
+const compact = useSheetCompact();
 </script>
 
 <template>
@@ -33,7 +34,7 @@ const subtitle = computed(() => attrText(props.node.attrs.subtitle));
       </button>
     </template>
     <template #content>
-      <div class="space-y-4 border-t border-default p-3">
+      <div class="border-t border-default" :class="compact ? 'space-y-2 p-2' : 'space-y-4 p-3'">
         <SheetNodes :nodes="node.children" />
       </div>
     </template>

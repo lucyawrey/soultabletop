@@ -100,7 +100,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 ### Layout
 | Tag | Attrs | Children | Renders |
 |---|---|---|---|
-| `Sheet` | — | any | root wrapper; optional (implicit if omitted) |
+| `Sheet` | `density` (roomy/compact, default roomy) | any | root wrapper; optional (implicit if omitted); top level only |
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
@@ -111,6 +111,12 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 | `Callout` | `color`, `icon`, `title` | text | `UAlert` |
 | `Badge` | `color` | text | `UBadge` |
 | `Collapsible` | `title` (req), `subtitle`, `icon`, `open` | any | `UCollapsible`: clickable header, children shown on expand (e.g. one per `List` item) |
+
+`density` (decided 2026-10-06, from the [PF2e sheet mockup](../.claude/mockups/pf2e-sheet/spec.md)): `roomy` is the
+site's form spacing; `compact` is for dense character sheets, with no custom CSS: the smallest inputs (Nuxt UI size
+`xs`), small uppercase field labels, smaller stats, tighter Section padding and Table cells, and every gap one step
+tighter (`Grid`/`Stack` `gap="md"` is `gap-2`; `sheetGapCompact` in `app/utils/sheet-layout.ts`). The sheet root
+carries `data-density="compact"` (or `roomy`) for Sheet CSS. Components read it through `useSheetCompact()`.
 
 `Section` also accepts `collapsible` and `collapsed`. `Table` accepts a `RowDetails` child (any content) rendered
 in `UTable`'s expandable rows.
@@ -396,12 +402,15 @@ Edit + Autosave switches (decided):
 - Edit on, Autosave off: draft copy, Save/Cancel buttons, unsaved-changes guard on navigation.
 - Edit on, Autosave on: each change saves after ~800 ms of inactivity; status indicator (Saving… / Saved / Error).
   A validation error keeps the draft and shows the message; the next change retries.
-- Edit off: read-only view (the Autosave switch only presets how editing behaves once turned on), except `live` fields.
+- Edit off: read-only view (the Autosave switch only presets how editing behaves once turned on), except `live` fields,
+  which save after the autosave pause whatever the Autosave setting (decided 2026-10-06: things changed in play, like
+  HP, shouldn't need a Save click). Turning Edit off doesn't save unsaved edits; a live change saves the whole draft.
 - One draft model for all modes: whenever the draft differs from the saved data and autosave is off, a
   Save/Discard bar is shown (covers `live` edits made in view mode).
 
 Per-field attributes (decided), boolean, allowed on any field tag and on `List`/`Table`:
-- `live` — editable even with Edit off (for users with `canEdit`). Saves via autosave if on, else via the Save bar.
+- `live` — editable even with Edit off (for users with `canEdit`). With Edit off, a change saves on its own after the
+  autosave pause, with or without Autosave (`liveEdits` in `useContentDraft`); with Edit on it follows Autosave.
 - `locked` — read-only even with Edit on until the user clicks the field's small pencil button, which unlocks that
   field for the rest of the page view.
 - They compose: a field is editable when `canEdit && (editMode || live)`; if `locked`, it additionally needs its
@@ -589,7 +598,7 @@ known list (`filter`, `sort`, `first`, `at`), so `first(inventory).item.weight` 
 
 Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
 parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't
-use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`, `filter`, `sort`, `first`, `at`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
+use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`, `filter`, `sort`, `first`, `at`, `editing`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
 (it wins in that sheet, with a warning).
 
 ### Functions (v1)
@@ -604,6 +613,7 @@ use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`,
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |
 | List items | `map(list, expr)` (the list of `expr` for each item; each a single value, empty ones kept), `filter(list, cond)` (the items that make `cond` true, in order), `sort(list, expr?, descending?)` (the items in order of `expr`, or of the items themselves; `sort(list, ., true)` sorts high to low), `first(list, cond?)` (the first item, or the first that makes `cond` true; nothing if none), `at(list, n)` (the item at index `n` from 0, `-1` the last; nothing out of range) |
+| Mode | `editing()`: true while the sheet is being edited (Edit on, for a viewer who can edit the content), else false. For parts shown only while editing, like empty choice slots: `show="editing() or length(senses) > 0"` (decided 2026-10-06; a function, so it can't clash with a field named `editing`) |
 | Rows | `itemKey()`: the current row's entry key in a struct (`'acrobatics'`), or its index in an array (from 0); `itemLabel()`: a struct entry's schema label, else its humanized key, and nothing in an array row. Only in a `List` or `Table` row or inside a per-item function (else `formula-no-item`; a `<Define>` body is checked at the top level, so pass them in as arguments) |
 
 In `sum(list, expr)` and the others, `expr` is evaluated once per item, scoped to the item like inside a `List`

@@ -12,13 +12,17 @@ const attrText = useSheetAttrText();
 const list = computed(() => resolve(props.node.binding!.path));
 const scopes = computed(() => rows(props.node));
 const label = computed(() => attrText(props.node.attrs.label));
+const compact = useSheetCompact();
 const layout = computed(() =>
   props.node.attrs.layout === "grid"
     ? [
-        "grid grid-cols-1 gap-4",
+        "grid grid-cols-1",
+        compact.value ? "gap-2" : "gap-4",
         sheetGridCols[(props.node.attrs.cols as number | undefined) ?? 2],
       ]
-    : "space-y-3",
+    : compact.value
+      ? "space-y-1"
+      : "space-y-3",
 );
 
 const editing = useSheetListEditing(() => props.node, list);
@@ -52,7 +56,7 @@ const lockedEditable = computed(() => editing.lockedEditable.value && !props.nod
         :repeat="scopes.length"
       >
         <div class="sheet-list-item flex gap-2">
-          <div class="min-w-0 flex-1 space-y-3">
+          <div class="min-w-0 flex-1" :class="compact ? 'space-y-2' : 'space-y-3'">
             <SheetNodes :nodes="node.children" />
           </div>
           <div v-if="editable" class="flex shrink-0 flex-col gap-1">

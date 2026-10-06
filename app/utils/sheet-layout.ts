@@ -39,6 +39,14 @@ export const sheetGap: Record<string, string> = {
   lg: "gap-6",
 };
 
+// `gap` on compact sheets (`<Sheet density="compact">`): one step tighter.
+export const sheetGapCompact: Record<string, string> = {
+  none: "gap-0",
+  sm: "gap-1",
+  md: "gap-2",
+  lg: "gap-3",
+};
+
 export const sheetAlign: Record<string, string> = {
   start: "items-start",
   center: "items-center",

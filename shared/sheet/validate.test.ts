@@ -373,6 +373,8 @@ describe("tags and attributes", () => {
   it("rejects bad hideLabel and format values, and hideLabel on non-field tags", () => {
     expect(errorCodes(`<Number field="hp" hideLabel="maybe" />`)).toEqual(["invalid-attribute"]);
     expect(errorCodes(`<Number field="hp" format="roman" />`)).toEqual(["invalid-attribute"]);
+    expect(errorCodes(`<Sheet density="compact"><Number field="hp" /></Sheet>`)).toEqual([]);
+    expect(errorCodes(`<Sheet density="tight"><Number field="hp" /></Sheet>`)).toEqual(["invalid-attribute"]);
     expect(messages(`<Divider hideLabel />`)).toEqual([
       "error unknown-attribute: <Divider> has no hideLabel attribute (it has: label)",
     ]);
