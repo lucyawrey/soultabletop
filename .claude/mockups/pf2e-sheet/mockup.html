@@ -436,7 +436,11 @@ document.addEventListener("click", e => {
   else if (b.dataset.prev) S.preview = b.dataset.prev;
   else if ("close" in b.dataset) S.preview = null;
   else if ("contrast" in b.dataset) { const box = document.getElementById("contrastbox"); box.hidden = !box.hidden; b.setAttribute("aria-expanded", !box.hidden); b.setAttribute("aria-pressed", !box.hidden); return; }
-  else if (b.closest(".pips")) { b.classList.toggle("on"); return; }
+  // Pips are a Tracker: clicking one sets the value to it (filling the ones before);
+  // clicking the highest filled one lowers the value by one.
+  else if (b.closest(".pips")) { const all = [...b.closest(".pips").children], i = all.indexOf(b);
+    const n = b.classList.contains("on") && !all[i + 1]?.classList.contains("on") ? i : i + 1;
+    all.forEach((x, j) => { x.classList.toggle("on", j < n); x.setAttribute("aria-pressed", j < n); }); return; }
   else return;
   render();
 });
