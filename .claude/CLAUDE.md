@@ -79,6 +79,7 @@ User-facing text is anything a person reads outside the code and git history: UI
 - **Resource names are lowercase mid-sentence** (system, campaign, content type, sheet, content, character, group, resource): "Could not save sheet.", "No content types for this system yet." Labels, titles, buttons, table headers, and nav keep Title Case: "New Sheet", "Delete Content Type", "Back to Sheets", "Content Types". This covers UI text, server error messages, the API reference (OpenAPI summaries/descriptions), and docs. In text people read, write "content type", never `ContentType`.
 - Don't rewrite or "improve" copy the team wrote; point out issues (typos, outdated facts) instead. Correcting a fact in technical docs is fine.
 - When unsure which side something falls on, ask.
+- **Art is the team's too (user, 2026-10-05):** agents don't draw icons, glyphs, illustrations, or other art, including hand-written SVG paths. Use icons from the bundled sets (Lucide, game-icons.net) or a text character, and where a custom drawing is needed, leave a marked placeholder and tell the user.
 
 ## Deployment and database
 

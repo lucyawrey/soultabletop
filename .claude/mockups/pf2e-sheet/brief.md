@@ -57,7 +57,7 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 
 - v3 changes after review: the tabs are full width below the columns, with a fixed height so switching tabs doesn't move the page; the contrast table opens from a Contrast button in the bar.
 - **Layout toggle (added after v3):** Tabs right (default: Strikes and Actions side by side, then skills and proficiencies on the left and the tabs on the right, filling that column's height) or Tabs below (the v3 layout). Phones stack both the same way.
-- Icons: action glyphs drawn as our own SVGs; other icons from game-icons.net (see "Game icons in sheets", PR #91).
+- Icons: action glyphs stay text (◆ ↺ ◇) until the user draws them (agents don't draw art); other icons from game-icons.net (see "Game icons in sheets", PR #91).
 
 ## Mockup v4 (user, 2026-10-05)
 
@@ -74,6 +74,6 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - **Class chips (user):** Class and its subclass (Doctrine, Racket) always sit on the same line; they wrap together.
 - **Build choices more prominent (user):** Ancestry, Heritage, Background, Class, and the subclass are small cards (label above a larger value) instead of pills; in edit mode the Change button sits under the value.
 - **Strikes and Actions grow together (user):** each panel grows with its rows, and the shorter one always stretches to the taller one's height (desktop; on a phone they stack and size separately). Edit mode has "+ Add strike" and "+ Add action" to try it.
-- **Game icons (user asked to try them, 2026-10-05):** two new toggles. *Action glyphs:* Text (◆ ↺ ◇, works today), Game icons (game-icons.net has no action glyphs; the closest are `diamonds`, the card suit, repeated per action, `anticlockwise-rotation` for a reaction, and an outlined `diamonds` for a free action), or Own SVG (our drawn diamonds, reaction arrow, hollow free-action diamond, as planned). Inline glyphs in rows need an inline icon tag (gap). *Section icons:* game-icons on section labels and tabs (`cowled`, `checked-shield`, `crossed-swords`, `sprint`, `skills`, `upgrade`, `star-medal`, `stars-stack`, `spell-book`, `knapsack`, `quill-ink`), which `Section` and `Tab` `icon` support today.
+- **Game icons (user asked to try them, 2026-10-05):** two new toggles. *Action glyphs:* Text (◆ ↺ ◇, works today), Game icons (game-icons.net has no action glyphs; the closest are `diamonds`, the card suit, repeated per action, `anticlockwise-rotation` for a reaction, and an outlined `diamonds` for a free action), or Own SVG (agent-drawn; dropped, since agents don't draw art). Inline glyphs in rows need an inline icon tag (gap). *Section icons:* game-icons on section labels and tabs (`cowled`, `checked-shield`, `crossed-swords`, `sprint`, `skills`, `upgrade`, `star-medal`, `stars-stack`, `spell-book`, `knapsack`, `quill-ink`), which `Section` and `Tab` `icon` support today.
 - **Action glyphs back to text (user):** ◆ ↺ ◇ as text, as before (now with spoken labels); the game-icons and own-SVG glyph toggle is gone. Section and tab icons stay, centered inline with their labels.
 - **Icon choices:** `icons.html` in this folder shows 6–7 game-icons candidates per section label and tab, drawn as the sheet draws them; the user picks one per label.
