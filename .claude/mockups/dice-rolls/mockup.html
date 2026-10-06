@@ -178,7 +178,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .toasts[data-pos="br"] { right: 16px; bottom: 16px; }
 .toasts[data-pos="tc"] { top: 16px; left: 50%; transform: translateX(-50%); }
 @media (max-width: 640px) { .toasts[data-pos="br"] { right: 8px; bottom: 8px; } .toasts[data-pos="tc"] { top: 8px; } }
-.toast { position: relative; }
+.toast { position: relative; overflow: hidden; }
+.toast .rcard { border-radius: inherit; }
 .stackhead .x { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; background: none; cursor: pointer; color: var(--st-ink-muted); font-size: 18px; line-height: 1; border-radius: 4px; }
 /* Toasts persist, so their close button is more prominent (site-wide: Nuxt UI's toast close in app.config). */
 .toast .x { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 1px solid var(--st-border-strong); background: var(--st-panel); cursor: pointer; color: var(--st-ink); font-size: 20px; line-height: 1; border-radius: 6px; }
@@ -195,9 +196,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .rcard .csum .eq { color: var(--st-ink-muted); font-size: 20px; }
 .rcard .ctotal { font-family: var(--st-font-display); font-weight: 700; font-size: 52px; line-height: .9; font-variant-numeric: lining-nums tabular-nums; }
 /* Dice card: the card's header band and footer, with the dice and the total on one row. */
-.bcard .bbody { display: flex; align-items: center; gap: 8px 14px; padding: 10px 12px 8px; }
-.bcard .bbody .dicerow { flex: 1; min-width: 0; }
-.bcard .btotal { display: flex; align-items: baseline; gap: 8px; margin-left: auto; }
+.bcard .bbody { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 8px; padding: 10px 12px 8px; }
+.bcard .bbody .dicerow { min-width: 0; }
+.bcard .btotal { display: flex; align-items: center; gap: 8px; }
 .bcard .btotal .eq { color: var(--st-ink-muted); font-size: 20px; }
 .bcard .btotal b { font-family: var(--st-font-display); font-weight: 700; font-size: 44px; line-height: .9; font-variant-numeric: lining-nums tabular-nums; }
 .bcard .bline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 0 12px 8px; }
@@ -238,7 +239,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.4 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.5 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
