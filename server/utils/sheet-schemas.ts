@@ -13,6 +13,7 @@ import {
   generateSheetMarkup,
   type ContentCategory,
 } from "../../shared/sheet/generate";
+import { markupHasOwnPreview } from "../../shared/sheet/card";
 import { processSheetCss } from "../../shared/sheet/css";
 import type { SheetDiagnostic } from "../../shared/sheet/parser";
 import type { SheetDisplay } from "../../shared/sheet/registry";
@@ -81,6 +82,28 @@ export interface ResolvedSheet {
   canEdit: boolean;
 }
 
+// The selected Sheet, or without one the ContentType's default Sheet, with
+// the viewer's access to it; undefined when there is none.
+async function findSheetWithAccess(
+  user: Pick<User, "id" | "name"> | null,
+  selectedSheetId: string | null,
+  contentTypeId: string,
+) {
+  const [row] = await useDatabase()
+    .select({ sheet, resource })
+    .from(sheet)
+    .innerJoin(resource, eq(resource.id, sheet.resourceId))
+    .where(
+      selectedSheetId
+        ? eq(sheet.resourceId, selectedSheetId)
+        : and(eq(sheet.contentTypeId, contentTypeId), eq(sheet.isDefault, true)),
+    )
+    .limit(1);
+  if (!row) return undefined;
+  const context = user ? await loadResourceAccessContext(user, [row.resource.id]) : null;
+  return { ...row, access: getResourceAccessOrPublic(row.resource, context) };
+}
+
 // The Sheet to render a Content with: its selected Sheet if the viewer can read
 // it, else (when none is selected) its ContentType's default Sheet if
 // readable, else one generated from the schema.
@@ -92,34 +115,19 @@ export async function resolveContentSheet(
   category: ContentCategory,
   schemas: SheetSchemas,
 ): Promise<ResolvedSheet> {
-  const [row] = await useDatabase()
-    .select({ sheet, resource })
-    .from(sheet)
-    .innerJoin(resource, eq(resource.id, sheet.resourceId))
-    .where(
-      selectedSheetId
-        ? eq(sheet.resourceId, selectedSheetId)
-        : and(eq(sheet.contentTypeId, contentTypeId), eq(sheet.isDefault, true)),
-    )
-    .limit(1);
-  if (row) {
-    const context = user
-      ? await loadResourceAccessContext(user, [row.resource.id])
-      : null;
-    const access = getResourceAccessOrPublic(row.resource, context);
-    if (access.canRead) {
-      return {
-        id: row.resource.id,
-        name: row.resource.name,
-        markup: row.sheet.markup,
-        css: processSheetCss(row.sheet.cssStyles, row.resource.id).css,
-        source: selectedSheetId ? "selected" : "default",
-        defaultEditMode: row.sheet.defaultEditMode,
-        defaultAutosave: row.sheet.defaultAutosave,
-        defaultDisplay: row.sheet.defaultDisplay,
-        canEdit: access.canEdit,
-      };
-    }
+  const row = await findSheetWithAccess(user, selectedSheetId, contentTypeId);
+  if (row?.access.canRead) {
+    return {
+      id: row.resource.id,
+      name: row.resource.name,
+      markup: row.sheet.markup,
+      css: processSheetCss(row.sheet.cssStyles, row.resource.id).css,
+      source: selectedSheetId ? "selected" : "default",
+      defaultEditMode: row.sheet.defaultEditMode,
+      defaultAutosave: row.sheet.defaultAutosave,
+      defaultDisplay: row.sheet.defaultDisplay,
+      canEdit: row.access.canEdit,
+    };
   }
   return {
     id: null,
@@ -129,6 +137,31 @@ export async function resolveContentSheet(
     source: "generated",
     ...generatedSheetDefaults(category),
     canEdit: false,
+  };
+}
+
+export interface PreviewSheet {
+  id: string;
+  markup: string;
+  // Scoped to `[data-sheet="<id>"]`, ready to use.
+  css: string;
+  defaultDisplay: SheetDisplay;
+}
+
+// A ContentType's default Sheet for previews of its content: only when the
+// viewer can read it and it has a `<Preview>` beside `<Sheet>` (otherwise
+// previews use the generated view, so nothing more is sent).
+export async function resolvePreviewSheet(
+  user: Pick<User, "id" | "name"> | null,
+  contentTypeId: string,
+): Promise<PreviewSheet | null> {
+  const row = await findSheetWithAccess(user, null, contentTypeId);
+  if (!row?.access.canRead || !markupHasOwnPreview(row.sheet.markup)) return null;
+  return {
+    id: row.resource.id,
+    markup: row.sheet.markup,
+    css: processSheetCss(row.sheet.cssStyles, row.resource.id).css,
+    defaultDisplay: row.sheet.defaultDisplay,
   };
 }
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { generatedCard, sheetPreviewTarget } from "./card";
+import { generatedCard, markupHasOwnPreview, sheetOwnPreview, sheetPreviewTarget } from "./card";
 import type { SheetRefs, SheetScope } from "./runtime";
-import type { SheetSchemas, ValidatedElement, ValidatedNode } from "./validate";
+import { compileSheet as compileWithoutRoot, type SheetSchemas, type ValidatedElement, type ValidatedNode } from "./validate";
 import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
 
 // Reference previews: `preview` on Ref, Value, and Column, and `<Preview>`.
@@ -130,8 +130,52 @@ describe("preview validation", () => {
       messages(`<Ref field="deity" preview><Preview><Button label="Go"><Set field="/level" formula="1" /></Button></Preview></Ref>`),
     ).toEqual(["error button-in-preview: <Button> can't be in a <Preview>: previews are read-only"]);
     expect(messages(`<Preview />`)).toEqual([
-      "error misplaced-tag: <Preview> must be directly inside <Ref> or <Value> or <Column>",
+      "error misplaced-tag: <Preview> must be at the top level or directly inside <Ref> or <Value> or <Column>",
     ]);
+  });
+
+  it("checks a Preview beside Sheet against the top level", () => {
+    const compiled = compileSheet(
+      `<Define name="twice" formula="level * 2" /><Sheet /><Preview class="mine"><Value field="level" /><Value formula="twice()" /></Preview>`,
+      schemas,
+    );
+    expect(compiled.diagnostics).toEqual([]);
+    const preview = sheetOwnPreview(compiled.nodes);
+    expect(preview?.attrs.class).toEqual(["mine"]);
+    expect(preview?.children).toHaveLength(2);
+    expect(
+      messages(`<Sheet /><Preview><Ref field="deity" preview /><Button label="Go"><Set field="level" formula="1" /></Button></Preview>`),
+    ).toEqual([
+      "error preview-in-preview: A preview can't open another preview; remove preview",
+      "error button-in-preview: <Button> can't be in a <Preview>: previews are read-only",
+    ]);
+    expect(messages(`<Sheet /><Preview /><Preview />`)).toEqual([
+      "error duplicate-preview: A sheet has only one <Preview> beside <Sheet>",
+    ]);
+    // A Preview child still works after one beside Sheet.
+    expect(
+      messages(`<Preview /><Sheet><Ref field="deity" preview><Preview><Tags field="domains" /></Preview></Ref></Sheet>`),
+    ).toEqual([]);
+  });
+
+  it("keeps a Preview's field formulas out of the sheet's computed fields", () => {
+    const compiled = compileSheet(
+      `<Sheet><Number field="level" formula="1" /></Sheet><Preview><Number field="level" formula="2" /></Preview>`,
+      schemas,
+    );
+    expect(compiled.diagnostics).toEqual([]);
+    expect(compiled.computedFields.get("level")?.source).toBe("1");
+    expect(compileSheet(`<Sheet /><Preview><Number field="level" formula="2" /></Preview>`, schemas).computedFields.size).toBe(0);
+  });
+
+  it("reports a Preview beside a missing Sheet only once", () => {
+    const { diagnostics } = compileWithoutRoot(`<Preview><Value field="level" /></Preview>`, schemas);
+    expect(diagnostics.map((item) => item.code)).toEqual(["missing-sheet"]);
+  });
+
+  it("finds a Preview beside Sheet in markup", () => {
+    expect(markupHasOwnPreview(`<Sheet /><preview><Value field="level" /></preview>`)).toBe(true);
+    expect(markupHasOwnPreview(`<Sheet><Ref field="deity" preview><Preview /></Ref></Sheet>`)).toBe(false);
   });
 
   it("reports a Preview under a broken preview only once", () => {
