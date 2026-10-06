@@ -34,10 +34,13 @@ function stableJson(value: unknown): string {
 
 // An editable copy of a Content's data (with its built-in `name`), saved with
 // `expectedUpdatedAt` so concurrent edits are detected (409 -> "conflict").
+// With `liveEdits` on (Edit off: only `live` fields can change), each change
+// saves after the same pause as autosave, whatever the Autosave setting.
 // See docs/sheet-system.md, section 5.
 export function useContentDraft(
   source: Ref<DraftSource | null | undefined>,
   autosave: Ref<boolean>,
+  liveEdits: Ref<boolean> = ref(false),
 ) {
   const draft = ref<Record<string, unknown>>({});
   // stableJson of the last saved (or loaded) draft.
@@ -119,13 +122,27 @@ export function useContentDraft(
     error.value = "";
   }
 
-  // Autosave after a pause in changes; paused while there's a conflict.
+  // A live change is waiting to be saved (or being saved) without autosave.
+  const liveSaving = ref(false);
+
+  // Autosave after a pause in changes; paused while there's a conflict. Turning
+  // Edit off doesn't save: only a change made with Edit off does.
   watch(
     [draft, autosave],
     () => {
       clearTimeout(timer);
-      if (!autosave.value || !dirty.value || status.value === "conflict") return;
-      timer = setTimeout(() => save(), AUTOSAVE_DELAY_MS);
+      const live = !autosave.value && liveEdits.value;
+      if (!(autosave.value || live) || !dirty.value || status.value === "conflict") {
+        liveSaving.value = false;
+        return;
+      }
+      liveSaving.value = live;
+      const mine = setTimeout(async () => {
+        await save();
+        // A newer change may have started its own wait meanwhile.
+        if (timer === mine) liveSaving.value = false;
+      }, AUTOSAVE_DELAY_MS);
+      timer = mine;
     },
     { deep: true },
   );
@@ -133,5 +150,5 @@ export function useContentDraft(
 
   useUnsavedChangesGuard(dirty);
 
-  return { draft, dirty, status, error, save, discard, reset };
+  return { draft, dirty, liveSaving, status, error, save, discard, reset };
 }
