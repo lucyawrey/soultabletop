@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { isFormulaError } from "./formula";
 import { sheetBreakdown, type SheetScope } from "./runtime";
-import { compileSheet, type SheetSchemas, type ValidatedElement, type ValidatedNode } from "./validate";
+import type { SheetSchemas, ValidatedElement, ValidatedNode } from "./validate";
+import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
 
 // <Part>: the parts of a number, listed in its breakdown popover.
 
