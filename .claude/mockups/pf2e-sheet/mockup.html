@@ -50,7 +50,8 @@ input, select { font: inherit; color: var(--st-ink); height: var(--d-h); box-siz
 .sheet-section > h2, .tabs button { display: inline-flex; align-items: center; gap: .3em; }
 .sheet-section > h2 .gi.sec, .tabs .gi.sec { color: var(--st-primary); width: .95em; height: .95em; }
 .sheet-section > h2 > span, .tabs button > span { display: contents; }
-.act { font-family: var(--st-font-body); color: var(--st-primary); font-weight: 700; letter-spacing: -1px; white-space: nowrap; }
+.act { font-family: var(--st-font-body); color: var(--st-primary); font-weight: 700; letter-spacing: 0; white-space: nowrap; font-size: 1.45em; line-height: 1; }
+.act.small { font-size: 1.2em; }
 .link { color: var(--st-primary); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
 .link.plain { color: var(--st-ink); }
 .pick { border: 1px dashed var(--st-border-strong); border-radius: 4px; padding: 0 6px; color: var(--st-primary); background: var(--st-panel-muted); cursor: pointer; font-size: var(--d-lfs); font-weight: 700; }
@@ -138,10 +139,10 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .skills .lead .mod { font-size: calc(var(--d-big) * .8); }
 .skills .init select { justify-self: end; width: auto; }
 
-.strikes .row { grid-template-columns: 26px 1.1fr 118px 1fr 1.6fr; }
+.strikes .row { grid-template-columns: 30px 1.1fr 118px 1fr 1.6fr; }
 .strikes .dt { display: contents; }
 .mapcell { font-size: var(--d-lfs); color: var(--st-ink-muted); white-space: nowrap; }
-.acts .row { grid-template-columns: 52px 1fr auto; }
+.acts .row { grid-template-columns: 76px 1fr auto; }
 .pair { display: grid; grid-template-columns: 1.5fr 1fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
 .pair .row { min-height: calc(var(--d-h) + 12px); }
 .pair .row:not(.th) .link { font-size: calc(var(--d-fs) + 1px); }
