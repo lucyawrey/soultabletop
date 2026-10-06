@@ -28,3 +28,4 @@ Decided with the user on 2026-10-06. The "Sheet dice buttons" item in `TODO.md` 
 
 - Who can click a follow-up in a shared campaign log (the roller, the GM, anyone), and whether it runs for someone who can't read the sheet: decide with campaign logs.
 - The mockup of the result looks, then the markup details while building (attribute lists, where `Roll`/`FollowUp` may appear, error codes).
+- Marking critical and fumble faces (user, 2026-10-06: opt-in per roll, any die, for systems that crit on other values): the mockup uses `crit="20" fumble="1"` on `Roll` (face lists, `max` for a die's highest face); settle the attribute names, ranges (`19-20`), and per-die-size forms with the markup details. How a roll target looks (die button or underline) is also the sheet's choice; settle how it's chosen there too.

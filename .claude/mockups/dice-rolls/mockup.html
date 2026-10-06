@@ -121,9 +121,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .die svg * { fill: var(--st-panel); stroke: var(--st-primary); stroke-width: 2px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .die b { position: relative; z-index: 1; line-height: 1; }
 .die.d4 b { transform: translateY(20%); font-size: .85em; }
-.die.d10 b { transform: translateY(-8%); }
-.die.d12 b { transform: translateY(6%); }
+.die.d10 b { transform: translateY(-10%); }
+.die.d12 b { transform: translateY(8%); }
+.die.two b { font-size: .86em; letter-spacing: -.02em; }
 .die.nat svg * { fill: var(--st-primary); } .die.nat b { color: var(--st-on-primary); }
+/* A fumble face: a dashed outline in the error color (not color alone) over a faint tint. */
+.die.fumble svg * { fill: color-mix(in srgb, var(--ui-error) 8%, var(--st-panel)); stroke: var(--ui-error); stroke-dasharray: 5 3; }
+.die.fumble b { color: var(--ui-error); }
 .die.dropped svg * { fill: var(--st-panel-muted); stroke: var(--st-border-strong); }
 .die.dropped b, .gdie.dropped b { color: var(--st-ink-muted); text-decoration: line-through; text-decoration-thickness: 2px; }
 /* Dice: game-icons.net, with the face on a badge (a d6 shows its pips instead). */
@@ -144,7 +148,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .dgroup > span:first-child { display: inline-flex; flex-wrap: wrap; align-items: end; gap: 3px; }
 
 .dgroup > small { font-size: 10.5px; font-weight: 700; color: var(--st-ink-muted); letter-spacing: .02em; }
-.shapes { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--st-border); }
+.shapes { display: grid; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--st-border); }
+.shaperow { display: flex; flex-wrap: wrap; align-items: end; gap: 8px 16px; }
+.shaperow > .sheet-field-label { width: 64px; align-self: center; }
 .dicerow .rtotal { display: inline-flex; align-items: center; gap: 8px; align-self: center; }
 .dicerow .rtotal .eq { color: var(--st-ink-muted); font-size: 20px; }
 .dicerow .rtotal b { font-family: var(--st-font-display); font-weight: 700; font-size: 44px; line-height: .9; font-variant-numeric: lining-nums tabular-nums; }
@@ -245,7 +251,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.11 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.12 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
@@ -335,6 +341,9 @@ function roll(spec, from) {
   const terms = resolve(spec.terms), k = kept(terms);
   const e = { id: NEXT++, ...spec, terms, total: sum(terms), natural: k.length === 1 ? k[0].v : null, when: new Date(), who: "you", from: from ? from.id : null,
     named: from ? { ...from.named, ...(from.name ? { [from.name]: { total: from.total, natural: from.natural } } : {}) } : {} };
+  const hit = (list, f) => (list || []).some(x => x === "max" ? f.v === f.s : x === f.v);
+  const mark = ts => ts.forEach(t => t.t === "d" ? t.faces.forEach(f => { if (f.kept) f.hi = hit(spec.crit, f) ? "crit" : hit(spec.fumble, f) ? "fumble" : null; }) : t.t === "x" && mark(t.of));
+  mark(terms);
   e.nat = k.length === 1 && k[0].s === 20 && (k[0].v === 20 || k[0].v === 1) ? k[0].v : null;
   ENTRIES.unshift(e);
   return e;
@@ -345,14 +354,14 @@ const byId = id => ENTRIES.find(e => e.id === id);
 // Specs: what a click runs. Each reads the sheet's data when it runs.
 const d20 = () => S.fortune ? { t: "d", n: 2, s: 20, keep: ["h", 1], label: "Fortune" } : { t: "d", n: 1, s: 20 };
 function checkSpec(action, label, path, parts) {
-  return { kind: "check", name: "check", action, label, path, parts, terms: [d20(), { t: "m", v: parts.reduce((s, [, v]) => s + v, 0) }],
+  return { kind: "check", name: "check", action, label, path, parts, crit: [20], fumble: [1], terms: [d20(), { t: "m", v: parts.reduce((s, [, v]) => s + v, 0) }],
     make: () => checkSpec(action, label, path, parts) };
 }
 function strikeParts(st) { return [["Dex", A.Dex], [RANKS[st.rank][1], P(st.rank)]]; }
 function attackSpec(i, map) {
   const st = STRIKES[i], parts = strikeParts(st), pen = map === 0 ? 0 : (st.agile ? -4 : -5) * map;
   if (pen) parts.push([map === 1 ? "MAP (2nd attack)" : "MAP (3rd attack)", pen]);
-  return { kind: "attack", name: "hit", strike: i, action: st.name, label: map === 0 ? "Attack" : `Attack · ${map === 1 ? "2nd" : "3rd"} (${sg(pen)})`, path: `Strikes › ${st.name}`, parts,
+  return { kind: "attack", name: "hit", crit: [20], fumble: [1], strike: i, action: st.name, label: map === 0 ? "Attack" : `Attack · ${map === 1 ? "2nd" : "3rd"} (${sg(pen)})`, path: `Strikes › ${st.name}`, parts,
     terms: [d20(), { t: "m", v: parts.reduce((s, [, v]) => s + v, 0) }], make: () => attackSpec(i, map) };
 }
 function damageSpec(i, kind) {
@@ -371,9 +380,10 @@ const TESTS = [
   ["Big hit", "Damage", [{ t: "d", n: 10, s: 6 }]],
   ["Mixed", "Damage", [{ t: "d", n: 3, s: 8 }, { t: "d", n: 2, s: 6 }, { t: "m", v: 5 }]],
   ["Ability score", "Roll", [{ t: "d", n: 4, s: 6, keep: ["h", 3] }]],
-  ["Every die", "Roll", [4, 6, 8, 10, 12, 20].map(s => ({ t: "d", n: 1, s }))],
+  ["Every die", "Roll", [4, 6, 8, 10, 12, 20].map(s => ({ t: "d", n: 1, s })), false, { crit: ["max"], fumble: [1] }],
+  ["d6 pool", "Roll", [{ t: "d", n: 5, s: 6 }], false, { crit: [6], fumble: [1] }],
 ];
-const testSpec = i => { const [action, label, terms] = TESTS[i]; return { kind: "damage", name: "test", action, label, path: "Test rolls", terms, parts: [] }; };
+const testSpec = i => { const [action, label, terms, , hi] = TESTS[i]; return { kind: "damage", name: "test", action, label, path: "Test rolls", terms, parts: [], ...hi }; };
 // Follow-ups each entry offers; a follow-up with a Set needs edit rights.
 function followUps(e) {
   if (e.kind === "attack") return [["Damage", "dmg"], ["Damage + sneak", "sneak"], ["Critical", "crit"]];
@@ -392,17 +402,17 @@ function runFollowUp(id, k) {
 // ---- Rendering dice ----
 // Outlines in a 100×100 box, each filling about the same area.
 const SHAPE = { 4: '<polygon points="50,5 96,88 4,88"/>', 6: '<rect x="9" y="9" width="82" height="82" rx="5"/>', 8: '<polygon points="50,2 98,50 50,98 2,50"/>',
-  10: '<polygon points="50,2 98,40 50,98 2,40"/>', 12: '<polygon points="50,3 97,37 79,95 21,95 3,37"/>', 20: '<polygon points="50,2 94,26 94,74 50,98 6,74 6,26"/>' };
+  10: '<polygon points="50,1 99,38 50,99 1,38"/>', 12: '<polygon points="50,1 99,36 81,97 19,97 1,36"/>', 20: '<polygon points="50,2 94,26 94,74 50,98 6,74 6,26"/>' };
 const D6 = ["", "one", "two", "three", "four", "five", "six"];
 function dieHTML(f, { size } = {}) {
-  const nat = f.kept && f.s === 20 && f.v === 20 ? " nat" : "", drop = f.kept ? "" : " dropped";
-  const label = `d${f.s}: ${f.v}${f.kept ? "" : ", dropped"}`;
+  const nat = f.hi === "crit" ? " nat" : f.hi === "fumble" ? " fumble" : "", drop = f.kept ? "" : " dropped";
+  const label = `d${f.s}: ${f.v}${f.kept ? "" : ", dropped"}${f.hi === "crit" ? ", critical" : f.hi === "fumble" ? ", fumble" : ""}`;
   if (S.shapes === "gi") {
     const icon = f.s === 6 ? `dice-six-faces-${D6[f.v]}` : f.s === 20 ? (f.v === 1 ? "dice-twenty-faces-one" : "dice-twenty-faces-twenty") : f.s === 8 ? "dice-eight-faces-eight" : `d${f.s}`;
     const badge = !(f.s === 6 || (f.s === 20 && (f.v === 1 || f.v === 20)));
     return `<span class="gdie${nat}${drop}" role="img" aria-label="${label}" title="${label}">${svg(icon)}${badge ? `<b>${f.v}</b>` : ""}</span>`;
   }
-  return `<span class="die d${f.s}${nat}${drop}" role="img" aria-label="${label}" title="${label}"><svg viewBox="0 0 100 100" aria-hidden="true">${SHAPE[f.s]}</svg><b>${f.v}</b></span>`;
+  return `<span class="die d${f.s}${nat}${drop}${f.v >= 10 ? " two" : ""}" role="img" aria-label="${label}" title="${label}"><svg viewBox="0 0 100 100" aria-hidden="true">${SHAPE[f.s]}</svg><b>${f.v}</b></span>`;
 }
 // Dice laid out as the expression: each term's dice grouped (captioned when there's more than one die), dropped ones labeled,
 // then the flat numbers; `tail` (the total) follows the last die so the sum reads left to right.
@@ -584,10 +594,8 @@ function renderSheet() {
 
   const tests = `<section class="sheet-section" data-gap="mockup only: rolls with several dice"><h2>Test rolls</h2><span class="aside">mockup only</span>
     <div style="display:flex;flex-wrap:wrap;gap:6px">${""}${TESTS.map(([a, l, t], i) => `<button class="fu" data-test="${i}">${a} · ${l} <span class="wr">${expr(t.map(x => x.t === "d" ? { ...x, faces: [] } : x.t === "x" ? { ...x, of: x.of.map(y => y.t === "d" ? { ...y, faces: [] } : y) } : x))}</span></button>`).join("")}</div>
-    <div class="shapes big" aria-label="Die shapes">${[4, 6, 8, 10, 12, 20].map(n => `<span class="dgroup"><span>${dieHTML({ s: n, v: n === 20 ? 13 : n, kept: true })}</span><small>d${n}</small></span>`).join("")}
-      <span class="dgroup"><span>${dieHTML({ s: 20, v: 20, kept: true })}</span><small>natural 20</small></span>
-      <span class="dgroup"><span>${dieHTML({ s: 20, v: 1, kept: true })}</span><small>natural 1</small></span>
-      <span class="dgroup"><span>${dieHTML({ s: 6, v: 2, kept: false })}</span><small>dropped</small></span></div></section>`;
+    <div class="shapes big" aria-label="Die shapes">${[["", null, true], ["critical", "crit", true], ["fumble", "fumble", true], ["dropped", null, false]].map(([row, hi, kept]) =>
+      `<div class="shaperow"><span class="sheet-field-label">${row || "plain"}</span>${[4, 6, 8, 10, 12, 20].map(n => `<span class="dgroup"><span>${dieHTML({ s: n, v: hi === "fumble" ? 1 : hi === "crit" ? n : Math.ceil(n * .6), kept, hi })}</span><small>d${n}</small></span>`).join("")}</div>`).join("")}</div></section>`;
   document.getElementById("sheet").innerHTML = head + skills + `<div class="right">${defs}${strikes}${tests}</div>`;
 }
 
@@ -627,7 +635,7 @@ function ratio(a, b) { const [x, y] = [lum(rgb(a)), lum(rgb(b))].sort((p, q) => 
 function contrast() {
   const pairs = [["ink on panel", "--st-ink", "--st-panel", 4.5], ["muted on panel", "--st-ink-muted", "--st-panel", 4.5], ["muted on panel-muted", "--st-ink-muted", "--st-panel-muted", 4.5],
     ["primary on panel (roll targets, follow-ups)", "--st-primary", "--st-panel", 4.5], ["on-primary on primary (natural 20)", "--st-on-primary", "--st-primary", 4.5],
-    ["border-strong on panel (dropped die outline)", "--st-border-strong", "--st-panel", 3], ["primary on panel (die outline)", "--st-primary", "--st-panel", 3]];
+    ["border-strong on panel (dropped die outline)", "--st-border-strong", "--st-panel", 3], ["primary on panel (die outline)", "--st-primary", "--st-panel", 3], ["error on panel (fumble face and outline)", "--ui-error", "--st-panel", 4.5]];
   document.getElementById("contrast").innerHTML = pairs.map(([n, f, b, min]) => { const r = ratio(`var(${f})`, `var(${b})`);
     return `<tr><td>${n}</td><td>${r.toFixed(2)}:1</td><td>${r >= min ? "pass" : "FAIL"} (≥ ${min})</td></tr>`; }).join("");
 }
