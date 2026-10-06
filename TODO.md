@@ -143,6 +143,9 @@ Playing campaigns online, sharing, and discovery.
 - **First-visit dashboard doesn't match the regular dashboard** · bug
   From the user (2026-10-06): "first visit dashboard does not match the design of the dashboard after the user has any content". The new-user dashboard (the `dashboard.newHeading` and `dashboard.welcome` placeholders above four start cards; see "Onboarding for new users") should follow the regular dashboard's design. Compare both with `.claude/mockups/ui-redesign/frozen.html` and decide with the user which parts change.
 
+- **Show a sheet's own `<Preview>` in the Sheet editor** · feature
+  The `<Preview>` beside `<Sheet>` (#98) never renders on the content page, so the editor's preview pane doesn't show it either and authors can't see it while writing it. For example, a Sheet/Preview switch in the pane, rendering it with `SheetRenderer`'s `previewOf` against the sample data.
+
 # Low priority
 
 - **Document Better Auth's built-in endpoints in the API reference** · chore · needs decision: which approach

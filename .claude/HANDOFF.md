@@ -5,7 +5,7 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 **Last updated:** 2026-10-06 (night, Linux)
 
 - **Nothing in progress.** Reference previews are done (#96, #97, #98); #99 (add picker reset) merged. No worktrees, no dev servers.
-- **Open gap from step 3:** the Sheet editor's preview pane doesn't show a sheet's own `<Preview>` (`docs/sheet-system.md`, "Reference previews").
+- **Open gap from step 3:** in `TODO.md` (end of Phase 4), "Show a sheet's own `<Preview>` in the Sheet editor".
 - **Next:** dice buttons, or the PF2e character sheet (`.claude/plans/pf2e-demo.md`, step 6).
 - **On `docs`, not yet on `main`:** the usage changes (`sheet-code-map.md`, `test-sheet.mjs`, the slimmer SKILL.md), the skill's notes on the required root, the skill and code-map rows for previews. They depend on each other, so they reach `main` in one docs-only PR when the user wants.
 - **Not yet seen by the user:** compact density on a real, full sheet.
