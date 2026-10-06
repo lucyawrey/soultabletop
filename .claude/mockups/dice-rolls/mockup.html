@@ -158,6 +158,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .natb.n20 { background: var(--st-primary); color: var(--st-on-primary); }
 .emeta { display: grid; grid-template-columns: max-content 1fr; gap: 1px 10px; font-size: 11.5px; color: var(--st-ink-muted); }
 .emeta b { color: var(--st-ink); font-weight: 600; }
+.rlist .die, .stack .die { --sz: 24px; }
+.efoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.efoot .efu { margin-top: 0; }
+.more { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--st-ink-muted); background: none; border: 0; padding: 2px 4px; cursor: pointer; border-radius: 4px; }
+.more:hover { color: var(--st-ink); text-decoration: underline; }
+.more .chev { display: inline-block; transition: transform .15s; }
+.more[aria-expanded="true"] .chev { transform: rotate(90deg); }
 .efu { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
 .fu { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 2px 9px; border: 1px solid var(--st-primary); border-radius: 999px; background: var(--st-panel); color: var(--st-primary); cursor: pointer; }
 .fu:hover { background: var(--st-primary); color: var(--st-on-primary); }
@@ -231,13 +238,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.2 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.3 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
   <div class="ctl" role="group" aria-label="Toast position" data-ctl="toast"><button data-v="br">Bottom right</button><button data-v="tc">Top center</button></div>
   <div class="ctl" role="group" aria-label="Roll target" data-ctl="target"><button data-v="icon">Die icon</button><button data-v="underline">Underline</button></div>
-  <div class="ctl" role="group" aria-label="Entry detail" data-ctl="detail"><button data-v="compact">Compact</button><button data-v="expanded">Expanded</button></div>
   <div class="ctl" role="group" aria-label="Viewer" data-ctl="viewer"><button data-v="owner">Owner</button><button data-v="reader">Read-only</button></div>
   <div class="ctl"><button data-contrast aria-expanded="false" aria-controls="contrastbox">Contrast</button></div>
 </div>
@@ -270,7 +276,7 @@ const GI = {"rolling-dices": "<path fill=\"currentColor\" d=\"M138.798 35.342L28
 const svg = (name, cls = "") => `<svg class="${cls}" viewBox="0 0 512 512" aria-hidden="true">${GI[name]}</svg>`;
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const S = { look: "blend", shapes: "css", recent: "drawer", toast: "br", target: "icon", detail: "compact", viewer: "owner",
+const S = { look: "blend", shapes: "css", recent: "drawer", toast: "br", target: "icon", exp: new Set(), viewer: "owner",
   hero: 2, fortune: false, drawer: false, stackOpen: true, toastId: null, open: null };
 const sg = n => (n >= 0 ? "+" : "−") + Math.abs(n);
 const tag = (t, a = "", gap = "", steps = "") => ` data-tag="${t}"${a ? ` data-attrs='${a}'` : ""}${gap ? ` data-gap="${gap}"` : ""}${steps ? ` data-steps='${steps}'` : ""}`;
@@ -407,16 +413,16 @@ function metaHTML(e) {
 function fromLine(e) { const p = e.from && byId(e.from); return p ? `<div class="efrom">↳ from <b>${p.action} · ${p.label}</b> ${p.total}${p.natural !== null ? ` (natural ${p.natural})` : ""}</div>` : ""; }
 // One entry in a list (and the toast in the Number and Dice looks).
 function entryHTML(e, { toast = false, anim = false } = {}) {
-  const exp = S.detail === "expanded", diceInToast = toast && S.look === "dice";
+  const exp = !toast && S.exp.has(e.id), diceInToast = toast && S.look === "dice";
   return `<article class="entry${e.from ? " child" : ""}" data-impl="new: RollEntry">
     <div class="ehead"><span class="eact">${e.action}</span><span class="elbl">${e.label}</span><time>${time(e.when)}</time></div>
     ${fromLine(e)}
     ${diceInToast ? diceRow(e.terms, anim) : ""}
     <div class="ebody"><span class="etotal${toast && anim && S.look === "dice" ? " pending" : ""}" data-total>${e.total}</span>
       <span class="eexpr">${expr(e.terms)} <span class="dim">= ${expr(e.terms, true)}</span></span>${natBadge(e)}</div>
-    ${exp && !diceInToast ? diceRow(e.terms) : ""}
-    ${exp ? metaHTML(e) : ""}
-    ${fuButtons(e)}</article>`;
+    ${!toast ? diceRow(e.terms) : ""}
+    ${exp ? `<div id="more${e.id}">${metaHTML(e)}</div>` : ""}
+    ${toast ? fuButtons(e) : `<div class="efoot">${fuButtons(e)}<button class="more" data-more="${e.id}" aria-expanded="${exp}" aria-controls="more${e.id}"><span class="chev" aria-hidden="true">›</span>Details</button></div>`}</article>`;
 }
 // The Card look: the dice and the sum laid out, then the total.
 function cardHTML(e, anim) {
@@ -424,7 +430,7 @@ function cardHTML(e, anim) {
     <div class="chead"><span class="eact" style="font-weight:700">${e.action}</span><span class="elbl" style="color:var(--st-ink-muted)">${e.label}</span><time style="margin-left:auto;font-size:11.5px;color:var(--st-ink-muted)">${time(e.when)}</time></div>
     <div class="cbody big">${fromLine(e)}${diceRow(e.terms)}
       <div class="csum"><span class="eexpr dim">${expr(e.terms)}</span><span class="eq">=</span><span class="ctotal${anim ? " settle" : ""}" style="${anim ? "animation-delay:.3s" : ""}" data-total>${e.total}</span></div>${natBadge(e)}</div>
-    <div class="cfoot">${S.detail === "expanded" ? metaHTML(e) : `<div class="efrom">${e.path} · ${e.who}</div>`}${fuButtons(e)}</div></div>`;
+    <div class="cfoot"><div class="efrom">${e.path} · ${e.who}</div>${fuButtons(e)}</div></div>`;
 }
 
 // The Dice card look: the card's header and footer, the dice tumbling in on one row with the total.
@@ -434,7 +440,7 @@ function blendHTML(e, anim) {
     ${e.from ? `<div style="padding:6px 12px 0">${fromLine(e)}</div>` : ""}
     <div class="bbody big">${diceRow(e.terms, anim)}<span class="btotal"><span class="eq">=</span><b class="${anim ? "pending" : ""}" data-total>${e.total}</b></span></div>
     <div class="bline"><span class="eexpr dim">${expr(e.terms)} = ${expr(e.terms, true)}</span>${natBadge(e)}</div>
-    ${S.detail === "expanded" || followUps(e).length ? `<div class="cfoot">${S.detail === "expanded" ? metaHTML(e) : ""}${fuButtons(e)}</div>` : ""}</div>`;
+    ${followUps(e).length ? `<div class="cfoot">${fuButtons(e)}</div>` : ""}</div>`;
 }
 
 // ---- Toast, stack, panel, drawer ----
@@ -554,8 +560,6 @@ function renderSheet() {
 // ---- Controls and clicks ----
 function syncBar() {
   document.querySelectorAll("[data-ctl]").forEach(g => g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", S[g.dataset.ctl] === b.dataset.v)));
-  // Die shapes matter only where dice are drawn: the Dice and Card looks, and expanded entries.
-  document.querySelector('[data-ctl="shapes"]').hidden = !(S.look !== "number" || S.detail === "expanded");
 }
 function renderAll() { syncBar(); renderSheet(); renderToasts(); renderRolls(); closePop(); }
 function closePop() { S.open = null; document.getElementById("mathpop").hidden = true; }
@@ -569,6 +573,8 @@ document.addEventListener("click", ev => {
   if (d.open) { if (S.open === d.open) return closePop(); S.open = d.open; const pop = document.getElementById("mathpop"), parts = PARTS[d.open];
     pop.innerHTML = `${parts.map(([l, v]) => `${l} <b>${sg(v)}</b>`).join(" · ")} = <b>${sg(total(parts))}</b>`; pop.hidden = false;
     const r = b.getBoundingClientRect(); pop.style.top = (r.bottom + scrollY + 4) + "px"; pop.style.left = Math.max(8, Math.min(r.left + scrollX, innerWidth - pop.offsetWidth - 8)) + "px"; return; }
+  if (d.more) { const id = +d.more; S.exp.has(id) ? S.exp.delete(id) : S.exp.add(id); renderRolls(); renderToasts();
+    document.querySelector(`#drawer [data-more="${id}"], #panel [data-more="${id}"]`)?.focus(); return; }
   if (d.fu) { const [id, k] = d.fu.split(":"); runFollowUp(+id, k); return; }
   if ("closetoast" in d) { if (S.recent === "stack") S.stackOpen = false; else S.toastId = null; renderToasts(); return; }
   if ("rolls" in d) { if (S.recent === "stack") { S.stackOpen = !S.stackOpen; if (!S.toastId && ENTRIES[0]) S.toastId = ENTRIES[0].id; renderToasts(); }
