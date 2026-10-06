@@ -86,7 +86,7 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .box .mod { font-size: var(--d-big); border-bottom: 0; text-align: center; }
 .box.key { border: 2px solid var(--st-primary); }
 .box input { width: 100%; text-align: center; font-weight: 700; }
-.defs { display: grid; grid-template-columns: .85fr 2fr .75fr 1.2fr; gap: var(--d-gap); }
+.defs { display: grid; grid-template-columns: .9fr 2fr 1.2fr; gap: var(--d-gap); }
 .saves { text-align: left; align-content: start; gap: 2px; }
 .saves .srow { display: grid; grid-template-columns: 1fr auto 24px; align-items: center; gap: 6px; }
 .saves .srow .mod { font-size: calc(var(--d-big) * .8); border-bottom: 1px dotted var(--st-border-strong); }
@@ -110,9 +110,10 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .skills .cols2 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(var(--half), auto); grid-auto-flow: column; column-gap: calc(var(--d-gap) * 3); }
 .skills .row { grid-template-columns: 1fr 30px 46px 42px; }
 .skills .init { grid-template-columns: auto 1fr 42px; border-bottom: 2px solid var(--st-border-strong); margin-bottom: calc(var(--d-gap) * .5); }
-.skills .init > b { font-family: var(--st-font-display); font-size: var(--d-h2); }
+.skills .lead > b { font-family: var(--st-font-display); font-size: var(--d-h2); }
+.skills .lead .mod { font-size: calc(var(--d-big) * .8); }
 .skills .init select { justify-self: end; width: auto; }
-.skills .init .mod { font-size: calc(var(--d-big) * .8); }
+
 .strikes .row { grid-template-columns: 26px 1.1fr 118px 1fr 1.6fr; }
 .strikes .dt { display: contents; }
 .mapcell { font-size: var(--d-lfs); color: var(--st-ink-muted); white-space: nowrap; }
@@ -151,10 +152,8 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 
 @media (max-width: 900px) {
   .top { grid-template-columns: 1fr; } .attrs { grid-template-columns: repeat(6, 1fr); }
-  .defs { grid-template-columns: 1fr 1fr; grid-template-areas: "ac perc" "hp hp" "saves saves"; }
-  .defs .ac { grid-area: ac; } .defs .perc { grid-area: perc; } .defs .hp { grid-area: hp; } .defs .saves { grid-area: saves; }
-  .saves .srows { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--d-gap); }
-  .saves .srow { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 0; }
+  .defs { grid-template-columns: 1fr 1.3fr; grid-template-areas: "hp hp" "ac saves"; }
+  .defs .ac { grid-area: ac; } .defs .hp { grid-area: hp; } .defs .saves { grid-area: saves; }
   .mid, .pair { grid-template-columns: 1fr; } .skills .cols2 { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
   .head { grid-template-columns: 1fr; } .meta { justify-content: start; }
   .strikes .row.th { display: none; }
@@ -271,7 +270,6 @@ function render() {
       <div class="meter"><i style="width:${c.hp / c.hpMax * 100}%"></i></div>
       <div class="death small"><span><span class="sheet-field-label">Dying</span> ${pips(c.dying, 4, "bad", "Dying")}</span><span><span class="sheet-field-label">Wounded</span> ${pips(c.wounded, 3, "bad sq", "Wounded")}</span><span><span class="sheet-field-label">Doomed</span> ${pips(c.doomed, 3, "bad sq", "Doomed")}</span></div>
     </div>
-    <div class="box perc"${tag("Value", 'formula="{wis + prof(perception)}"')}><span class="sheet-field-label">Perception</span>${perc.btn}<span>${rank(c.perc)}</span>${perc.parts}</div>
     ${saves}
   </div>
   <div class="strip small">
@@ -296,11 +294,12 @@ function render() {
     return `<div class="row ${r === "u" ? "untrained" : ""}"><span>${n}</span><span class="small dim">${k}</span>${rank(r)}${m.btn}${m.parts}</div>`; };
   const skillMod = n => { if (n === "Perception") return a.Wis + P(c.perc, L); const [, k] = SKILLS.find(x => x[0] === n); const r = c.skills[n] || "u"; return a[k] + P(r, L) + (CHECK[n] && penalty ? penalty : 0); };
   const im = mod("init", [[c.init, skillMod(c.init)], ...(c.initBonus || [])]);
-  const init = `<div class="row init"${tag("Value", `formula="{switch(initiative.roll, 'perception', perception, get(skills, initiative.roll)) + initiative.bonus}"`)}><b>Initiative</b>
+  const init = `<div class="row lead init"${tag("Value", `formula="{switch(initiative.roll, 'perception', perception, get(skills, initiative.roll)) + initiative.bonus}"`)}><b>Initiative</b>
     <span${tag("Select", 'field="initiative.roll" live', "live attribute doesn't exist yet")} style="justify-self:end"><select aria-label="Initiative rolls with">${["Perception", ...SKILLS.map(x => x[0])].map(n => `<option ${n === c.init ? "selected" : ""}>${n}</option>`).join("")}</select></span>${im.btn}${im.parts}</div>`;
   const all = [...SKILLS.map(([n, k]) => [n, k, c.skills[n] || "u"]), ...c.lore];
   const half = Math.ceil(all.length / 2);
   const skills = `<section class="sheet-section skills"${tag("Table", 'field="skills" rows="fixed"')}><h2>Skills</h2><span class="aside">${penalty ? `armor ${penalty} on Str/Dex skills` : ""}</span>
+    <div class="row lead"${tag("Value", 'formula="{wis + prof(perception)}"')}><b>Perception</b><span class="small dim">Wis</span>${rank(c.perc)}${perc.btn}${perc.parts}</div>
     ${init}<div class="cols2" style="--half:${half}">${all.map(skillRow).join("")}</div></section>`;
 
   const profs = `<section class="sheet-section"${tag("Grid", 'columns="2"')}><h2>Proficiencies</h2>
