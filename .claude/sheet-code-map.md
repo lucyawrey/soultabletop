@@ -37,4 +37,4 @@ Where each part of the Sheet system lives, so you can grep for the function and 
 
 ## Docs to update with a Sheet feature
 
-`docs/sheet-system.md` (the design; one section per feature), and the sheets skill (`.claude/skills/soul-tabletop-sheets/`).
+`docs/sheet-system.md` (the design; one section per feature). The sheets skill only gets a row in `references/tags.md` for a new tag and, for a new feature, one bullet in SKILL.md's "Paths, formulas, and features" pointing to the doc's section.
