@@ -13,7 +13,9 @@ Decided with the user on 2026-10-06. Gap 6 of the PF2e sheet mockup ([spec](../m
 ## Steps (one PR each)
 
 1. Require the `<Sheet>` root (#96, merged).
-2. Previews with the generated card and overrides (no fetching). Enough for the PF2e demo.
+2. Previews with the generated card and overrides (no fetching). Enough for the PF2e demo. (#97, open.)
 3. `<Card>` in content-type sheets, fetched on first open.
 
 - **Triggers** (user, 2026-10-06): `preview` on `Ref`, and on `Value`/`Column` when the field is reached through a content field (`spell.name` previews `spell`), which is how the mockup's tables show names.
+- **Override syntax** (user, 2026-10-06): a `<Card>` child on the `preview` tag, not bare children (a `Value`'s or `Column`'s children are already `Part`s and `Button`s). Same tag name as step 3's `<Card>` beside `<Sheet>`.
+- **Generated card body** (user, 2026-10-06): the schema has no Markdown type, so after the name and tag chips come label/value rows for other fields with a value, then text that is long (over 120 characters) or multi-line as Markdown.

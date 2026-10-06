@@ -16,6 +16,7 @@ Where each part of the Sheet system lives, so you can grep for the function and 
 | `runtime.ts` | Rendering-time logic, framework-free: `evaluateSheetFormula`, `sheetCondition` (`show`), `sheetOverride`, text interpolation, `setSheetValue`, `defaultSheetValue`, `sheetButtonWrites` (Buttons), `sheetBreakdown` (Parts). Unit-test new runtime logic here. |
 | `scope.ts` | Path resolution against data and refs (`resolveSheetPath`), `itemScopes`/`entryScopes` for List and Table rows. |
 | `generate.ts` | Generated sheets from a schema. |
+| `card.ts` | Reference previews: `sheetPreviewTarget` (what a `preview` tag opens), `generatedCard` (the card without a `<Card>`). Tests in `card.test.ts`. |
 | `editor.ts` | Sheet editor helpers: field paths for autocomplete, sample data, where formulas are in markup. |
 | `css.ts` | Sheet CSS scoping and checks. |
 | `*.test.ts` | Tests per file; `buttons.test.ts` and `breakdown.test.ts` cover Buttons and Parts end to end (compile, then runtime). |
@@ -32,6 +33,7 @@ Where each part of the Sheet system lives, so you can grep for the function and 
 | `components/sheet/Table.vue`, `List.vue` | Repeaters; Table hides Button-only columns from non-editors. |
 | `components/sheet/Button.vue`, `ButtonGroup.vue`, `ColumnButtons.vue` | Buttons, the shared amount box, a Column's buttons. |
 | `components/sheet/Breakdown.vue` | The breakdown popover. |
+| `components/sheet/PreviewTrigger.vue`, `PreviewCard.vue` | A `preview` value's button; the card (teleported to the body; read-only via `provideSheetReadOnly`), opened through `SheetContext.preview`. |
 | `components/ContentDetail.vue`, `composables/useContentDraft.ts` | The content page around the sheet: Edit/Autosave switches, draft, saving (`live` edits save on their own). |
 | `pages/sheets/[id]/edit.vue` | The Sheet editor (markup, CSS, preview, reference panel grouped by tag category). |
 

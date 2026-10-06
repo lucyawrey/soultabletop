@@ -68,6 +68,7 @@ The details are in `docs/sheet-system.md`; grep for the section you need and rea
 - **`live`, `locked`, `display`** (section 5, "Per-field attributes" and "Display of non-editable fields"): `live` keeps a field editable (and saving at once) with Edit off, for things changed in play; `locked` needs a pencil click first; `display="box"` shows non-editable fields as disabled inputs (character sheets), `text` as plain values (stat blocks, cards).
 - **Breakdowns** ("Breakdowns"): `<Part label formula>` children on `Value`, `Column`, or `Number` (with a formula) list a number's parts in a popover; without a formula a `Value`/`Column` shows their sum.
 - **Buttons** ("Buttons"): `<Button label>` with `<Set field formula>` children changes fields when clicked (damage, rests, item moves); `amount` adds a number box, `*` in a Set's field changes every item, `toast` adds a toast with Undo (off by default), `live` makes it usable with Edit off.
+- **Reference previews** ("Reference previews"): `preview` on `Ref`, `Value`, or `Column` makes the value open a card of the content it comes from (`spell.name` → the spell): generated from the schema, or the tag's own `<Card>` child (paths relative to that content; read-only).
 - **Density** ("Tag catalog", `Sheet`): sheets are compact by default; `<Sheet density="roomy">` for form spacing.
 
 ## CSS
