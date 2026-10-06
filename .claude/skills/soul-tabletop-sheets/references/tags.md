@@ -88,7 +88,7 @@ In edit mode a `List` or `Table` of an array gets add, remove, and reorder contr
 
 | Tag | Attributes | Children | Notes |
 |---|---|---|---|
-| `Preview` | `class`, `show` only | any | Only directly inside a `Ref`, `Value`, or `Column` with `preview`, at most one: what the preview shows, instead of the generated view (chips, rows, long text from the referenced content type). Paths inside are relative to the referenced content (`/` still reaches the top level); always read-only, so no `Button`s and no `preview` inside. Styled by this sheet's CSS (class `sheet-preview`) |
+| `Preview` | `class`, `show` only | any | What a preview shows instead of the generated view (chips, rows, long text). Two places, at most one each: beside `<Sheet>` at the top level, for every preview of this content type from other sheets (paths read this content's top level; `<Define>`s work; styled by this sheet's CSS; never shown on the content's own page); or directly inside a `Ref`, `Value`, or `Column` with `preview`, overriding it for that tag (paths relative to the referenced content, `/` still reaches the top level; styled by the referencing sheet's CSS). Always read-only, so no `Button`s and no `preview` inside. Class `sheet-preview` |
 
 `preview` shows the last content field on the way to the tag's field (`spell.name` shows `spell`; in a `Table` over an array of content, the row). Plain `preview` expands below the value (under the row for a `Column`; any number open): use it for spells, feats, and other content read in full. `preview="card"` floats a card under the value: use it for minor things with no inline place, like a background.
 

@@ -16,7 +16,7 @@ Where each part of the Sheet system lives, so you can grep for the function and 
 | `runtime.ts` | Rendering-time logic, framework-free: `evaluateSheetFormula`, `sheetCondition` (`show`), `sheetOverride`, text interpolation, `setSheetValue`, `defaultSheetValue`, `sheetButtonWrites` (Buttons), `sheetBreakdown` (Parts). Unit-test new runtime logic here. |
 | `scope.ts` | Path resolution against data and refs (`resolveSheetPath`), `itemScopes`/`entryScopes` for List and Table rows. |
 | `generate.ts` | Generated sheets from a schema. |
-| `card.ts` | Reference previews: `sheetPreviewTarget` (what a `preview` tag opens), `generatedCard` (the card without a `<Card>`). Tests in `card.test.ts`. |
+| `card.ts` | Reference previews: `sheetPreviewTarget` (what a `preview` tag opens), `generatedCard` (the view without a `<Preview>`), `sheetOwnPreview`/`markupHasOwnPreview` (the `<Preview>` beside `<Sheet>`). Tests in `card.test.ts`. |
 | `editor.ts` | Sheet editor helpers: field paths for autocomplete, sample data, where formulas are in markup. |
 | `css.ts` | Sheet CSS scoping and checks. |
 | `*.test.ts` | Tests per file; `buttons.test.ts` and `breakdown.test.ts` cover Buttons and Parts end to end (compile, then runtime). |
@@ -33,8 +33,9 @@ Where each part of the Sheet system lives, so you can grep for the function and 
 | `components/sheet/Table.vue`, `List.vue` | Repeaters; Table hides Button-only columns from non-editors. |
 | `components/sheet/Button.vue`, `ButtonGroup.vue`, `ColumnButtons.vue` | Buttons, the shared amount box, a Column's buttons. |
 | `components/sheet/Breakdown.vue` | The breakdown popover. |
-| `components/sheet/PreviewTrigger.vue`, `PreviewExpanded.vue`, `PreviewBody.vue` | A `preview` value's button (and the floating card's `UPopover`); the expanded box (under a field, or under a Table row via `provideSheetRowPreviews`); the `<Preview>` or generated view (read-only via `provideSheetReadOnly`). |
+| `components/sheet/PreviewTrigger.vue`, `PreviewExpanded.vue`, `PreviewBody.vue` | A `preview` value's button (and the floating card's `UPopover`); the expanded box (under a field, or under a Table row via `provideSheetRowPreviews`); the `<Preview>`, the type's own `<Preview>` (loaded by `createSheetOwnPreviews` in `useSheet.ts`, rendered by `Renderer.vue` with `previewOf`), or the generated view (read-only via `provideSheetReadOnly`). |
 | `components/ContentDetail.vue`, `composables/useContentDraft.ts` | The content page around the sheet: Edit/Autosave switches, draft, saving (`live` edits save on their own). |
+| `server/utils/sheet-schemas.ts`, `server/api/content-type/[id]/preview.get.ts` | Which Sheet renders a content (`resolveContentSheet`), a type's preview sheet (`resolvePreviewSheet`), schema loading, markup and CSS checks on save. |
 | `pages/sheets/[id]/edit.vue` | The Sheet editor (markup, CSS, preview, reference panel grouped by tag category). |
 
 ## Docs to update with a Sheet feature
