@@ -9,6 +9,7 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 - "we want to support free archetype variant rules" (user, 2026-10-06, during the PF2e sheet mockup; Pathfinder 2e's Free Archetype variant adds an archetype feat slot at every even level)
 - "support a very simple official system: Cairn (https://github.com/yochaigal/cairn)" (user, 2026-10-06)
 - Question: "is using nuxtui instead of raw html in custom character sheets causing performance or developer overhead?" (user, 2026-10-06; the Sheet renderer maps tags to Nuxt UI components, e.g. `UInputNumber`, `UTable`, `USelect`)
+- "searchable dropdowns like the ones in sheets, used for more of the site's base UI (e.g. system selection)" (user, 2026-10-06; the sheet's `sheet/ContentPicker.vue` is a server-searched `USelectMenu`; candidates include `SystemSelector.vue`, `OwnerField.vue`, and the list pages' filters)
 
 # In progress
 
@@ -16,7 +17,7 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
   Plan: [.claude/plans/pf2e-demo.md](.claude/plans/pf2e-demo.md) (decisions, references and their rules, density, steps).
   A small slice of the Pathfinder 2e system for the demo, and a head start on the official one (Phase 2): content types (character, ancestry, background, class, feat, spell, item) and a polished character sheet using formulas, choice fields, struct tables, list functions, and defaults. Agents design the types and sheets, reading the Foundry pf2e data for reference (`~/Developer/foundry-pf2e`); an import script loads a small ORC Remaster slice of content through the API with the user's API key, never agent-written content (see "Data sources and import scripts for official content"). Keep a copy of the schemas, sheets, and script in `.claude/` until the authoring CLI exists. The system's description credits the data source and states the ORC license notice from the start. Replaces the old `pf2e-test` system, which the reset removes.
 
-- **Sheet reference previews** · feature · step 1 of 3 merged (#96, required `<Sheet>` root); step 2 in review (#97); step 3 (`<Card>` in content-type sheets) after it
+- **Sheet reference previews** · feature · step 1 of 3 merged (#96, required `<Sheet>` root); step 2 in review (#97); step 3 (`<Preview>` in content-type sheets) after it
   Clicking a referenced spell, feat, item, or class feature shows its rules text in a card, in play and edit, read from the referenced resource. Design (user, 2026-10-06): [.claude/plans/reference-previews.md](.claude/plans/reference-previews.md).
 
 # Next up
