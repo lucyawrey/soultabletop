@@ -26,9 +26,13 @@ function append(value: unknown) {
   context.update(props.list.path, [...current, value]);
 }
 
+// The picker is remade after each pick, so it starts empty again and the
+// same content can be added twice.
+const picks = ref(0);
 function pick(id: string, ref: SheetRef) {
   context.addRef(id, ref);
   append(id);
+  picks.value += 1;
 }
 </script>
 
@@ -36,6 +40,7 @@ function pick(id: string, ref: SheetRef) {
   <div class="flex flex-wrap items-center gap-2">
     <div v-if="contentField && contentField.allow !== 'local'" class="w-56">
       <SheetContentPicker
+        :key="picks"
         :content-type-id="contentField.contentTypeId"
         :placeholder="`${label}…`"
         @pick="pick"
