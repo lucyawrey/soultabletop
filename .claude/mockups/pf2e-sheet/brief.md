@@ -88,3 +88,14 @@ Rendered in Chrome at 1400px and 390px (no console errors, no sideways scroll), 
 - **Class DC (user: "in class to match spells"):** the Class tab opens with a strip like the Spells tab's (class name, Class DC with its rank and breakdown, key attribute). Proficiencies now holds only Attacks and Defenses.
 - **Pips act as a Tracker (user):** clicking a pip sets the value to it, filling the ones before; clicking the highest filled pip lowers the value by one. Applies to dying, wounded, doomed, hero points, and the spell trackers.
 - **Edit cue (user):** field-styled controls (solid white, inset, ▾ on rank pickers) were tried and rejected ("looks bad"). Back to the dashed look-alikes, plus a soft ring (2px, primary at 22%, 2px offset) around every editable control in edit mode; focus shows the full-strength ring.
+- **Gaps are documented, not shown (user):** the Gaps toggle and the dashed outlines are gone; elements still carry `data-gap`. The gaps so far (for the spec and `TODO.md`):
+  - `density` attribute on `<Sheet>` (compact/roomy).
+  - `live` attribute: fields editable in play mode (HP, temp HP, hero points, dying/wounded/doomed, shield raised, conditions, initiative roll, spell slots, Divine Font).
+  - `{editing}` visible to formulas (empty choice slots and Add buttons only in edit).
+  - A tag for a button that changes a field (Damage/Heal).
+  - Breakdowns on a box (AC, saves; rows can use `RowDetails`).
+  - Reference previews (rules text of a linked spell, feat, or item).
+  - A list read from the referenced class (class features).
+  - Strikes read hit and damage from the inventory item instead of typed values.
+  - Conditions that change the numbers.
+  - Roll buttons.
