@@ -96,7 +96,11 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .hp .now { display: flex; align-items: baseline; gap: 4px; }
 .hp .now input { width: 58px; height: calc(var(--d-hero) + 4px); font-size: var(--d-hero); font-weight: 700; }
 .hp .max { font-size: calc(var(--d-hero) * .7); font-weight: 700; color: var(--st-ink-muted); }
-.hp .temp { display: flex; align-items: center; gap: 6px; align-self: center; }
+.hp .hpline { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.hp .temp { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.hp .adj { display: flex; gap: 4px; align-items: center; }
+.hp .adj input { width: 48px; text-align: center; }
+.hp .adj button { height: var(--d-h); padding: 0 10px; border: 1px solid var(--st-border-strong); border-radius: calc(var(--st-radius) * .66); background: var(--st-panel); cursor: pointer; font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 .hp .temp input { width: 48px; height: calc(var(--d-big) + 6px); font-size: var(--d-big); font-weight: 700; text-align: center; }
 .meter { grid-column: 1 / -1; height: 6px; background: var(--st-panel-muted); border: 1px solid var(--st-border); border-radius: 3px; overflow: hidden; } .meter i { display: block; height: 100%; background: var(--st-primary); }
 .death { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; }
@@ -269,7 +273,8 @@ function render() {
     <div class="box key hero-n ac"${tag("Value", 'formula="{10 + min(dex, armor.dexCap) + prof(armor.rank) + armor.ac + (shieldRaised ? shield.ac : 0)}"', "breakdown on a box")}><span class="sheet-field-label">Armor Class</span>${ac.btn}<span class="small dim">${c.armor.name}</span>${ac.parts}</div>
     <div class="box hp"${tag("Tracker", 'field="hp" max="{ancestry.hp + (class.hp + con) * level}" live', "live attribute doesn't exist yet")}>
       <span class="sheet-field-label" style="grid-column:1/-1">Hit Points</span>
-      <span class="now"><input aria-label="Current HP" value="${c.hp}"><span class="max">/ ${c.hpMax}</span></span><span class="temp"><span class="sheet-field-label">Temp</span><input aria-label="Temp HP" value="${c.temp}"></span>
+      <div class="hpline"><span class="now"><input aria-label="Current HP" value="${c.hp}"><span class="max">/ ${c.hpMax}</span></span>
+      <span class="adj"${tag("Button", 'action="damage" live', "no tag yet for a button that changes a field")}><input aria-label="Amount" placeholder="0" inputmode="numeric" data-amt><button data-hpdo="damage">Damage</button><button data-hpdo="heal">Heal</button></span><span class="temp"><span class="sheet-field-label">Temp</span><input aria-label="Temp HP" value="${c.temp}"></span></div>
       <div class="meter"><i style="width:${c.hp / c.hpMax * 100}%"></i></div>
       <div class="death small"><span><span class="sheet-field-label">Dying</span> ${pips(c.dying, 4, "bad", "Dying")}</span><span><span class="sheet-field-label">Wounded</span> ${pips(c.wounded, 3, "bad sq", "Wounded")}</span><span><span class="sheet-field-label">Doomed</span> ${pips(c.doomed, 3, "bad sq", "Doomed")}</span></div>
     </div>
@@ -358,6 +363,10 @@ document.addEventListener("click", e => {
   const t = e.target;
   if (t.matches("[data-shield]")) { S.shieldUp = t.checked; return render(); }
   const b = t.closest("button"); if (!b) return;
+  if (b.dataset.hpdo) { const c = PCS[S.pc], n = Math.max(0, parseInt(document.querySelector("[data-amt]").value) || 0);
+    if (b.dataset.hpdo === "heal") c.hp = Math.min(c.hpMax, c.hp + n);
+    else { const fromTemp = Math.min(c.temp, n); c.temp -= fromTemp; c.hp = Math.max(0, c.hp - (n - fromTemp)); }
+    return render(); }
   const g = b.closest("[data-ctl]");
   if (g) S[g.dataset.ctl] = b.dataset.v;
   else if (b.dataset.tab) S.tab = b.dataset.tab;
