@@ -107,6 +107,8 @@ const expandedPreview = computed<SheetPreview | undefined>(() =>
     ? { key: previewKey, target: previewTarget.value, card: previewCard.value }
     : undefined,
 );
+// A boxed Ref's card lines up with the box rather than the name in it.
+const refBox = useTemplateRef<HTMLElement>("refBox");
 function togglePreview() {
   const target = previewTarget.value;
   if (!target) return;
@@ -388,6 +390,7 @@ const imageSize = computed(
 
     <div
       v-else-if="display === 'ref'"
+      ref="refBox"
       :class="
         boxedView
           ? 'min-h-8 rounded-md bg-default px-2.5 py-1.5 text-sm ring ring-accented ring-inset'
@@ -401,6 +404,7 @@ const imageSize = computed(
         :target="previewTarget"
         :card="previewCard"
         :open="previewOpen"
+        :anchor="boxedView ? refBox : undefined"
         @toggle="togglePreview"
       >
         {{ refInfo.name }}

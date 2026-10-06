@@ -13,6 +13,8 @@ defineProps<{
   card?: ValidatedElement;
   // Expanded now (`expand` only).
   open?: boolean;
+  // What a `card` lines up with, when not the value itself (a boxed Ref's box).
+  anchor?: HTMLElement | null;
 }>();
 defineEmits<{ toggle: [] }>();
 
@@ -21,7 +23,11 @@ const triggerClass =
 </script>
 
 <template>
-  <UPopover v-if="mode === 'card'" :content="{ side: 'bottom', align: 'start' }">
+  <UPopover
+    v-if="mode === 'card'"
+    :reference="anchor ?? undefined"
+    :content="{ side: 'bottom', align: 'start' }"
+  >
     <button type="button" :class="triggerClass">
       <slot />
     </button>
