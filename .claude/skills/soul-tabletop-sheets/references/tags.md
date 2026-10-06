@@ -55,10 +55,10 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Tags` | none | array of strings | |
 | `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value |
 | `Ref` | none | resourceLink, content | Link to the referenced resource or Content |
-| `Value` | `formula`, `format` (`plain` \| `signed`) | any value | Never editable; `formula` (read-only) instead of `field` |
+| `Value` | `formula`, `format` (`plain` \| `signed`) | any value | Never editable; `formula` (read-only) instead of `field`; with `Part` children and no formula, shows their sum |
 | `Markdown` | none | string | Formatted long text |
 | `Image` | `alt`, `size` (`sm` \| `md` \| `lg` \| `full`, default md) | string | The string must be an https URL |
-| `Column` | `formula`, `format` (`plain` \| `signed`), `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class`; `formula` (read-only) is computed per row; instead of `field`/`formula` it may hold `Button` children (each row gets them; hidden from viewers who can't edit) |
+| `Column` | `formula`, `format` (`plain` \| `signed`), `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class`; `formula` (read-only) is computed per row; it may hold `Part` children (a breakdown; their sum without a formula) and `Button` children (each row gets them, after the value; a column of only Buttons is hidden from viewers who can't edit) |
 
 `formula`: read-only on `Value`, `Column`, `Tracker` (instead of `field`; never both). On `Number`, `Text`, and
 `Checkbox` it may stand alone (read-only) or go with `field` (an override: the field's value wins when it has one; the
@@ -77,6 +77,12 @@ field tag, with a warning.
 | `Table` | `field` (req), `label` | only `Column` and `RowDetails`; paths inside are relative to each row | array of structs (also content or object items), or a struct of alike structs |
 
 In edit mode a `List` or `Table` of an array gets add, remove, and reorder controls; one of a struct's entries has a row per schema entry and no controls.
+
+## Breakdowns
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Part` | `label` (req, text with `{…}`), `formula` (req, a number); common: `class`, `show` | none | Only directly inside `Value`, `Column`, or `Number` (a `Number` needs a `formula`). Clicking the number lists the parts in a popover; a `Value`/`Column` without a formula shows their sum. Parts that give nothing are left out |
 
 ## Buttons
 

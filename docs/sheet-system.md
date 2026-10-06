@@ -165,7 +165,7 @@ View mode renders formatted values, edit mode renders the input.
 | `Tags` | — | array of string (not of choices) | `UInputTags` |
 | `Tracker` | `max` (optional, at least 0), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max" |
 | `Ref` | — | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
-| `Value` | `format`, `formula` | any | read-only in both modes |
+| `Value` | `format`, `formula` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
 | `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
@@ -275,6 +275,48 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
   `Column` ("use show on the Table, or a formula in the column"). A `show` formula that fails **shows** the tag, so
   a typo never hides content. Hidden tags are still fully validated.
 
+### Breakdowns (decided 2026-10-06)
+`<Part label="…" formula="…" />` children list the parts of a number. Clicking the number opens a popover under it
+that lists them, like "Base **10** · Dex **+3** · Trained **+3** · Item **+2** = **18**"; clicking again, clicking
+elsewhere, or Escape closes it, and it floats, so nothing moves (from the frozen PF2e sheet mockup).
+
+```
+<Value label="Armor Class">
+  <Part label="Base" formula="10" />
+  <Part label="Dex" formula="min(dex, armor.dexCap)" />
+  <Part label="{rankName(armor.rank)}" formula="prof(armor.rank)" />
+  <Part label="Item" formula="armor.ac" />
+  <Part label="Shield" formula="shield.ac" show="shieldRaised" />
+</Value>
+<Table field="skills">
+  <Column formula="itemLabel()" label="Skill" />
+  <Column label="Mod" format="signed">
+    <Part label="{skillAttrName(itemKey())}" formula="get(/attributes, skillAttr(itemKey()))" />
+    <Part label="{rankName(rank)}" formula="prof(rank)" />
+  </Column>
+</Table>
+```
+
+- Child tags rather than a `parts` list naming a formula's terms, or a breakdown made from the formula itself, so
+  labels are written for players and can be formulas (`{rankName(rank)}`, per row in a `Table`) (decided).
+- `Part` is only directly inside `Value`, `Column`, or `Number`, takes `label` (required, text with `{…}`),
+  `formula` (required, must give a number), and of the common attributes `class` and `show`.
+- A `Value` or `Column` with parts and no `formula` (or `field`) shows their sum, so nothing is written twice. Other
+  formulas can't read that sum: a total other formulas need goes in a `<Define>`, and the parts can call it. With a
+  `formula`, the formula gives the number and the parts only explain it (nothing checks that they add up). A `Number`
+  takes parts only with a `formula` (an override): the popover shows the computed parts even while a typed value wins.
+- A part hidden by `show`, or whose value is nothing, is left out of the list and the sum. A part that fails makes
+  the sum fail ("—", like any formula).
+- The popover shows part values signed, except the first when the number itself isn't `format="signed"` (a base,
+  like 10 for AC or a DC); the total is the number as shown.
+- The number shown as text (a `Value`, a `Column` cell, a `Number` out of edit or as a stat) is the button that opens
+  it, with a dotted underline. A `Number` shown as an input (editable, or `display="box"`) opens it from a small Σ
+  button beside its label instead.
+- A `Column` may also hold `Button`s next to its value (see "Buttons").
+- Rendered by `sheet/Breakdown.vue` (`UPopover`); `sheetBreakdown` in `runtime.ts` computes the parts and the sum.
+  Hook class: `sheet-breakdown-trigger` on the number's button. The popover opens outside the sheet's element (inside
+  it, the root's `contain: paint` would clip it), so Sheet CSS can't style it; it uses the site's theme.
+
 ### Buttons (decided 2026-10-06)
 `<Button label="…">` changes fields when clicked, with one `<Set field="…" formula="…" />` child per change:
 
@@ -323,8 +365,8 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
   `toast` a click just changes the fields. A click that writes nothing because of an error always shows a toast
   saying why.
 - `locked` doesn't stop a Button: it guards a field's own input, while a Button is its own action.
-- In a `Table`, a `Column` with `Button` children instead of a `field` or `formula` gives each row its buttons
-  (a Column with both is an error). Such columns are left out for viewers who can't edit.
+- In a `Table`, a `Column` with `Button` children gives each row its buttons, after the column's value if it also
+  has a `field`, `formula`, or parts. A Column of only Buttons is left out for viewers who can't edit.
 - Rendered by `sheet/Button.vue` (`UButton`, outline, `xs` in compact sheets), `sheet/ButtonGroup.vue` (the shared
   box; `SheetNodes` groups the buttons), and `sheet/ColumnButtons.vue`; the writes come from `sheetButtonWrites` in
   `runtime.ts`. Hook classes: `sheet-button` on each button, `sheet-button-group` around a box and its buttons.
@@ -630,6 +672,7 @@ every formula once; the renderer evaluates the compiled trees (`evaluateSheetFor
 - `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox`, `Field` (override), and as
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
 - `show="expr"`: a bare formula, like `formula=`.
+- `formula="expr"` on a `<Part>`: one part of a number (see "Breakdowns").
 - `formula="expr"` on a Button's `<Set>`: the value it writes (see "Buttons"); there `amount` can be a parameter.
 - `{expr}` in text, in text attributes (`title="HP {hp.max}"`), and in the number attributes read when rendering
   (`Tracker max`, `Number min`/`max`/`step`). In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
