@@ -20,7 +20,7 @@ const props = defineProps<{
 }>();
 
 const { context, number } = useSheet();
-// Compact sheets (`<Sheet density="compact">`) use the smallest inputs.
+// Compact sheets (the default) use the smallest inputs.
 const size = computed(() => (context.density.value === "compact" ? "xs" : undefined));
 const attrText = useSheetAttrText();
 

@@ -9,7 +9,7 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "#shared/sheet/runtime";
-import type { SheetDensity, SheetDisplay } from "#shared/sheet/registry";
+import { SHEET_DENSITIES, type SheetDensity, type SheetDisplay } from "#shared/sheet/registry";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
 
 // Renders Content with Sheet markup, for viewing and editing. See
@@ -53,12 +53,14 @@ const emit = defineEmits<{
 }>();
 
 const compiled = computed(() => compileSheet(props.markup, props.schemas));
-// `<Sheet density>`; the validator allows `Sheet` only at the top level.
+// `<Sheet density>`, compact when not given; the validator allows `Sheet`
+// only at the top level and checks the value.
 const density = computed<SheetDensity>(() => {
   const sheet = compiled.value.nodes.find(
     (node) => node.type === "element" && node.tag === "Sheet",
   );
-  return sheet?.type === "element" && sheet.attrs.density === "compact" ? "compact" : "roomy";
+  const given = sheet?.type === "element" ? sheet.attrs.density : undefined;
+  return SHEET_DENSITIES.find((density) => density === given) ?? "compact";
 });
 const editing = computed(() => (props.canEdit ?? false) && (props.editMode ?? false));
 const root = computed<SheetScope>(() => ({ value: props.data, path: [] }));
