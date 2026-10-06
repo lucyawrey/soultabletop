@@ -5,6 +5,7 @@ const props = defineProps<{ node: ValidatedElement }>();
 
 const attrText = useSheetAttrText();
 const { context, condition } = useSheet();
+const compact = useSheetCompact();
 // Only valid <Tab> children; the validator reports anything else. Tabs hidden
 // by `show` leave the tab list.
 const allTabs = computed(() =>
@@ -46,13 +47,14 @@ const tabFor = (key: string | number | undefined) =>
     v-if="items.length"
     v-model="active"
     :items="items"
+    :size="compact ? 'xs' : undefined"
     :class="sheetClasses(node)"
     :unmount-on-hide="false"
   >
     <template #content="{ item }">
       <div
         v-if="tabFor(item.value)"
-        :class="[sheetClasses(tabFor(item.value)!.tab), 'space-y-4 pt-2']"
+        :class="[sheetClasses(tabFor(item.value)!.tab), compact ? 'space-y-2 pt-1' : 'space-y-4 pt-2']"
       >
         <SheetFormulaWarning
           v-if="tabFor(item.value)!.error && context.showInvalid.value"

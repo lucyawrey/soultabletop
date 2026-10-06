@@ -11,7 +11,7 @@ import {
   type FormulaValue,
 } from "#shared/sheet/formula";
 import type { TextPart } from "#shared/sheet/parser";
-import type { SheetDisplay } from "#shared/sheet/registry";
+import type { SheetDensity, SheetDisplay } from "#shared/sheet/registry";
 import {
   entryScopes,
   evaluateSheetFormula,
@@ -56,6 +56,8 @@ export interface SheetContext {
   editMode: Ref<boolean>;
   // How fields look when they can't be edited, before any `display` attribute.
   defaultDisplay: Ref<SheetDisplay>;
+  // `<Sheet density>`.
+  density: Ref<SheetDensity>;
   // Writes a value into the Content's draft data.
   update: (path: (string | number)[], value: unknown) => void;
   // Makes referenced Content picked while editing displayable before saving.
@@ -119,6 +121,32 @@ export function provideSheetFlags(node: () => ValidatedNode) {
   });
   provide(flagsKey, flags);
   return flags;
+}
+
+// The live/locked/display flags in effect here.
+export function useSheetFlags() {
+  return inject(flagsKey, ref(defaultFlags()));
+}
+
+// The number typed in the box a run of Buttons with `amount` shares (see
+// SheetButtonGroup); null while empty.
+const amountKey: InjectionKey<Ref<number | null>> = Symbol("sheet-button-amount");
+
+export function provideSheetButtonAmount() {
+  const amount = ref<number | null>(null);
+  provide(amountKey, amount);
+  return amount;
+}
+
+export function useSheetButtonAmount() {
+  return inject(amountKey, ref(null));
+}
+
+// Whether a Button can be clicked here: Edit on, or `live` (inherited, or on
+// the Button itself). Only viewers who can edit see Buttons at all.
+export function sheetButtonUsable(context: SheetContext, flags: SheetFlags, node: ValidatedElement) {
+  const live = typeof node.attrs.live === "boolean" ? node.attrs.live : flags.live;
+  return context.canEdit.value && (context.editMode.value || live);
 }
 
 // Whether a field (or List/Table) at `path` can be edited right now, and its
@@ -368,6 +396,13 @@ export function sheetClasses(node: ValidatedElement) {
     `sheet-${node.tag.toLowerCase()}`,
     ...(Array.isArray(extra) ? (extra as string[]) : []),
   ];
+}
+
+// Whether the sheet is compact (the default; not `<Sheet density="roomy">`): smaller inputs,
+// labels, and gaps.
+export function useSheetCompact() {
+  const { context } = useSheet();
+  return computed(() => context.density.value === "compact");
 }
 
 // Literal text of a text attribute, interpolated.

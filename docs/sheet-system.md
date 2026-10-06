@@ -100,7 +100,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 ### Layout
 | Tag | Attrs | Children | Renders |
 |---|---|---|---|
-| `Sheet` | — | any | root wrapper; optional (implicit if omitted) |
+| `Sheet` | `density` (compact/roomy, default compact) | any | root wrapper; optional (implicit if omitted); top level only |
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
@@ -111,6 +111,14 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 | `Callout` | `color`, `icon`, `title` | text | `UAlert` |
 | `Badge` | `color` | text | `UBadge` |
 | `Collapsible` | `title` (req), `subtitle`, `icon`, `open` | any | `UCollapsible`: clickable header, children shown on expand (e.g. one per `List` item) |
+
+`density` (decided 2026-10-06, from the [PF2e sheet mockup](../.claude/mockups/pf2e-sheet/spec.md); compact made the
+default the same day, since it reliably looks like a character sheet): `roomy` is the site's form spacing, written
+`<Sheet density="roomy">`; `compact`, the default (writing it stays valid, so a sheet can name it if more densities come) (also for sheets without a `<Sheet>` root, and generated sheets), is
+dense, with no custom CSS: the smallest inputs (Nuxt UI size
+`xs`), small uppercase field labels, smaller stats, tighter Section padding and Table cells, and every gap one step
+tighter (`Grid`/`Stack` `gap="md"` is `gap-2`; `sheetGapCompact` in `app/utils/sheet-layout.ts`). The sheet root
+carries `data-density="compact"` (or `roomy`) for Sheet CSS. Components read it through `useSheetCompact()`.
 
 `Section` also accepts `collapsible` and `collapsed`. `Table` accepts a `RowDetails` child (any content) rendered
 in `UTable`'s expandable rows.
@@ -242,7 +250,7 @@ required `resourceLink` or `content` entry without a default would be left empty
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
 | `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
-| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
+| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
 
 Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
 skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even
@@ -266,6 +274,60 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
   none visible, `Tabs` renders nothing); a `RowDetails` hidden for a row takes away that row's expand button. Not on
   `Column` ("use show on the Table, or a formula in the column"). A `show` formula that fails **shows** the tag, so
   a typo never hides content. Hidden tags are still fully validated.
+
+### Buttons (decided 2026-10-06)
+`<Button label="…">` changes fields when clicked, with one `<Set field="…" formula="…" />` child per change:
+
+```
+<Button label="Damage" amount live>
+  <Set field="hp.temp" formula="max(0, hp.temp - amount)" />
+  <Set field="hp.value" formula="max(0, hp.value - max(0, amount - hp.temp))" />
+</Button>
+<Button label="Daily preparations" icon="i-lucide-sunrise" live toast>
+  <Set field="spells.*.cast" formula="false" />
+</Button>
+<Table field="inventory">
+  <Column field="name" />
+  <Column label="Move" live>
+    <Button label="Wear" show="state == 'Held'"><Set field="state" formula="'Worn'" /></Button>
+  </Column>
+</Table>
+```
+
+- `Button` takes `label` (required), `icon`, `amount`, `toast`, and of the common attributes `class`, `show`, and `live`
+  (`locked` and `display` don't apply). It contains only `Set`s, at least one; `Set` is only directly inside a
+  `Button` and takes no common attributes. Child tags rather than one `set="field: formula; …"` attribute, so each
+  formula is a whole attribute like everywhere else and its errors point at its own tag (decided).
+- Every `Set` of a Button is computed from the data as it was before the click, then all are written together, so
+  their order doesn't matter (two writing one field: the last wins). A formula that fails writes nothing and shows its
+  message in a toast. A result of nothing removes the key.
+- `field` is a path to one text, number, true/false, or scalar field (not a struct, array, or reference); the
+  formula's result must fit it, and a literal written to a choice field must be one of its options (other values are
+  checked on the click). A path through a `content` field is a warning: only local data there can change. One `*` segment changes every item of an array, or every entry of a struct whose
+  entries are alike (`spells.*.cast`, `slots.*.used`); its formula then runs once per item, with relative paths being
+  the item's like in a `List` (`<Set field="slots.*.left" formula="max" />`), and `/` the top level. Without `*` the
+  formula runs in the Button's scope (a `List` or `Table` row, or the top level). Fields reached through a reference
+  to other content are skipped.
+- `amount`: a number box before the button; adjacent Buttons with `amount` (siblings with nothing between them)
+  share one box, as Damage and Heal do. In their `Set` formulas `amount` is the number typed (a parameter, like a
+  `<Define>`'s: `/amount` still reaches a field of that name); clicking with the box empty writes nothing and says
+  "Type an amount first", and a click clears the box. Without `amount` on the Button, `amount` is an ordinary path.
+- Who can use it (decided): only viewers who can edit the content see Buttons (and the amount box). With Edit on they
+  work; with Edit off only `live` ones (on the Button or inherited) do, the rest are disabled. Writes go into the draft
+  like any edit, so they save the way a `live` field does with Edit off (at once) and like other edits with Edit on.
+- Results are checked against their fields on the click, as the save would: the field's type, a choice field's
+  options, and nothing for a required field. A result that doesn't fit writes nothing and says why.
+- `toast` (off by default, decided: toasts distract in play, so they're for large actions like Daily preparations):
+  after a click a toast names the Button with an **Undo** action that writes back the previous values. A value
+  changed since the click (edited, or its row moved) is left as it is, and a second toast says how many. Without
+  `toast` a click just changes the fields. A click that writes nothing because of an error always shows a toast
+  saying why.
+- `locked` doesn't stop a Button: it guards a field's own input, while a Button is its own action.
+- In a `Table`, a `Column` with `Button` children instead of a `field` or `formula` gives each row its buttons
+  (a Column with both is an error). Such columns are left out for viewers who can't edit.
+- Rendered by `sheet/Button.vue` (`UButton`, outline, `xs` in compact sheets), `sheet/ButtonGroup.vue` (the shared
+  box; `SheetNodes` groups the buttons), and `sheet/ColumnButtons.vue`; the writes come from `sheetButtonWrites` in
+  `runtime.ts`. Hook classes: `sheet-button` on each button, `sheet-button-group` around a box and its buttons.
 
 ---
 
@@ -396,12 +458,15 @@ Edit + Autosave switches (decided):
 - Edit on, Autosave off: draft copy, Save/Cancel buttons, unsaved-changes guard on navigation.
 - Edit on, Autosave on: each change saves after ~800 ms of inactivity; status indicator (Saving… / Saved / Error).
   A validation error keeps the draft and shows the message; the next change retries.
-- Edit off: read-only view (the Autosave switch only presets how editing behaves once turned on), except `live` fields.
+- Edit off: read-only view (the Autosave switch only presets how editing behaves once turned on), except `live` fields,
+  which save after the autosave pause whatever the Autosave setting (decided 2026-10-06: things changed in play, like
+  HP, shouldn't need a Save click). Turning Edit off doesn't save unsaved edits; a live change saves the whole draft.
 - One draft model for all modes: whenever the draft differs from the saved data and autosave is off, a
   Save/Discard bar is shown (covers `live` edits made in view mode).
 
 Per-field attributes (decided), boolean, allowed on any field tag and on `List`/`Table`:
-- `live` — editable even with Edit off (for users with `canEdit`). Saves via autosave if on, else via the Save bar.
+- `live` — editable even with Edit off (for users with `canEdit`). With Edit off, a change saves on its own after the
+  autosave pause, with or without Autosave (`liveEdits` in `useContentDraft`); with Edit on it follows Autosave.
 - `locked` — read-only even with Edit on until the user clicks the field's small pencil button, which unlocks that
   field for the rest of the page view.
 - They compose: a field is editable when `canEdit && (editMode || live)`; if `locked`, it additionally needs its
@@ -565,6 +630,7 @@ every formula once; the renderer evaluates the compiled trees (`evaluateSheetFor
 - `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox`, `Field` (override), and as
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
 - `show="expr"`: a bare formula, like `formula=`.
+- `formula="expr"` on a Button's `<Set>`: the value it writes (see "Buttons"); there `amount` can be a parameter.
 - `{expr}` in text, in text attributes (`title="HP {hp.max}"`), and in the number attributes read when rendering
   (`Tracker max`, `Number min`/`max`/`step`). In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
   there, but the editor's XML highlighting reads it as a tag.
@@ -589,7 +655,7 @@ known list (`filter`, `sort`, `first`, `at`), so `first(inventory).item.weight` 
 
 Calls have no sigil (decided): `word(` is always a call, a bare word always a path, except inside a `<Define>`, where a
 parameter's name is the parameter (`/name` still reaches the field). Built-in names are reserved: a `<Define>` can't
-use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`, `filter`, `sort`, `first`, `at`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
+use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`, `filter`, `sort`, `first`, `at`, `editing`) go in `formulaLaterBuiltins`; a sheet's definition with such a name keeps working
 (it wins in that sheet, with a warning).
 
 ### Functions (v1)
@@ -604,6 +670,7 @@ use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`,
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |
 | List items | `map(list, expr)` (the list of `expr` for each item; each a single value, empty ones kept), `filter(list, cond)` (the items that make `cond` true, in order), `sort(list, expr?, descending?)` (the items in order of `expr`, or of the items themselves; `sort(list, ., true)` sorts high to low), `first(list, cond?)` (the first item, or the first that makes `cond` true; nothing if none), `at(list, n)` (the item at index `n` from 0, `-1` the last; nothing out of range) |
+| Mode | `editing()`: true while the sheet is being edited (Edit on, for a viewer who can edit the content), else false. For parts shown only while editing, like empty choice slots: `show="editing() or length(senses) > 0"` (decided 2026-10-06; a function, so it can't clash with a field named `editing`) |
 | Rows | `itemKey()`: the current row's entry key in a struct (`'acrobatics'`), or its index in an array (from 0); `itemLabel()`: a struct entry's schema label, else its humanized key, and nothing in an array row. Only in a `List` or `Table` row or inside a per-item function (else `formula-no-item`; a `<Define>` body is checked at the top level, so pass them in as arguments) |
 
 In `sum(list, expr)` and the others, `expr` is evaluated once per item, scoped to the item like inside a `List`
@@ -671,7 +738,8 @@ fast.
 
 ### Security
 Formulas read only the data the viewer already has (the content and its loaded references) and produce text, numbers,
-and true/false that render through Vue as text. They can't write data, make requests, or build URLs: no tag that loads
+and true/false that render through Vue as text. They can't write data on their own (a `Button`'s `Set`s write only
+when a viewer who can edit clicks it, into that viewer's draft, saved through the normal content PATCH checks), make requests, or build URLs: no tag that loads
 or links a URL takes a formula (`Image` never will). Paths and `get` read own properties only, and reserved keys are
 rejected everywhere.
 

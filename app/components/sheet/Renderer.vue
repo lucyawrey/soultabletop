@@ -9,7 +9,7 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "#shared/sheet/runtime";
-import type { SheetDisplay } from "#shared/sheet/registry";
+import { SHEET_DENSITIES, type SheetDensity, type SheetDisplay } from "#shared/sheet/registry";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
 
 // Renders Content with Sheet markup, for viewing and editing. See
@@ -53,6 +53,16 @@ const emit = defineEmits<{
 }>();
 
 const compiled = computed(() => compileSheet(props.markup, props.schemas));
+// `<Sheet density>`, compact when not given; the validator allows `Sheet`
+// only at the top level and checks the value.
+const density = computed<SheetDensity>(() => {
+  const sheet = compiled.value.nodes.find(
+    (node) => node.type === "element" && node.tag === "Sheet",
+  );
+  const given = sheet?.type === "element" ? sheet.attrs.density : undefined;
+  return SHEET_DENSITIES.find((density) => density === given) ?? "compact";
+});
+const editing = computed(() => (props.canEdit ?? false) && (props.editMode ?? false));
 const root = computed<SheetScope>(() => ({ value: props.data, path: [] }));
 
 // Definitions without parameters are computed once each and recomputed only
@@ -87,6 +97,7 @@ const formulas = computed<SheetFormulaDefinitions>(() => {
     definitions: compiled.value.definitions,
     stepBudget: compiled.value.stepBudget,
     computedFields: compiled.value.computedFields,
+    editing: editing.value,
     cached: (name) => values.get(name)?.value,
   };
 });
@@ -101,6 +112,7 @@ provideSheetContext({
   canEdit: computed(() => props.canEdit ?? false),
   editMode: computed(() => props.editMode ?? false),
   defaultDisplay: computed(() => props.defaultDisplay ?? "text"),
+  density,
   update: (path, value) => setSheetValue(props.data, path, value),
   addRef: (id, ref) => emit("addRef", id, ref),
   addLink: (id, link) => emit("addLink", id, link),
@@ -111,8 +123,10 @@ provideSheetContext({
 <template>
   <!-- `contain: paint` keeps Sheet CSS (even position: fixed) inside this box. -->
   <div
-    class="sheet-root isolate space-y-4 [contain:paint]"
+    class="sheet-root isolate [contain:paint]"
+    :class="density === 'compact' ? 'space-y-2 text-sm' : 'space-y-4'"
     :data-sheet="scopeId ?? undefined"
+    :data-density="density"
   >
     <SheetNodes :nodes="compiled.nodes" />
   </div>

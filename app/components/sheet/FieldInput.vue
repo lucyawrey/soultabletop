@@ -20,6 +20,8 @@ const props = defineProps<{
 }>();
 
 const { context, number } = useSheet();
+// Compact sheets (the default) use the smallest inputs.
+const size = computed(() => (context.density.value === "compact" ? "xs" : undefined));
 const attrText = useSheetAttrText();
 
 // An xs or sm Column is too narrow for the − and + buttons beside the value.
@@ -231,6 +233,7 @@ const imageError = computed(() =>
 
 <template>
   <UTextarea
+    :size="size"
     v-if="display === 'text' && node.attrs.multiline === true"
     v-model="text"
     :disabled="disabled"
@@ -240,6 +243,7 @@ const imageError = computed(() =>
     class="w-full"
   />
   <UInput
+    :size="size"
     v-else-if="display === 'text'"
     v-model="text"
     :disabled="disabled"
@@ -249,6 +253,7 @@ const imageError = computed(() =>
   />
 
   <USelect
+    :size="size"
     v-else-if="display === 'select'"
     v-model="choice"
     :disabled="disabled"
@@ -257,6 +262,7 @@ const imageError = computed(() =>
     class="w-full"
   />
   <USelectMenu
+    :size="size"
     v-else-if="display === 'choices'"
     v-model="choiceList"
     multiple
@@ -269,6 +275,7 @@ const imageError = computed(() =>
   />
 
   <UInputNumber
+    :size="size"
     v-else-if="display === 'number' || display === 'stat'"
     v-model="numberValue"
     :disabled="disabled"
@@ -285,6 +292,7 @@ const imageError = computed(() =>
   />
 
   <USwitch
+    :size="size"
     v-else-if="display === 'boolean' && node.tag === 'Toggle'"
     v-model="booleanValue"
     :disabled="disabled"
@@ -303,6 +311,7 @@ const imageError = computed(() =>
     @click="booleanValue = !booleanValue"
   />
   <UCheckbox
+    :size="size"
     v-else-if="display === 'boolean'"
     v-model="booleanValue"
     :disabled="disabled"
@@ -310,6 +319,7 @@ const imageError = computed(() =>
   />
 
   <UInputTags
+    :size="size"
     v-else-if="display === 'tags'"
     v-model="tags"
     :disabled="disabled"
@@ -331,6 +341,7 @@ const imageError = computed(() =>
       />
     </div>
     <UInputNumber
+      :size="size"
       v-else
       v-model="numberValue"
       :disabled="disabled"
@@ -356,6 +367,7 @@ const imageError = computed(() =>
   />
   <div v-else-if="display === 'ref'" class="space-y-2">
     <UInput
+      :size="size"
       v-if="isLocal"
       v-model="localName"
       :disabled="disabled"
@@ -400,6 +412,7 @@ const imageError = computed(() =>
 
   <div v-else-if="display === 'scalar'" class="flex gap-2">
     <USelect
+      :size="size"
       v-model="scalarType"
       :disabled="disabled"
       :items="scalarTypes"
@@ -407,6 +420,7 @@ const imageError = computed(() =>
       class="w-28 shrink-0"
     />
     <UInput
+      :size="size"
       v-if="scalarType === 'string'"
       v-model="text"
       :disabled="disabled"
@@ -414,6 +428,7 @@ const imageError = computed(() =>
       class="min-w-0 flex-1"
     />
     <UInputNumber
+      :size="size"
       v-else-if="scalarType === 'number'"
       v-model="scalarNumber"
       :disabled="disabled"
@@ -424,6 +439,7 @@ const imageError = computed(() =>
       class="min-w-0 flex-1"
     />
     <USwitch
+      :size="size"
       v-else-if="scalarType === 'boolean'"
       v-model="booleanValue"
       :disabled="disabled"
@@ -447,6 +463,7 @@ const imageError = computed(() =>
 
   <UFormField v-else-if="display === 'image'" size="md" :error="imageError">
     <UInput
+      :size="size"
       v-model="text"
       :disabled="disabled"
       type="url"

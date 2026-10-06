@@ -14,6 +14,9 @@ export type AttrType =
   | { kind: "enum"; values: readonly string[] }
   // A field path, resolved against the schema.
   | { kind: "field" }
+  // A field path that may have one `*` segment, for every item of a list or
+  // entry of a struct (`<Set field="spells.*.cast">`).
+  | { kind: "target" }
   // Comma-separated values.
   | { kind: "list" }
   // Iconify name, e.g. i-lucide-sword.
@@ -63,7 +66,7 @@ export type ChildrenRule =
 
 export interface TagSpec {
   name: string;
-  category: "layout" | "field" | "repeater" | "definition";
+  category: "layout" | "field" | "repeater" | "action" | "definition";
   description: string;
   attrs: Record<string, AttrSpec>;
   children: ChildrenRule;
@@ -79,6 +82,8 @@ export interface TagSpec {
   noFlagAttrs?: boolean;
   // Takes no common attributes at all.
   noCommonAttrs?: boolean;
+  // Of the flags, takes only `live` (not `locked` or `display`).
+  liveOnly?: boolean;
   // With `parents`: may also be at the top level.
   topLevel?: boolean;
   // Field tags that accept `formula`: `readOnly` shows the computed value
@@ -121,6 +126,12 @@ const icon: AttrSpec = {
 export const SHEET_DISPLAYS = ["text", "box"] as const;
 export type SheetDisplay = (typeof SHEET_DISPLAYS)[number];
 
+// How tightly a sheet is laid out (`<Sheet density>`): compact (the default),
+// smaller inputs and gaps that look like a character sheet, or roomy, the
+// site's form spacing.
+export const SHEET_DENSITIES = ["roomy", "compact"] as const;
+export type SheetDensity = (typeof SHEET_DENSITIES)[number];
+
 // Accepted by every tag.
 export const commonAttrs: Record<string, AttrSpec> = {
   class: {
@@ -155,6 +166,7 @@ export function commonAttrsFor(spec: TagSpec): Record<string, AttrSpec> {
   const { class: className, show, ...flags } = commonAttrs;
   const visible: Record<string, AttrSpec> = spec.name in noShowTags ? {} : { show: show! };
   if (spec.noFlagAttrs) return { class: className!, ...visible };
+  if (spec.liveOnly) return { class: className!, live: flags.live!, ...visible };
   return { class: className!, ...flags, ...visible };
 }
 
@@ -194,7 +206,12 @@ const tagList: TagSpec[] = [
     name: "Sheet",
     category: "layout",
     description: "Optional root wrapping the whole sheet",
-    attrs: {},
+    attrs: {
+      density: oneOf(
+        SHEET_DENSITIES,
+        "compact (the default) uses smaller inputs, labels, and gaps; roomy uses the site's form spacing",
+      ),
+    },
     children: "any",
     parents: [],
   },
@@ -515,14 +532,15 @@ const tagList: TagSpec[] = [
   {
     name: "Column",
     category: "field",
-    description: "One column of a Table",
+    description: "One column of a Table: a field, a formula, or Button tags",
     attrs: {
       ...fieldAttrs,
       formula: readOnlyFormula,
       format: formatAttr,
       width: oneOf(["auto", "xs", "sm", "md", "lg"], "Column width"),
     },
-    children: "none",
+    // Buttons instead of a field or formula: each row gets its own.
+    children: { only: ["Button"] },
     parents: ["Table"],
     binds: ["string", "number", "boolean", "scalar", "resourceLink", "content"],
     formula: "readOnly",
@@ -535,6 +553,49 @@ const tagList: TagSpec[] = [
     children: "any",
     parents: ["Table"],
     noFlagAttrs: true,
+  },
+
+  // Actions
+  {
+    name: "Button",
+    category: "action",
+    description:
+      "A button that changes fields when clicked, with a Set tag for each; shown to viewers who can edit the content, and with Edit off usable only if live",
+    attrs: {
+      label: text("Button text", true),
+      icon,
+      amount: bool(
+        "Shows a number box before the button (adjacent buttons with amount share one); amount in its Set formulas is the number typed",
+      ),
+      toast: bool(
+        "After a click, shows a toast naming the button, with Undo; for large actions (off by default)",
+      ),
+    },
+    children: { only: ["Set"] },
+    liveOnly: true,
+  },
+  {
+    name: "Set",
+    category: "action",
+    description:
+      "One change a Button makes: its field gets the formula's value. Every Set of a Button reads the data from before the click",
+    attrs: {
+      field: {
+        type: { kind: "target" },
+        required: true,
+        description:
+          "The field to change; one * changes every item of a list or entry of a struct, like spells.*.cast",
+      },
+      formula: {
+        type: { kind: "formula" },
+        required: true,
+        description:
+          "The new value; nothing removes it. With *, relative paths are each item's, like in a List",
+      },
+    },
+    children: "none",
+    parents: ["Button"],
+    noCommonAttrs: true,
   },
 
   // Definitions
