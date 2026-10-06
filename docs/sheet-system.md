@@ -347,15 +347,37 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.c
   (a resource link has no preview). Without a content field on the way, or without a `field`, it's an
   `invalid-attribute` error. References and local data (custom copies) both work; a reference that isn't loaded
   (missing or not readable) shows no button. References get an Open link to their page.
-- **Generated view** (no `<Preview>`): from the content type's top-level fields, in schema order (`generatedCard` in
+- **Generated view** (no `<Preview>` of either kind): from the content type's top-level fields, in schema order (`generatedCard` in
   `shared/sheet/card.ts`): arrays of text or choices as chips; other fields with a value as label/value rows (choice
   labels, numbers, Yes/No, a content field's name); text over 120 characters or with a line break as Markdown under
   its label, below the rows (decided: the schema has no Markdown type, so length decides; a short row stays plain
   text). Structs, free-form objects, resource links, other arrays, and empty values are left out. It isn't styled by Sheet CSS.
-- **`<Preview>`**: the sheet's own view, directly inside the `preview` tag, used for both ways (decided: a child tag rather than bare
+- **What shows, in order:** the tag's own `<Preview>` (an override, below); else the `<Preview>` beside `<Sheet>` in the
+  previewed content type's default sheet; else the generated view. A `<Preview>` hidden by its `show` gives way to the
+  next.
+- **`<Preview>` beside `<Sheet>`** (decided): a content type's sheet can say how its content looks in every preview
+  from other sheets, with a `<Preview>` at the top level next to `<Sheet>` (at most one, `duplicate-preview`). It is
+  never shown on the content's own page. Its paths are read against the content's top level, and the sheet's
+  `<Define>`s work in it; the same limits apply (`button-in-preview`, `preview-in-preview`). It is styled by its own
+  sheet's CSS and density, and used for references and local data of that type alike.
+  ```
+  <Sheet>…</Sheet>
+  <Preview>
+    <Value formula="concat('Rank ', rank)" />
+    <Markdown field="description" />
+  </Preview>
+  ```
+  Loading (decided): it is fetched when a preview of that type first opens, once per content type per page, from
+  `GET /api/content-type/<id>/preview` (`resolvePreviewSheet` in `server/utils/sheet-schemas.ts`). That returns the type's
+  default Sheet and the schemas to compile it with only when the viewer can read both the content type and that Sheet
+  and the markup has a `<Preview>` beside `<Sheet>`; otherwise `sheet` is null and the generated view is used. The
+  preview renders through `SheetRenderer` with `previewOf`, its own sheet context with the previewed content as the
+  top level, read-only. The page's `refs` are passed along, so references inside it show names when the page already
+  has them.
+- **`<Preview>` in a preview tag** (an override): the sheet's own view, directly inside the `preview` tag, used for both ways (decided: a child tag rather than bare
   children, which would mix with a `Value`'s or `Column`'s `Part`s and `Button`s). Its paths are relative to the
   referenced content, like a `List` row (`/…` still reaches the sheet's top level, and `<Define>`s work). It takes
-  `class` and `show` (a hidden `<Preview>` falls back to the generated view). It is styled by the referencing sheet's
+  `class` and `show` (a hidden one gives way to the type's own `<Preview>` or the generated view). It is styled by the referencing sheet's
   CSS: its element carries the sheet's `data-sheet` and `data-density`, also in a floating card.
   Errors: `preview-tag-without-preview` (no `preview` on its tag), `duplicate-preview` (two in one tag).
 - **Limits:** previews are always read-only (no inputs, whatever `live`; fields inside show as text unless they say
@@ -370,9 +392,8 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.c
   expanded box, under a field by `Field.vue` or under a row by `Table.vue`, through `provideSheetRowPreviews`),
   `sheet/PreviewBody.vue` (the `<Preview>` or generated view, read-only through `provideSheetReadOnly`),
   `sheetPreviewTarget` in `shared/sheet/card.ts` (what a tag shows).
-- Data: the content GET's `refs` already holds each referenced content's data; nothing more is fetched. A
-  `<Preview>` in the referenced content type's own sheet is the next step (plan, step 3); it will apply to local data
-  of that type too.
+- Data: the content GET's `refs` already holds each referenced content's data; only a type's own `<Preview>` is
+  fetched (above).
 
 ### Buttons (decided 2026-10-06)
 `<Button label="…">` changes fields when clicked, with one `<Set field="…" formula="…" />` child per change:

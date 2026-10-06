@@ -392,6 +392,11 @@ class Validator {
     }
     for (const extra of roots.slice(1))
       this.error("duplicate-sheet", "A sheet has only one <Sheet>", extra.loc);
+    const previews = nodes.filter(
+      (node) => node.type === "element" && findTag(node.tag)?.name === "Preview",
+    );
+    for (const extra of previews.slice(1))
+      this.error("duplicate-preview", "A sheet has only one <Preview> beside <Sheet>", extra.loc);
   }
 
   private error(code: string, message: string, loc: Loc) {
@@ -1005,7 +1010,9 @@ class Validator {
 
     // A `<Preview>` is checked against the content its tag's preview opens.
     if (spec.name === "Preview") {
-      const card = this.card;
+      // Beside `<Sheet>`: this content type's own preview, read against the
+      // top level.
+      const card = parent ? this.card : { shape: this.rootShape };
       if (!card) {
         return invalid(
           "preview-tag-without-preview",
@@ -1013,11 +1020,12 @@ class Validator {
         );
       }
       if (card === "broken") return broken("<Preview> has errors");
+      const outer = this.card;
       this.card = undefined;
       this.cardDepth += 1;
       const children = this.children(node.children, spec, card.shape);
       this.cardDepth -= 1;
-      this.card = card;
+      this.card = outer;
       return { type: "element", tag: spec.name, spec, attrs, children, loc: node.loc };
     }
     // Previews are read-only and can't open other previews.

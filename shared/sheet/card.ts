@@ -3,7 +3,8 @@
 // be unit-tested. See docs/sheet-system.md, "Reference previews".
 
 import { choiceLabel, fieldOptions, type ContentTypeSchema } from "../content-schema";
-import { humanizeFieldName } from "./registry";
+import { parseSheetMarkup, type SheetNode } from "./parser";
+import { findTag, humanizeFieldName } from "./registry";
 import {
   findRef,
   formatSheetValue,
@@ -13,7 +14,7 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "./runtime";
-import type { ValidatedElement } from "./validate";
+import type { ValidatedElement, ValidatedNode } from "./validate";
 
 // What a card shows: the referenced (or local) content as a row scope for a
 // `<Preview>`'s paths, and as a record for the generated card.
@@ -56,6 +57,21 @@ export function sheetPreviewTarget(
     name: typeof value.name === "string" ? value.name : "",
     contentTypeId: node.preview.contentTypeId,
   };
+}
+
+const isPreview = (node: SheetNode | ValidatedNode) =>
+  node.type === "element" && findTag(node.tag)?.name === "Preview";
+
+// A content type's own `<Preview>`: the one beside `<Sheet>` in its sheet.
+export function sheetOwnPreview(nodes: ValidatedNode[]): ValidatedElement | undefined {
+  const found = nodes.find(isPreview);
+  return found?.type === "element" ? found : undefined;
+}
+
+// Whether markup has a `<Preview>` beside `<Sheet>`, without validating it
+// (the server sends a type's sheet for previews only when it has one).
+export function markupHasOwnPreview(markup: string) {
+  return parseSheetMarkup(markup).nodes.some(isPreview);
 }
 
 // Text longer than this (or with a line break) is shown as Markdown under

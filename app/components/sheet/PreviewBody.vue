@@ -3,23 +3,31 @@ import { generatedCard, type SheetPreviewTarget } from "#shared/sheet/card";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // What a reference preview shows, expanded or in a card: the tag's `<Preview>`
-// (styled by this sheet's CSS), or without one, a view generated from the
-// content type's schema. Always read-only.
+// (styled by this sheet's CSS); without one, the `<Preview>` beside `<Sheet>`
+// in the content type's default sheet (styled by that sheet's CSS, loaded on
+// first use); without either, a view generated from the content type's
+// schema. Always read-only.
 const props = defineProps<{
   target: SheetPreviewTarget;
   card?: ValidatedElement;
+  // Rendered inside the content type's own sheet: `card` is its own
+  // `<Preview>`, so there's nothing more to load.
+  own?: boolean;
 }>();
 
 const { context, condition } = useSheet();
 provideSheetReadOnly();
 
-// A `<Preview>` hidden by its `show` gives way to the generated view.
+// A `<Preview>` hidden by its `show` gives way to the next one.
 const card = computed(() => {
   const written = props.card;
   return written && condition(written.attrs.show, props.target.scope).shown ? written : undefined;
 });
+const ownPreview = computed(() =>
+  card.value || props.own ? undefined : context.ownPreview(props.target.contentTypeId).value,
+);
 const generated = computed(() =>
-  card.value
+  card.value || (ownPreview.value && ownPreview.value.status !== "none")
     ? undefined
     : generatedCard(
         context.schemas.value.types[props.target.contentTypeId]?.schema ?? {},
@@ -50,6 +58,21 @@ const generatedEmpty = computed(
       <SheetNodes :nodes="card.children" />
     </SheetScope>
   </div>
+
+  <p v-else-if="ownPreview?.status === 'loading'" class="text-sm text-dimmed">Loading…</p>
+
+  <SheetRenderer
+    v-else-if="ownPreview?.status === 'ready'"
+    :markup="ownPreview.sheet.markup"
+    :schemas="ownPreview.schemas"
+    :data="target.record"
+    :refs="context.refs.value"
+    :links="context.links.value"
+    :css="ownPreview.sheet.css"
+    :scope-id="ownPreview.sheet.id"
+    :default-display="ownPreview.sheet.defaultDisplay"
+    :preview-of="target"
+  />
 
   <div v-else-if="generated" class="sheet-preview space-y-2 text-sm">
     <div
