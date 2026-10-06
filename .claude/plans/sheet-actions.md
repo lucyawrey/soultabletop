@@ -24,6 +24,8 @@ Decided with the user on 2026-10-06. The "Sheet dice buttons" item in `TODO.md` 
   - v1: follow-up buttons on each entry in the Recent rolls list and on the toast while it's open (user).
 - **Server-ready rolling** (user): the dice engine and action evaluation live in `shared/` with the random source passed in. v1 rolls in the browser (`crypto.getRandomValues`); the campaign log later sends the action to the server, which rolls with the same code. Markup and entries don't change.
 
+- **Dice are inline SVG in one custom component** (user, 2026-10-06, for the build): a Vue component (e.g. `RollDie.vue`) holds the die outlines (d2 circle to d20 hexagon) as data and draws the face on top; states (critical, fumble, dropped) restyle it with theme tokens. Not `.svg` files. The outlines are agent-drawn, an exception the user approved; team art can replace them in that component. Details in the [dice mockup brief](../mockups/dice-rolls/brief.md).
+
 ## Open
 
 - Who can click a follow-up in a shared campaign log (the roller, the GM, anyone), and whether it runs for someone who can't read the sheet: decide with campaign logs.
