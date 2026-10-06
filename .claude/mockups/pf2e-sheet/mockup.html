@@ -55,8 +55,9 @@ input, select { font: inherit; color: var(--st-ink); height: var(--d-h); box-siz
 .link.plain { color: var(--st-ink); }
 .pick { border: 1px dashed var(--st-border-strong); border-radius: 4px; padding: 0 6px; color: var(--st-primary); background: var(--st-panel-muted); cursor: pointer; font-size: var(--d-lfs); font-weight: 700; }
 .mod { font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; background: none; border: 0; padding: 0 2px; cursor: pointer; border-bottom: 1px dotted var(--st-border-strong); }
-.parts { grid-column: 1 / -1; font-size: var(--d-lfs); color: var(--st-ink-muted); background: var(--st-panel-muted); border-radius: 4px; padding: 2px 6px; }
-.parts b { color: var(--st-ink); }
+.mathpop { position: absolute; z-index: 7; max-width: min(360px, calc(100vw - 16px)); font-size: 11.5px; color: var(--st-ink-muted); background: var(--st-panel); border: 1px solid var(--st-border-strong); border-radius: 6px; padding: 4px 8px; box-shadow: 0 6px 18px rgb(0 0 0 / .14); font-family: var(--st-font-body); }
+.mathpop[hidden] { display: none; }
+.mathpop b { color: var(--st-ink); }
 .rank { display: inline-grid; place-items: center; width: 20px; height: 17px; border-radius: 4px; font-size: 10.5px; font-weight: 700; border: 1px solid var(--st-border-strong); color: var(--st-ink-muted); }
 .rank.t, .rank.e, .rank.m, .rank.l { background: var(--st-primary); color: var(--st-on-primary); border-color: var(--st-primary); }
 select.rank-sel { appearance: none; -webkit-appearance: none; width: 20px; height: 17px; padding: 0; border: 1px dashed var(--st-primary); border-radius: 4px; font-size: 10.5px; font-weight: 700; text-align: center; text-align-last: center; color: var(--st-ink-muted); cursor: pointer; vertical-align: middle; }
@@ -129,7 +130,6 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .saves { text-align: left; align-content: start; gap: 2px; }
 .saves .srow { display: grid; grid-template-columns: 1fr auto 24px; align-items: center; gap: 6px; }
 .saves .srow .mod { font-size: calc(var(--d-big) * .8); border-bottom: 1px dotted var(--st-border-strong); }
-.saves .parts { margin-top: 2px; }
 .hero-n .sheet-field-value, .hero-n .mod { font-size: var(--d-hero); }
 .hp { text-align: left; grid-template-columns: 1fr auto; gap: 3px 8px; }
 .hp .now { display: flex; align-items: baseline; gap: 4px; }
@@ -143,7 +143,6 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .hp .temp input { width: 48px; height: calc(var(--d-big) + 6px); font-size: var(--d-big); font-weight: 700; text-align: center; }
 .meter { grid-column: 1 / -1; height: 6px; background: var(--st-panel-muted); border: 1px solid var(--st-border); border-radius: 3px; overflow: hidden; } .meter i { display: block; height: 100%; background: var(--st-primary); }
 .death { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; }
-.box .parts { text-align: left; }
 .strip { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; margin-top: var(--d-gap); }
 
 /* Rows */
@@ -257,6 +256,7 @@ input.coin { width: 44px; height: 22px; text-align: center; font-weight: 700; }
 </div>
 <main id="sheet" class="sheet" data-tag="Sheet" data-attrs='density="compact"' data-gap="density attribute doesn't exist yet"></main>
 <div id="preview"></div>
+<div id="mathpop" class="mathpop" role="status" hidden></div>
 <div class="contrast" id="contrastbox" hidden><table id="contrast"></table></div>
 
 <script>
@@ -329,10 +329,12 @@ const E = () => S.mode === "edit";
 const rank = (r, id) => E() ? `<select class="rank-sel ${r}" aria-label="Proficiency">${Object.entries(RANKS).map(([k, v]) => `<option ${k === r ? "selected" : ""}>${v[0]}</option>`).join("")}</select>`
   : `<span class="rank ${r}" title="${RANKS[r][1]}" aria-label="${RANKS[r][1]}">${RANKS[r][0]}</span>`;
 // A modifier that opens its breakdown; parts are [label, value].
+let OPEN_PARTS = "";
 function mod(id, parts, base = 0) {
   const total = base + parts.reduce((s, [, v]) => s + v, 0);
-  return { total, btn: `<button class="mod" aria-expanded="${S.open === id}" data-open="${id}">${base ? total : sg(total)}</button>`,
-    parts: S.open === id ? `<div class="parts">${base ? `<b>${base}</b> base · ` : ""}${parts.map(([l, v]) => `${l} <b>${sg(v)}</b>`).join(" · ")} = <b>${base ? total : sg(total)}</b></div>` : "" };
+  // The breakdown opens in a popover under the number, so it never moves the layout.
+  if (S.open === id) OPEN_PARTS = `${base ? `<b>${base}</b> base · ` : ""}${parts.map(([l, v]) => `${l} <b>${sg(v)}</b>`).join(" · ")} = <b>${base ? total : sg(total)}</b>`;
+  return { total, btn: `<button class="mod" aria-expanded="${S.open === id}" aria-controls="mathpop" data-open="${id}">${base ? total : sg(total)}</button>`, parts: "" };
 }
 const pips = (n, max, cls = "", label) => `<span class="pips ${cls}" role="group" aria-label="${label}">${Array.from({ length: max }, (_, i) => `<button class="${i < n ? "on" : ""}" aria-pressed="${i < n}" aria-label="${label} ${i + 1}"></button>`).join("")}</span>`;
 const ref = (v, field) => E() ? `<button class="link refpick" aria-label="Change ${field}: ${v}"${tag("Ref", `field="${field}"`)}>${v}<span class="caret" aria-hidden="true">▾</span></button>` : `<button class="link" data-prev="${v}">${v}</button>`;
@@ -479,11 +481,12 @@ function render() {
     <p class="small dim">Rules text from the imported content goes here: traits, actions, and the full description, read from the referenced resource.</p></div>` : "";
   document.querySelectorAll("[data-ctl]").forEach(g => g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", S[g.dataset.ctl] === b.dataset.v)));
   contrast();
+  placeMath();
 }
 document.addEventListener("change", e => { if (e.target.matches(".rank-sel")) e.target.className = "rank-sel " + e.target.value.toLowerCase(); if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
 document.addEventListener("click", e => {
   const t = e.target;
-  const b = t.closest("button"); if (!b) return;
+  const b = t.closest("button"); if (!b) { if (S.open && !t.closest("#mathpop")) { S.open = null; render(); } return; }
   if (b.dataset.st) { PCS[S.pc].inv[+b.dataset.inv][3] = b.dataset.st; return render(); }
   if ("shield" in b.dataset) { S.shieldUp = !S.shieldUp; return render(); }
   if (b.dataset.hpdo) { const c = PCS[S.pc], n = Math.max(0, parseInt(document.querySelector("[data-amt]").value) || 0);
@@ -512,6 +515,16 @@ document.addEventListener("click", e => {
   render();
 });
 
+function placeMath() {
+  const pop = document.getElementById("mathpop"), btn = S.open && document.querySelector(`[data-open="${S.open}"]`);
+  if (!btn || !OPEN_PARTS) { pop.hidden = true; OPEN_PARTS = ""; return; }
+  pop.innerHTML = OPEN_PARTS; pop.hidden = false; OPEN_PARTS = "";
+  const r = btn.getBoundingClientRect(), w = pop.offsetWidth;
+  pop.style.top = `${r.bottom + window.scrollY + 4}px`;
+  pop.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - w / 2, document.documentElement.clientWidth - w - 8)) + window.scrollX}px`;
+}
+addEventListener("resize", () => S.open && render());
+addEventListener("keydown", e => { if (e.key === "Escape" && S.open) { const id = S.open; S.open = null; render(); document.querySelector(`[data-open="${id}"]`)?.focus(); } });
 function rgb(v) { const d = document.createElement("div"); d.style.color = v; document.body.append(d); const m = getComputedStyle(d).color.match(/[\d.]+/g).map(Number); d.remove(); return m; }
 function lum([r, g, b]) { return [r, g, b].map(x => { x /= 255; return x <= .03928 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; }).reduce((s, x, i) => s + x * [.2126, .7152, .0722][i], 0); }
 function ratio(a, b) { const [x, y] = [lum(rgb(a)), lum(rgb(b))].sort((p, q) => q - p); return (x + .05) / (y + .05); }
