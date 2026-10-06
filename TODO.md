@@ -12,6 +12,8 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
+- **Sheet buttons that change a field** · feature · PR #93 (`sheet-buttons`)
+  `<Button>` with `<Set field formula>` children, `*` for every item, a shared `amount` box, Undo toast (user's decisions, 2026-10-06). Damage and Heal on HP, Daily preparations, an inventory item's move badges.
 - **Pathfinder 2e demo system** · feature · on `docs` (`.claude/pf2e/`, `.claude/mockups/pf2e-sheet/`)
   Plan: [.claude/plans/pf2e-demo.md](.claude/plans/pf2e-demo.md) (decisions, references and their rules, density, steps).
   A small slice of the Pathfinder 2e system for the demo, and a head start on the official one (Phase 2): content types (character, ancestry, background, class, feat, spell, item) and a polished character sheet using formulas, choice fields, struct tables, list functions, and defaults. Agents design the types and sheets, reading the Foundry pf2e data for reference (`~/Developer/foundry-pf2e`); an import script loads a small ORC Remaster slice of content through the API with the user's API key, never agent-written content (see "Data sources and import scripts for official content"). Keep a copy of the schemas, sheets, and script in `.claude/` until the authoring CLI exists. The system's description credits the data source and states the ORC license notice from the start. Replaces the old `pf2e-test` system, which the reset removes.
@@ -24,8 +26,6 @@ Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The 
 
 Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the first four items (density, `editing()`, and live fields saving at once were built in #92), from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
 
-- **Sheet buttons that change a field** · feature · needs decision: the markup (a tag, its action syntax, and which changes are allowed)
-  Damage and Heal on HP (temp HP first, heal stops at the max), Daily preparations (refresh spell slots and trackers), and an inventory item's move badges (set its state). Usable in play for viewers who can edit, like `live` fields.
 - **Sheet breakdown popovers** · feature · needs decision: the markup (how a number lists its parts)
   Clicking a computed number (a `Value`, or a box like AC and saves) shows its parts in a popover under it, without moving the layout; click again, click elsewhere, or Escape closes it. `RowDetails` only expands table rows.
 - **Sheet reference previews** · feature

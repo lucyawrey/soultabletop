@@ -159,7 +159,7 @@ What the Sheet system can't do yet (marked `data-gap` in the page). Each is in `
 1. ~~`density` on `<Sheet>` (compact/roomy).~~ Built in #92.
 2. ~~`live`: fields editable in play mode, saved at once.~~ `live` already existed; saving at once was built in #92.
 3. ~~`editing` visible to formulas.~~ Built in #92 as the function `editing()`: write `show="editing() or length(senses) > 0"`, not the page's `show="editing or senses"`.
-4. A button that changes a field (Damage/Heal, Daily preparations, item moves).
+4. A button that changes a field (Damage/Heal, Daily preparations, item moves). In PR #93: `<Button>` with `<Set>` children (see `docs/sheet-system.md`, "Buttons").
 5. Breakdown popovers on `Value` and boxes (AC, saves, skills, Strikes); `RowDetails` only expands table rows.
 6. Reference previews (the rules text of a linked spell, feat, item, or class feature).
 7. A list read from a referenced resource (class features from the class).
