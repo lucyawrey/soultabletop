@@ -248,7 +248,7 @@ required `resourceLink` or `content` entry without a default would be left empty
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
 | `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
-| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula`, `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
+| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
 
 Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
 skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even
@@ -272,6 +272,60 @@ row knows its key and label for `itemKey()` and `itemLabel()` (see "Formulas"; `
   none visible, `Tabs` renders nothing); a `RowDetails` hidden for a row takes away that row's expand button. Not on
   `Column` ("use show on the Table, or a formula in the column"). A `show` formula that fails **shows** the tag, so
   a typo never hides content. Hidden tags are still fully validated.
+
+### Buttons (decided 2026-10-06)
+`<Button label="…">` changes fields when clicked, with one `<Set field="…" formula="…" />` child per change:
+
+```
+<Button label="Damage" amount live>
+  <Set field="hp.temp" formula="max(0, hp.temp - amount)" />
+  <Set field="hp.value" formula="max(0, hp.value - max(0, amount - hp.temp))" />
+</Button>
+<Button label="Daily preparations" icon="i-lucide-sunrise" live toast>
+  <Set field="spells.*.cast" formula="false" />
+</Button>
+<Table field="inventory">
+  <Column field="name" />
+  <Column label="Move" live>
+    <Button label="Wear" show="state == 'Held'"><Set field="state" formula="'Worn'" /></Button>
+  </Column>
+</Table>
+```
+
+- `Button` takes `label` (required), `icon`, `amount`, `toast`, and of the common attributes `class`, `show`, and `live`
+  (`locked` and `display` don't apply). It contains only `Set`s, at least one; `Set` is only directly inside a
+  `Button` and takes no common attributes. Child tags rather than one `set="field: formula; …"` attribute, so each
+  formula is a whole attribute like everywhere else and its errors point at its own tag (decided).
+- Every `Set` of a Button is computed from the data as it was before the click, then all are written together, so
+  their order doesn't matter (two writing one field: the last wins). A formula that fails writes nothing and shows its
+  message in a toast. A result of nothing removes the key.
+- `field` is a path to one text, number, true/false, or scalar field (not a struct, array, or reference); the
+  formula's result must fit it, and a literal written to a choice field must be one of its options (other values are
+  checked on the click). A path through a `content` field is a warning: only local data there can change. One `*` segment changes every item of an array, or every entry of a struct whose
+  entries are alike (`spells.*.cast`, `slots.*.used`); its formula then runs once per item, with relative paths being
+  the item's like in a `List` (`<Set field="slots.*.left" formula="max" />`), and `/` the top level. Without `*` the
+  formula runs in the Button's scope (a `List` or `Table` row, or the top level). Fields reached through a reference
+  to other content are skipped.
+- `amount`: a number box before the button; adjacent Buttons with `amount` (siblings with nothing between them)
+  share one box, as Damage and Heal do. In their `Set` formulas `amount` is the number typed (a parameter, like a
+  `<Define>`'s: `/amount` still reaches a field of that name); clicking with the box empty writes nothing and says
+  "Type an amount first", and a click clears the box. Without `amount` on the Button, `amount` is an ordinary path.
+- Who can use it (decided): only viewers who can edit the content see Buttons (and the amount box). With Edit on they
+  work; with Edit off only `live` ones (on the Button or inherited) do, the rest are disabled. Writes go into the draft
+  like any edit, so they save the way a `live` field does with Edit off (at once) and like other edits with Edit on.
+- Results are checked against their fields on the click, as the save would: the field's type, a choice field's
+  options, and nothing for a required field. A result that doesn't fit writes nothing and says why.
+- `toast` (off by default, decided: toasts distract in play, so they're for large actions like Daily preparations):
+  after a click a toast names the Button with an **Undo** action that writes back the previous values. A value
+  changed since the click (edited, or its row moved) is left as it is, and a second toast says how many. Without
+  `toast` a click just changes the fields. A click that writes nothing because of an error always shows a toast
+  saying why.
+- `locked` doesn't stop a Button: it guards a field's own input, while a Button is its own action.
+- In a `Table`, a `Column` with `Button` children instead of a `field` or `formula` gives each row its buttons
+  (a Column with both is an error). Such columns are left out for viewers who can't edit.
+- Rendered by `sheet/Button.vue` (`UButton`, outline, `xs` in compact sheets), `sheet/ButtonGroup.vue` (the shared
+  box; `SheetNodes` groups the buttons), and `sheet/ColumnButtons.vue`; the writes come from `sheetButtonWrites` in
+  `runtime.ts`. Hook classes: `sheet-button` on each button, `sheet-button-group` around a box and its buttons.
 
 ---
 
@@ -574,6 +628,7 @@ every formula once; the renderer evaluates the compiled trees (`evaluateSheetFor
 - `formula="expr"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox`, `Field` (override), and as
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
 - `show="expr"`: a bare formula, like `formula=`.
+- `formula="expr"` on a Button's `<Set>`: the value it writes (see "Buttons"); there `amount` can be a parameter.
 - `{expr}` in text, in text attributes (`title="HP {hp.max}"`), and in the number attributes read when rendering
   (`Tracker max`, `Number min`/`max`/`step`). In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
   there, but the editor's XML highlighting reads it as a tag.
@@ -681,7 +736,8 @@ fast.
 
 ### Security
 Formulas read only the data the viewer already has (the content and its loaded references) and produce text, numbers,
-and true/false that render through Vue as text. They can't write data, make requests, or build URLs: no tag that loads
+and true/false that render through Vue as text. They can't write data on their own (a `Button`'s `Set`s write only
+when a viewer who can edit clicks it, into that viewer's draft, saved through the normal content PATCH checks), make requests, or build URLs: no tag that loads
 or links a URL takes a formula (`Image` never will). Paths and `get` read own properties only, and reserved keys are
 rejected everywhere.
 
