@@ -172,8 +172,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .toasts[data-pos="tc"] { top: 16px; left: 50%; transform: translateX(-50%); }
 @media (max-width: 640px) { .toasts[data-pos="br"] { right: 8px; bottom: 8px; } .toasts[data-pos="tc"] { top: 8px; } }
 .toast { position: relative; }
-.toast .x, .stackhead .x { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; background: none; cursor: pointer; color: var(--st-ink-muted); font-size: 18px; line-height: 1; border-radius: 4px; }
-.toast .entry { padding-right: 32px; }
+.stackhead .x { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; background: none; cursor: pointer; color: var(--st-ink-muted); font-size: 18px; line-height: 1; border-radius: 4px; }
+/* Toasts persist, so their close button is more prominent (site-wide: Nuxt UI's toast close in app.config). */
+.toast .x { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 1px solid var(--st-border-strong); background: var(--st-panel); cursor: pointer; color: var(--st-ink); font-size: 20px; line-height: 1; border-radius: 6px; }
+.toast .x:hover { background: var(--st-panel-muted); border-color: var(--st-ink-muted); }
+.toast .entry { padding-right: 40px; }
 .stack { display: grid; gap: 0; overflow: auto; max-height: 55vh; }
 .stackhead { position: relative; display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
 .stackhead .x { top: 1px; }
@@ -221,7 +224,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.1 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
@@ -434,7 +437,7 @@ function renderToasts(anim = false) {
   anim = anim && !REDUCED;
   const body = S.look === "card" ? cardHTML(e, anim) : entryHTML(e, { toast: true, anim });
   const toast = `<div class="toast bg-default ring ring-accented rounded-lg shadow-lg${anim && S.look !== "card" ? " slidein" : ""}" data-impl="new: RollToast (UToast-style)">${body}
-    <button class="x" data-closetoast aria-label="Close">×</button></div>`;
+    <button class="x" data-closetoast aria-label="Close" title="Close" data-impl="app.config toast slots.close: UButton color=neutral variant=outline size=sm icon=i-lucide-x">×</button></div>`;
   let stack = "";
   if (S.recent === "stack") {
     const older = ENTRIES.filter(x => x.id !== e.id);
@@ -443,8 +446,7 @@ function renderToasts(anim = false) {
   }
   box.innerHTML = toast + stack;
   if (anim) animate(box, e);
-  // Outside the Stack option the toast closes after a while, unless the pointer or focus is in it.
-  if (S.recent !== "stack") { const tick = () => { toastTimer = setTimeout(() => { if (box.matches(":hover, :focus-within")) return tick(); S.toastId = null; renderToasts(); }, 9000); }; tick(); }
+  // The roll toast persists (Nuxt UI toaster, one toast id "roll", duration Infinity): the next roll replaces it, × closes it.
 }
 function animate(box, e) {
   if (!e || REDUCED) return;

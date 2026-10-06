@@ -27,3 +27,8 @@ For sheet actions with `Roll` steps ([plan](../../plans/sheet-actions.md)). It d
 ## Content
 
 Tessaly Quill, level-1 Elf Rogue (Thief), from the frozen sheet: Dex +4, trained strikes (+7), Fortitude +4, Reflex +9, Will +6, Perception +6 (expert), Initiative with Stealth (+6, with the leather armor's −1). Rapier, Shortbow, Dagger (agile). The roller is shown as "you".
+
+## Decided during review (user, 2026-10-06)
+
+- **Rolls use Nuxt UI's toaster**, not a toast of their own, so they stack with the app's other toasts (sheet Button undo and errors, load and save errors) instead of overlapping them. One roll toast at a time: added with a fixed id (`"roll"`) and `duration: Infinity`, so it stays until the next roll replaces it or the user closes it; other toasts keep the default 5 s. The Toast position option becomes the app toaster's position. Watch for: the toaster's max of 5 drops the oldest toast, which could be the roll toast; and Nuxt UI may pulse a replaced toast on top of the roll's own animation.
+- **A more prominent toast close button, site-wide** (Nuxt UI's toast `close` slot in `app.config.ts`): an outlined button (`color="neutral" variant="outline"`, 28px, ink-colored ×) instead of the faint link-style ×. Shown in the mockup since v1.1.
