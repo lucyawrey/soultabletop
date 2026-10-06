@@ -4,7 +4,7 @@ import type { SheetRefs, SheetScope } from "./runtime";
 import type { SheetSchemas, ValidatedElement, ValidatedNode } from "./validate";
 import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
 
-// Reference previews: `preview` on Ref, Value, and Column, and `<Card>`.
+// Reference previews: `preview` on Ref, Value, and Column, and `<Preview>`.
 
 const schemas: SheetSchemas = {
   root: {
@@ -105,37 +105,37 @@ describe("preview validation", () => {
     ]);
   });
 
-  it("checks a Card against the referenced content", () => {
+  it("checks a Preview against the referenced content", () => {
     const ref = tag(
-      `<Table field="spells"><Column field="name" preview><Card><Value field="rank" /><Tags field="traits" /><Value field="/level" /></Card></Column></Table>`,
+      `<Table field="spells"><Column field="name" preview><Preview><Value field="rank" /><Tags field="traits" /><Value field="/level" /></Preview></Column></Table>`,
       "Column",
     );
-    expect(ref.children.map((child) => child.type === "element" && child.tag)).toEqual(["Card"]);
-    expect(messages(`<Ref field="deity" preview><Card><Value field="rank" /></Card></Ref>`)).toEqual([
+    expect(ref.children.map((child) => child.type === "element" && child.tag)).toEqual(["Preview"]);
+    expect(messages(`<Ref field="deity" preview><Preview><Value field="rank" /></Preview></Ref>`)).toEqual([
       'error unknown-field: "rank": the schema has no field "rank"',
     ]);
   });
 
-  it("keeps cards read-only and single", () => {
-    expect(messages(`<Ref field="deity"><Card /></Ref>`)).toEqual([
-      "error card-without-preview: <Card> is shown by a preview; add preview to its <Ref>",
+  it("keeps previews read-only and single", () => {
+    expect(messages(`<Ref field="deity"><Preview /></Ref>`)).toEqual([
+      "error preview-tag-without-preview: <Preview> is shown by a preview; add preview to its <Ref>",
     ]);
-    expect(messages(`<Ref field="deity" preview><Card /><Card /></Ref>`)).toEqual([
-      "error duplicate-card: <Ref> has only one <Card>",
+    expect(messages(`<Ref field="deity" preview><Preview /><Preview /></Ref>`)).toEqual([
+      "error duplicate-preview: <Ref> has only one <Preview>",
     ]);
     expect(
-      messages(`<Table field="inventory"><Column field="item.name" preview><Card><Ref field="material" preview /></Card></Column></Table>`),
-    ).toEqual(["error preview-in-card: A card can't open another card; remove preview"]);
+      messages(`<Table field="inventory"><Column field="item.name" preview><Preview><Ref field="material" preview /></Preview></Column></Table>`),
+    ).toEqual(["error preview-in-preview: A preview can't open another preview; remove preview"]);
     expect(
-      messages(`<Ref field="deity" preview><Card><Button label="Go"><Set field="/level" formula="1" /></Button></Card></Ref>`),
-    ).toEqual(["error button-in-card: <Button> can't be in a <Card>: cards are read-only"]);
-    expect(messages(`<Card />`)).toEqual([
-      "error misplaced-tag: <Card> must be directly inside <Ref> or <Value> or <Column>",
+      messages(`<Ref field="deity" preview><Preview><Button label="Go"><Set field="/level" formula="1" /></Button></Preview></Ref>`),
+    ).toEqual(["error button-in-preview: <Button> can't be in a <Preview>: previews are read-only"]);
+    expect(messages(`<Preview />`)).toEqual([
+      "error misplaced-tag: <Preview> must be directly inside <Ref> or <Value> or <Column>",
     ]);
   });
 
-  it("reports a Card under a broken preview only once", () => {
-    expect(messages(`<Value field="level" preview><Card /></Value>`)).toEqual([
+  it("reports a Preview under a broken preview only once", () => {
+    expect(messages(`<Value field="level" preview><Preview /></Value>`)).toEqual([
       "error invalid-attribute: preview needs a field reached through a content field, like spell.name",
     ]);
   });

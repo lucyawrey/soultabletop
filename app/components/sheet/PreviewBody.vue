@@ -2,7 +2,7 @@
 import { generatedCard, type SheetPreviewTarget } from "#shared/sheet/card";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
-// What a reference preview shows, expanded or in a card: the tag's `<Card>`
+// What a reference preview shows, expanded or in a card: the tag's `<Preview>`
 // (styled by this sheet's CSS), or without one, a view generated from the
 // content type's schema. Always read-only.
 const props = defineProps<{
@@ -13,7 +13,7 @@ const props = defineProps<{
 const { context, condition } = useSheet();
 provideSheetReadOnly();
 
-// A `<Card>` hidden by its `show` gives way to the generated view.
+// A `<Preview>` hidden by its `show` gives way to the generated view.
 const card = computed(() => {
   const written = props.card;
   return written && condition(written.attrs.show, props.target.scope).shown ? written : undefined;
@@ -51,7 +51,7 @@ const generatedEmpty = computed(
     </SheetScope>
   </div>
 
-  <div v-else-if="generated" class="sheet-card space-y-2 text-sm">
+  <div v-else-if="generated" class="sheet-preview space-y-2 text-sm">
     <div
       v-for="tag in generated.tags"
       :key="tag.label"

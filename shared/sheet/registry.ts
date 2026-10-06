@@ -205,7 +205,7 @@ export type SheetPreviewMode = (typeof SHEET_PREVIEW_MODES)[number];
 const previewAttr: AttrSpec = {
   type: { kind: "enum", values: SHEET_PREVIEW_MODES, bare: "expand" },
   description:
-    "Clicking the value shows the referenced content (the one its field is reached through, like spell for spell.name): expanded below it (preview, or preview=\"expand\"), or in a card at the bottom right (preview=\"card\"); a <Card> inside replaces the generated view",
+    "Clicking the value shows the referenced content (the one its field is reached through, like spell for spell.name): expanded below it (preview, or preview=\"expand\"), or in a card floating under it (preview=\"card\"); a <Preview> inside replaces the generated view",
 };
 
 const formatAttr = oneOf(
@@ -478,7 +478,7 @@ const tagList: TagSpec[] = [
     description: "A link to another resource or content",
     attrs: { ...fieldAttrs, preview: previewAttr },
     // The card its preview opens.
-    children: { only: ["Card"] },
+    children: { only: ["Preview"] },
     binds: ["resourceLink", "content"],
   },
   {
@@ -491,7 +491,7 @@ const tagList: TagSpec[] = [
       format: formatAttr,
       preview: previewAttr,
     },
-    children: { only: ["Part", "Card"] },
+    children: { only: ["Part", "Preview"] },
     binds: ["anyValue"],
     formula: "readOnly",
   },
@@ -558,7 +558,7 @@ const tagList: TagSpec[] = [
     },
     // Parts explaining its number, Buttons (each row gets its own), and the
     // card its preview opens.
-    children: { only: ["Part", "Button", "Card"] },
+    children: { only: ["Part", "Button", "Preview"] },
     parents: ["Table"],
     binds: ["string", "number", "boolean", "scalar", "resourceLink", "content"],
     formula: "readOnly",
@@ -584,7 +584,7 @@ const tagList: TagSpec[] = [
     noCommonAttrs: true,
   },
   {
-    name: "Card",
+    name: "Preview",
     category: "layout",
     description:
       "What a preview shows (expanded or in a card), instead of the generated view; paths inside are relative to the referenced content, and it is always read-only",

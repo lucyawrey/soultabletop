@@ -5,7 +5,7 @@ defineProps<{ preview: SheetPreview }>();
 </script>
 
 <template>
-  <div class="sheet-preview relative rounded-md border border-default bg-elevated/50 p-2">
+  <div class="sheet-preview-frame relative rounded-md border border-default bg-elevated/50 p-2">
     <UButton
       v-if="preview.target.id"
       :to="`/content/${preview.target.id}`"

@@ -90,7 +90,7 @@ const previewTarget = computed(() =>
 const previewMode = computed(() => props.node.preview?.mode ?? "expand");
 const previewCard = computed(() =>
   props.node.children.find(
-    (child): child is ValidatedElement => child.type === "element" && child.tag === "Card",
+    (child): child is ValidatedElement => child.type === "element" && child.tag === "Preview",
   ),
 );
 // An expanded preview opens under this tag, or for a Column under its row.

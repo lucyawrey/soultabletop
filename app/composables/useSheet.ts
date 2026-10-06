@@ -43,7 +43,7 @@ import {
 } from "#shared/sheet/validate";
 
 // An expanded reference preview (see SheetPreviewBody): what it shows, and
-// the `<Card>` the tag that opened it wrote, if any. `key` tells which tag
+// the `<Preview>` the tag that opened it wrote, if any. `key` tells which tag
 // opened it, so clicking that again closes it.
 export interface SheetPreview {
   key: string;

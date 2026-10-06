@@ -16,7 +16,7 @@ import {
 import type { ValidatedElement } from "./validate";
 
 // What a card shows: the referenced (or local) content as a row scope for a
-// `<Card>`'s paths, and as a record for the generated card.
+// `<Preview>`'s paths, and as a record for the generated card.
 export interface SheetPreviewTarget {
   scope: SheetScope;
   record: Record<string, unknown>;
@@ -71,7 +71,7 @@ export interface GeneratedCard {
   texts: { label: string; markdown: string }[];
 }
 
-// The card of content without a `<Card>`: from the top-level fields of its
+// The card of content without a `<Preview>`: from the top-level fields of its
 // schema, in schema order. Structs, free-form objects, and arrays of anything
 // but text or choices are left out; so are empty values.
 export function generatedCard(

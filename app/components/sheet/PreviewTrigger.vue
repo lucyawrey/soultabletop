@@ -33,7 +33,7 @@ const triggerClass =
     </button>
     <template #content>
       <div
-        class="sheet-preview max-h-[min(30rem,70vh)] w-[min(340px,calc(100vw-2rem))] overflow-y-auto p-3"
+        class="sheet-preview-frame max-h-[min(30rem,70vh)] w-[min(340px,calc(100vw-2rem))] overflow-y-auto p-3"
         role="group"
         :aria-label="target.name || 'Preview'"
       >

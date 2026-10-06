@@ -119,7 +119,7 @@ export interface ValidatedElement {
   entries?: SheetEntry[];
   // `preview` on Ref, Value, or Column: expanded or in a card, the content
   // field the value is reached through (relative to the tag's scope, like its
-  // field), and its content type. A `<Card>` child, if any, is in `children`.
+  // field), and its content type. A `<Preview>` child, if any, is in `children`.
   preview?: { mode: SheetPreviewMode; path: SheetPath; contentTypeId: string };
   children: ValidatedNode[];
   loc: Loc;
@@ -196,7 +196,7 @@ type Shape = (
   | { kind: "unknown"; depth: number }
 ) & { item?: "array" | "struct" | "unknown" };
 
-// What a `<Card>` child is checked against (see Validator.card).
+// What a `<Preview>` child is checked against (see Validator.card).
 type CardScope = { shape: Shape } | "broken" | undefined;
 
 // Field types a struct's entries can have for a List, Table, or per-item
@@ -1003,16 +1003,16 @@ class Validator {
       }
     }
 
-    // A `<Card>` is checked against the content its tag's preview opens.
-    if (spec.name === "Card") {
+    // A `<Preview>` is checked against the content its tag's preview opens.
+    if (spec.name === "Preview") {
       const card = this.card;
       if (!card) {
         return invalid(
-          "card-without-preview",
-          `<Card> is shown by a preview; add preview to its <${parent!.name}>`,
+          "preview-tag-without-preview",
+          `<Preview> is shown by a preview; add preview to its <${parent!.name}>`,
         );
       }
-      if (card === "broken") return broken("<Card> has errors");
+      if (card === "broken") return broken("<Preview> has errors");
       this.card = undefined;
       this.cardDepth += 1;
       const children = this.children(node.children, spec, card.shape);
@@ -1020,11 +1020,11 @@ class Validator {
       this.card = card;
       return { type: "element", tag: spec.name, spec, attrs, children, loc: node.loc };
     }
-    // Cards are read-only and can't open other cards.
+    // Previews are read-only and can't open other previews.
     if (this.cardDepth && spec.name === "Button")
-      return invalid("button-in-card", "<Button> can't be in a <Card>: cards are read-only");
+      return invalid("button-in-preview", "<Button> can't be in a <Preview>: previews are read-only");
     if (this.cardDepth && typeof attrs.preview === "string")
-      return invalid("preview-in-card", "A card can't open another card; remove preview");
+      return invalid("preview-in-preview", "A preview can't open another preview; remove preview");
 
     let binding: Binding | undefined;
     let childScope = scope;
@@ -1148,10 +1148,10 @@ class Validator {
       }
     }
     const cards = node.children.filter(
-      (child) => child.type === "element" && child.tag.toLowerCase() === "card",
+      (child) => child.type === "element" && child.tag.toLowerCase() === "preview",
     );
     for (const extra of cards.slice(1))
-      this.error("duplicate-card", `<${spec.name}> has only one <Card>`, extra.loc);
+      this.error("duplicate-preview", `<${spec.name}> has only one <Preview>`, extra.loc);
 
     // A Button's Sets may use `amount` when it has one.
     const outerParams = this.setParams;
@@ -1183,11 +1183,11 @@ class Validator {
 
   // The `amount` of the Button whose Sets are being checked.
   private setParams: Readonly<Record<string, FormulaType>> | undefined;
-  // What a `<Card>` child of the tag being checked shows: the shape of the
+  // What a `<Preview>` child of the tag being checked shows: the shape of the
   // content its preview opens, "broken" when that preview has errors
   // (already reported), or undefined without a preview.
   private card: CardScope;
-  // How many `<Card>`s the tag being checked is inside.
+  // How many `<Preview>`s the tag being checked is inside.
   private cardDepth = 0;
 
   // The content a `preview` opens: the last content field on the way to the
