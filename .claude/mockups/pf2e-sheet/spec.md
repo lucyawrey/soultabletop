@@ -9,7 +9,7 @@ The approved character sheet for the Pathfinder 2e demo system ([plan](../../pla
 
 Where the built sheet differs from `frozen.html` and the difference isn't under "Decided after the mockup", it's drift: fix the sheet, or record the new decision here.
 
-What changed from `mockup.html` besides the locked options: the CSS of rejected options was removed (the Tabs below layout and its two-column skills grid, the segmented item-state toggle, the old feat cards), and the `data-attrs` were corrected to the Sheet system's real syntax (`Grid cols`, `Number format="signed"`, bare formulas in `formula` and `show`, `if()` instead of `?:`, no `rows`/`item` attributes, which don't exist). One change by the user at the freeze (2026-10-06): Spell DC and spell attack now work like Class DC, with a spellcasting rank badge (a picker in edit) and breakdown popovers; the mockup had them as plain numbers fixed at trained.
+What changed from `mockup.html` besides the locked options: the CSS of rejected options was removed (the Tabs below layout and its two-column skills grid, the segmented item-state toggle, the old feat cards), and the `data-attrs` were corrected to the Sheet system's real syntax (`Grid cols`, `Number format="signed"`, bare formulas in `formula` and `show`, `if()` instead of `?:`, no `rows`/`item` attributes, which don't exist). Two changes by the user at the freeze (2026-10-06). Lore skills can be added: in edit, each Lore row's name is a dashed input with a × to remove it, and "+ Add lore" adds a trained Int row and focuses its name (the mockup had one fixed Lore row; the brief had more Lore rows "left for later"). And Spell DC and spell attack now work like Class DC, with a spellcasting rank badge (a picker in edit) and breakdown popovers; the mockup had them as plain numbers fixed at trained.
 
 ## Chosen options
 
@@ -82,7 +82,7 @@ From `frozen.html`'s CSS. Phones are below 901px.
 
 **Skills and Proficiencies** (left column, `minmax(300px, 1fr)`)
 - Perception, then Initiative (a "rolls with" select, Perception or any skill), labels in the display font at `--d-h2`, values at `--d-big × .8`; a 2px `--st-border-strong` rule under them.
-- Skill rows `1fr 30px 46px 42px`: name, attribute (muted), rank badge, modifier. Untrained: name and modifier muted and regular weight (the U badge stays). Lore last.
+- Skill rows `1fr 30px 46px 42px`: name, attribute (muted), rank badge, modifier. Untrained: name and modifier muted and regular weight (the U badge stays). Lore rows last, after a divider: any number of them, each with its own name and rank, always Int; edit adds and removes them (above).
 - Proficiencies: two labeled rows, Attacks and Defenses, each a wrap of rank badge + name.
 
 **Tabs** (right column, `1.75fr`; phone: below, full width)
@@ -137,6 +137,7 @@ Each block in `frozen.html` carries `data-tag` and `data-attrs` (inspect the pag
 | Perception | `Value formula="wis + prof(perception)"` |
 | Initiative | `Select field="initiative.roll" live` and `Value formula="switch(initiative.roll, 'perception', perception, get(skills, initiative.roll)) + initiative.bonus"` |
 | Skills | `Table field="skills"` (struct rows) |
+| Lore | `Table field="lore"` (an array of name and rank; edit adds and removes rows, which arrays support today) |
 | Proficiencies | `Grid cols="2"` |
 | Tabs | `Tabs` / `Tab label="…" icon="…"` |
 | Class DC | `Value formula="10 + key + prof(classDC)"` |

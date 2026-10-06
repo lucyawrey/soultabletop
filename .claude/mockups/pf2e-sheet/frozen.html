@@ -152,6 +152,11 @@ select.rank-sel.t, select.rank-sel.e, select.rank-sel.m, select.rank-sel.l { bac
 .row.th { min-height: 0; } .row.th > * { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 .row.untrained > span:first-child, .row.untrained .mod { color: var(--st-ink-muted); font-weight: 400; }
 .skills .row { grid-template-columns: 1fr 30px 46px 42px; }
+/* Lore in edit: the name is a dashed input the size of the play text, with a × to remove. */
+.skills .rows + .rows { border-top: 1px solid var(--st-border); }
+.lorename { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.lorename input { border-style: dashed; height: auto; padding: 0 2px; width: 100%; }
+.lorename .x { border: 0; background: none; padding: 0 2px; cursor: pointer; color: var(--st-ink-muted); font-size: 1.1em; line-height: 1; }
 .skills .init { grid-template-columns: auto 1fr 42px; border-bottom: 2px solid var(--st-border-strong); margin-bottom: calc(var(--d-gap) * .5); }
 .skills .lead > b { font-family: var(--st-font-display); font-size: var(--d-h2); }
 .skills .lead .mod { font-size: calc(var(--d-big) * .8); }
@@ -395,17 +400,19 @@ function render() {
     <div class="rows">${c.actions.map(([g, n, d]) => `<div class="row">${glyph(g)}<button class="link plain" data-prev="${n}">${n}</button><span class="small dim">${d}</span></div>`).join("")}
     ${E() ? `<div class="row"><button class="pick" style="justify-self:start;grid-column:1/-1" data-add="actions">+ Add action</button></div>` : ""}</div></section>`;
 
-  const skillRow = ([n, k, r]) => { const parts = [[k, a[k]], [RANKS[r][1], P(r, L)]]; if (CHECK[n] && penalty) parts.push(["Armor", penalty]);
-    const m = mod("k" + n, parts);
-    return `<div class="row ${r === "u" ? "untrained" : ""}"><span>${n}</span><span class="small dim">${k}</span>${rank(r)}${m.btn}${m.parts}</div>`; };
+  const skillRow = ([n, k, r], li = -1) => { const parts = [[k, a[k]], [RANKS[r][1], P(r, L)]]; if (CHECK[n] && penalty) parts.push(["Armor", penalty]);
+    const m = mod("k" + n + (li >= 0 ? li : ""), parts);
+    const name = E() && li >= 0 ? `<span class="lorename"><input value="${n}" placeholder="… Lore" aria-label="Lore name" data-lore-name="${li}"><button class="x" data-lore-rm="${li}" aria-label="Remove ${n || "lore"}">×</button></span>` : `<span>${n}</span>`;
+    return `<div class="row ${r === "u" ? "untrained" : ""}">${name}<span class="small dim">${k}</span>${rank(r)}${m.btn}${m.parts}</div>`; };
   const skillMod = n => { if (n === "Perception") return a.Wis + P(c.perc, L); const [, k] = SKILLS.find(x => x[0] === n); const r = c.skills[n] || "u"; return a[k] + P(r, L) + (CHECK[n] && penalty ? penalty : 0); };
   const im = mod("init", [[c.init, skillMod(c.init)], ...(c.initBonus || [])]);
   const init = `<div class="row lead init"${tag("Value", `formula="switch(initiative.roll, 'perception', perception, get(skills, initiative.roll)) + initiative.bonus"`)}><b>Initiative</b>
     <span${tag("Select", 'field="initiative.roll" live', "live attribute doesn't exist yet")} style="justify-self:end"><select aria-label="Initiative rolls with">${["Perception", ...SKILLS.map(x => x[0])].map(n => `<option ${n === c.init ? "selected" : ""}>${n}</option>`).join("")}</select></span>${im.btn}${im.parts}</div>`;
-  const all = [...SKILLS.map(([n, k]) => [n, k, c.skills[n] || "u"]), ...c.lore];
   const skills = `<section class="sheet-section skills"${tag("Table", 'field="skills"')}>${h2("Skills")}<span class="aside">${penalty ? `armor ${penalty} on Str/Dex skills` : ""}</span>
     <div class="row lead"${tag("Value", 'formula="wis + prof(perception)"')}><b>Perception</b><span class="small dim">Wis</span>${rank(c.perc)}${perc.btn}${perc.parts}</div>
-    ${init}<div class="rows">${all.map(skillRow).join("")}</div></section>`;
+    ${init}<div class="rows">${SKILLS.map(([n, k]) => skillRow([n, k, c.skills[n] || "u"])).join("")}</div>
+    <div class="rows"${tag("Table", 'field="lore"')}>${c.lore.map(skillRow).join("")}
+    ${E() ? `<div class="row"><button class="pick" style="justify-self:start;grid-column:1/-1" data-lore-add>+ Add lore</button></div>` : ""}</div></section>`;
 
   const profs = `<section class="sheet-section"${tag("Grid", 'cols="2"')}>${h2("Proficiencies")}
     <div class="profrows">${Object.entries(c.profs).map(([g, list]) => `<span class="sheet-field-label">${g}</span><div>${list.map(([n, r]) => `<span style="white-space:nowrap">${rank(r)} <span class="small">${n}</span></span>`).join("")}</div>`).join("")}</div></section>`;
@@ -482,11 +489,13 @@ function render() {
   contrast();
   placeMath();
 }
-document.addEventListener("change", e => { if (e.target.dataset.langAdd !== undefined && e.target.value) { PCS[S.pc].languages += ", " + e.target.value; return render(); } if (e.target.matches("[data-shp]")) { PCS[S.pc].shield.cur = Math.max(0, Math.min(PCS[S.pc].shield.hp, +e.target.value || 0)); return render(); } if (e.target.matches(".rank-sel")) e.target.className = "rank-sel " + e.target.value.toLowerCase(); if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
+document.addEventListener("change", e => { if (e.target.dataset.langAdd !== undefined && e.target.value) { PCS[S.pc].languages += ", " + e.target.value; return render(); } if (e.target.dataset.loreName !== undefined) { PCS[S.pc].lore[+e.target.dataset.loreName][0] = e.target.value; return render(); } if (e.target.matches("[data-shp]")) { PCS[S.pc].shield.cur = Math.max(0, Math.min(PCS[S.pc].shield.hp, +e.target.value || 0)); return render(); } if (e.target.matches(".rank-sel")) e.target.className = "rank-sel " + e.target.value.toLowerCase(); if (e.target.matches('[aria-label="Initiative rolls with"]')) { PCS[S.pc].init = e.target.value; render(); } });
 document.addEventListener("click", e => {
   const t = e.target;
   const b = t.closest("button"); if (!b) { if (S.open && !t.closest("#mathpop")) { S.open = null; render(); } return; }
   if (b.dataset.st) { PCS[S.pc].inv[+b.dataset.inv][3] = b.dataset.st; return render(); }
+  if ("loreAdd" in b.dataset) { PCS[S.pc].lore.push(["", "Int", "t"]); render(); return document.querySelector(`[data-lore-name="${PCS[S.pc].lore.length - 1}"]`)?.focus(); }
+  if (b.dataset.loreRm) { PCS[S.pc].lore.splice(+b.dataset.loreRm, 1); return render(); }
   if (b.dataset.langRm) { const c = PCS[S.pc]; c.languages = c.languages.split(", ").filter(l => l !== b.dataset.langRm).join(", "); return render(); }
   if ("prep" in b.dataset) { const sp = PCS[S.pc].spells; sp.r1.forEach(x => x[2] = 0); sp.font[2] = 0; sp.focusUsed = 0; return render(); }
   if ("shield" in b.dataset) { S.shieldUp = !S.shieldUp; return render(); }
