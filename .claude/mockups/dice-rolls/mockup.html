@@ -251,7 +251,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.13 · 2026-10-06</small>
+  <b>Dice rolls</b><small>mockup v1.14 · 2026-10-06</small>
   <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
@@ -380,7 +380,8 @@ const TESTS = [
   ["Big hit", "Damage", [{ t: "d", n: 10, s: 6 }]],
   ["Mixed", "Damage", [{ t: "d", n: 3, s: 8 }, { t: "d", n: 2, s: 6 }, { t: "m", v: 5 }]],
   ["Ability score", "Roll", [{ t: "d", n: 4, s: 6, keep: ["h", 3] }]],
-  ["Every die", "Roll", [4, 6, 8, 10, 12, 20].map(s => ({ t: "d", n: 1, s })), false, { crit: ["max"], fumble: [1] }],
+  ["Every die", "Roll", [2, 4, 6, 8, 10, 12, 20].map(s => ({ t: "d", n: 1, s })), false, { crit: ["max"], fumble: [1] }],
+  ["Coin", "Flip", [{ t: "d", n: 1, s: 2 }]],
   ["d6 pool", "Roll", [{ t: "d", n: 5, s: 6 }], false, { crit: [6], fumble: [1] }],
 ];
 const testSpec = i => { const [action, label, terms, , hi] = TESTS[i]; return { kind: "damage", name: "test", action, label, path: "Test rolls", terms, parts: [], ...hi }; };
@@ -401,7 +402,7 @@ function runFollowUp(id, k) {
 
 // ---- Rendering dice ----
 // Outlines in a 100×100 box, each filling about the same area.
-const SHAPE = { 4: '<polygon points="50,5 96,88 4,88"/>', 6: '<rect x="9" y="9" width="82" height="82"/>', 8: '<polygon points="50,2 98,50 50,98 2,50"/>',
+const SHAPE = { 2: '<circle cx="50" cy="50" r="44"/>', 4: '<polygon points="50,5 96,88 4,88"/>', 6: '<rect x="9" y="9" width="82" height="82"/>', 8: '<polygon points="50,2 98,50 50,98 2,50"/>',
   10: '<polygon points="50,1 99,38 50,99 1,38"/>', 12: '<polygon points="50,1 99,36 81,97 19,97 1,36"/>', 20: '<polygon points="50,2 94,26 94,74 50,98 6,74 6,26"/>' };
 const D6 = ["", "one", "two", "three", "four", "five", "six"];
 function dieHTML(f, { size } = {}) {
@@ -595,7 +596,7 @@ function renderSheet() {
   const tests = `<section class="sheet-section" data-gap="mockup only: rolls with several dice"><h2>Test rolls</h2><span class="aside">mockup only</span>
     <div style="display:flex;flex-wrap:wrap;gap:6px">${""}${TESTS.map(([a, l, t], i) => `<button class="fu" data-test="${i}">${a} · ${l} <span class="wr">${expr(t.map(x => x.t === "d" ? { ...x, faces: [] } : x.t === "x" ? { ...x, of: x.of.map(y => y.t === "d" ? { ...y, faces: [] } : y) } : x))}</span></button>`).join("")}</div>
     <div class="shapes big" aria-label="Die shapes">${[["", null, true], ["critical", "crit", true], ["fumble", "fumble", true], ["dropped", null, false]].map(([row, hi, kept]) =>
-      `<div class="shaperow"><span class="sheet-field-label">${row || "plain"}</span>${[4, 6, 8, 10, 12, 20].map(n => `<span class="dgroup"><span>${dieHTML({ s: n, v: hi === "fumble" ? 1 : hi === "crit" ? n : Math.ceil(n * .6), kept, hi })}</span><small>d${n}</small></span>`).join("")}</div>`).join("")}</div></section>`;
+      `<div class="shaperow"><span class="sheet-field-label">${row || "plain"}</span>${[2, 4, 6, 8, 10, 12, 20].map(n => `<span class="dgroup"><span>${dieHTML({ s: n, v: hi === "fumble" ? 1 : hi === "crit" ? n : Math.ceil(n * .6), kept, hi })}</span><small>d${n}</small></span>`).join("")}</div>`).join("")}</div></section>`;
   document.getElementById("sheet").innerHTML = head + skills + `<div class="right">${defs}${strikes}${tests}</div>`;
 }
 
