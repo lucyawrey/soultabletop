@@ -8,6 +8,7 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 - "we want to support free archetype variant rules" (user, 2026-10-06, during the PF2e sheet mockup; Pathfinder 2e's Free Archetype variant adds an archetype feat slot at every even level)
 - "support a very simple official system: Cairn (https://github.com/yochaigal/cairn)" (user, 2026-10-06)
+- Question: "is using nuxtui instead of raw html in custom character sheets causing performance or developer overhead?" (user, 2026-10-06; the Sheet renderer maps tags to Nuxt UI components, e.g. `UInputNumber`, `UTable`, `USelect`)
 
 # In progress
 
