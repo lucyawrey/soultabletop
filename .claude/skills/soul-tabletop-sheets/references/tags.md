@@ -8,7 +8,7 @@ Attributes marked (req) are required. Tag and attribute names are case-insensiti
 
 ## Attributes every tag accepts
 
-`Tab` and `RowDetails` are rendered by their parents (`Tabs`, `Table`), so they accept only `class` and `show` from this list; `live`, `locked`, and `display` there are an unknown-attribute error. `Column` takes no `show` (put it on the `Table`, or use a formula in the column). `Define` takes none of these.
+`Tab` and `RowDetails` are rendered by their parents (`Tabs`, `Table`), so they accept only `class` and `show` from this list; `live`, `locked`, and `display` there are an unknown-attribute error. `Column` takes no `show` (put it on the `Table`, or use a formula in the column). `Button` takes only `class`, `show`, and `live`. `Define` and `Set` take none of these.
 
 | Attribute | Values | Meaning |
 |---|---|---|
@@ -58,7 +58,7 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Value` | `formula`, `format` (`plain` \| `signed`) | any value | Never editable; `formula` (read-only) instead of `field` |
 | `Markdown` | none | string | Formatted long text |
 | `Image` | `alt`, `size` (`sm` \| `md` \| `lg` \| `full`, default md) | string | The string must be an https URL |
-| `Column` | `formula`, `format` (`plain` \| `signed`), `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class`; `formula` (read-only) is computed per row |
+| `Column` | `formula`, `format` (`plain` \| `signed`), `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class`; `formula` (read-only) is computed per row; instead of `field`/`formula` it may hold `Button` children (each row gets them; hidden from viewers who can't edit) |
 
 `formula`: read-only on `Value`, `Column`, `Tracker` (instead of `field`; never both). On `Number`, `Text`, and
 `Checkbox` it may stand alone (read-only) or go with `field` (an override: the field's value wins when it has one; the
@@ -77,6 +77,13 @@ field tag, with a warning.
 | `Table` | `field` (req), `label` | only `Column` and `RowDetails`; paths inside are relative to each row | array of structs (also content or object items), or a struct of alike structs |
 
 In edit mode a `List` or `Table` of an array gets add, remove, and reorder controls; one of a struct's entries has a row per schema entry and no controls.
+
+## Buttons
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Button` | `label` (req), `icon`, `amount` (boolean), `toast` (boolean, off by default) | only `Set`, at least one | Shown only to viewers who can edit; with Edit off usable only if `live`. Adjacent Buttons with `amount` share one number box; `amount` in their `Set` formulas is the number typed. A click writes all `Set`s (computed from the data before it); with `toast`, a toast offers Undo. Errors always show a toast |
+| `Set` | `field` (req; one text, number, true/false, or scalar field; one `*` segment for every item of an array or entry of a struct of alike entries), `formula` (req) | none | Only directly inside `Button`. With `*` the formula runs per item, paths relative to the item; nothing (`null`) removes the value; a literal written to a choice field must be an option |
 
 ## Definitions
 

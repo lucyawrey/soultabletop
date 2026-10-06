@@ -52,8 +52,9 @@ The full list of attributes and children is in `references/tags.md` (verified ag
 - Layout: `Sheet`, `Section` (card; `title`, `description`, `icon`, `span`, `collapsible`, `collapsed`), `Grid` (`cols` 1-12, `gap`), `Stack` (`direction`, `gap`, `align`, `wrap`), `Tabs` (only `Tab` children) and `Tab` (`label` required), `Divider`, `Heading` (`level` 1-4), `Note`, `Callout`, `Badge`, `Collapsible` (`title` required).
 - Fields (need `field`, or `formula` where allowed; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (the field's schema options, else its own `options` list), `Tags`, `Tracker` (`max` optional), `Ref`, `Value` (never editable), `Markdown`, `Image`.
 - Repeaters: `List` (repeats its children per array item, or per entry of a struct whose entries are alike), `Table` (only `Column` and `RowDetails` children; `Column` takes `field` or `formula`, and `format`).
+- Buttons: `Button` (`label` required, `icon`, `amount`, `toast`; only `Set` children) and `Set` (`field`, `formula`, both required). See "Buttons" below.
 - Definitions: `Define` (`name`, `params`, `formula`; top level or directly inside `Sheet`; renders nothing).
-- Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Define` takes none.
+- Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Button` takes `class`, `show`, and `live` only; `Define` and `Set` take none.
 
 Rendering notes: `Number variant="stat"` shows a big number with its label small. `format="signed"` (on `Number` and `Value`) shows `+2` for positives; an editable `Number` input shows the sign too, while the saved value stays a plain number. `Tracker style="pips"` shows boxes instead of a bar; a `Tracker` without `max` (or at 0) shows just its value. `Checkbox style="dot"` shows a filled or empty circle with no Yes/No text. On phones, `Table` rows stack their cells with labels. `Ref` shows a link to the referenced resource or Content.
 
@@ -83,7 +84,7 @@ Computed when the sheet is shown, never saved. Full rules: `docs/sheet-system.md
 - `show="expr"` (a bare formula like `show="hp > 0"` or `show="hasShield"`, no braces): hides the tag (and all inside) when false or empty. Works on `Tab` (hidden tabs leave the list) and `RowDetails` (per row). A `show` formula that fails shows the tag.
 - Errors: a formula that can never work (unknown field, `name + 1` on text, wrong arity, a result the tag can't show) is an error and blocks saving; a runtime failure (division by zero) shows "—", with a warning icon for sheet editors.
 - Cost: a sheet's formulas share a step budget (split between them, and between the items of a List), so a formula that sums a long list inside a long List can run out and show "—". Prefer one total outside the List (or a `<Define>` without parameters, computed once) to the same sum in every row.
-- Not available: dice (`2d6`, `roll`), dates, regex, writing data. Store a value in a field when players should type it; compute it when it follows from other fields.
+- Not available: dice (`2d6`, `roll`), dates, regex, writing data (use a `Button`). Store a value in a field when players should type it; compute it when it follows from other fields.
 
 ## `live`, `locked`, `display`
 
@@ -93,6 +94,38 @@ Boolean (`live`, `locked`) or enum (`display`) attributes on any tag except `Tab
 - `locked`: read-only even in Edit mode until the user clicks the field's pencil button. Use it for things that rarely change: ability scores, level.
 - They compose: editable when the user can edit and (Edit is on, or `live`), and if `locked`, after the unlock click. `live locked` = editable in view mode after unlocking.
 - `display="text"` shows non-editable fields as plain values (stat blocks, spell cards); `display="box"` shows their input, disabled, so the sheet looks the same in edit and view mode (character sheets). It defaults to the Sheet's "Non-editable fields" setting (new sheets: `box` for player characters, `text` otherwise). `Value` and `Image` look the same in both.
+
+## Buttons
+
+A `Button` changes fields when clicked, one `Set` per field. Use it for actions in play: damage and healing, a rest or daily preparations that refill things, moving an item between held, worn, and stowed.
+
+```
+<Button label="Damage" amount live>
+  <Set field="hp.temp" formula="max(0, hp.temp - amount)" />
+  <Set field="hp.value" formula="max(0, hp.value - max(0, amount - hp.temp))" />
+</Button>
+<Button label="Heal" amount live>
+  <Set field="hp.value" formula="min(hp.value + amount, hpMax)" />
+</Button>
+<Button label="Daily preparations" icon="i-lucide-sunrise" live toast>
+  <Set field="spells.*.cast" formula="false" />
+  <Set field="slots.*.left" formula="max" />
+</Button>
+<Table field="inventory">
+  <Column field="name" />
+  <Column label="Move" live>
+    <Button label="Wear" show="state == 'Held'"><Set field="state" formula="'Worn'" /></Button>
+    <Button label="Stow" show="state != 'Stowed'"><Set field="state" formula="'Stowed'" /></Button>
+  </Column>
+</Table>
+```
+
+- Every `Set` reads the data from before the click (so Damage above uses the old `hp.temp` in both), then all write together. A formula that fails, or a result the field can't hold (wrong type, not an option, nothing for a required field), writes nothing. A result of nothing (`null`) removes the value of an optional field. `locked` doesn't stop a Button.
+- `field` must be one text, number, true/false, or scalar field. One `*` changes every item of an array or every entry of a struct of alike entries; then the formula runs per item, with paths relative to the item (`formula="max"` reads that slot's `max`). Without `*`, paths are relative to the Button's row (inside a `List`/`Table`) or the top level.
+- A literal written to a choice field must be one of its options (`'Worn'`).
+- `amount` shows a number box; adjacent Buttons with `amount` share one box. `amount` in their formulas is the number typed (`/amount` reaches a field named so). Without `amount` on the Button, `amount` is an ordinary path.
+- Only viewers who can edit the content see Buttons. They work with Edit on; with Edit off only if `live` (put `live` on the Button, or on a Section or Column around it). A click saves like a `live` field change. `toast` adds a toast with Undo after the click; leave it off for quick, frequent actions (damage, item moves) and use it for large ones (daily preparations, a rest). Errors always show a toast.
+- In a `Table`, put Buttons in a `Column` that has no `field` or `formula`: each row gets its own.
 
 ## CSS
 
@@ -128,7 +161,7 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 
 ## Known limits
 
-- Formulas can't roll dice or write data, and computed values aren't saved or returned by the API.
+- Formulas can't roll dice or write data (only a `Button`'s `Set`s write, when clicked), and computed values aren't saved or returned by the API.
 - `{…}` is always a formula, never a bare lookup: a field named like a keyword (`and`, `true`) or dice (`d6`) is reached as `{/and}`, `{/d6}`.
 - Dice buttons are planned in TODO.md, not available.
 

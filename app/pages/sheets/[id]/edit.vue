@@ -370,6 +370,7 @@ const tagGroups = computed(() => {
     layout: [],
     field: [],
     repeater: [],
+    action: [],
     definition: [],
   };
   for (const spec of sheetTags.values()) groups[spec.category].push(spec);
@@ -377,6 +378,7 @@ const tagGroups = computed(() => {
     { title: "Layout", tags: groups.layout },
     { title: "Fields", tags: groups.field },
     { title: "Repeaters", tags: groups.repeater },
+    { title: "Buttons", tags: groups.action },
     { title: "Definitions", tags: groups.definition },
   ];
 });
@@ -384,6 +386,7 @@ function attrType(spec: TagSpec["attrs"][string]) {
   const { type } = spec;
   if (type.kind === "enum") return type.values.join(" | ");
   if (type.kind === "field") return "field path";
+  if (type.kind === "target") return "field path, * for every item";
   if (type.kind === "number" && type.min !== undefined && type.max !== undefined)
     return `number ${type.min}–${type.max}`;
   return type.kind;

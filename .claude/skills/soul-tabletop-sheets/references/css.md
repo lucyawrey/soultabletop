@@ -22,9 +22,9 @@ Verified: these outputs come from running `processSheetCss` on those inputs.
 
 Every tag's root element has `sheet-<tag>` in lowercase: `sheet-sheet`, `sheet-section`, `sheet-grid`, `sheet-stack`,
 `sheet-tabs`, `sheet-tab`, `sheet-divider`, `sheet-heading`, `sheet-note`, `sheet-callout`, `sheet-badge`,
-`sheet-collapsible`, `sheet-list`, `sheet-table`, `sheet-rowdetails`, and one per field tag (`sheet-field`,
+`sheet-collapsible`, `sheet-list`, `sheet-table`, `sheet-rowdetails`, `sheet-button`, and one per field tag (`sheet-field`,
 `sheet-text`, `sheet-number`, `sheet-checkbox`, `sheet-toggle`, `sheet-select`, `sheet-tags`, `sheet-tracker`,
-`sheet-ref`, `sheet-value`, `sheet-markdown`, `sheet-image`, `sheet-column`). Also `sheet-list-item` (each List item),
+`sheet-ref`, `sheet-value`, `sheet-markdown`, `sheet-image`, `sheet-column`). Also `sheet-list-item` (each List item), `sheet-button-group` (an amount box with its Buttons),
 `sheet-text` on plain text paragraphs (the same class as the `Text` tag, so scope with a parent when it matters),
 `sheet-invalid` (placeholder for a broken tag, shown to editors only), and `sheet-root` on the outermost element.
 Each `Column` cell has `sheet-column`. The `class` attribute adds your own classes on the same element.
