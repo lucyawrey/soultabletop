@@ -23,7 +23,7 @@ What changed from `mockup.html` besides the locked options: the CSS of rejected 
 
 ## Decided after the mockup (not shown in it)
 
-None yet.
+- **Strikes: take parts from the dice mockup** (user, 2026-10-06: "it looks good"). When the sheet is built, consider the Strikes section of [the dice mockup](../dice-rolls/mockup.html) (v1.14): traits on their own muted line under the weapon name, the hit modifier with its roll button and the MAP steps as smaller rollable numbers in one cell, and the damage with "+1d6 sneak" beside it; on a phone, the hit cell moves beside the name and the damage below. The user's word was "aspects", so which parts to take is decided while building.
 
 ## Known issues in the frozen page
 
