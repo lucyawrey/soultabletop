@@ -587,10 +587,11 @@ const tagList: TagSpec[] = [
     name: "Preview",
     category: "layout",
     description:
-      "What a preview shows (expanded or in a card), instead of the generated view; paths inside are relative to the referenced content, and it is always read-only",
+      "What a preview shows (expanded or in a card), instead of the generated view: beside <Sheet> for every preview of this content type, or inside a preview tag for that tag alone; paths inside are relative to the previewed content, and it is always read-only",
     attrs: {},
     children: "any",
     parents: ["Ref", "Value", "Column"],
+    topLevel: true,
     noFlagAttrs: true,
   },
   {

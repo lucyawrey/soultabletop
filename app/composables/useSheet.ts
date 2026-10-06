@@ -51,6 +51,41 @@ export interface SheetPreview {
   card?: ValidatedElement;
 }
 
+// A content type's own `<Preview>` (beside `<Sheet>` in its default sheet),
+// as loaded for previews of its content: "none" when it has none or the
+// viewer can't read that sheet, so previews use the generated view.
+export type SheetOwnPreview =
+  | { status: "loading" }
+  | { status: "none" }
+  | {
+      status: "ready";
+      sheet: { id: string; markup: string; css: string; defaultDisplay: SheetDisplay };
+      schemas: SheetSchemas;
+    };
+
+// Loads each content type's own preview when first asked for, once per
+// rendered Sheet.
+export function createSheetOwnPreviews() {
+  const loaded = new Map<string, Ref<SheetOwnPreview>>();
+  return (contentTypeId: string): Ref<SheetOwnPreview> => {
+    const known = loaded.get(contentTypeId);
+    if (known) return known;
+    const state = shallowRef<SheetOwnPreview>({ status: "loading" });
+    loaded.set(contentTypeId, state);
+    $fetch<{
+      sheet: Extract<SheetOwnPreview, { status: "ready" }>["sheet"] | null;
+      schemas: SheetSchemas | null;
+    }>(`/api/content-type/${contentTypeId}/preview`)
+      .then(({ sheet, schemas }) => {
+        state.value = sheet && schemas ? { status: "ready", sheet, schemas } : { status: "none" };
+      })
+      .catch(() => {
+        state.value = { status: "none" };
+      });
+    return state;
+  };
+}
+
 // Shared by every component of one rendered Sheet (see SheetRenderer.vue).
 export interface SheetContext {
   root: Ref<SheetScope>;
@@ -80,6 +115,8 @@ export interface SheetContext {
   // The scope ID of the Sheet's CSS (`[data-sheet="…"]`), for content
   // rendered outside the sheet's element (preview cards).
   scopeId: Ref<string | undefined>;
+  // A content type's own preview, loaded on first use (createSheetOwnPreviews).
+  ownPreview: (contentTypeId: string) => Ref<SheetOwnPreview>;
 }
 
 // `live` / `locked` / `display` in effect, inherited from enclosing tags.
