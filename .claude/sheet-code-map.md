@@ -33,7 +33,7 @@ Where each part of the Sheet system lives, so you can grep for the function and 
 | `components/sheet/Table.vue`, `List.vue` | Repeaters; Table hides Button-only columns from non-editors. |
 | `components/sheet/Button.vue`, `ButtonGroup.vue`, `ColumnButtons.vue` | Buttons, the shared amount box, a Column's buttons. |
 | `components/sheet/Breakdown.vue` | The breakdown popover. |
-| `components/sheet/PreviewTrigger.vue`, `PreviewExpanded.vue`, `PreviewBody.vue` | A `preview` value's button (and the floating card's `UPopover`); the expanded box (under a field, or under a Table row via `provideSheetRowPreviews`); the `<Card>` or generated view (read-only via `provideSheetReadOnly`). |
+| `components/sheet/PreviewTrigger.vue`, `PreviewExpanded.vue`, `PreviewBody.vue` | A `preview` value's button (and the floating card's `UPopover`); the expanded box (under a field, or under a Table row via `provideSheetRowPreviews`); the `<Preview>` or generated view (read-only via `provideSheetReadOnly`). |
 | `components/ContentDetail.vue`, `composables/useContentDraft.ts` | The content page around the sheet: Edit/Autosave switches, draft, saving (`live` edits save on their own). |
 | `pages/sheets/[id]/edit.vue` | The Sheet editor (markup, CSS, preview, reference panel grouped by tag category). |
 
