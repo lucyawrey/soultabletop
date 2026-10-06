@@ -4,10 +4,9 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 
 **Last updated:** 2026-10-06 (afternoon)
 
-- **Waiting on the user:** review and merge PR #93, sheet buttons (`<Button>` with `<Set>` children, `*`, shared `amount` box, Undo toast), worktree `../soultabletop-worktrees/sheet-buttons`. Choices the user hasn't confirmed: buttons hidden from viewers who can't edit, disabled with Edit off unless `live`; an empty amount box gives a "Type an amount first" toast.
-- **Test data to delete after #93 merges** (user's account, via the API, in this order): content `9cf5bb05-8e19-4876-939b-1469f42d475c` (Valeros), sheet `65758e21-9471-433a-a9ad-cf6059302fb9`, content type `759bff23-1544-4853-868c-c6c8c7881333`, system `21bafdf7-b931-4082-b1cb-965989aba85b` ("Test: sheet buttons").
-- **Next:** the remaining sheet features at the top of Next up in `TODO.md`, in order (breakdown popovers, reference previews, dice buttons); popovers need a markup decision with the user. Then the PF2e character sheet build (`.claude/plans/pf2e-demo.md`, step 6). After #93 merges, delete its TODO item and mark gap 4 done in `.claude/mockups/pf2e-sheet/spec.md`.
-- **Not yet seen by the user:** compact density in the real app (#92); it was checked only on throwaway test sheets.
+- **Done:** #93 (sheet buttons: `<Button>` with `<Set>`, `*`, shared `amount` box, opt-in `toast` with Undo) and #94 (compact is the default density) merged; their test data was deleted.
+- **Next:** breakdown popovers, the top of Next up in `TODO.md`; the markup is decided there (`<Part>` children on `Value`, `Column`, `Number` with a formula). New branch off `main`; an agent reviewer before the user reviews; a test character in the user's account for the preview, deleted after merge (`.claude/running-commands.md`). Then reference previews, dice buttons, and the PF2e character sheet build (`.claude/plans/pf2e-demo.md`, step 6).
+- **Not yet seen by the user:** compact density on a real, full sheet (only test sheets so far).
 - **Waiting on the user:** keep or delete `icons.html` in the mockup folder; whether the Initiative "rolls with" picker should offer Lore skills.
 - The nine reference content types in `.claude/pf2e/content-types/` are drafted but not validated against the API or reviewed.
 - **Unverified on the Mac:** that `code` is on the PATH. **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70). The Mac's `.env.local` names the API key `SOUL_API_KEY`, while the README says `SOUL_TABLETOP_API_KEY`.

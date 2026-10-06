@@ -12,8 +12,6 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 
 # In progress
 
-- **Sheet buttons that change a field** · feature · PR #93 (`sheet-buttons`)
-  `<Button>` with `<Set field formula>` children, `*` for every item, a shared `amount` box, Undo toast (user's decisions, 2026-10-06). Damage and Heal on HP, Daily preparations, an inventory item's move badges.
 - **Pathfinder 2e demo system** · feature · on `docs` (`.claude/pf2e/`, `.claude/mockups/pf2e-sheet/`)
   Plan: [.claude/plans/pf2e-demo.md](.claude/plans/pf2e-demo.md) (decisions, references and their rules, density, steps).
   A small slice of the Pathfinder 2e system for the demo, and a head start on the official one (Phase 2): content types (character, ancestry, background, class, feat, spell, item) and a polished character sheet using formulas, choice fields, struct tables, list functions, and defaults. Agents design the types and sheets, reading the Foundry pf2e data for reference (`~/Developer/foundry-pf2e`); an import script loads a small ORC Remaster slice of content through the API with the user's API key, never agent-written content (see "Data sources and import scripts for official content"). Keep a copy of the schemas, sheets, and script in `.claude/` until the authoring CLI exists. The system's description credits the data source and states the ORC license notice from the start. Replaces the old `pf2e-test` system, which the reset removes.
@@ -24,9 +22,9 @@ The exact order: do these one at a time, top first.
 
 Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The items below, in this order.
 
-Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the first four items (density, `editing()`, and live fields saving at once were built in #92), from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
+Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the items below (density, `editing()`, and live fields saving at once were built in #92, buttons in #93), from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
 
-- **Sheet breakdown popovers** · feature · depends on: PR #93 (both change `Column`'s children)
+- **Sheet breakdown popovers** · feature
   Clicking a computed number shows its parts in a popover under it, without moving the layout; click again, click elsewhere, or Escape closes it (the frozen mockup's look: "Wis **+3** · Expert **+4** · Armor **−1** = **+6**", DCs with "10 base" first). User's decisions (2026-10-06): `<Part label="…" formula="…" />` children, with `{…}` allowed in `label` and `show` on a Part; a tag with parts and no formula of its own shows their sum (other formulas can't read it; use a `<Define>`). On `Value`, `Column` (per row, beside Button children), and `Number` with a formula (the popover shows the computed parts, even while a manual value wins). An agent reviewer checks the PR before the user does.
 - **Sheet reference previews** · feature
   Clicking a referenced spell, feat, item, or class feature shows its rules text in a card, in play and edit, read from the referenced resource.
