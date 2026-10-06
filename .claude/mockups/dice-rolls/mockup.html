@@ -187,6 +187,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .rcard .csum { display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
 .rcard .csum .eq { color: var(--st-ink-muted); font-size: 20px; }
 .rcard .ctotal { font-family: var(--st-font-display); font-weight: 700; font-size: 52px; line-height: .9; font-variant-numeric: lining-nums tabular-nums; }
+/* Dice card: the card's header band and footer, with the dice and the total on one row. */
+.bcard .bbody { display: flex; align-items: center; gap: 8px 14px; padding: 10px 12px 8px; }
+.bcard .bbody .dicerow { flex: 1; min-width: 0; }
+.bcard .btotal { display: flex; align-items: baseline; gap: 8px; margin-left: auto; }
+.bcard .btotal .eq { color: var(--st-ink-muted); font-size: 20px; }
+.bcard .btotal b { font-family: var(--st-font-display); font-weight: 700; font-size: 44px; line-height: .9; font-variant-numeric: lining-nums tabular-nums; }
+.bcard .bline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 0 12px 8px; }
 .rcard .cfoot { display: grid; gap: 6px; padding: 8px 12px 10px; border-top: 1px solid var(--st-border); }
 @media (prefers-reduced-motion: no-preference) {
   .tumble { animation: tumble .85s cubic-bezier(.2, .7, .3, 1) both; }
@@ -224,12 +231,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 </head>
 <body>
 <div class="bar">
-  <b>Dice rolls</b><small>mockup v1.1 · 2026-10-06</small>
-  <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="card">Card</button></div>
+  <b>Dice rolls</b><small>mockup v1.2 · 2026-10-06</small>
+  <div class="ctl" role="group" aria-label="Result look" data-ctl="look"><button data-v="number">Number</button><button data-v="dice">Dice</button><button data-v="blend">Dice card</button><button data-v="card">Card</button></div>
   <div class="ctl" role="group" aria-label="Die shapes" data-ctl="shapes"><button data-v="css">CSS shapes</button><button data-v="gi">Game icons</button></div>
   <div class="ctl" role="group" aria-label="Recent rolls" data-ctl="recent"><button data-v="drawer">Drawer</button><button data-v="panel">Panel</button><button data-v="stack">Stack</button></div>
   <div class="ctl" role="group" aria-label="Toast position" data-ctl="toast"><button data-v="br">Bottom right</button><button data-v="tc">Top center</button></div>
-  <div class="ctl" role="group" aria-label="Roll target" data-ctl="target"><button data-v="icon">Die icon</button><button data-v="underline">Underline</button><button data-v="hover">Hover</button></div>
+  <div class="ctl" role="group" aria-label="Roll target" data-ctl="target"><button data-v="icon">Die icon</button><button data-v="underline">Underline</button></div>
   <div class="ctl" role="group" aria-label="Entry detail" data-ctl="detail"><button data-v="compact">Compact</button><button data-v="expanded">Expanded</button></div>
   <div class="ctl" role="group" aria-label="Viewer" data-ctl="viewer"><button data-v="owner">Owner</button><button data-v="reader">Read-only</button></div>
   <div class="ctl"><button data-contrast aria-expanded="false" aria-controls="contrastbox">Contrast</button></div>
@@ -263,7 +270,7 @@ const GI = {"rolling-dices": "<path fill=\"currentColor\" d=\"M138.798 35.342L28
 const svg = (name, cls = "") => `<svg class="${cls}" viewBox="0 0 512 512" aria-hidden="true">${GI[name]}</svg>`;
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const S = { look: "number", shapes: "css", recent: "drawer", toast: "br", target: "icon", detail: "compact", viewer: "owner",
+const S = { look: "blend", shapes: "css", recent: "drawer", toast: "br", target: "icon", detail: "compact", viewer: "owner",
   hero: 2, fortune: false, drawer: false, stackOpen: true, toastId: null, open: null };
 const sg = n => (n >= 0 ? "+" : "−") + Math.abs(n);
 const tag = (t, a = "", gap = "", steps = "") => ` data-tag="${t}"${a ? ` data-attrs='${a}'` : ""}${gap ? ` data-gap="${gap}"` : ""}${steps ? ` data-steps='${steps}'` : ""}`;
@@ -420,6 +427,16 @@ function cardHTML(e, anim) {
     <div class="cfoot">${S.detail === "expanded" ? metaHTML(e) : `<div class="efrom">${e.path} · ${e.who}</div>`}${fuButtons(e)}</div></div>`;
 }
 
+// The Dice card look: the card's header and footer, the dice tumbling in on one row with the total.
+function blendHTML(e, anim) {
+  return `<div class="rcard bcard${anim ? " slidein" : ""}" data-impl="new: RollCard (compact)">
+    <div class="chead"><span class="eact" style="font-weight:700">${e.action}</span><span class="elbl" style="color:var(--st-ink-muted)">${e.label}</span><time style="margin-left:auto;font-size:11.5px;color:var(--st-ink-muted)">${time(e.when)}</time></div>
+    ${e.from ? `<div style="padding:6px 12px 0">${fromLine(e)}</div>` : ""}
+    <div class="bbody big">${diceRow(e.terms, anim)}<span class="btotal"><span class="eq">=</span><b class="${anim ? "pending" : ""}" data-total>${e.total}</b></span></div>
+    <div class="bline"><span class="eexpr dim">${expr(e.terms)} = ${expr(e.terms, true)}</span>${natBadge(e)}</div>
+    ${S.detail === "expanded" || followUps(e).length ? `<div class="cfoot">${S.detail === "expanded" ? metaHTML(e) : ""}${fuButtons(e)}</div>` : ""}</div>`;
+}
+
 // ---- Toast, stack, panel, drawer ----
 let toastTimer = null, numTimer = null;
 S.fresh = null;
@@ -435,8 +452,8 @@ function renderToasts(anim = false) {
   const e = S.toastId && byId(S.toastId);
   if (!e || (S.recent === "stack" && !S.stackOpen)) { box.innerHTML = ""; return; }
   anim = anim && !REDUCED;
-  const body = S.look === "card" ? cardHTML(e, anim) : entryHTML(e, { toast: true, anim });
-  const toast = `<div class="toast bg-default ring ring-accented rounded-lg shadow-lg${anim && S.look !== "card" ? " slidein" : ""}" data-impl="new: RollToast (UToast-style)">${body}
+  const body = S.look === "card" ? cardHTML(e, anim) : S.look === "blend" ? blendHTML(e, anim) : entryHTML(e, { toast: true, anim });
+  const toast = `<div class="toast bg-default ring ring-accented rounded-lg shadow-lg${anim && S.look !== "card" && S.look !== "blend" ? " slidein" : ""}" data-impl="new: RollToast (UToast-style)">${body}
     <button class="x" data-closetoast aria-label="Close" title="Close" data-impl="app.config toast slots.close: UButton color=neutral variant=outline size=sm icon=i-lucide-x">×</button></div>`;
   let stack = "";
   if (S.recent === "stack") {
@@ -455,7 +472,7 @@ function animate(box, e) {
     numTimer = setInterval(() => { if (performance.now() - t0 > 700) { clearInterval(numTimer); el.textContent = e.total; el.classList.add("settle"); return; }
       el.textContent = lo + Math.floor(Math.random() * (hi - lo + 1)); }, 45);
   }
-  if (S.look === "dice") setTimeout(() => { const el = box.querySelector("[data-total]"); if (el) { el.classList.remove("pending"); el.classList.add("settle"); } }, 750);
+  if (S.look === "dice" || S.look === "blend") setTimeout(() => { const el = box.querySelector("[data-total]"); if (el) { el.classList.remove("pending"); el.classList.add("settle"); } }, 750);
 }
 function listHTML(anim = false) {
   return `<div class="rhead"><h2>Recent rolls</h2><span class="sp"></span>
@@ -465,7 +482,7 @@ function listHTML(anim = false) {
 }
 // The newest entry at the top of the panel, in the chosen result look.
 function newestHTML(e, anim) {
-  return `<div class="bg-elevated">${S.look === "card" ? cardHTML(e, anim) : entryHTML(e, { toast: true, anim })}</div>`;
+  return `<div class="bg-elevated">${S.look === "card" ? cardHTML(e, anim) : S.look === "blend" ? blendHTML(e, anim) : entryHTML(e, { toast: true, anim })}</div>`;
 }
 function renderRolls(anim = false) {
   document.getElementById("page").dataset.recent = S.recent;
