@@ -72,6 +72,14 @@ select.rank-sel { width: 46px; height: calc(var(--d-h) - 4px); padding: 0 2px; f
 .meta .sheet-field-value { font-size: var(--d-big); line-height: 1; }
 .meta .sheet-field-value.word { font-size: calc(var(--d-big) * .7); }
 .meta .pips button { width: 17px; height: 17px; }
+/* Desktop: the strip sits centered beside the name and chips, a bit larger. */
+@media (min-width: 901px) {
+  .head > .meta { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .head > .facts { grid-column: 1; }
+  .meta > div { padding: calc(var(--d-pad) * .9) calc(var(--d-pad) + 14px); grid-template-rows: auto calc(var(--d-big) * 1.5); }
+  .meta .sheet-field-value { font-size: calc(var(--d-big) * 1.15); }
+  .meta .pips button { width: 19px; height: 19px; }
+}
 .facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2px 14px; }
 
 /* Defenses: hero numbers first, then the rest. */
