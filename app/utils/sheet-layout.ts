@@ -39,7 +39,7 @@ export const sheetGap: Record<string, string> = {
   lg: "gap-6",
 };
 
-// `gap` on compact sheets (`<Sheet density="compact">`): one step tighter.
+// `gap` on compact sheets (the default density): one step tighter.
 export const sheetGapCompact: Record<string, string> = {
   none: "gap-0",
   sm: "gap-1",
