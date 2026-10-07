@@ -661,10 +661,7 @@ async function insertPath(path: string) {
           </UCard>
         </div>
 
-        <!-- Stacked (and on narrow screens), the preview comes first. -->
         <SheetPreviewPane
-          class="order-first"
-          :class="{ 'lg:order-none': layout === 'columns' }"
           :markup="markup"
           :css="cssResult.css"
           :scope-id="id"
