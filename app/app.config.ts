@@ -8,6 +8,13 @@ export default defineAppConfig({
       secondary: "gilt",
       neutral: "folio",
     },
+    // Roll toasts stay until closed, so every toast's close button is a
+    // visible outlined button (.claude/mockups/dice-rolls/spec.md).
+    toast: {
+      slots: {
+        close: "p-0 size-7 justify-center rounded-md ring ring-accented bg-default text-highlighted hover:bg-elevated",
+      },
+    },
     navigationMenu: {
       slots: {
         // Roomier rows, and small uppercase group labels like the mockup.

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
-import { hasSheetParts, type SheetScope } from "#shared/sheet/runtime";
+import { hasSheetParts, sheetActionWrites, type SheetScope } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // <Table>: one row per item of the bound array (or entry of the bound
@@ -21,13 +21,14 @@ const editing = useSheetListEditing(() => props.node, list);
 const { unlock, remove, move } = editing;
 const editable = computed(() => editing.editable.value && !props.node.entries);
 const lockedEditable = computed(() => editing.lockedEditable.value && !props.node.entries);
-// Columns of only Buttons show only to viewers who can edit, like the
-// Buttons.
+// Columns of only Buttons that write show only to viewers who can edit, like
+// the Buttons (a Button with only Rolls works for everyone).
 const buttonsOnly = (column: ValidatedElement) =>
   !column.binding &&
   !column.formula &&
   !hasSheetParts(column) &&
-  column.children.some((child) => child.type === "element" && child.tag === "Button");
+  column.children.some((child) => child.type === "element" && child.tag === "Button") &&
+  column.children.every((child) => child.type !== "element" || child.tag !== "Button" || sheetActionWrites(child));
 const columnNodes = computed(() =>
   props.node.children.filter(
     (child): child is ValidatedElement =>

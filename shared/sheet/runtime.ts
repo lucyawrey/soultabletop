@@ -27,6 +27,7 @@ import {
   type FormulaEnv,
 } from "./formula-eval";
 import { formatFormulaNumber } from "./formula-functions";
+import { printRollTerm, rollFormula, rollTermDice, type RollRandom, type RollTerm } from "./roll";
 import type { TextPart } from "./parser";
 import {
   entryScopes,
@@ -41,6 +42,7 @@ import {
   isCompiledFormula,
   type AttrValue,
   type ValidatedElement,
+  type ValidatedNode,
   type SheetComputedField,
   type SheetDefinition,
   type SheetSchemas,
@@ -201,12 +203,14 @@ function formulaEnv(
   refs: SheetRefs,
   formulas: SheetFormulaDefinitions,
   params?: Readonly<Record<string, FormulaValue>>,
+  shown?: FormulaValue,
 ): FormulaEnv {
   return {
     root,
     scope,
     refs,
     params,
+    shown,
     editing: formulas.editing ?? false,
     budget: { steps: formulas.stepBudget ?? formulaBudget().steps },
     picked: new WeakMap(),
@@ -250,7 +254,8 @@ function formulaEnv(
   };
 }
 
-// A formula's value in `scope`, with `params` (a Button's `amount`). Never
+// A formula's value in `scope`, with `params` (in an action's steps: its
+// `amount` and named rolls) and `shown` (value() in a value's steps). Never
 // throws.
 export function evaluateSheetFormula(
   ast: FormulaNode,
@@ -259,8 +264,9 @@ export function evaluateSheetFormula(
   refs: SheetRefs,
   formulas: SheetFormulaDefinitions = noDefinitions,
   params?: Readonly<Record<string, FormulaValue>>,
+  shown?: FormulaValue,
 ): FormulaValue {
-  return evaluateFormula(ast, formulaEnv(root, scope, refs, formulas, params));
+  return evaluateFormula(ast, formulaEnv(root, scope, refs, formulas, params, shown));
 }
 
 // Why a Set's result can't go in its field, if it can't. The content save
@@ -345,11 +351,207 @@ export interface SheetWrite {
   previous: unknown;
 }
 
-// What clicking a Button changes: each of its `<Set>`s computed from the data
-// as it is before the click, so the order of the Sets doesn't matter (a later
-// write to the same field wins). Fields reached through references to other
-// Content are skipped. If any formula fails, nothing is written and `error`
-// says why.
+// A named roll, as later steps read it (hit.total, hit.dice, ...).
+export interface SheetRollRecord {
+  total: number;
+  // The kept dice's faces.
+  dice: number[];
+  // The face when exactly one die is kept, else nothing.
+  natural: number | null;
+  crit: boolean;
+  fumble: boolean;
+}
+
+// A FollowUp offered on a roll's entry, with what it reads when clicked: the
+// named rolls up to its place (the sheet itself is read at the click).
+export interface SheetFollowUp {
+  node: ValidatedElement;
+  params: Record<string, FormulaValue>;
+}
+
+// One roll's result: what the toast and Recent rolls show, and what a
+// campaign log will store.
+export interface SheetRollEntry {
+  // The action's name ("Rapier") and the Roll's label ("Attack").
+  title: string;
+  label: string;
+  // The expression as rolled ("d20 + 7") and its parts with each die.
+  expression: string;
+  term: RollTerm;
+  total: number;
+  natural: number | null;
+  // How the natural die is marked, for the "Natural 20" badge.
+  naturalMark: "crit" | "fumble" | null;
+  // The Roll's name, if it has one, and every named roll so far (this one
+  // included), for follow-ups.
+  name?: string;
+  records: Record<string, SheetRollRecord>;
+  followUps: SheetFollowUp[];
+}
+
+export interface SheetActionContext {
+  root: SheetScope;
+  // The action's scope (a List or Table row, or the top level).
+  scope: SheetScope;
+  refs: SheetRefs;
+  formulas?: SheetFormulaDefinitions;
+  // `amount` (a Button with amount) and, for a follow-up, the named rolls
+  // before it.
+  params?: Record<string, FormulaValue>;
+  // value() in a value's steps.
+  shown?: FormulaValue;
+  random: RollRandom;
+  // The action's name, for its entries' titles.
+  title: string;
+}
+
+// What running an action's steps did: the writes to apply (in order) and the
+// rolls made. On an error nothing is applied, and the message says why.
+export type SheetActionResult = { writes: SheetWrite[]; entries: SheetRollEntry[] } | { error: string };
+
+// Whether an action's own steps (not its follow-ups') write anything.
+export function sheetActionWrites(node: ValidatedElement) {
+  return node.children.some((child) => child.type === "element" && child.tag === "Set");
+}
+
+// Whether an action has steps at all (a value tag with Rolls or Sets).
+export function sheetActionSteps(node: ValidatedElement) {
+  return node.children.some(
+    (child) => child.type === "element" && (child.tag === "Set" || child.tag === "Roll" || child.tag === "FollowUp"),
+  );
+}
+
+// Runs an action's steps top to bottom. Each Set is written into a copy of
+// the data, so later steps read it; each Roll makes an entry, and FollowUps
+// attach to the entry of the Roll before them. Fields reached through
+// references to other Content are skipped. Never throws.
+export function runSheetAction(steps: readonly ValidatedNode[], context: SheetActionContext): SheetActionResult {
+  const { refs, random, title } = context;
+  const formulas = context.formulas ?? noDefinitions;
+  let root = context.root;
+  let scope = context.scope;
+  // The data as the steps so far left it (copied on the first write).
+  let data: Record<string, unknown> | undefined;
+  const params: Record<string, FormulaValue> = { ...context.params };
+  const records: Record<string, SheetRollRecord> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (isRollRecord(value)) records[key] = value;
+  }
+  const writes: SheetWrite[] = [];
+  const entries: SheetRollEntry[] = [];
+
+  for (const step of steps) {
+    if (step.type !== "element") continue;
+    if (step.tag === "FollowUp") {
+      entries.at(-1)?.followUps.push({ node: step, params: { ...params } });
+      continue;
+    }
+    if (!sheetCondition(step.attrs.show, root, scope, refs, formulas, params, context.shown).shown) continue;
+
+    if (step.tag === "Set") {
+      const set = setWrites(step, root, scope, refs, formulas, params, context.shown);
+      if ("error" in set) return set;
+      for (const write of set.writes) {
+        if (!data) data = copyData(root.value);
+        setSheetValue(data, write.path, write.value);
+        writes.push(write);
+      }
+      if (data && set.writes.length) {
+        root = { ...root, value: data };
+        scope = scope.path ? { ...scope, value: sheetValueAt(data, scope.path) } : scope;
+      }
+      continue;
+    }
+
+    if (step.tag !== "Roll" || !step.formula) continue;
+    const env = formulaEnv(root, scope, refs, formulas, params, context.shown);
+    const rolled = rollFormula(step.formula.ast, env, random);
+    if (isFormulaError(rolled)) return { error: rolled.message };
+    const dice = rollTermDice(rolled.term);
+    for (const die of dice) {
+      if (!die.kept) continue;
+      const faceParams = { ...params, face: die.face, sides: die.sides };
+      for (const mark of ["crit", "fumble"] as const) {
+        const condition = step.attrs[mark];
+        if (die.mark || !isCompiledFormula(condition)) continue;
+        const value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas, faceParams, context.shown);
+        if (isFormulaError(value)) return { error: value.message };
+        if (value === true) die.mark = mark;
+      }
+    }
+    const kept = dice.filter((die) => die.kept);
+    const record: SheetRollRecord = {
+      total: rolled.total,
+      dice: kept.map((die) => die.face),
+      natural: kept.length === 1 ? kept[0]!.face : null,
+      crit: kept.some((die) => die.mark === "crit"),
+      fumble: kept.some((die) => die.mark === "fumble"),
+    };
+    const name = typeof step.attrs.name === "string" ? step.attrs.name : undefined;
+    if (name) {
+      records[name] = record;
+      params[name] = record as unknown as FormulaValue;
+    }
+    const label = Array.isArray(step.attrs.label)
+      ? interpolateSheetText(step.attrs.label as TextPart[], root, scope, refs, formulas, params, context.shown)
+      : "";
+    entries.push({
+      title,
+      label: label || "Roll",
+      expression: printRollTerm(rolled.term),
+      term: rolled.term,
+      total: rolled.total,
+      natural: record.natural,
+      naturalMark: kept.length === 1 ? (kept[0]!.mark ?? null) : null,
+      ...(name ? { name } : {}),
+      records: { ...records },
+      followUps: [],
+    });
+  }
+  return { writes, entries };
+}
+
+function isRollRecord(value: unknown): value is SheetRollRecord {
+  return isRecord(value) && typeof value.total === "number" && Array.isArray(value.dice);
+}
+
+// The Content's data as plain objects, to write a click's steps into.
+function copyData(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? (JSON.parse(JSON.stringify(value)) as Record<string, unknown>) : {};
+}
+
+// One Set's writes (one per item with `*`).
+function setWrites(
+  set: ValidatedElement,
+  root: SheetScope,
+  scope: SheetScope,
+  refs: SheetRefs,
+  formulas: SheetFormulaDefinitions,
+  params: Readonly<Record<string, FormulaValue>>,
+  shown: FormulaValue | undefined,
+): { writes: SheetWrite[] } | { error: string } {
+  if (!set.target || !set.formula) return { writes: [] };
+  const { list, path } = set.target;
+  const rows = list
+    ? set.entries
+      ? entryScopes(resolveSheetPath(list, root, scope, refs), set.entries)
+      : itemScopes(resolveSheetPath(list, root, scope, refs))
+    : [scope];
+  const writes: SheetWrite[] = [];
+  for (const row of rows) {
+    const target = resolveSheetPath(path, root, row, refs);
+    const value = evaluateSheetFormula(set.formula.ast, root, row, refs, formulas, params, shown);
+    if (isFormulaError(value)) return { error: value.message };
+    if (!target.path) continue;
+    const problem = setValueProblem(set.target.field, value, set.attrs.field as string);
+    if (problem) return { error: problem };
+    writes.push({ path: target.path, value: value ?? undefined, previous: target.value });
+  }
+  return { writes };
+}
+
+// What clicking a Button that only writes changes: its steps run in order
+// (see runSheetAction), with `amount` the number typed.
 export function sheetButtonWrites(
   button: ValidatedElement,
   root: SheetScope,
@@ -361,27 +563,16 @@ export function sheetButtonWrites(
   if (button.attrs.amount === true && (amount === undefined || amount === null)) {
     return { error: "Type an amount first" };
   }
-  const params = button.attrs.amount === true ? { amount: amount ?? null } : undefined;
-  const writes: SheetWrite[] = [];
-  for (const child of button.children) {
-    if (child.type !== "element" || !child.target || !child.formula) continue;
-    const { list, path } = child.target;
-    const rows = list
-      ? child.entries
-        ? entryScopes(resolveSheetPath(list, root, scope, refs), child.entries)
-        : itemScopes(resolveSheetPath(list, root, scope, refs))
-      : [scope];
-    for (const row of rows) {
-      const target = resolveSheetPath(path, root, row, refs);
-      const value = evaluateSheetFormula(child.formula.ast, root, row, refs, formulas, params);
-      if (isFormulaError(value)) return { error: value.message };
-      if (!target.path) continue;
-      const problem = setValueProblem(child.target.field, value, child.attrs.field as string);
-      if (problem) return { error: problem };
-      writes.push({ path: target.path, value: value ?? undefined, previous: target.value });
-    }
-  }
-  return { writes };
+  const result = runSheetAction(button.children, {
+    root,
+    scope,
+    refs,
+    formulas,
+    params: button.attrs.amount === true ? { amount: amount ?? null } : undefined,
+    random: () => 1,
+    title: "",
+  });
+  return "error" in result ? result : { writes: result.writes };
 }
 
 // The value of a definition without parameters, as calls see it (it may be a
@@ -418,11 +609,13 @@ export function sheetTextSegments(
   scope: SheetScope,
   refs: SheetRefs,
   formulas: SheetFormulaDefinitions = noDefinitions,
+  params?: Readonly<Record<string, FormulaValue>>,
+  shown?: FormulaValue,
 ): SheetTextSegment[] {
   return parts.map((part) => {
     if (typeof part === "string") return { text: part };
     if (!part.ast) return { text: "—", error: "This formula has errors" };
-    const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas);
+    const value = evaluateSheetFormula(part.ast, root, scope, refs, formulas, params, shown);
     if (isFormulaError(value)) return { text: "—", error: value.message };
     // `{path}` to a choice field shows the option's label.
     const label = part.options && choiceLabel(part.options, value);
@@ -436,8 +629,10 @@ export function interpolateSheetText(
   scope: SheetScope,
   refs: SheetRefs,
   formulas: SheetFormulaDefinitions = noDefinitions,
+  params?: Readonly<Record<string, FormulaValue>>,
+  shown?: FormulaValue,
 ): string {
-  return sheetTextSegments(parts, root, scope, refs, formulas)
+  return sheetTextSegments(parts, root, scope, refs, formulas, params, shown)
     .map((segment) => segment.text)
     .join("");
 }
@@ -466,10 +661,12 @@ export function sheetCondition(
   scope: SheetScope,
   refs: SheetRefs,
   formulas: SheetFormulaDefinitions = noDefinitions,
+  params?: Readonly<Record<string, FormulaValue>>,
+  shown?: FormulaValue,
 ): { shown: boolean; error?: string } {
   if (condition === undefined) return { shown: true };
   if (!isCompiledFormula(condition)) return { shown: true };
-  const value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas);
+  const value = evaluateSheetFormula(condition.ast, root, scope, refs, formulas, params, shown);
   if (isFormulaError(value)) return { shown: true, error: value.message };
   if (value === true) return { shown: true };
   if (value === false || value === null || value === undefined) return { shown: false };

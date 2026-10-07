@@ -79,11 +79,20 @@ export type FormulaNode =
   | { type: "call"; name: string; args: FormulaNode[]; nameLoc: Loc; loc: Loc }
   // A path on a call's result: `first(weapons).bonus` (`path` is relative).
   | { type: "member"; target: FormulaNode; path: SheetPath; text: string; loc: Loc }
-  | { type: "dice"; count: number; sides: number; loc: Loc };
+  // `2d20kh1`: keep the highest (`h`) or lowest (`l`) `count` of the dice.
+  | { type: "dice"; count: number; sides: number; keep?: DiceKeep; loc: Loc };
+
+export interface DiceKeep {
+  mode: "h" | "l";
+  count: number;
+}
 
 export interface FormulaParseOptions {
   // Inside a `<Define>`: bare words with these names are its parameters.
   params?: readonly string[];
+  // Parameters that are named rolls: `hit.total` reads a field of one (a
+  // definition's `rank.x` stays the field path rank.x).
+  records?: readonly string[];
 }
 
 export interface FormulaParseResult {
@@ -110,7 +119,7 @@ interface Token {
   type: TokenType;
   text: string;
   value?: number | string;
-  dice?: { count: number; sides: number };
+  dice?: { count: number; sides: number; keep?: DiceKeep };
   start: number; // index into the decoded characters
   end: number;
 }
@@ -358,15 +367,24 @@ class Lexer {
     const sidesStart = this.index;
     this.digits();
     const sides = Number(this.chars.slice(sidesStart, this.index).join(""));
+    // `kh1` / `kl1`: keep the highest or lowest dice.
+    let keep: DiceKeep | undefined;
+    if (this.peek() === "k" && (this.peek(1) === "h" || this.peek(1) === "l") && isDigit(this.peek(2))) {
+      const mode = this.peek(1) as "h" | "l";
+      this.index += 2;
+      const keepStart = this.index;
+      this.digits();
+      keep = { mode, count: Number(this.chars.slice(keepStart, this.index).join("")) };
+    }
     if (isIdentChar(this.peek()) || this.peek() === ".") {
       while (isIdentChar(this.peek())) this.index += 1;
       throw new FormulaSyntaxError(
-        `"${this.chars.slice(start, this.index).join("")}" looks like dice but isn't; dice look like 2d6`,
+        `"${this.chars.slice(start, this.index).join("")}" looks like dice but isn't; dice look like 2d6 or 2d20kh1`,
         start,
         this.index,
       );
     }
-    return this.make("dice", start, { dice: { count, sides } });
+    return this.make("dice", start, { dice: { count, sides, ...(keep ? { keep } : {}) } });
   }
 
   private string(start: number, quote: string): Token {
@@ -412,6 +430,11 @@ class Lexer {
     if (this.peek() === "d" && isDigit(this.peek(1))) {
       let end = this.index + 1;
       while (isDigit(this.chars[end])) end += 1;
+      // `d20kh1`: a keep suffix.
+      if (this.chars[end] === "k" && (this.chars[end + 1] === "h" || this.chars[end + 1] === "l") && isDigit(this.chars[end + 2])) {
+        end += 3;
+        while (isDigit(this.chars[end])) end += 1;
+      }
       if (!isIdentChar(this.chars[end])) return this.dice(start, 1);
     }
     const name = this.identifier();
@@ -500,6 +523,7 @@ class FormulaParser {
     private readonly chars: string[],
     private readonly positions: Position[],
     private readonly params: readonly string[],
+    private readonly records: readonly string[] = [],
   ) {
     this.lexer = new Lexer(chars);
     this.token = this.lexer.next();
@@ -639,6 +663,18 @@ class FormulaParser {
           );
         }
         const text = token.value as string;
+        // A parameter holding a group of fields (a named roll): `hit.total`.
+        const [first, ...rest] = text.split(".");
+        if (!text.startsWith("/") && !text.startsWith(".") && rest.length && this.records.includes(first!)) {
+          const name = first!;
+          const target = this.node<FormulaNode>({
+            type: "param",
+            name,
+            loc: this.loc(token.start, token.start + name.length),
+          });
+          const memberText = `.${rest.join(".")}`;
+          return this.node({ type: "member", target, path: parsePathText(memberText), text: memberText, loc });
+        }
         return this.node({ type: "path", path: parsePathText(text), text, loc });
       }
       default:
@@ -740,7 +776,8 @@ export function parseFormula(
     };
   }
   try {
-    const parser = new FormulaParser(chars, positions, options.params ?? []);
+    const records = options.records ?? [];
+    const parser = new FormulaParser(chars, positions, [...(options.params ?? []), ...records], records);
     return { ast: parser.parse(), diagnostics: [] };
   } catch (error) {
     if (!(error instanceof FormulaSyntaxError)) throw error;
@@ -830,7 +867,7 @@ export function printFormula(node: FormulaNode): string {
     case "member":
       return `${printFormula(node.target)}${node.text}`;
     case "dice":
-      return `${printNumber(node.count)}d${printNumber(node.sides)}`;
+      return `${printNumber(node.count)}d${printNumber(node.sides)}${node.keep ? `k${node.keep.mode}${printNumber(node.keep.count)}` : ""}`;
   }
 }
 

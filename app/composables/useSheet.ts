@@ -12,7 +12,7 @@ import {
 } from "#shared/sheet/formula";
 import type { SheetPreviewTarget } from "#shared/sheet/card";
 import type { TextPart } from "#shared/sheet/parser";
-import type { SheetDensity, SheetDisplay } from "#shared/sheet/registry";
+import type { SheetDensity, SheetDisplay, SheetRollTarget } from "#shared/sheet/registry";
 import {
   entryScopes,
   evaluateSheetFormula,
@@ -104,6 +104,8 @@ export interface SheetContext {
   defaultDisplay: Ref<SheetDisplay>;
   // `<Sheet density>`.
   density: Ref<SheetDensity>;
+  // `<Sheet rolls>`: "button" puts a die button beside every value with steps.
+  rollTarget: Ref<SheetRollTarget>;
   // Writes a value into the Content's draft data.
   update: (path: (string | number)[], value: unknown) => void;
   // Makes referenced Content picked while editing displayable before saving.

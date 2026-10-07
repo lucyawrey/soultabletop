@@ -100,7 +100,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 ### Layout
 | Tag | Attrs | Children | Renders |
 |---|---|---|---|
-| `Sheet` | `density` (compact/roomy, default compact) | any | root wrapper; required: every sheet is one `<Sheet>`, with only `<Define>`s beside it (decided 2026-10-06, so other views of the content, like reference preview cards, can sit beside it) |
+| `Sheet` | `density` (compact/roomy, default compact), `rolls` (auto/button, default auto; see "Rolls") | any | root wrapper; required: every sheet is one `<Sheet>`, with only `<Define>`s beside it (decided 2026-10-06, so other views of the content, like reference preview cards, can sit beside it) |
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
@@ -400,12 +400,13 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.c
   fetched (above).
 
 ### Buttons (decided 2026-10-06)
-`<Button label="…">` changes fields when clicked, with one `<Set field="…" formula="…" />` child per change:
+`<Button label="…">` runs its steps when clicked: one `<Set field="…" formula="…" />` per change, and `<Roll>`s and
+`<FollowUp>`s (see "Rolls"):
 
 ```
 <Button label="Damage" amount live>
-  <Set field="hp.temp" formula="max(0, hp.temp - amount)" />
   <Set field="hp.value" formula="max(0, hp.value - max(0, amount - hp.temp))" />
+  <Set field="hp.temp" formula="max(0, hp.temp - amount)" />
 </Button>
 <Button label="Daily preparations" icon="i-lucide-sunrise" live toast>
   <Set field="spells.*.cast" formula="false" />
@@ -419,12 +420,14 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.c
 ```
 
 - `Button` takes `label` (required), `icon`, `amount`, `toast`, and of the common attributes `class`, `show`, and `live`
-  (`locked` and `display` don't apply). It contains only `Set`s, at least one; `Set` is only directly inside a
-  `Button` and takes no common attributes. Child tags rather than one `set="field: formula; …"` attribute, so each
-  formula is a whole attribute like everywhere else and its errors point at its own tag (decided).
-- Every `Set` of a Button is computed from the data as it was before the click, then all are written together, so
-  their order doesn't matter (two writing one field: the last wins). A formula that fails writes nothing and shows its
-  message in a toast. A result of nothing removes the key.
+  (`locked` and `display` don't apply). It contains steps (`Set`, `Roll`, `FollowUp`), at least one; `Set` is only
+  directly inside an action (a `Button`, a value with steps, or a `FollowUp`; see "Rolls") and takes no common
+  attributes. Child tags rather than one `set="field: formula; …"` attribute, so each formula is a whole attribute
+  like everywhere else and its errors point at its own tag (decided).
+- Steps run top to bottom, each reading what the ones before it wrote (decided 2026-10-06, with rolls; until then
+  every `Set` read the data from before the click, so the documented Damage button swapped its two `Set`s). Nothing
+  is written until every step has run: a formula that fails writes nothing and shows its message in a toast. A
+  result of nothing removes the key.
 - `field` is a path to one text, number, true/false, or scalar field (not a struct, array, or reference); the
   formula's result must fit it, and a literal written to a choice field must be one of its options (other values are
   checked on the click). A path through a `content` field is a warning: only local data there can change. One `*` segment changes every item of an array, or every entry of a struct whose
@@ -436,8 +439,9 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.c
   share one box, as Damage and Heal do. In their `Set` formulas `amount` is the number typed (a parameter, like a
   `<Define>`'s: `/amount` still reaches a field of that name); clicking with the box empty writes nothing and says
   "Type an amount first", and a click clears the box. Without `amount` on the Button, `amount` is an ordinary path.
-- Who can use it (decided): only viewers who can edit the content see Buttons (and the amount box). With Edit on they
-  work; with Edit off only `live` ones (on the Button or inherited) do, the rest are disabled. Writes go into the draft
+- Who can use it (decided): only viewers who can edit the content see Buttons that write (and their amount box). With
+  Edit on they work; with Edit off only `live` ones (on the Button or inherited) do, the rest are disabled. A Button
+  with only `Roll`s writes nothing, so every viewer sees and uses it (see "Rolls"). Writes go into the draft
   like any edit, so they save the way a `live` field does with Edit off (at once) and like other edits with Edit on.
 - Results are checked against their fields on the click, as the save would: the field's type, a choice field's
   options, and nothing for a required field. A result that doesn't fit writes nothing and says why.
@@ -448,10 +452,83 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.c
   saying why.
 - `locked` doesn't stop a Button: it guards a field's own input, while a Button is its own action.
 - In a `Table`, a `Column` with `Button` children gives each row its buttons, after the column's value if it also
-  has a `field`, `formula`, or parts. A Column of only Buttons is left out for viewers who can't edit.
+  has a `field`, `formula`, or parts. A Column of only Buttons that write is left out for viewers who can't edit.
 - Rendered by `sheet/Button.vue` (`UButton`, outline, `xs` in compact sheets), `sheet/ButtonGroup.vue` (the shared
-  box; `SheetNodes` groups the buttons), and `sheet/ColumnButtons.vue`; the writes come from `sheetButtonWrites` in
-  `runtime.ts`. Hook classes: `sheet-button` on each button, `sheet-button-group` around a box and its buttons.
+  box; `SheetNodes` groups the buttons), and `sheet/ColumnButtons.vue`; the steps run in `runSheetAction` in
+  `runtime.ts` (`sheetButtonWrites` for a Button that only writes). Hook classes: `sheet-button` on each button,
+  `sheet-button-group` around a box and its buttons.
+
+### Rolls (decided 2026-10-06)
+Design: `.claude/plans/sheet-actions.md`; look frozen in `.claude/mockups/dice-rolls/` (`frozen.html`, `spec.md`), both
+on the `docs` branch until its next merge. A roll is a step of an
+action, not a formula: formulas stay pure, and dice are allowed only in a `<Roll>`'s formula.
+
+```
+<Value label="Stealth" formula="dex + prof(skills.stealth)" format="signed">
+  <Part label="Dex" formula="dex" />
+  <Roll name="check" label="Check" formula="if(fortune, 2d20kh1, d20) + value()" crit="face == 20" fumble="face == 1" />
+  <FollowUp label="Reroll ({heroPoints} left)" show="heroPoints > 0">
+    <Set field="heroPoints" formula="heroPoints - 1" />
+    <Roll label="Reroll" formula="if(fortune, 2d20kh1, d20) + value()" crit="face == 20" fumble="face == 1" />
+  </FollowUp>
+</Value>
+<Table field="strikes">
+  <Column field="name" />
+  <Column label="Hit" formula="/dex + prof(rank)" format="signed">
+    <Roll name="hit" label="Attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
+    <FollowUp label="Damage"><Roll label="Damage" formula="dice(damage)" /></FollowUp>
+    <FollowUp label="Critical"><Roll label="Critical damage" formula="2 * dice(damage) + dice(deadly)" /></FollowUp>
+  </Column>
+</Table>
+<Button label="Fireball"><Roll label="Damage" formula="6d6" /></Button>
+```
+
+- **Actions and steps:** `Roll`, `Set`, and `FollowUp` are steps, directly inside a `Button`, a `Value`, a `Number`, a
+  `Column`, or a `FollowUp` (an action), in any order and number; they run top to bottom, each seeing the writes and
+  named rolls before it. A value with steps is clicked to run them, so it needs a value to show (a `field`,
+  `formula`, or parts). Steps can't be in a `<Preview>` (`step-in-preview`); elsewhere they're `step-misplaced`.
+- **`Roll`:** `formula` (required), `name`, `label` (text with `{…}`; default "Roll"), `crit`, `fumble`, and `show`
+  (skips the step); no other common attributes. One entry per Roll: its title is the action's name (a Button's
+  label; a value's label; in a `List` or `Table` row, the row's label or its `name` field, like "Rapier") and the
+  Roll's label ("Rapier · Attack").
+- **Dice:** `NdM` and `dM`, with `khK`/`klK` keeping the highest or lowest K (`2d20kh1`, `4d6kh3`). Only in a Roll's
+  `formula` (elsewhere `dice-outside-roll`), and only added, subtracted, multiplied, divided, or picked with `if()`
+  (not inside other functions or comparisons). `dice(text)` rolls dice written in a text field (`dice(damage)` with
+  `damage` = "1d6 + 4"): only numbers, dice, `+ − × ÷`, and parentheses; anything else fails the roll with a toast.
+  The parts without dice are computed like any formula, nothing counting as 0. Limits: 2 to 1000 sides, at most 100
+  dice in one Roll (`roll-limit`, checked again for `dice(text)` at the click).
+- **`value()`:** in steps inside a `Value`, `Number`, or `Column`, the value the tag shows (a `Number`'s typed value
+  or formula, a `Column`'s value for that row); elsewhere `value-outside-value`. A definition named `value` wins.
+- **`crit` and `fumble`:** conditions run once per kept die, with `face` and `sides` as parameters: `crit="face == 20"`,
+  `crit="face >= weapon.critRange"`, `crit="face == sides"` (opt-in per roll, any die, for systems that crit on other
+  values). A critical face fills its die; a fumble's is dashed in the error color. With exactly one die kept and
+  marked, the entry shows a "Natural N" badge.
+- **Named rolls:** `name` makes a record later steps read: `hit.total`, `hit.dice` (the kept faces), `hit.natural` (the
+  face when exactly one die is kept, else nothing), `hit.crit`, `hit.fumble`. `hit` alone where a number is needed is
+  `roll-record-as-number`; names are unique in an action and its follow-ups (`roll-name-duplicate`), can't look like
+  dice or be `amount`, `face`, or `sides`, and shadow fields of the same name (reach those with `/`).
+- **`FollowUp`:** `label` (required, text with `{…}`) and `show`; holds steps, at least one (`follow-up-empty`), nested
+  at most 3 deep. It's offered as a button on the entry of the last `Roll` before it in its action
+  (`follow-up-without-roll` without one) and runs when clicked: the named rolls up to its place are stored on the
+  entry, and the sheet is read at the click. Its label and `show` are read live, so "Reroll (2 left)" counts down.
+  A used follow-up stays clickable, marked with a check. One with a `Set` is left out for viewers who can't write;
+  one with only `Set`s shows a toast with Undo when clicked.
+- **Who can use an action:** one whose steps (outside follow-ups) are only `Roll`s works for anyone who can see the
+  sheet, in any mode; one with a `Set` follows the Button rules (edit rights; Edit on, or `live`).
+- **The click target** (`<Sheet rolls>`): by default a value that also opens a breakdown or preview gets a small die
+  button beside it, and other values are the button themselves (underlined in the primary color); `rolls="button"`
+  puts a die button beside every value with steps. A `Number` shown as an input gets the die button beside its label.
+  Hook class: `sheet-roll-trigger`.
+- **Results:** each roll is an entry (`SheetRollEntry` in `runtime.ts`: title, label, the expression as rolled, each
+  die, total, natural, named rolls, follow-ups), what a campaign log will store. The newest shows in one toast
+  (Nuxt UI's toaster, id `roll`, no timeout: the next roll replaces it, × closes it); the content page's **Rolls**
+  button opens Recent rolls, this visit's entries with Details. A click that rolls and writes gets **Undo** on its
+  first entry. Follow-ups in a campaign log, private rolls, and server-side rolling: see the plan.
+- **Code:** `shared/sheet/roll.ts` (rolling a formula with a given random source; `cryptoRandom` in the browser, the
+  server later), `runSheetAction` in `runtime.ts`, the checks in `validate.ts` (`stepElement`, `rollElement`) and
+  `formula-check.ts`; `app/composables/useSheetRolls.ts` (Recent rolls, the toast, running), `sheet/RollTrigger.vue`,
+  and `components/roll/` (`Die.vue`: the die outlines as inline SVG, agent-drawn with the user's OK; `Dice.vue`,
+  `Card.vue`, `Entry.vue`, `RecentRolls.vue`).
 
 ---
 
@@ -480,7 +557,10 @@ Formulas (errors unless noted; codes in parentheses):
 | Result doesn't fit the tag (`Number`/`Tracker`: number, `Text`: text, `Checkbox`: true/false, `Column`: a single value, `show`: true/false/nothing, number attrs: number; any tag: a list or group of fields) or, for overrides, the field | error (`formula-result-type`) |
 | Neither `field` nor `formula` on a field tag; both on a tag that doesn't override | error |
 | `live`/`locked` on a field tag with a formula and no field | warning (`flag-no-effect`) |
-| Dice (`2d6`, `roll(…)`) | error (`formula-dice`) |
+| Dice (`2d6`, `dice(…)`) outside a `<Roll>`'s formula, or in a Roll but not in arithmetic or an `if` branch; `roll(…)`, `adv(…)`, `dis(…)` | error (`dice-outside-roll`) |
+| A step outside an action, or in a `<Preview>`; a `<FollowUp>` with no `<Roll>` before it, or empty | error (`step-misplaced`, `step-in-preview`, `follow-up-without-roll`, `follow-up-empty`) |
+| `value()` outside a step in a `Value`, `Number`, or `Column`; a named roll used as a number; two Rolls with one name | error (`value-outside-value`, `roll-record-as-number`, `roll-name-duplicate`) |
+| Dice with fewer than 2 or more than 1000 sides, more than 100 in a Roll, a keep count out of range; follow-ups nested more than 3 deep | error (`roll-limit`) |
 | `<Define>`: duplicate name; a built-in or reserved name; invalid params; a cycle (every definition in it) | error (`duplicate-definition`, `formula-reserved-name`, `invalid-attribute`, `formula-cycle`) |
 | `<Define>` named like a built-in added after v1 | warning (`formula-shadows-builtin`); the definition wins in that sheet |
 | `<Define>` name or parameter that looks like dice (`d6`) | error (`formula-reserved-name`, `invalid-attribute`) |
@@ -738,8 +818,8 @@ Each phase ends with `pnpm test && pnpm typecheck && pnpm lint`, template compil
    keyframes); sheet save validation; curated fonts in `nuxt.config.ts`.
 8. **Sheet editor page** — `app/pages/sheets/[id]/edit.vue`, CodeMirror, preview, reference slide-over, "Copy to new
    Sheet" from generated.
-9. **Formulas and conditional display** — done (see "Formulas"). **Later**: image uploads, dice rolls,
-   schema-level computed fields.
+9. **Formulas and conditional display** — done (see "Formulas"); dice rolls done (see "Rolls"). **Later**: image
+   uploads, schema-level computed fields.
 
 Also update `.claude/data-model.md` (Sheet system bullets, `shared/` code) and `CLAUDE.md` (`pnpm test`) and remove the TODO.md item once done.
 
@@ -759,7 +839,10 @@ every formula once; the renderer evaluates the compiled trees (`evaluateSheetFor
   the body of `<Define>`. Raw text: no braces, no `{…}`; text inside it in single quotes.
 - `show="expr"`: a bare formula, like `formula=`.
 - `formula="expr"` on a `<Part>`: one part of a number (see "Breakdowns").
-- `formula="expr"` on a Button's `<Set>`: the value it writes (see "Buttons"); there `amount` can be a parameter.
+- `formula="expr"` on a `<Set>`: the value it writes (see "Buttons"); there `amount` (a Button with `amount`) and the
+  action's named rolls are parameters, and `value()` the value of a value tag with steps.
+- `formula="expr"` on a `<Roll>`: what it rolls, the only place dice go; `crit`/`fumble` on it: conditions per die,
+  with `face` and `sides` as parameters (see "Rolls").
 - `{expr}` in text, in text attributes (`title="HP {hp.max}"`), and in the number attributes read when rendering
   (`Tracker max`, `Number min`/`max`/`step`). In text, write `&lt;` for `<` (or turn the comparison around): our parser accepts a bare `<`
   there, but the editor's XML highlighting reads it as a tag.
@@ -809,8 +892,8 @@ alike, repeating over its schema entries like a struct `Table` (`count(skills, r
 evaluator doesn't know the schema, so the validator puts the entries on the path node (`entries`). `filter` and `sort`
 give back an array, so `itemKey()` over their result is the index in it. Per-row constants, like each skill's
 attribute, come from a definition: `<Define name="skillAttr" params="s" formula="switch(s, 'acrobatics', 'dex', …)" />`
-called as `skillAttr(itemKey())`. `roll`, `dice`, `adv`, `dis`, and
-dice like `2d6` are reserved for dice rolls (an error now). Left out on purpose: regular expressions, dates,
+called as `skillAttr(itemKey())`. Dice like `2d6` and `dice(text)` work only in a `<Roll>`'s formula (see "Rolls");
+`roll`, `adv`, and `dis` are reserved for later. Left out on purpose: regular expressions, dates,
 randomness, locale formatting. The editor's reference panel lists every function from the table in
 `formula-functions.ts`.
 
