@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { SheetCssResult } from "#shared/sheet/css";
-import { markupHasOwnPreview, type SheetPreviewTarget } from "#shared/sheet/card";
 import { sampleSheetData, sheetFieldPaths } from "#shared/sheet/editor";
 import { formulaLimits } from "#shared/sheet/formula";
 import { formulaFunctions } from "#shared/sheet/formula-functions";
@@ -320,7 +319,7 @@ function insertGenerated() {
 
 const SAMPLE = "sample";
 const previewSource = ref(SAMPLE);
-const previewEditMode = ref(false);
+const layout = useSheetLayout();
 const { data: contents } = await useLazyFetch<ContentOption[]>("/api/content", {
   query: computed(() => ({ contentTypeId: sheet.value?.contentTypeId })),
   default: () => [],
@@ -354,26 +353,6 @@ watch(
     }
   },
   { immediate: true },
-);
-// The pane shows the sheet, or its own `<Preview>` (beside `<Sheet>`) the way
-// a reference preview from another sheet shows it, read-only.
-const previewView = ref<"sheet" | "preview">("sheet");
-const previewViews = [
-  { label: "Sheet", value: "sheet" },
-  { label: "Preview", value: "preview" },
-];
-const hasOwnPreview = computed(() => markupHasOwnPreview(markup.value));
-const previewOf = computed<SheetPreviewTarget | undefined>(() =>
-  hasOwnPreview.value && previewView.value === "preview" && sheet.value
-    ? {
-        record: previewData.value,
-        name: String(previewData.value.name ?? ""),
-        contentTypeId: sheet.value.contentTypeId,
-        id: previewSource.value === SAMPLE ? undefined : previewSource.value,
-        // The renderer puts its root scope here.
-        scope: { value: previewData.value, path: [] },
-      }
-    : undefined,
 );
 function addPreviewRef(refId: string, ref: SheetRefs[string]) {
   previewRefs.value = { ...previewRefs.value, [refId]: ref };
@@ -453,7 +432,8 @@ async function insertPath(path: string) {
             </template>
           </p>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <SheetLayoutToggle v-model="layout" />
           <UButton
             icon="i-lucide-book-open"
             color="neutral"
@@ -512,7 +492,7 @@ async function insertPath(path: string) {
         @confirm="save(true)"
       />
 
-      <div class="grid gap-6 lg:grid-cols-2">
+      <div class="grid gap-6" :class="{ 'lg:grid-cols-2': layout === 'columns' }">
         <div class="min-w-0 space-y-4">
           <UTabs v-model="tab" :items="tabs" :unmount-on-hide="false">
             <template #markup>
@@ -681,53 +661,39 @@ async function insertPath(path: string) {
           </UCard>
         </div>
 
-        <div class="min-w-0 space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <h2 class="font-semibold text-highlighted">Preview</h2>
-            <div class="flex flex-wrap items-center gap-3">
-              <UTabs
-                v-if="hasOwnPreview"
-                v-model="previewView"
-                :items="previewViews"
-                :content="false"
-                size="xs"
-                aria-label="Preview view"
-              />
-              <USwitch v-if="!previewOf" v-model="previewEditMode" label="Edit Fields" />
-              <USelect
-                v-model="previewSource"
-                :items="previewOptions"
-                class="w-48"
-                aria-label="Preview data"
-              />
-            </div>
-          </div>
-          <p class="text-xs text-muted">
-            Changes made in the preview are never saved.
-          </p>
-          <UAlert
-            v-if="previewError"
-            color="error"
-            variant="subtle"
-            :description="previewError"
-          />
-          <SheetRenderer
-            :markup="markup"
-            :css="cssResult.css"
-            :scope-id="id"
-            :schemas="sheet.schemas"
-            :data="previewData"
-            :refs="previewRefs"
-            :links="previewLinks"
-            can-edit-sheet
-            can-edit
-            :edit-mode="previewEditMode"
-            :default-display="form.defaultDisplay"
-            :preview-of="previewOf"
-            @add-ref="addPreviewRef"
-            @add-link="addPreviewLink"
-          />
-        </div>
+        <SheetPreviewPane
+          :markup="markup"
+          :css="cssResult.css"
+          :scope-id="id"
+          :schemas="sheet.schemas"
+          :data="previewData"
+          :refs="previewRefs"
+          :links="previewLinks"
+          :content-type-id="sheet.contentTypeId"
+          :content-id="previewSource === SAMPLE ? undefined : previewSource"
+          can-edit-sheet
+          :default-display="form.defaultDisplay"
+          note="Changes made in the preview are never saved."
+          @add-ref="addPreviewRef"
+          @add-link="addPreviewLink"
+        >
+          <template #controls>
+            <USelect
+              v-model="previewSource"
+              :items="previewOptions"
+              class="w-48"
+              aria-label="Preview data"
+            />
+          </template>
+          <template #alerts>
+            <UAlert
+              v-if="previewError"
+              color="error"
+              variant="subtle"
+              :description="previewError"
+            />
+          </template>
+        </SheetPreviewPane>
       </div>
     </template>
 

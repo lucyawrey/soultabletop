@@ -61,13 +61,12 @@ const contentType = computed(() =>
 
 // Preview against sample data, not tied to any content. Changes made in the
 // preview are never saved.
-const tab = ref("preview");
+const layout = useSheetLayout();
+const tab = ref("markup");
 const tabs = [
-  { label: "Preview", value: "preview", slot: "preview" as const },
   { label: "Markup", value: "markup", slot: "markup" as const },
   { label: "CSS", value: "css", slot: "css" as const },
 ];
-const previewEditMode = ref(false);
 const previewData = ref<Record<string, unknown>>({});
 // Content and resources picked in the preview, so they show by name.
 const previewRefs = ref<SheetRefs>({});
@@ -152,7 +151,16 @@ async function remove() {
         </template>
       </DetailHeader>
 
-      <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <!-- Side by side: the code and About on the left, the preview on the
+        right. Stacked: the code and About, then the preview below. -->
+      <div
+        class="grid items-start gap-6"
+        :class="layout === 'columns' ? 'lg:grid-cols-2' : 'lg:grid-cols-[minmax(0,1fr)_280px]'"
+      >
+        <div
+          class="min-w-0 space-y-6"
+          :class="{ 'lg:col-span-2 lg:grid lg:grid-cols-subgrid lg:space-y-0': layout === 'stacked' }"
+        >
         <UTabs
           v-model="tab"
           :items="tabs"
@@ -160,32 +168,6 @@ async function remove() {
           :unmount-on-hide="false"
           class="min-w-0"
         >
-        <template #preview>
-          <div class="space-y-4 pt-2">
-            <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-              <p class="text-muted">
-                Shown with sample data. Changes made in the preview are never saved.
-              </p>
-              <USwitch v-model="previewEditMode" label="Edit Fields" />
-            </div>
-            <SheetRenderer
-              :markup="sheet.markup"
-              :css="sheet.css"
-              :scope-id="sheet.id"
-              :schemas="sheet.schemas"
-              :data="previewData"
-              :refs="previewRefs"
-              :links="previewLinks"
-              :can-edit-sheet="sheet.canEdit"
-              can-edit
-              :edit-mode="previewEditMode"
-              :default-display="sheet.defaultDisplay"
-              @add-ref="addPreviewRef"
-              @add-link="addPreviewLink"
-            />
-          </div>
-        </template>
-
         <template #markup>
           <ClientOnly v-if="sheet.markup">
             <CodeEditor
@@ -233,6 +215,24 @@ async function remove() {
             { label: 'Default', value: sheet.isDefault ? 'Yes' : 'No' },
             { label: 'Updated', value: formatShortDate(sheet.updatedAt) },
           ]"
+        />
+        </div>
+
+        <SheetPreviewPane
+          :class="{ 'lg:col-span-2': layout === 'stacked' }"
+          :markup="sheet.markup"
+          :css="sheet.css"
+          :scope-id="sheet.id"
+          :schemas="sheet.schemas"
+          :data="previewData"
+          :refs="previewRefs"
+          :links="previewLinks"
+          :content-type-id="sheet.contentTypeId"
+          :can-edit-sheet="sheet.canEdit"
+          :default-display="sheet.defaultDisplay"
+          note="Shown with sample data. Changes made in the preview are never saved."
+          @add-ref="addPreviewRef"
+          @add-link="addPreviewLink"
         />
       </div>
     </template>
