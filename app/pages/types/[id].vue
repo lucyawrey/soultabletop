@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ForkedFrom } from "#shared/forked-from";
 import type { ResourceSource } from "#shared/resource-list";
 import {
   extractApiErrorMessage,
@@ -35,6 +36,7 @@ interface ContentTypeDetail {
   canChangeOwner: boolean;
   isPubliclyReadable: boolean;
   updatedAt?: string;
+  forkedFrom: ForkedFrom;
 }
 
 interface SystemOption {
@@ -71,6 +73,7 @@ followSystem(contentType.value?.systemId);
 // Logged-out visitors can view this if it's public; otherwise they're sent to
 // sign in, since it may be something their account can see.
 const loggedIn = await useLoggedIn();
+const isForkOpen = ref(false);
 if (!contentType.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
@@ -309,6 +312,7 @@ async function remove() {
         :title="contentType.name"
         :system-id="contentType.systemId"
         :source="contentType.source"
+        :forked-from="contentType.forkedFrom"
       >
         <template #meta>
           <ReadableIdBadge
@@ -320,26 +324,36 @@ async function remove() {
             {{ CONTENT_CATEGORY_LABELS[contentType.contentCategory] }}
           </LabelChip>
         </template>
-        <template v-if="contentType.canEdit" #actions>
+        <template v-if="loggedIn" #actions>
           <UButton
-            icon="i-lucide-pencil"
+            icon="i-lucide-git-fork"
             color="neutral"
             variant="outline"
-            @click="openEdit"
+            @click="isForkOpen = true"
           >
-            Edit
+            Fork
           </UButton>
-          <UButton
-            icon="i-lucide-trash"
-            color="error"
-            variant="outline"
-            @click="
-              deleteError = '';
-              isDeleteOpen = true;
-            "
-          >
-            Delete
-          </UButton>
+          <template v-if="contentType.canEdit">
+            <UButton
+              icon="i-lucide-pencil"
+              color="neutral"
+              variant="outline"
+              @click="openEdit"
+            >
+              Edit
+            </UButton>
+            <UButton
+              icon="i-lucide-trash"
+              color="error"
+              variant="outline"
+              @click="
+                deleteError = '';
+                isDeleteOpen = true;
+              "
+            >
+              Delete
+            </UButton>
+          </template>
         </template>
       </DetailHeader>
 
@@ -417,22 +431,22 @@ async function remove() {
             />
           </UFieldGroup>
           <template v-if="contentType.canEdit">
-            <UButton
-              label="Discard"
-              color="neutral"
-              variant="outline"
-              size="sm"
-              :disabled="!schemaDirty || schemaBusy"
-              @click="discardSchema"
-            />
-            <UButton
-              label="Save schema"
-              icon="i-lucide-save"
-              size="sm"
-              :loading="schemaBusy"
-              :disabled="!schemaDirty || builderHasErrors"
-              @click="saveSchema()"
-            />
+              <UButton
+                label="Discard"
+                color="neutral"
+                variant="outline"
+                size="sm"
+                :disabled="!schemaDirty || schemaBusy"
+                @click="discardSchema"
+              />
+              <UButton
+                label="Save schema"
+                icon="i-lucide-save"
+                size="sm"
+                :loading="schemaBusy"
+                :disabled="!schemaDirty || builderHasErrors"
+                @click="saveSchema()"
+              />
           </template>
         </template>
 
@@ -579,5 +593,6 @@ async function remove() {
         />
       </template>
     </UModal>
+    <ForkDialog v-if="loggedIn" v-model:open="isForkOpen" :resource-id="id" />
   </PageContainer>
 </template>

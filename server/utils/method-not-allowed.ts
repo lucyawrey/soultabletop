@@ -22,6 +22,7 @@ export const METHOD_GUARDED_ROUTES: Record<string, string[]> = {
   "/api/content-type/:id/:readableId/preview": ["GET"],
   "/api/group/:id/members": ["GET", "POST"],
   "/api/group/:id/members/:userId": ["DELETE"],
+  "/api/resource/:id/fork": ["GET", "POST"],
   "/api/resource/:id/grants": ["GET", "POST"],
   "/api/resource/:id/grants/:grantId": ["DELETE"],
 };

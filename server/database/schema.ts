@@ -276,6 +276,10 @@ export const resource = pgTable(
     // Markdown shown on the resource's page; null for none. Left out of list
     // endpoints (see `resourceListColumns`).
     description: text("description"),
+    // The resource this one was forked from (copied), if any. Not a foreign
+    // key: it keeps pointing at a deleted source, which pages show as no
+    // longer available.
+    forkedFromId: uuid("forked_from_id"),
     isPubliclyReadable: boolean("is_publicly_readable")
       .default(false)
       .notNull(),
