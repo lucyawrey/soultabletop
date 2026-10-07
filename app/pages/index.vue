@@ -340,10 +340,9 @@ const continueItem = computed(() => {
 // card.
 const isNewUser = computed(() => !dashboardLoading.value && !continueItem.value);
 
-// The Get started card's actions.
+// The Get started card's actions (New Character and New Campaign are in the
+// header).
 const startActions = [
-  { icon: "i-lucide-user", label: "New Character", to: "/characters?new=1", primary: true },
-  { icon: "i-lucide-flag", label: "New Campaign", to: "/campaigns?new=1" },
   { icon: "i-lucide-globe", label: "Browse Systems", to: "/systems?tab=find" },
   { icon: "i-lucide-shapes", label: "New System", to: "/systems?new=1" },
 ];
@@ -478,8 +477,8 @@ function formatUpdated(updatedAt: string) {
         "
         :description="isNewUser ? undefined : copy.dashboard.subheading"
       >
-        <UButton to="/characters?new=1" icon="i-lucide-plus">New Character</UButton>
-        <UButton to="/campaigns?new=1" icon="i-lucide-plus" color="neutral" variant="outline">
+        <UButton to="/characters?new=1" icon="i-lucide-user">New Character</UButton>
+        <UButton to="/campaigns?new=1" icon="i-lucide-flag" color="neutral" variant="outline">
           New Campaign
         </UButton>
       </PageHeader>
@@ -514,8 +513,8 @@ function formatUpdated(updatedAt: string) {
               :key="action.label"
               :to="action.to"
               :icon="action.icon"
-              :color="action.primary ? 'primary' : 'neutral'"
-              :variant="action.primary ? 'solid' : 'outline'"
+              color="neutral"
+              variant="outline"
             >
               {{ action.label }}
             </UButton>

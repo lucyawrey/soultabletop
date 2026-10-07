@@ -21,7 +21,7 @@ Where the site differs from `frozen.html` and the difference isn't listed under 
 
 - **Landing:** on large screens the hero and the card stay together as one block, centered horizontally and vertically (user, 2026-10-02).
 - **Landing:** the signed-out sidebar shows on the landing page too, without a Sign in button there (as the mockup shows; confirmed in the #64 review).
-- **New-user dashboard:** a first-visit heading from team copy (`dashboard.newHeading`), then the regular dashboard's layout: a Get started card in the Continue card's place (the `dashboard.welcome` text and New Character, New Campaign, Browse Systems, New System buttons), then the same Campaigns, Characters, and Content sections with their empty lines. Replaces the mockup's dashed welcome box and four start cards (user, 2026-10-07).
+- **New-user dashboard:** a first-visit heading from team copy (`dashboard.newHeading`), then the regular dashboard's layout: a Get started card in the Continue card's place (the `dashboard.welcome` text and Browse Systems and New System buttons; New Character and New Campaign stay in the header, where they have the Characters and Campaigns nav icons instead of plus signs), then the same Campaigns, Characters, and Content sections with their empty lines. Replaces the mockup's dashed welcome box and four start cards (user, 2026-10-07).
 - **Lists:** default view per page: cards for Characters and Campaigns, a table for the rest.
 - **Detail pages:** the resource's system under the heading, and the Source badge in the meta row (#88).
 
