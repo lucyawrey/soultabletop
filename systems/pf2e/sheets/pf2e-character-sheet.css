@@ -40,7 +40,7 @@
   position: relative;
   overflow: visible;
   background: var(--st-panel);
-  border: 1px solid var(--st-border);
+  border: 1px solid var(--st-border-strong);
   border-radius: var(--st-radius);
   min-width: 0;
 }
@@ -259,7 +259,7 @@
 .maintabs .sheet-tab { flex: 1; }
 .sheet-tab {
   background: var(--st-panel);
-  border: 1px solid var(--st-border);
+  border: 1px solid var(--st-border-strong);
   border-radius: 0 var(--st-radius) var(--st-radius) var(--st-radius);
   padding: calc(var(--d-pad) * 1.5);
   min-height: 640px;
@@ -317,7 +317,7 @@
   font-weight: 700;
   color: var(--st-ink-muted);
 }
-.maintabs [data-slot="trigger"][data-state="active"] { background: var(--st-panel); border-color: var(--st-border); color: var(--st-ink); }
+.maintabs [data-slot="trigger"][data-state="active"] { background: var(--st-panel); border-color: var(--st-border-strong); color: var(--st-ink); }
 .maintabs [data-slot="leadingIcon"] { color: var(--st-primary); width: .95em; height: .95em; }
 .maintabs .sheet-tab { padding-top: calc(var(--d-pad) * 1.5); }
 
