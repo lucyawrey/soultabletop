@@ -243,7 +243,9 @@ async function remove() {
         />
         </div>
 
+        <!-- On narrow screens the preview comes first, for readers. -->
         <SheetPreviewPane
+          class="order-first lg:order-none"
           :class="layout === 'stacked' ? 'lg:col-span-2' : '2xl:col-start-2 2xl:row-start-1'"
           :markup="sheet.markup"
           :css="sheet.css"
