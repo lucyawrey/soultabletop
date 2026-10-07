@@ -6,6 +6,7 @@
   "scripts": {
     "build": "nuxt build --dotenv .env.local",
     "dev": "nuxt dev --dotenv .env.local",
+    "dev:worktree": "scripts/dev-worktree.sh",
     "preview": "nuxt preview --dotenv .env.local",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
