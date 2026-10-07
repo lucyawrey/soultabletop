@@ -64,7 +64,9 @@ The user decided the four marked (user); the rest are the agent's calls, open to
 - **Limits** (agent's call): at most 100 dice per Roll, 2 to 1000 sides, follow-ups nested at most 3 deep.
 - **Error codes** (agent's call): `dice-outside-roll`, `step-misplaced` (a step outside the tags above), `step-in-preview` (like `button-in-preview`), `follow-up-without-roll`, `follow-up-empty`, `value-outside-value`, `roll-name-duplicate`, `roll-record-as-number` (an error whose message suggests `hit.total`), `roll-limit` (dice or sides out of range).
 
+- **Undo for an action that rolls and writes** (user): the roll's toast and its entry get an Undo button that writes back the click's writes (same rules as a Button's Undo: a value changed since is left as is, and a toast says how many). The roll stays in Recent rolls, marked "undone". One toast, nothing stacks. When a click makes several entries, Undo sits on the first.
+- **Follow-ups in a shared campaign log** (user, for when logs exist): the person who rolled and the campaign's GMs can click them; others see them disabled. A follow-up with a `Set` also needs edit rights on the content, and every follow-up reads the sheet at the click, so it runs only for someone who can still read the content.
+
 ## Open
 
-- Who can click a follow-up in a shared campaign log (the roller, the GM, anyone), and whether it runs for someone who can't read the sheet: decide with campaign logs.
-- Undo for an action that both rolls and writes (a Button with `Roll` and `Set` steps): on the roll toast, or a second toast. Decide while building.
+None.
