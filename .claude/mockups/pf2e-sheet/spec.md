@@ -33,6 +33,44 @@ What changed from `mockup.html` besides the locked options: the CSS of rejected 
   - Still to build: resist/weak/immune (schema fields; changing the schema is fine), the Bulk meter's encumbered mark (a Tracker feature), empty "Choose … feat" rows for coming levels, and Strike roll titles from the weapon's name (rows titled by a referenced content's name).
   - Second look (user, 2026-10-07): every panel, the tab panel and selected tab included, has the strong border (`--st-border-strong`); the tabs run as tall as the Skills and Proficiencies column and sit flush on their panel; the Level box and its value are centered.
 
+## Differences from frozen.html that remain
+
+Where the built sheet (draft PR #108, as of 2026-10-07) still differs from `frozen.html` on purpose, and who chose it. "User" is a decision above; "agent, approved" was proposed by the agent and accepted by the user; "agent, unconfirmed" is the agent's choice, not yet reviewed: confirm it or fix it. Anything not listed is drift.
+
+**Decided by the user**
+- Every panel has the strong border; in the mockup the section panels had the light one.
+- The tabs run as tall as the Skills and Proficiencies column (the mockup gave the panel a fixed 640px minimum).
+- Edit mode keeps the play layout with inputs in the row cells (the direction); the details are the agent's (below).
+- Rank option labels are U/T/E/M/L in the schema.
+- Initiative doesn't offer Lore.
+- Strikes take parts from the dice mockup (which parts was left to the agent; below).
+
+**Agent, approved by the user**
+- Spells grouped as Spells and Cantrips, with a Spell slots group ("Rank 1", pips, "1 of 2 left"), not one group per rank.
+- A die button beside every rollable value (the roll system's default).
+- Resist / weak / immune, the Bulk mark, open feat slots, and Strike roll titles were gaps the user chose to build; how each looks is the agent's (below).
+
+**Agent, unconfirmed**
+- Strikes: the MAP steps are rollable numbers in the hit cell, and "+1d6 sneak" sits beside the damage (from the dice mockup); traits stay in their own column, not a muted line under the name. A Strike's notes show after its traits.
+- Edit mode:
+  - pickers and selects are the app's standard ones (chevron, solid edge), not the mockup's dashed badges and build cards with ▾, and there's no soft ring on controls that look like play values;
+  - every list row has move up, move down, and remove buttons, and each list an "Add …" button;
+  - the inventory is one list with a State select (not grouped Held/Worn/Stowed with move badges), and spells one list with cantrips;
+  - Actions show an action picker, plus a "Feat" picker while no action is chosen;
+  - open feat slots are their own group after the feats ("Open feat slots, to level N", up to two levels ahead), not interleaved by level;
+  - a spell's prepared rank (`spells.rank`) has no input on the sheet (a gap to fix).
+- Header: XP has no "/ 1000" (the schema has no maximum); Speed shows "25 ft" as one value; Languages and Senses are chips in play (the mockup listed languages as plain text).
+- Conditions are the app's tag input (chips with ×, type to add), not chips plus a "+ Add" button; Resist / weak / immune shows "none" when empty, and edits as small add-lists.
+- Signed values show 0 without a sign (the Sheet system's `signed` format); the mockup showed "+0".
+- The Skills aside ("armor −1 on Str/Dex skills") shows only when the penalty applies: not when the character meets the armor's Strength, so Merisiel shows none.
+- Proficiencies use the schema's labels ("Simple Weapons"), and the class's other weapon proficiencies ("Rapier, sap, shortbow, …") aren't shown.
+- Class tab: the Racket group has no Benefits row (the racket opens a preview card instead); class features show only what the class data holds (level 1 for both classes), so no coming levels appear muted yet.
+- Spells tab: the tradition and casting show as "Divine Prepared"; the slots are their own group (above).
+- Inventory: the Bulk meter is the app's progress bar with the mark; Invested shows "0 / 10".
+- Biography follows the character schema's fields (Pronouns, Age, Height, Weight, Appearance; Personality, Edicts, Anathema; Allies, Enemies, Organizations; Backstory; Notes), not the mockup's list (which had Ethnicity, Nationality, Birthplace, Beliefs, Likes, Dislikes, Catchphrases).
+- Reference previews and breakdowns are the Sheet system's (a card under the value; a popover), not the mockup's bottom-right card. Decided for the system when those features were built, not for this sheet.
+- Section labels are placed by styling Nuxt UI's card header element; Roomy density hasn't been looked at.
+
 ## Known issues in the frozen page
 
 - Phone, Roomy, Edit: the six attribute inputs in one row are too narrow for their signed values at full size ("+4" clips). The built sheet shouldn't copy this: on a phone in roomy density the attributes should fit (for example 3 per row). The user said edit "doesn't need to be perfect", so the page wasn't changed.
