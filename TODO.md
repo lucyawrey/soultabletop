@@ -26,10 +26,11 @@ Demo prep (user's plan, 2026-10-05): a demo in about a week, no fixed date. The 
 
 Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then build the sheet"): the items below (density, `editing()`, and live fields saving at once were built in #92, buttons in #93), from the frozen mockup's gaps ([spec](.claude/mockups/pf2e-sheet/spec.md), "Gaps"; `data-gap` marks in [frozen.html](.claude/mockups/pf2e-sheet/frozen.html)). Then the character sheet is built (step 6 of the PF2e plan, "Pathfinder 2e demo system" in In progress). Each updates `docs/sheet-system.md`.
 
-- **Onboarding structure** · feature
-  The structure part of "Onboarding for new users" (Phase 4): a Getting Started panel explaining systems, content types, sheets, content, and campaigns, with links, and next-step suggestions in empty states and after creating something. All explanations and welcome text are placeholders in `content/copy.yml` for the team to write.
 - **Fork resources ("make my own copy")** · feature · needs decision: whether a copy remembers where it came from, and what a parent copy brings along beyond the chain (a system's other content types and sheets?)
   User (2026-10-06, added to the demo list): copy a resource you can read into your own account, either alone or together with its parents. Mostly for forking an official character sheet, its content type, and its system: when you don't need your own system or schema, you fork just the sheet, which stays on the original content type; forking with parents copies the chain (sheet → content type → system) and points each copy at the copied parent. Also keeps your characters and campaigns safe from changes or deletions by the author. Pairs with the library's "no longer available" placeholders.
+- **Onboarding structure** · feature
+  Last in the demo list (user, 2026-10-06), after the PF2e character sheet.
+  The structure part of "Onboarding for new users" (Phase 4): a Getting Started panel explaining systems, content types, sheets, content, and campaigns, with links, and next-step suggestions in empty states and after creating something. All explanations and welcome text are placeholders in `content/copy.yml` for the team to write.
 
 # Phase 1: Sheets ready for real systems
 
