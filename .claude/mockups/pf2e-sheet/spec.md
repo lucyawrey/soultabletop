@@ -31,6 +31,7 @@ What changed from `mockup.html` besides the locked options: the CSS of rejected 
   - Rank option labels in the schema are the letters U/T/E/M/L, so edit's rank selects are badge-sized.
   - Rollable values keep the roll system's die button beside them.
   - Still to build: resist/weak/immune (schema fields; changing the schema is fine), the Bulk meter's encumbered mark (a Tracker feature), empty "Choose … feat" rows for coming levels, and Strike roll titles from the weapon's name (rows titled by a referenced content's name).
+  - Second look (user, 2026-10-07): every panel, the tab panel and selected tab included, has the strong border (`--st-border-strong`); the tabs run as tall as the Skills and Proficiencies column and sit flush on their panel; the Level box and its value are centered.
 
 ## Known issues in the frozen page
 
