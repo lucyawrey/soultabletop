@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { SheetCssResult } from "#shared/sheet/css";
+import { markupHasOwnPreview, type SheetPreviewTarget } from "#shared/sheet/card";
 import { sampleSheetData, sheetFieldPaths } from "#shared/sheet/editor";
 import { formulaLimits } from "#shared/sheet/formula";
 import { formulaFunctions } from "#shared/sheet/formula-functions";
@@ -354,6 +355,26 @@ watch(
   },
   { immediate: true },
 );
+// The pane shows the sheet, or its own `<Preview>` (beside `<Sheet>`) the way
+// a reference preview from another sheet shows it, read-only.
+const previewView = ref<"sheet" | "preview">("sheet");
+const previewViews = [
+  { label: "Sheet", value: "sheet" },
+  { label: "Preview", value: "preview" },
+];
+const hasOwnPreview = computed(() => markupHasOwnPreview(markup.value));
+const previewOf = computed<SheetPreviewTarget | undefined>(() =>
+  hasOwnPreview.value && previewView.value === "preview" && sheet.value
+    ? {
+        record: previewData.value,
+        name: String(previewData.value.name ?? ""),
+        contentTypeId: sheet.value.contentTypeId,
+        id: previewSource.value === SAMPLE ? undefined : previewSource.value,
+        // The renderer puts its root scope here.
+        scope: { value: previewData.value, path: [] },
+      }
+    : undefined,
+);
 function addPreviewRef(refId: string, ref: SheetRefs[string]) {
   previewRefs.value = { ...previewRefs.value, [refId]: ref };
 }
@@ -664,7 +685,15 @@ async function insertPath(path: string) {
           <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
             <h2 class="font-semibold text-highlighted">Preview</h2>
             <div class="flex flex-wrap items-center gap-3">
-              <USwitch v-model="previewEditMode" label="Edit Fields" />
+              <UTabs
+                v-if="hasOwnPreview"
+                v-model="previewView"
+                :items="previewViews"
+                :content="false"
+                size="xs"
+                aria-label="Preview view"
+              />
+              <USwitch v-if="!previewOf" v-model="previewEditMode" label="Edit Fields" />
               <USelect
                 v-model="previewSource"
                 :items="previewOptions"
@@ -694,6 +723,7 @@ async function insertPath(path: string) {
             can-edit
             :edit-mode="previewEditMode"
             :default-display="form.defaultDisplay"
+            :preview-of="previewOf"
             @add-ref="addPreviewRef"
             @add-link="addPreviewLink"
           />

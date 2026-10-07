@@ -772,7 +772,8 @@ Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
   `<readableId>.stts` or `<readableId>.css`.
 - Right: live preview via the real `SheetRenderer` with its Edit Fields/Autosave switches (preview edits never save), plus a
   data picker: **Sample data** (generated from the schema: labels as text, 10 for numbers, 2 items per array) or any
-  readable content of this content type.
+  readable content of this content type. When the markup has a `<Preview>` beside `<Sheet>`, a **Sheet** | **Preview**
+  switch shows it instead of the sheet, read-only, as a reference preview from another sheet would (`previewOf`).
 - Parse/validate/CSS-scope run client-side, debounced ~200 ms, with the same `shared/sheet` code the server uses.
 - Toolbar: Save (Ctrl/Cmd+S), "Insert generated markup" (replaces markup after confirmation), unsaved-changes guard.
 - Reference slide-over: every tag with its attrs (generated from the registry), the content type's field paths with
