@@ -10,7 +10,7 @@ The sources of the official Pathfinder 2e system: its content types, and later i
 node systems/pf2e/build-types.mjs
 ```
 
-Edit the script, not the JSON files. In the files, a `content` field's `contentTypeId` is the target type's readable ID (for example `pf2e-feat`). The import script creates the types in dependency order and swaps those for the real IDs.
+Edit the script, not the JSON files. The script is temporary: system definitions are meant to end up as plain files loaded by shared CLI tools (the authoring CLI in `TODO.md`), and then the JSON files become the source and the script goes. In the files, a `content` field's `contentTypeId` is the target type's readable ID (for example `pf2e-feat`). The import script creates the types in dependency order and swaps those for the real IDs.
 
 | Type | Holds |
 |---|---|
