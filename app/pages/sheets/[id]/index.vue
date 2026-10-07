@@ -168,8 +168,8 @@ async function remove() {
       </DetailHeader>
 
       <!-- Side by side: the code and About on the left, the preview on the
-        right; on the widest screens About gets a third column. Stacked: the
-        code and About, then the preview below. -->
+        right; on the widest screens About gets a third column. Stacked (and
+        on narrow screens): the preview, then the code and About below. -->
       <div
         class="grid items-start gap-6"
         :class="
@@ -245,8 +245,8 @@ async function remove() {
 
         <!-- On narrow screens the preview comes first, for readers. -->
         <SheetPreviewPane
-          class="order-first lg:order-none"
-          :class="layout === 'stacked' ? 'lg:col-span-2' : '2xl:col-start-2 2xl:row-start-1'"
+          class="order-first"
+          :class="layout === 'stacked' ? 'lg:col-span-2' : 'lg:order-none 2xl:col-start-2 2xl:row-start-1'"
           :markup="sheet.markup"
           :css="sheet.css"
           :scope-id="sheet.id"
