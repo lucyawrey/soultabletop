@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ForkedFrom } from "#shared/forked-from";
 import type { ResourceSource } from "#shared/resource-list";
 import { sampleSheetData } from "#shared/sheet/editor";
 import type { SheetDisplay } from "#shared/sheet/registry";
@@ -25,6 +26,7 @@ interface SheetDetail {
   canEdit: boolean;
   isPubliclyReadable: boolean;
   schemas: SheetSchemas;
+  forkedFrom: ForkedFrom;
 }
 
 interface ContentTypeOption {
@@ -45,6 +47,7 @@ followSystem(sheet.value?.systemId);
 // Logged-out visitors can view this if it's public; otherwise they're sent to
 // sign in, since it may be something their account can see.
 const loggedIn = await useLoggedIn();
+const isForkOpen = ref(false);
 if (!sheet.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
@@ -120,6 +123,7 @@ async function remove() {
         :title="sheet.name"
         :system-id="sheet.systemId"
         :source="sheet.source"
+        :forked-from="sheet.forkedFrom"
       >
         <template #meta>
           <ReadableIdBadge
@@ -129,26 +133,36 @@ async function remove() {
           <VisibilityBadge :is-publicly-readable="sheet.isPubliclyReadable" />
           <LabelChip v-if="sheet.isDefault" tone="primarySoft">Default</LabelChip>
         </template>
-        <template v-if="sheet.canEdit" #actions>
+        <template v-if="loggedIn" #actions>
           <UButton
-            :to="`/sheets/${id}/edit`"
-            icon="i-lucide-pencil"
+            icon="i-lucide-git-fork"
             color="neutral"
             variant="outline"
+            @click="isForkOpen = true"
           >
-            Edit
+            Fork
           </UButton>
-          <UButton
-            icon="i-lucide-trash"
-            color="error"
-            variant="outline"
-            @click="
-              deleteError = '';
-              isDeleteOpen = true;
-            "
-          >
-            Delete
-          </UButton>
+          <template v-if="sheet.canEdit">
+            <UButton
+              :to="`/sheets/${id}/edit`"
+              icon="i-lucide-pencil"
+              color="neutral"
+              variant="outline"
+            >
+              Edit
+            </UButton>
+            <UButton
+              icon="i-lucide-trash"
+              color="error"
+              variant="outline"
+              @click="
+                deleteError = '';
+                isDeleteOpen = true;
+              "
+            >
+              Delete
+            </UButton>
+          </template>
         </template>
       </DetailHeader>
 
@@ -262,5 +276,6 @@ async function remove() {
         />
       </template>
     </UModal>
+    <ForkDialog v-if="loggedIn" v-model:open="isForkOpen" :resource-id="id" />
   </PageContainer>
 </template>

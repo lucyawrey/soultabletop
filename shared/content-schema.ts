@@ -246,6 +246,23 @@ export function referencedContentTypeIds(
   return ids;
 }
 
+// A copy of `schema` whose `content` fields point at `idMap`'s new IDs, for
+// ContentTypes copied together (forks). IDs not in the map are kept, and
+// field order is kept.
+export function remapContentTypeIds(
+  schema: ContentTypeSchema,
+  idMap: ReadonlyMap<string, string>,
+): ContentTypeSchema {
+  const remap = (field: ContentFieldSchema): ContentFieldSchema => {
+    if (field.type === "content")
+      return { ...field, contentTypeId: idMap.get(field.contentTypeId) ?? field.contentTypeId };
+    if (field.type === "array") return { ...field, itemType: remap(field.itemType) };
+    if (field.type === "struct") return { ...field, entries: remapContentTypeIds(field.entries, idMap) };
+    return field;
+  };
+  return Object.fromEntries(Object.entries(schema).map(([key, field]) => [key, remap(field)]));
+}
+
 // Whether an optional struct with these entries starts filled in: some entry
 // (or a nested struct's entry) has a `default`, and every required entry can
 // get a starting value. A required resourceLink or content entry without a

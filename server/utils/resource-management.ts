@@ -6,6 +6,7 @@ import { useDatabase } from "./database";
 import { getResourceSource } from "./resource-list-filter";
 import { isUniqueConstraintError } from "./user-profile";
 import { loadOwnerReadableId } from "./resource-address";
+import type { ForkedFrom } from "../../shared/forked-from";
 import {
   canCreateForGroup,
   getResourceAccess,
@@ -121,9 +122,10 @@ export async function loadReadableResource(
   if (!access.canRead) {
     throw createError({ statusCode: 404, statusMessage: "Resource not found" });
   }
-  const [ownerReadableId, source] = await Promise.all([
+  const [ownerReadableId, source, forkedFrom] = await Promise.all([
     loadOwnerReadableId(item),
     loadResourceSource(item, context),
+    loadForkedFrom(item, user),
   ]);
   return {
     item: {
@@ -131,10 +133,38 @@ export async function loadReadableResource(
       // With `readableId`, the resource's owner + readable ID address.
       ownerReadableId,
       source,
+      forkedFrom,
       canEdit: access.canEdit,
       canChangeOwner: !!context && canChangeResourceOwner(item, user!, context),
     },
     context,
+  };
+}
+
+// The resource a fork was copied from, for the viewer: its name and address
+// when they can read it, else only `available: false` (also when it was
+// deleted). Null for a resource that isn't a fork.
+export async function loadForkedFrom(
+  item: Pick<Resource, "forkedFromId">,
+  user: Pick<User, "id" | "name"> | null,
+): Promise<ForkedFrom> {
+  if (!item.forkedFromId) return null;
+  const [source] = await useDatabase()
+    .select()
+    .from(resource)
+    .where(eq(resource.id, item.forkedFromId))
+    .limit(1);
+  const context =
+    source && user ? await loadResourceAccessContext(user, [source.id]) : null;
+  if (!source || !getResourceAccessOrPublic(source, context).canRead)
+    return { id: item.forkedFromId, available: false };
+  return {
+    id: source.id,
+    available: true,
+    kind: source.kind,
+    name: source.name,
+    readableId: source.readableId,
+    ownerReadableId: await loadOwnerReadableId(source),
   };
 }
 
