@@ -6,8 +6,7 @@
 #   pnpm dev:worktree main [port]     # the main checkout, on any branch
 # (or scripts/dev-worktree.sh with the same arguments)
 # Works from any checkout of the repo. Installs dependencies first when the
-# worktree has none. Uses the worktree's .claude/scripts/agent-run.sh for the
-# project's Node and pnpm. Stop it with Ctrl+C.
+# worktree has none. Stop it with Ctrl+C.
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -40,13 +39,13 @@ if [ ! -f "$env_file" ]; then
   exit 1
 fi
 
-run="$dir/.claude/scripts/agent-run.sh"
-if [ ! -d "$dir/node_modules" ]; then
+cd "$dir"
+if [ ! -d node_modules ]; then
   echo "Installing dependencies in $dir"
-  "$run" pnpm install
+  pnpm install
 fi
 echo "Starting $target ($dir)"
 if [ -n "${2:-}" ]; then
-  exec "$run" pnpm nuxt dev --dotenv "$env_file" --port "$2"
+  exec pnpm nuxt dev --dotenv "$env_file" --port "$2"
 fi
-exec "$run" pnpm nuxt dev --dotenv "$env_file"
+exec pnpm nuxt dev --dotenv "$env_file"
