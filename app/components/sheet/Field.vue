@@ -4,9 +4,9 @@ import { isFormulaError } from "#shared/sheet/formula";
 import {
   findRef,
   hasSheetParts,
-  isRecord,
   ownProperty,
   sheetActionSteps,
+  sheetRowTitle,
   resourceLinkPath,
   sheetOverride,
   type SheetScope,
@@ -187,19 +187,15 @@ const tags = computed(() =>
 // Steps (<Roll>, <Set>, <FollowUp>) run when the value is clicked: a die
 // button beside it when it also opens a breakdown or preview (or with
 // <Sheet rolls="button">), else the value itself. Entries are named after the
-// List or Table row (its label, or its name field), else the tag's label.
+// List or Table row (its label, its name field, or the Content it references),
+// else the tag's label.
 const hasSteps = computed(() => sheetActionSteps(props.node));
 const rollButton = computed(
   () => context.rollTarget.value === "button" || !!parts.value || !!previewTarget.value,
 );
-const rollTitle = computed(() => {
-  const item = scope.value.item;
-  const row = scope.value.value;
-  const rowName = item
-    ? (item.label ?? (isRecord(row) && typeof row.name === "string" ? row.name : undefined))
-    : undefined;
-  return rowName || label.value || "Roll";
-});
+const rollTitle = computed(
+  () => sheetRowTitle(scope.value.item, scope.value.value, context.refs.value) || label.value || "Roll",
+);
 
 const breakdownView = computed(() => {
   if (!parts.value) return undefined;
@@ -218,6 +214,12 @@ const breakdownView = computed(() => {
 // A computed maximum can be anything; keep it a whole number of at least 0.
 // 0 (or no `max`) shows just the count.
 const trackerMax = computed(() => Math.max(Math.floor(number(props.node.attrs.max) ?? 0), 0));
+// `mark`: a tick on the bar at a value (a threshold), as a share of the bar.
+const trackerMark = computed(() => {
+  const mark = number(props.node.attrs.mark);
+  if (mark === undefined || mark <= 0 || mark >= trackerMax.value) return undefined;
+  return `${(mark / trackerMax.value) * 100}%`;
+});
 const trackerValue = computed(() =>
   typeof value.value === "number" ? value.value : 0,
 );
@@ -407,7 +409,15 @@ const imageSize = computed(
           :class="index < trackerValue ? 'bg-primary' : ''"
         />
       </div>
-      <UProgress v-else :model-value="trackerValue" :max="trackerMax" />
+      <div v-else class="relative">
+        <UProgress :model-value="trackerValue" :max="trackerMax" />
+        <span
+          v-if="trackerMark"
+          class="sheet-tracker-mark absolute -inset-y-1 w-0.5 -translate-x-1/2 bg-inverted"
+          :style="{ left: trackerMark }"
+          aria-hidden="true"
+        />
+      </div>
       <div class="text-xs text-muted tabular-nums">
         {{ trackerValue }} / {{ trackerMax }}
       </div>
