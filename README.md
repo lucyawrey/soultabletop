@@ -35,7 +35,7 @@ feature branch in `../soultabletop-worktrees/`), from any checkout:
 
 ```bash
 pnpm dev:worktree               # list the worktrees
-pnpm dev:worktree <branch>      # start that worktree's server on the first free port from 3000
+pnpm dev:worktree <branch>      # start that worktree's server (port 3000, or the next free one)
 pnpm dev:worktree <branch> 3005 # or on a given port
 ```
 

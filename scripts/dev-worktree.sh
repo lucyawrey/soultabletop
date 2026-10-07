@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Starts the dev server of one of this repo's git worktrees, with the main
-# checkout's .env.local, on the first free port from 3000:
+# checkout's .env.local (on port 3000, or the next free one Nuxt picks):
 #   pnpm dev:worktree                 # list the worktrees
 #   pnpm dev:worktree <branch> [port] # a worktree by its branch
 #   pnpm dev:worktree main [port]     # the main checkout, on any branch
@@ -40,24 +40,13 @@ if [ ! -f "$env_file" ]; then
   exit 1
 fi
 
-port=${2:-}
-if [ -z "$port" ]; then
-  for candidate in $(seq 3000 3020); do
-    if ! lsof -iTCP:"$candidate" -sTCP:LISTEN >/dev/null 2>&1; then
-      port=$candidate
-      break
-    fi
-  done
-fi
-if [ -z "$port" ]; then
-  echo "No free port from 3000 to 3020; pass one." >&2
-  exit 1
-fi
-
 run="$dir/.claude/scripts/agent-run.sh"
 if [ ! -d "$dir/node_modules" ]; then
   echo "Installing dependencies in $dir"
   "$run" pnpm install
 fi
-echo "Starting $target ($dir) on http://localhost:$port"
-exec "$run" pnpm nuxt dev --dotenv "$env_file" --port "$port"
+echo "Starting $target ($dir)"
+if [ -n "${2:-}" ]; then
+  exec "$run" pnpm nuxt dev --dotenv "$env_file" --port "$2"
+fi
+exec "$run" pnpm nuxt dev --dotenv "$env_file"
