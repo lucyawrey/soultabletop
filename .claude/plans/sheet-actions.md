@@ -62,7 +62,7 @@ The user decided the four marked (user); the rest are the agent's calls, open to
 - **Roll target** (user): the rule decides by default (a value that also opens a breakdown or preview gets a die button beside it; otherwise the value is the button), and `<Sheet rolls="button">` puts a die button on every rollable value. Hook classes: `sheet-roll-trigger` on the die button or the value's button.
 - **A value with steps** shows as text (it's a button); a `Number` shown as an input gets the die button beside it, like its Σ button.
 - **Limits** (agent's call): at most 100 dice per Roll, 2 to 1000 sides, follow-ups nested at most 3 deep.
-- **Error codes** (agent's call): `dice-outside-roll`, `step-misplaced` (a step outside the tags above), `step-in-preview` (like `button-in-preview`), `follow-up-without-roll`, `follow-up-empty`, `value-outside-value`, `roll-name-duplicate`, `roll-record-as-number` (warning-level message suggesting `hit.total`), `roll-limit` (dice or sides out of range).
+- **Error codes** (agent's call): `dice-outside-roll`, `step-misplaced` (a step outside the tags above), `step-in-preview` (like `button-in-preview`), `follow-up-without-roll`, `follow-up-empty`, `value-outside-value`, `roll-name-duplicate`, `roll-record-as-number` (an error whose message suggests `hit.total`), `roll-limit` (dice or sides out of range).
 
 ## Open
 
