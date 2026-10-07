@@ -9,7 +9,7 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 - **Unconfirmed agent defaults** for forks (plan's "Agent defaults"): kept names, `-2` readable ID suffixes, copies start Limited, default sheet only on a copied type.
 - **Sheet page layout and editor `<Preview>`** merged (#103): side by side / stacked switch shared by the sheet page and editor (`sheet-layout` cookie); the sheet page stacks preview first, the editor code first.
 - **First-visit dashboard** merged (#104).
-- **Next:** the PF2e character sheet (`.claude/plans/pf2e-demo.md`, step 6). Cairn and the first-visit dashboard are on the demo list (TODO, Next up).
+- **PF2e demo** (`.claude/plans/pf2e-demo.md`; sources now in `systems/pf2e/` on `main`): step 2 is PR #106 (eleven content types incl. the character, checked through the API; Tier B, waiting on the user's review), worktree `../soultabletop-worktrees/pf2e-content-types`. Next: the import script (step 5), then the sheet (step 6). After #106 merges, delete `.claude/pf2e/build-types.mjs` and `.claude/pf2e/content-types/` from `docs` (the legacy export stays).
 - **On `docs`, not yet on `main`:** the usage changes (`sheet-code-map.md`, `test-sheet.mjs`, the slimmer SKILL.md), the skill's notes on the required root, the skill and code-map rows for previews; one docs-only PR when the user wants.
 - **Waiting on the user:** keep or delete `icons.html` in the PF2e mockup folder; whether the Initiative "rolls with" picker should offer Lore skills; compact density on a real, full sheet not yet seen.
 - The nine reference content types in `.claude/pf2e/content-types/` are drafted but not validated against the API or reviewed.
