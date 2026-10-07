@@ -30,6 +30,8 @@ Sheet features for the Pathfinder 2e demo sheet (user, 2026-10-06: "do 1-7 then 
 
 - **Cairn demo system** · feature
   User (2026-10-07, added to the demo list): "support for small rpg cairn (so the demo has a high effort system and one more approachable for a test user to understand the markup of)". A small official system ([Cairn](https://github.com/yochaigal/cairn)) beside Pathfinder 2e: its content types and a character sheet simple enough that a test user can read the markup and learn from it. Earlier idea (2026-10-06, Unsorted): "support a very simple official system: Cairn".
+- **First-visit dashboard doesn't match the regular dashboard** · bug
+  From the user (2026-10-06): "first visit dashboard does not match the design of the dashboard after the user has any content". The new-user dashboard (the `dashboard.newHeading` and `dashboard.welcome` placeholders above four start cards; see "Onboarding for new users") should follow the regular dashboard's design. Compare both with `.claude/mockups/ui-redesign/frozen.html` and decide with the user which parts change.
 - **Onboarding structure** · feature
   Last in the demo list (user, 2026-10-06), after the PF2e character sheet.
   The structure part of "Onboarding for new users" (Phase 4): a Getting Started panel explaining systems, content types, sheets, content, and campaigns, with links, and next-step suggestions in empty states and after creating something. All explanations and welcome text are placeholders in `content/copy.yml` for the team to write.
@@ -142,9 +144,6 @@ Playing campaigns online, sharing, and discovery.
 
 - **Landing page drift from the frozen redesign** · bug
   Found by comparing the signed-out landing page with `.claude/mockups/ui-redesign/frozen.html` (2026-10-05): the sidebar nav lists Content before Characters; the sign-in tabs' text is smaller than in the mockup; the Sign in button looks disabled until the form is filled. Some of these may be intentional changes by the user: ask about each one before changing anything. Then fix it to match the frozen page, or record it as a decision in `.claude/mockups/ui-redesign/spec.md` ("Decided after the mockup"); compare with `.claude/scripts/compare-mockup.mjs`.
-- **First-visit dashboard doesn't match the regular dashboard** · bug
-  From the user (2026-10-06): "first visit dashboard does not match the design of the dashboard after the user has any content". The new-user dashboard (the `dashboard.newHeading` and `dashboard.welcome` placeholders above four start cards; see "Onboarding for new users") should follow the regular dashboard's design. Compare both with `.claude/mockups/ui-redesign/frozen.html` and decide with the user which parts change.
-
 - **Show a sheet's own `<Preview>` in the Sheet editor** · feature
   The `<Preview>` beside `<Sheet>` (#98) never renders on the content page, so the editor's preview pane doesn't show it either and authors can't see it while writing it. For example, a Sheet/Preview switch in the pane, rendering it with `SheetRenderer`'s `previewOf` against the sample data.
 
