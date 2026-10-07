@@ -218,7 +218,7 @@ const types = {
       ...common,
     },
   },
-  // The player character. Like a Foundry character, it keeps the build
+  // The player character. It keeps the build
   // choices and the play state, and links to its ancestry, class, feats,
   // spells, and items instead of copying them. Ranks are stored here, not
   // read from the class, since they change with level.

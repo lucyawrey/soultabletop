@@ -19,8 +19,8 @@ Edit the script, not the JSON files. The script is temporary: system definitions
 | `pf2e-feat`, `pf2e-action`, `pf2e-spell`, `pf2e-deity`, `pf2e-item` | Rules content the character links to |
 | `pf2e-character` | The player character (category `playerCharacter`) |
 
-The character follows how Foundry's pf2e system stores one: it keeps the build choices and the play state (level, XP, attribute modifiers, proficiency ranks, HP, conditions, hero and focus points, spell slots, coins, biography), and links to its ancestry, class, feats, spells, and items instead of copying them. Ranks are stored on the character, since they grow with level. Every rules type ends with traits, rarity, rules text, and source.
+The character keeps the build choices and the play state (level, XP, attribute modifiers, proficiency ranks, HP, conditions, hero and focus points, spell slots, coins, biography), and links to its ancestry, class, feats, spells, and items instead of copying them. Ranks are stored on the character, since they grow with level. Every rules type ends with traits, rarity, rules text, and source.
 
 ## Sources and licenses
 
-The schemas are designed from the data in the [Foundry VTT pf2e system](https://github.com/foundryvtt/pf2e) (its packs of ancestries, classes, feats, spells, items, and iconic characters). Its code is licensed under the Apache License 2.0; the game system information in it is Paizo's, licensed under the ORC License (Remaster) and the Open Game License 1.0a (earlier books). Only ORC-licensed Remaster content is imported.
+The schemas are our own design. The [Foundry VTT pf2e system](https://github.com/foundryvtt/pf2e) is a data source: its packs are where the imported content comes from, and they were read to learn what each type needs to hold, but its data model isn't followed. Its code is licensed under the Apache License 2.0; the game system information in it is Paizo's, licensed under the ORC License (Remaster) and the Open Game License 1.0a (earlier books). Only ORC-licensed Remaster content is imported.
