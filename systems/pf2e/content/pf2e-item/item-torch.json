@@ -1,0 +1,14 @@
+{
+  "name": "Torch",
+  "readableId": "item-torch",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 1,
+    "bulk": 0.1,
+    "usage": "Held in one hand",
+    "rarity": "common",
+    "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage.",
+    "source": "Pathfinder Player Core"
+  }
+}

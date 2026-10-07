@@ -1,0 +1,45 @@
+{
+  "comment": "The demo slice: Foundry pf2e pack files (relative to packs/pf2e/) to convert, by our content type. Built around the iconics Kyra (cleric) and Merisiel (rogue) at level 1, plus a third ancestry and background, shields, and basic actions. Only ORC Remaster items are converted.",
+  "pf2e-ancestry": ["ancestries/human.json", "ancestries/elf.json", "ancestries/dwarf.json"],
+  "pf2e-heritage": ["heritages/human/versatile-human.json", "heritages/elf/whisper-elf.json", "heritages/dwarf/rock-dwarf.json"],
+  "pf2e-background": ["backgrounds/acolyte.json", "backgrounds/criminal.json", "backgrounds/warrior.json"],
+  "pf2e-class": ["classes/cleric.json", "classes/rogue.json"],
+  "pf2e-class-feature": [
+    "class-features/deity-cleric.json", "class-features/doctrine.json", "class-features/cleric-spellcasting.json",
+    "class-features/divine-font.json", "class-features/first-doctrine.json", "class-features/cloistered-cleric.json",
+    "class-features/first-doctrine-cloistered-cleric.json", "class-features/warpriest.json", "class-features/first-doctrine-warpriest.json",
+    "class-features/rogues-racket.json", "class-features/sneak-attack.json", "class-features/surprise-attack.json", "class-features/thief.json"
+  ],
+  "pf2e-feat": [
+    "feats/ancestry/human/level-1/haughty-obstinacy.json", "feats/ancestry/human/level-1/natural-ambition.json",
+    "feats/ancestry/elf/level-1/forlorn.json", "feats/ancestry/elf/level-1/nimble-elf.json",
+    "feats/ancestry/dwarf/level-1/dwarven-doughtiness.json",
+    "feats/class/cleric/level-1/domain-initiate.json", "feats/class/cleric/level-1/healing-hands.json",
+    "feats/class/rogue/level-1/nimble-dodge.json", "feats/class/shared-class-feats/level-1/trap-finder.json",
+    "feats/general/level-1/armor-proficiency.json", "feats/general/level-1/shield-block.json",
+    "feats/skill/level-1/student-of-the-canon.json", "feats/skill/level-1/experienced-smuggler.json",
+    "feats/skill/level-1/cat-fall.json", "feats/skill/level-1/pickpocket.json", "feats/skill/level-1/intimidating-glare.json"
+  ],
+  "pf2e-action": [
+    "actions/basic/aid.json", "actions/basic/raise-a-shield.json", "actions/basic/seek.json", "actions/basic/strike.json",
+    "actions/basic/take-cover.json", "actions/skill/demoralize.json", "actions/skill/recall-knowledge.json",
+    "actions/skill/sneak.json", "actions/skill/steal.json"
+  ],
+  "pf2e-spell": [
+    "spells/spells/cantrip/daze.json", "spells/spells/cantrip/divine-lance.json", "spells/spells/cantrip/guidance.json",
+    "spells/spells/cantrip/light.json", "spells/spells/cantrip/shield.json", "spells/spells/cantrip/stabilize.json",
+    "spells/spells/rank-1/bless.json", "spells/spells/rank-1/command.json", "spells/spells/rank-1/heal.json",
+    "spells/spells/rank-1/sanctuary.json", "spells/focus/fire-ray.json"
+  ],
+  "pf2e-deity": ["deities/core-gods/sarenrae.json"],
+  "pf2e-item": [
+    "equipment/scimitar.json", "equipment/mace.json", "equipment/sling.json", "equipment/rapier.json", "equipment/dagger.json",
+    "equipment/shortsword.json", "equipment/shortbow.json",
+    "equipment/chain-shirt.json", "equipment/leather-armor.json", "equipment/wooden-shield.json", "equipment/steel-shield.json",
+    "equipment/sling-bullets.json", "equipment/arrows.json",
+    "equipment/backpack.json", "equipment/bedroll.json", "equipment/chalk.json", "equipment/flint-and-steel.json",
+    "equipment/rope.json", "equipment/rations.json", "equipment/soap.json", "equipment/torch.json", "equipment/waterskin.json",
+    "equipment/healers-toolkit.json", "equipment/religious-symbol-wooden.json", "equipment/thieves-toolkit.json",
+    "equipment/crowbar.json", "equipment/grappling-hook.json", "equipment/caltrops.json", "equipment/healing-potion-minor.json"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Intimidating Glare",
+  "readableId": "feat-intimidating-glare",
+  "data": {
+    "level": 1,
+    "category": "skill",
+    "actions": "passive",
+    "prerequisites": [
+      "trained in Intimidation"
+    ],
+    "traits": [
+      "General",
+      "Skill"
+    ],
+    "rarity": "common",
+    "description": "You can Demoralize with a mere glare. When you do, Demoralize loses the auditory trait and gains the visual trait, and you don't take a penalty if the creature doesn't understand your language.",
+    "source": "Pathfinder Player Core"
+  }
+}

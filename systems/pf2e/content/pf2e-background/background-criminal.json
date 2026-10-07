@@ -1,0 +1,32 @@
+{
+  "name": "Criminal",
+  "readableId": "background-criminal",
+  "data": {
+    "boosts": [
+      {
+        "choices": [
+          "dex",
+          "int"
+        ]
+      },
+      {
+        "choices": [
+          "cha",
+          "con",
+          "dex",
+          "int",
+          "str",
+          "wis"
+        ]
+      }
+    ],
+    "trainedSkills": [
+      "stealth"
+    ],
+    "trainedLore": "Underworld Lore",
+    "skillFeat": "feat-experienced-smuggler",
+    "rarity": "common",
+    "description": "As an unscrupulous independent or as a member of an underworld organization, you lived a life of crime. You might have become an adventurer to seek redemption, to escape the law, or simply to get access to bigger and better loot.\n\nChoose two attribute boosts. One must be to **Dexterity** or **Intelligence**, and one is a free attribute boost.\n\nYou're trained in the Stealth skill and the Underworld Lore skill. You gain the Experienced Smuggler skill feat.",
+    "source": "Pathfinder Player Core"
+  }
+}

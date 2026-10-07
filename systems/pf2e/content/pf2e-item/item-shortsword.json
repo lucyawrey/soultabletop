@@ -1,0 +1,26 @@
+{
+  "name": "Shortsword",
+  "readableId": "item-shortsword",
+  "data": {
+    "kind": "weapon",
+    "level": 0,
+    "price": 90,
+    "bulk": 0.1,
+    "usage": "Held in one hand",
+    "weapon": {
+      "category": "martial",
+      "group": "Sword",
+      "damageDice": 1,
+      "damageDie": "d6",
+      "damageType": "piercing"
+    },
+    "traits": [
+      "Agile",
+      "Finesse",
+      "Versatile s"
+    ],
+    "rarity": "common",
+    "description": "These blades come in a variety of shapes and styles, but they are typically 2 feet long.",
+    "source": "Pathfinder Player Core"
+  }
+}

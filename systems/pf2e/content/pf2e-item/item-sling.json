@@ -1,0 +1,25 @@
+{
+  "name": "Sling",
+  "readableId": "item-sling",
+  "data": {
+    "kind": "weapon",
+    "level": 0,
+    "bulk": 0.1,
+    "usage": "Held in one hand",
+    "weapon": {
+      "category": "simple",
+      "group": "Sling",
+      "damageDice": 1,
+      "damageDie": "d6",
+      "damageType": "bludgeoning",
+      "range": 50,
+      "reload": "1"
+    },
+    "traits": [
+      "Propulsive"
+    ],
+    "rarity": "common",
+    "description": "Little more than a leather cup attached to a pair of straps, a sling can be used to fling smooth stones or sling bullets at a range.",
+    "source": "Pathfinder Player Core"
+  }
+}

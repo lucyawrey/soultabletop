@@ -1,0 +1,14 @@
+{
+  "name": "Surprise Attack",
+  "readableId": "feature-surprise-attack",
+  "data": {
+    "level": 1,
+    "actions": "passive",
+    "traits": [
+      "Rogue"
+    ],
+    "rarity": "common",
+    "description": "You spring into combat faster than foes can react. On the first round of combat, if you roll Deception or Stealth for initiative, creatures that haven't acted are Off-Guard to you.",
+    "source": "Pathfinder Player Core"
+  }
+}

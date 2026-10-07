@@ -1,0 +1,14 @@
+{
+  "name": "Healer's Toolkit",
+  "readableId": "item-healers-toolkit",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 500,
+    "bulk": 1,
+    "usage": "Other",
+    "rarity": "common",
+    "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace its tools as part of the action that uses them.",
+    "source": "Pathfinder Player Core"
+  }
+}

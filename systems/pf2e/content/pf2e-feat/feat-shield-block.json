@@ -1,0 +1,15 @@
+{
+  "name": "Shield Block",
+  "readableId": "feat-shield-block",
+  "data": {
+    "level": 1,
+    "category": "general",
+    "actions": "reaction",
+    "traits": [
+      "General"
+    ],
+    "rarity": "common",
+    "description": "**Trigger** While you have your shield raised, you would take physical damage (bludgeoning, piercing, or slashing) from an attack.\n\n---\n\nYou snap your shield in place to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield.",
+    "source": "Pathfinder Player Core"
+  }
+}

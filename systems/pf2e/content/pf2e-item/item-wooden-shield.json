@@ -1,0 +1,19 @@
+{
+  "name": "Wooden Shield",
+  "readableId": "item-wooden-shield",
+  "data": {
+    "kind": "shield",
+    "level": 0,
+    "price": 100,
+    "bulk": 1,
+    "shield": {
+      "acBonus": 2,
+      "hardness": 3,
+      "hp": 12,
+      "brokenThreshold": 6
+    },
+    "rarity": "common",
+    "description": "Though they come in a variety of shapes and sizes, the protection offered by wooden shields comes from the stoutness of their materials. While wooden shields are less expensive than steel shields, they break more easily.\n\nHardness HP BT\n\n3 12 6",
+    "source": "Pathfinder Player Core"
+  }
+}

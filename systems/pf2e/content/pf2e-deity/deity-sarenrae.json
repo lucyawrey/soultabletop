@@ -1,0 +1,29 @@
+{
+  "name": "Sarenrae",
+  "readableId": "deity-sarenrae",
+  "data": {
+    "category": "deity",
+    "font": [
+      "heal"
+    ],
+    "sanctification": "Can choose holy",
+    "attributes": [
+      "con",
+      "wis"
+    ],
+    "skill": "medicine",
+    "favoredWeapon": "Scimitar",
+    "domains": [
+      "fire",
+      "healing",
+      "sun",
+      "truth"
+    ],
+    "alternateDomains": [
+      "repose"
+    ],
+    "rarity": "common",
+    "description": "Like the light of dawn, Sarenrae spreads warmth across the world and into the hearts of its inhabitants. Burning passion, exuberant joviality, and fierce determination all rise at the goddess's influence. Sarenrae is one of the most popular deities on Golarion, with vast amounts of worshippers found from Tian Xia to Taldor. Beyond her warmth, her focus on redemption draws many to her faith. There is always room under her roof for those who have seen the error of their ways and wish to make amends, especially if they'll also pass their story onto others to prevent them from making the same mistakes.\n\n**Title** The Dawnflower\n\n**Areas of Concern** healing, honest redemption, the sun\n\n**Edicts** destroy the Spawn of Rovagug, protect allies, provide aid to the sick and wounded, seek and allow redemption\n\n**Anathema** create undead, lie, deny a repentant creature an opportunity for redemption, fail to strike down evil\n\n**Religious Symbol** angelic ankh\n\n**Sacred Animal** dove\n\n**Sacred Colors** blue, gold",
+    "source": "Pathfinder Lost Omens Divine Mysteries"
+  }
+}

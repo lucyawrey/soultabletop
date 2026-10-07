@@ -1,0 +1,25 @@
+{
+  "name": "Heal",
+  "readableId": "spell-heal",
+  "data": {
+    "rank": 1,
+    "kind": "spell",
+    "traditions": [
+      "divine",
+      "primal"
+    ],
+    "cast": "1 to 3",
+    "range": "varies",
+    "targets": "1 willing living creature or 1 undead",
+    "defense": "basic Fortitude",
+    "damage": "1d8 vitality",
+    "traits": [
+      "Healing",
+      "Manipulate",
+      "Vitality"
+    ],
+    "rarity": "common",
+    "description": "You channel vital energy to heal the living or damage the undead. If the target is a willing living creature, you restore 1d8 Hit Points. If the target is undead, you deal that amount of vitality damage to it, and it gets a basic Fortitude save. The number of actions you spend when Casting this Spell determines its targets, range, area, and other parameters.\n\n◆ The spell has a range of touch.\n\n◆◆ (concentrate) The spell has a range of 30 feet. If you're healing a living creature, increase the Hit Points restored by 8.\n\n◆◆◆ (concentrate) You disperse vital energy in a 30-foot emanation. This targets all living and undead creatures in the burst.\n\n---\n\n**Heightened (+1)** The amount of healing or damage increases by 1d8, and the extra healing for the 2-action version increases by 8.",
+    "source": "Pathfinder Player Core"
+  }
+}

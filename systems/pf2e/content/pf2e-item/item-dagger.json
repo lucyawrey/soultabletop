@@ -1,0 +1,27 @@
+{
+  "name": "Dagger",
+  "readableId": "item-dagger",
+  "data": {
+    "kind": "weapon",
+    "level": 0,
+    "price": 20,
+    "bulk": 0.1,
+    "usage": "Held in one hand",
+    "weapon": {
+      "category": "simple",
+      "group": "Knife",
+      "damageDice": 1,
+      "damageDie": "d4",
+      "damageType": "piercing"
+    },
+    "traits": [
+      "Agile",
+      "Finesse",
+      "Thrown 10",
+      "Versatile s"
+    ],
+    "rarity": "common",
+    "description": "This small, bladed weapon is held in one hand and used to stab a creature in close combat. It can also be thrown.",
+    "source": "Pathfinder Player Core"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Dwarven Doughtiness",
+  "readableId": "feat-dwarven-doughtiness",
+  "data": {
+    "level": 1,
+    "category": "ancestry",
+    "actions": "passive",
+    "traits": [
+      "Dwarf"
+    ],
+    "rarity": "common",
+    "description": "You are naturally calm and collected in the face of imminent danger. At the end of your turn, reduce your Frightened condition by 2 instead of 1.",
+    "source": "Pathfinder Player Core"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Rogue's Racket",
+  "readableId": "feature-rogues-racket",
+  "data": {
+    "level": 1,
+    "actions": "passive",
+    "traits": [
+      "Rogue"
+    ],
+    "rarity": "common",
+    "description": "You've begun to develop your techniques and approach to a job, while building your reputation in rogues' circles. Choose a rogue's racket from the list below.\n\nEldritch Trickster\n\nMastermind\n\nRuffian\n\nScoundrel\n\nThief",
+    "source": "Pathfinder Player Core"
+  }
+}

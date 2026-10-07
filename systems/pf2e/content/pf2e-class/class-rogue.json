@@ -1,0 +1,121 @@
+{
+  "name": "Rogue",
+  "readableId": "class-rogue",
+  "data": {
+    "hp": 8,
+    "keyAttributes": [
+      "dex"
+    ],
+    "perception": 2,
+    "saves": {
+      "fortitude": 1,
+      "reflex": 2,
+      "will": 2
+    },
+    "trainedSkills": [
+      "stealth"
+    ],
+    "additionalSkills": 7,
+    "attacks": {
+      "unarmed": 1,
+      "simple": 1,
+      "martial": 1,
+      "advanced": 0
+    },
+    "defenses": {
+      "heavy": 0,
+      "light": 1,
+      "medium": 0,
+      "unarmored": 1
+    },
+    "classDc": 1,
+    "spellcasting": 0,
+    "features": [
+      {
+        "level": 1,
+        "feature": "feature-rogues-racket"
+      },
+      {
+        "level": 1,
+        "feature": "feature-sneak-attack"
+      },
+      {
+        "level": 1,
+        "feature": "feature-surprise-attack"
+      }
+    ],
+    "ancestryFeatLevels": [
+      1,
+      5,
+      9,
+      13,
+      17
+    ],
+    "classFeatLevels": [
+      1,
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20
+    ],
+    "generalFeatLevels": [
+      3,
+      7,
+      11,
+      15,
+      19
+    ],
+    "skillFeatLevels": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "skillIncreaseLevels": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "rarity": "common",
+    "description": "*You are skilled and opportunistic. Using your sharp wits and quick reactions, you take advantage of your opponents' missteps and strike where it hurts most. You play a dangerous game, seeking thrills and testing your skills, and likely don't care much for any laws that happen to get in your way. While the path of every rogue is unique and riddled with danger, the one thing you all share in common is the breadth and depth of your skills.*\n\n*Rogue*",
+    "source": "Pathfinder Player Core"
+  }
+}

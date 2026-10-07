@@ -1,0 +1,21 @@
+{
+  "name": "Healing Potion (Minor)",
+  "readableId": "item-healing-potion-minor",
+  "data": {
+    "kind": "consumable",
+    "level": 1,
+    "price": 400,
+    "bulk": 0.1,
+    "usage": "Held in one hand",
+    "traits": [
+      "Consumable",
+      "Healing",
+      "Magical",
+      "Potion",
+      "Vitality"
+    ],
+    "rarity": "common",
+    "description": "**Activate** A (manipulate)\n\n---\n\nA *healing potion* is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a *healing potion*, you regain 1d8 healing Hit Points.",
+    "source": "Pathfinder GM Core"
+  }
+}

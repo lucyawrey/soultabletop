@@ -1,0 +1,15 @@
+{
+  "name": "Nimble Dodge",
+  "readableId": "feat-nimble-dodge",
+  "data": {
+    "level": 1,
+    "category": "class",
+    "actions": "reaction",
+    "traits": [
+      "Rogue"
+    ],
+    "rarity": "common",
+    "description": "**Trigger** A creature targets you with an attack and you can see the attacker.\n\n**Requirements** You are not encumbered.\n\n---\n\nYou deftly dodge out of the way, gaining a +2 circumstance bonus to AC against the triggering attack.",
+    "source": "Pathfinder Player Core"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Crowbar",
+  "readableId": "item-crowbar",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 50,
+    "bulk": 0.1,
+    "usage": "Held in two hands",
+    "rarity": "common",
+    "description": "When Forcing Open an object that doesn't have an easy grip, a crowbar makes it easier to gain the necessary leverage. Without a crowbar, prying something open takes a -2 item penalty to the Athletics check to Force Open.",
+    "source": "Pathfinder Player Core"
+  }
+}

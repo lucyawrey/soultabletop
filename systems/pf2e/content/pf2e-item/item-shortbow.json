@@ -1,0 +1,26 @@
+{
+  "name": "Shortbow",
+  "readableId": "item-shortbow",
+  "data": {
+    "kind": "weapon",
+    "level": 0,
+    "price": 300,
+    "bulk": 1,
+    "usage": "Held in one plus hands",
+    "weapon": {
+      "category": "martial",
+      "group": "Bow",
+      "damageDice": 1,
+      "damageDie": "d6",
+      "damageType": "piercing",
+      "range": 60,
+      "reload": "0"
+    },
+    "traits": [
+      "Deadly d10"
+    ],
+    "rarity": "common",
+    "description": "This smaller bow is made of a single piece of wood and favored by skirmishers and cavalry.",
+    "source": "Pathfinder Player Core"
+  }
+}
