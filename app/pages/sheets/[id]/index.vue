@@ -132,8 +132,10 @@ async function remove() {
           <VisibilityBadge :is-publicly-readable="sheet.isPubliclyReadable" />
           <LabelChip v-if="sheet.isDefault" tone="primarySoft">Default</LabelChip>
         </template>
-        <template v-if="loggedIn" #actions>
+        <template #actions>
+          <SheetLayoutToggle v-model="layout" />
           <UButton
+            v-if="loggedIn"
             icon="i-lucide-git-fork"
             color="neutral"
             variant="outline"
@@ -173,7 +175,7 @@ async function remove() {
       >
         <div
           class="min-w-0 space-y-6"
-          :class="{ 'lg:col-span-2 lg:grid lg:grid-cols-subgrid lg:space-y-0': layout === 'stacked' }"
+          :class="{ 'lg:col-span-2 lg:grid lg:grid-cols-subgrid lg:items-start lg:space-y-0': layout === 'stacked' }"
         >
         <UTabs
           v-model="tab"
@@ -232,7 +234,9 @@ async function remove() {
         />
         </div>
 
+        <!-- On narrow screens the preview comes first, for readers. -->
         <SheetPreviewPane
+          class="order-first lg:order-none"
           :class="{ 'lg:col-span-2': layout === 'stacked' }"
           :markup="sheet.markup"
           :css="sheet.css"

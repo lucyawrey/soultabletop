@@ -761,7 +761,8 @@ content type, and default, then opens the editor: a sheet created without markup
 `css`. The detail page previews the sheet with `SheetRenderer` against `sampleSheetData` (broken-tag placeholders for
 editors, an Edit Fields switch whose changes never save), with the markup and CSS in tabs beside the preview (a read-only `CodeEditor`, for the same syntax colors).
 
-Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
+Layout (≥ lg: side by side, or stacked with the editor above the preview, picked with a layout switch in the toolbar
+and remembered per browser in the `sheet-layout` cookie, shared with the sheet's page; below lg always stacked):
 - Left: tabs **Markup** | **CSS** | **Settings** (Name, ID, Visibility, Default sheet, Start with Edit Fields on, Default
   autosave, Non-editable fields), then a diagnostics list (errors + warnings, click → jump to line).
 - The Markup and CSS tabs have **Upload** and **Download** buttons, and a file dropped on either editor loads into it.
@@ -770,7 +771,7 @@ Layout (side by side ≥ lg; below that an Editor/Preview tab switch):
   characters) and rejected if they aren't text. A loaded file replaces the editor's content as an unsaved change (undo
   restores it), so it's checked and previewed before saving. Download saves the editor's current content as
   `<readableId>.stts` or `<readableId>.css`.
-- Right: live preview via the real `SheetRenderer` with its Edit Fields/Autosave switches (preview edits never save), plus a
+- Right (or below): live preview (`SheetPreviewPane`, shared with the sheet's page) via the real `SheetRenderer` with its Edit Fields/Autosave switches (preview edits never save), plus a
   data picker: **Sample data** (generated from the schema: labels as text, 10 for numbers, 2 items per array) or any
   readable content of this content type. When the markup has a `<Preview>` beside `<Sheet>`, a **Sheet** | **Preview**
   switch shows it instead of the sheet, read-only, as a reference preview from another sheet would (`previewOf`).
