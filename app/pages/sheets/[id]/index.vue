@@ -168,14 +168,23 @@ async function remove() {
       </DetailHeader>
 
       <!-- Side by side: the code and About on the left, the preview on the
-        right. Stacked: the code and About, then the preview below. -->
+        right; on the widest screens About gets a third column. Stacked: the
+        code and About, then the preview below. -->
       <div
         class="grid items-start gap-6"
-        :class="layout === 'columns' ? 'lg:grid-cols-2' : 'lg:grid-cols-[minmax(0,1fr)_280px]'"
+        :class="
+          layout === 'columns'
+            ? 'lg:grid-cols-2 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_280px]'
+            : 'lg:grid-cols-[minmax(0,1fr)_280px]'
+        "
       >
         <div
           class="min-w-0 space-y-6"
-          :class="{ 'lg:col-span-2 lg:grid lg:grid-cols-subgrid lg:items-start lg:space-y-0': layout === 'stacked' }"
+          :class="
+            layout === 'stacked'
+              ? 'lg:col-span-2 lg:grid lg:grid-cols-subgrid lg:items-start lg:space-y-0'
+              : '2xl:contents'
+          "
         >
         <UTabs
           v-model="tab"
@@ -221,6 +230,7 @@ async function remove() {
         </UTabs>
 
         <AboutPanel
+          :class="{ '2xl:col-start-3 2xl:row-start-1': layout === 'columns' }"
           :facts="[
             { label: 'Owner', value: ownerLabel(sheet) },
             { label: 'ID', value: sheet.readableId, mono: true },
@@ -236,7 +246,7 @@ async function remove() {
         <!-- On narrow screens the preview comes first, for readers. -->
         <SheetPreviewPane
           class="order-first lg:order-none"
-          :class="{ 'lg:col-span-2': layout === 'stacked' }"
+          :class="layout === 'stacked' ? 'lg:col-span-2' : '2xl:col-start-2 2xl:row-start-1'"
           :markup="sheet.markup"
           :css="sheet.css"
           :scope-id="sheet.id"
