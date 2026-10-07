@@ -44,8 +44,11 @@ export interface FormulaEnv {
   refs: SheetRefs;
   // Whether the sheet is being edited (`editing()`).
   editing?: boolean;
-  // Inside a definition: its arguments by parameter name.
+  // Inside a definition: its arguments by parameter name. In an action's
+  // steps: `amount`, and the named rolls so far.
   params?: Readonly<Record<string, FormulaValue>>;
+  // In an action on a value tag: the value it shows, for value().
+  shown?: FormulaValue;
   // Calls the sheet's definition `name`, or returns undefined if the sheet has
   // none by that name. See callFormulaDefinition.
   call(name: string, args: FormulaValue[]): FormulaValue | undefined;
@@ -297,6 +300,7 @@ function evaluateCall(
   const result = env.call(node.name, args);
   if (result !== undefined) return result;
   if (builtin) return callBuiltin(builtin, node, env, args);
+  if (node.name === "value" && !node.args.length && env.shown !== undefined) return env.shown;
   return new FormulaError("unknown-function", `There's no function named ${node.name}`);
 }
 
@@ -377,6 +381,7 @@ export function callFormulaDefinition(
     ...env,
     scope: env.root,
     params,
+    shown: undefined,
     depth: depth + 1,
   });
 }

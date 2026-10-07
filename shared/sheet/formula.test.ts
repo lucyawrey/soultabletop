@@ -217,7 +217,7 @@ describe("literals", () => {
     [".5", "A number can't start with a dot; write 0.5 instead of .5"],
     ["2x", "\"2x\" isn't a number or a field name; field names can't start with a digit"],
     ["2d", "\"2d\" isn't a number or a field name; field names can't start with a digit"],
-    ["2d6x", "\"2d6x\" looks like dice but isn't; dice look like 2d6"],
+    ["2d6x", "\"2d6x\" looks like dice but isn't; dice look like 2d6 or 2d20kh1"],
     [`1${"0".repeat(400)}`, "This number is too large"],
     ["'abc", "Text is missing its closing '"],
     ["'a\\nb'", "Use \\\\ for a backslash in text; only \\', \\\", and \\\\ are escapes"],

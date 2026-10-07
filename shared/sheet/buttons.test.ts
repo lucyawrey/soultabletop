@@ -161,13 +161,13 @@ describe("Button and Set validation", () => {
 
   it("places Buttons and Sets (a Column may show a field beside its Buttons)", () => {
     expect(messages(`<Button label="X" />`)).toEqual([
-      "error missing-child: <Button> needs a <Set> for each field it changes",
+      "error missing-child: <Button> needs a step: a <Set> for each field it changes, or a <Roll>",
     ]);
     expect(messages(`<Set field="focus" formula="1" />`)).toEqual([
-      "error misplaced-tag: <Set> must be directly inside <Button>",
+      "error step-misplaced: <Set> must be directly inside <Button> or <Value> or <Number> or <Column> or <FollowUp>",
     ]);
     expect(messages(`<Button label="X"><Number field="focus" /></Button>`)).toEqual([
-      "error child-not-allowed: <Button> can only contain <Set>",
+      "error child-not-allowed: <Button> can only contain <Set> and <Roll> and <FollowUp>",
     ]);
     expect(messages(`<Button label="X" locked><Set field="focus" formula="1" /></Button>`)[0]).toContain(
       "error unknown-attribute: <Button> has no locked attribute",
@@ -184,8 +184,8 @@ describe("clicking a Button", () => {
       <Set field="hp.value" formula="min(hp.value + amount, hp.max)" />
     </Button>
     <Button label="Damage" amount>
-      <Set field="hp.temp" formula="max(0, hp.temp - amount)" />
       <Set field="hp.value" formula="max(0, hp.value - max(0, amount - hp.temp))" />
+      <Set field="hp.temp" formula="max(0, hp.temp - amount)" />
     </Button>
     <Button label="Daily preparations">
       <Set field="spells.*.cast" formula="false" />
@@ -197,12 +197,16 @@ describe("clicking a Button", () => {
       <Button label="Wear"><Set field="state" formula="'Worn'" /></Button>
     </List>`);
 
-  it("computes every Set from the data before the click", () => {
+  it("runs Sets in order, each reading what the ones before it wrote", () => {
     const data = { hp: { value: 20, temp: 3, max: 30 } };
     click(damage!, data, 5);
     expect(data.hp).toEqual({ value: 18, temp: 0, max: 30 });
     click(heal!, data, 50);
     expect(data.hp.value).toBe(30);
+    const [twice] = buttons(`<Button label="Twice"><Set field="focus" formula="focus + 1" /><Set field="focus" formula="focus * 10" /></Button>`);
+    const counter: Record<string, unknown> = { focus: 1 };
+    click(twice!, counter);
+    expect(counter.focus).toBe(20);
   });
 
   it("gives back the previous values for Undo", () => {
@@ -210,8 +214,8 @@ describe("clicking a Button", () => {
     const result = click(damage!, data, 1);
     expect(result).toEqual({
       writes: [
-        { path: ["hp", "temp"], value: 2, previous: 3 },
         { path: ["hp", "value"], value: 20, previous: 20 },
+        { path: ["hp", "temp"], value: 2, previous: 3 },
       ],
     });
   });

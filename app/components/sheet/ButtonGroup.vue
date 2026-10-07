@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { sheetActionWrites } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // Adjacent Buttons with `amount` (grouped by SheetNodes): one number box
 // before them, whose value their Set formulas read as `amount`. Clicking one
-// clears it. Only viewers who can edit see it.
+// clears it. Only viewers who can edit see it, unless a Button only rolls.
 const props = defineProps<{ nodes: ValidatedElement[] }>();
 
 const { context, condition } = useSheet();
@@ -12,11 +13,14 @@ const attrText = useSheetAttrText();
 const compact = useSheetCompact();
 const amount = provideSheetButtonAmount();
 
+const rollsOnly = (node: ValidatedElement) => !sheetActionWrites(node);
 const shown = computed(
-  () => context.canEdit.value && props.nodes.some((node) => condition(node.attrs.show).shown),
+  () =>
+    (context.canEdit.value || props.nodes.some(rollsOnly)) &&
+    props.nodes.some((node) => condition(node.attrs.show).shown),
 );
 const usable = computed(() =>
-  props.nodes.some((node) => sheetButtonUsable(context, flags.value, node)),
+  props.nodes.some((node) => rollsOnly(node) || sheetButtonUsable(context, flags.value, node)),
 );
 // Names the box for screen readers: "Amount for Damage or Heal".
 const boxLabel = computed(

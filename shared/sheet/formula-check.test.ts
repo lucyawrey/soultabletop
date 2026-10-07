@@ -142,8 +142,8 @@ describe("calls", () => {
     ["prof()", "formula-arity: prof takes 1 argument (rank)"],
     ["pb(1)", "formula-arity: pb takes 0 arguments (none)"],
     ["nope(1)", "formula-unknown-function: There's no function named nope"],
-    ["roll(1)", "formula-dice: Dice rolls aren't available here yet"],
-    ["2d6 + 1", "formula-dice: Dice rolls aren't available here yet"],
+    ["roll(1)", "dice-outside-roll: Dice can only be rolled in a <Roll>'s formula"],
+    ["2d6 + 1", "dice-outside-roll: Dice can only be rolled in a <Roll>'s formula"],
   ])("%s", (source, message) => {
     expect(messages(source)).toEqual([message]);
   });

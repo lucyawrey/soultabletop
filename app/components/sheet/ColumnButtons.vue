@@ -7,7 +7,6 @@ import SheetField from "./Field.vue";
 // when it also has a field, formula, or parts.
 const props = defineProps<{ node: ValidatedElement; compact?: boolean }>();
 
-const { context } = useSheet();
 const hasValue = computed(
   () => !!props.node.binding || !!props.node.formula || hasSheetParts(props.node),
 );
@@ -20,6 +19,6 @@ const buttons = computed(() =>
   <!-- With a value, its Field carries the Column's classes. -->
   <div :class="[hasValue ? [] : sheetClasses(node), 'flex flex-wrap items-center gap-1']">
     <SheetField v-if="hasValue" :node="node" compact />
-    <SheetNodes v-if="context.canEdit.value" :nodes="buttons" />
+    <SheetNodes :nodes="buttons" />
   </div>
 </template>

@@ -134,6 +134,16 @@ export type SheetDisplay = (typeof SHEET_DISPLAYS)[number];
 export const SHEET_DENSITIES = ["roomy", "compact"] as const;
 export type SheetDensity = (typeof SHEET_DENSITIES)[number];
 
+// How a value with steps is clicked (`<Sheet rolls>`).
+export const SHEET_ROLL_TARGETS = ["auto", "button"] as const;
+export type SheetRollTarget = (typeof SHEET_ROLL_TARGETS)[number];
+
+// The tags an action runs, in order (see "Rolls" in docs/sheet-system.md).
+export const STEP_TAGS = ["Set", "Roll", "FollowUp"] as const;
+// Tags that may hold steps: a Button, a value (clicking it runs them), and a
+// FollowUp.
+export const ACTION_TAGS = ["Button", "Value", "Number", "Column", "FollowUp"] as const;
+
 // Accepted by every tag.
 export const commonAttrs: Record<string, AttrSpec> = {
   class: {
@@ -223,6 +233,10 @@ const tagList: TagSpec[] = [
       density: oneOf(
         SHEET_DENSITIES,
         "compact (the default) uses smaller inputs, labels, and gaps; roomy uses the site's form spacing",
+      ),
+      rolls: oneOf(
+        SHEET_ROLL_TARGETS,
+        "How a value with a Roll is clicked: auto (the default) puts a die button beside a value that also opens a breakdown or preview and makes other values the button themselves; button puts a die button beside every one",
       ),
     },
     children: "any",
@@ -403,8 +417,8 @@ const tagList: TagSpec[] = [
         "stat shows a large number with a small label",
       ),
     },
-    // Parts that explain its formula (needs one).
-    children: { only: ["Part"] },
+    // Parts that explain its formula (needs one), and steps a click runs.
+    children: { only: ["Part", ...STEP_TAGS] },
     binds: ["number"],
     formula: "override",
   },
@@ -491,7 +505,7 @@ const tagList: TagSpec[] = [
       format: formatAttr,
       preview: previewAttr,
     },
-    children: { only: ["Part", "Preview"] },
+    children: { only: ["Part", "Preview", ...STEP_TAGS] },
     binds: ["anyValue"],
     formula: "readOnly",
   },
@@ -558,7 +572,7 @@ const tagList: TagSpec[] = [
     },
     // Parts explaining its number, Buttons (each row gets its own), and the
     // card its preview opens.
-    children: { only: ["Part", "Button", "Preview"] },
+    children: { only: ["Part", "Button", "Preview", ...STEP_TAGS] },
     parents: ["Table"],
     binds: ["string", "number", "boolean", "scalar", "resourceLink", "content"],
     formula: "readOnly",
@@ -609,7 +623,7 @@ const tagList: TagSpec[] = [
     name: "Button",
     category: "action",
     description:
-      "A button that changes fields when clicked, with a Set tag for each; shown to viewers who can edit the content, and with Edit off usable only if live",
+      "A button that runs its steps in order when clicked: Set changes a field, Roll rolls dice, FollowUp offers more steps on the roll's entry. With only Rolls it works for every viewer; with a Set, only for viewers who can edit, and with Edit off only if live",
     attrs: {
       label: text("Button text", true),
       icon,
@@ -620,14 +634,14 @@ const tagList: TagSpec[] = [
         "After a click, shows a toast naming the button, with Undo; for large actions (off by default)",
       ),
     },
-    children: { only: ["Set"] },
+    children: { only: [...STEP_TAGS] },
     liveOnly: true,
   },
   {
     name: "Set",
     category: "action",
     description:
-      "One change a Button makes: its field gets the formula's value. Every Set of a Button reads the data from before the click",
+      "One change an action makes: its field gets the formula's value. Steps run in order, so a Set reads what the steps before it wrote",
     attrs: {
       field: {
         type: { kind: "target" },
@@ -643,7 +657,48 @@ const tagList: TagSpec[] = [
       },
     },
     children: "none",
-    parents: ["Button"],
+    parents: [...ACTION_TAGS],
+    noCommonAttrs: true,
+  },
+  {
+    name: "Roll",
+    category: "action",
+    description:
+      "Rolls dice when its action runs and shows the result in a toast and Recent rolls; with name, later steps read the roll (name.total, name.dice, name.natural, name.crit, name.fumble)",
+    attrs: {
+      formula: {
+        type: { kind: "formula" },
+        required: true,
+        description:
+          "What to roll: a formula with dice, like d20 + value() or dice(damage); dice can be added, subtracted, multiplied, divided, or picked with if()",
+      },
+      name: { type: { kind: "name" }, description: "A name later steps read the roll by, like hit" },
+      label: text("What the roll is, like Attack (default Roll)"),
+      crit: {
+        type: { kind: "formula" },
+        description: "Which kept dice are critical, like face == 20 (face and sides are the die's)",
+      },
+      fumble: {
+        type: { kind: "formula" },
+        description: "Which kept dice are fumbles, like face == 1 (face and sides are the die's)",
+      },
+      show: commonAttrs.show!,
+    },
+    children: "none",
+    parents: [...ACTION_TAGS],
+    noCommonAttrs: true,
+  },
+  {
+    name: "FollowUp",
+    category: "action",
+    description:
+      "Steps offered as a button on the entry of the Roll before it, run when clicked (like damage after an attack); it reads the sheet at the click",
+    attrs: {
+      label: text("Button text, like Damage or Reroll ({heroPoints} left)", true),
+      show: commonAttrs.show!,
+    },
+    children: { only: [...STEP_TAGS] },
+    parents: [...ACTION_TAGS],
     noCommonAttrs: true,
   },
 
