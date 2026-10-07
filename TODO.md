@@ -140,6 +140,8 @@ Playing campaigns online, sharing, and discovery.
 
 - **Landing page drift from the frozen redesign** · bug
   Found by comparing the signed-out landing page with `.claude/mockups/ui-redesign/frozen.html` (2026-10-05): the sidebar nav lists Content before Characters; the sign-in tabs' text is smaller than in the mockup; the Sign in button looks disabled until the form is filled. Some of these may be intentional changes by the user: ask about each one before changing anything. Then fix it to match the frozen page, or record it as a decision in `.claude/mockups/ui-redesign/spec.md` ("Decided after the mockup"); compare with `.claude/scripts/compare-mockup.mjs`.
+- **Compact resource detail headers** · feature
+  User (2026-10-07, seeing the PF2e character sheet): "now that im seeing it with the character sheets we should really make the details headers more compact across the board. will need design work and a separate pr". The header of every resource's detail page (type label, title, system link, owner/ID/visibility chips, updated date, the divider, then the Edit Fields/Autosave/View with bar) takes about 300px above a sheet. Starts with a mockup for the user to approve (`.claude/ui-mockups.md`), then its own PR.
 
 # Low priority
 
