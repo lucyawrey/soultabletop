@@ -27,6 +27,7 @@ import {
   type FormulaBaseKind,
   type FormulaNode,
   type FormulaType,
+  walkFormula,
 } from "./formula";
 import { checkFormula, type FormulaCheckHost } from "./formula-check";
 import type { SheetEntry } from "./scope";
@@ -46,11 +47,13 @@ import {
   type SheetPath,
   type TextPart,
 } from "./parser";
+import { rollLimits } from "./roll";
 import {
   commonAttrsFor,
   findTag,
   humanizeFieldName,
   noShowTags,
+  STEP_TAGS,
   type AttrSpec,
   type BindKind,
   type SheetPreviewMode,
@@ -104,6 +107,25 @@ export interface SetTarget {
   // The field, when the schema knows it.
   field?: ContentFieldSchema;
 }
+
+// The steps of the action being checked (a Button's, a value's, or a
+// FollowUp's), in order: what their formulas can read.
+interface ActionContext {
+  // `amount` (a Button with amount) and the named rolls so far, as parameters.
+  params: Record<string, FormulaType>;
+  rolls: Set<string>;
+  // On a value tag: the type of the value value() gives.
+  shown?: FormulaType;
+  // Every Roll name in the action and its follow-ups (names are unique).
+  names: Set<string>;
+  // Whether a Roll came before, in this list of steps.
+  rolled: boolean;
+  // FollowUps around these steps.
+  depth: number;
+}
+
+const maxFollowUpDepth = 3;
+const stepTags: readonly string[] = STEP_TAGS;
 
 export interface ValidatedElement {
   type: "element";
@@ -641,19 +663,33 @@ class Validator {
 
   // Parses and checks one formula in `scope`, with `params` as names it can
   // use (a Button's `amount`). Undefined if it has errors (they are reported).
+  // In a step (Roll, Set, FollowUp), formulas also see the action's `amount`,
+  // its named rolls so far, and value(); `dice` allows dice (a Roll's formula).
   private compileFormula(
     source: string,
     start: Position,
     scope: Shape,
     loc: Loc,
     params?: Readonly<Record<string, FormulaType>>,
+    options: { dice?: boolean } = {},
   ): CompiledFormula | undefined {
     if (!this.countFormula(loc)) return undefined;
-    const parsed = parseFormula(source, start, { params: params ? Object.keys(params) : [] });
+    const step = this.inStep ? this.action : undefined;
+    const names = params ?? step?.params;
+    const parsed = parseFormula(source, start, {
+      params: names ? Object.keys(names) : [],
+      records: step ? [...step.rolls] : [],
+    });
     this.diagnostics.push(...parsed.diagnostics);
     if (!parsed.ast) return undefined;
     const before = this.errorCount();
-    const checked = checkFormula(parsed.ast, this.formulaHost(params), scope);
+    const host = this.formulaHost(names);
+    if (step) {
+      host.shown = step.shown;
+      host.rolls = step.rolls;
+    }
+    if (options.dice) host.dice = true;
+    const checked = checkFormula(parsed.ast, host, scope);
     this.diagnostics.push(...checked.diagnostics);
     if (this.errorCount() > before) return undefined;
     return { source, loc, ast: parsed.ast, type: checked.type };
@@ -929,11 +965,24 @@ class Validator {
       if (spec.parents.length && !allowedHere) {
         const allowed = spec.parents.map((name) => `<${name}>`).join(" or ");
         return invalid(
-          "misplaced-tag",
+          stepTags.includes(spec.name) ? "step-misplaced" : "misplaced-tag",
           spec.topLevel
             ? `<${spec.name}> must be at the top level or directly inside ${allowed}`
             : `<${spec.name}> must be directly inside ${allowed}`,
         );
+      }
+    }
+
+    if (stepTags.includes(spec.name)) {
+      if (this.cardDepth)
+        return invalid("step-in-preview", `<${spec.name}> can't be in a <Preview>: previews are read-only`);
+      if (!this.action) return invalid("step-misplaced", `<${spec.name}> must be directly inside a <Button>, <Value>, <Number>, <Column>, or <FollowUp>`);
+      const outerStep = this.inStep;
+      this.inStep = true;
+      try {
+        return this.stepElement(node, spec, scope, invalid, broken);
+      } finally {
+        this.inStep = outerStep;
       }
     }
 
@@ -943,8 +992,6 @@ class Validator {
     if (spec.category === "definition") {
       return { type: "element", tag: spec.name, spec, attrs, children: [], loc: node.loc };
     }
-    if (spec.name === "Set") return this.setElement(node, spec, attrs, scope) ?? broken(`<Set> has errors`);
-
     // A formula attribute that didn't compile makes the tag unusable.
     const formulaAttr = attrNamed(node, "formula");
     const formula = isCompiledFormula(attrs.formula) ? attrs.formula : undefined;
@@ -956,7 +1003,8 @@ class Validator {
       child.type === "element" ? [child.tag.toLowerCase()] : [],
     );
     const hasParts = childTags.includes("part");
-    const buttonsOnly = spec.name === "Column" && childTags.includes("button") && !hasParts;
+    const hasSteps = childTags.some((tag) => stepTags.some((step) => step.toLowerCase() === tag));
+    const buttonsOnly = spec.name === "Column" && childTags.includes("button") && !hasParts && !hasSteps;
     if (hasParts && (spec.name === "Value" || spec.name === "Column") && attrNamed(node, "field") && !formulaAttr) {
       return invalid(
         "invalid-attribute",
@@ -981,6 +1029,12 @@ class Validator {
       if (!hasField && !formula && !hasParts && !buttonsOnly) {
         // A field attribute that was written but is invalid is reported already.
         if (attrNamed(node, "field")) return broken(`<${spec.name}> has errors`);
+        if (hasSteps) {
+          return invalid(
+            "missing-attribute",
+            `<${spec.name}> with steps needs a field, formula, or parts: clicking its value runs them`,
+          );
+        }
         return invalid(
           "missing-attribute",
           spec.formula
@@ -1162,19 +1216,43 @@ class Validator {
     for (const extra of cards.slice(1))
       this.error("duplicate-preview", `<${spec.name}> has only one <Preview>`, extra.loc);
 
-    // A Button's Sets may use `amount` when it has one.
-    const outerParams = this.setParams;
+    // An action: a Button, or a value whose click runs its steps. Its steps
+    // may use `amount` (a Button with amount) and value() (a value).
+    const outerAction = this.action;
     if (spec.name === "Button") {
-      this.setParams = attrs.amount === true ? { amount: formulaTypes.number } : undefined;
+      this.action = {
+        params: attrs.amount === true ? { amount: formulaTypes.number } : {},
+        rolls: new Set(),
+        names: new Set(),
+        rolled: false,
+        depth: 0,
+      };
       if (!node.children.some((child) => child.type === "element")) {
-        this.error("missing-child", "<Button> needs a <Set> for each field it changes", node.loc);
+        this.error("missing-child", "<Button> needs a step: a <Set> for each field it changes, or a <Roll>", node.loc);
       }
+    } else if (hasSteps && (spec.name === "Value" || spec.name === "Number" || spec.name === "Column")) {
+      if (typeof attrs.field !== "string" && !formula && !hasParts) {
+        return invalid(
+          "missing-attribute",
+          `<${spec.name}> with steps needs a field, formula, or parts: clicking its value runs them`,
+        );
+      }
+      this.action = {
+        params: {},
+        rolls: new Set(),
+        names: new Set(),
+        rolled: false,
+        depth: 0,
+        shown: formula ? formula.type : binding?.field ? fieldType(binding.field) : hasParts ? formulaTypes.number : formulaTypes.any,
+      };
+    } else {
+      this.action = undefined;
     }
     const outerCard = this.card;
     this.card = card;
     const children = this.children(node.children, spec, childScope);
     this.card = outerCard;
-    this.setParams = outerParams;
+    this.action = outerAction;
 
     return {
       type: "element",
@@ -1190,8 +1268,11 @@ class Validator {
     };
   }
 
-  // The `amount` of the Button whose Sets are being checked.
-  private setParams: Readonly<Record<string, FormulaType>> | undefined;
+  // The action whose steps are being checked.
+  private action: ActionContext | undefined;
+  // Whether a step's attributes are being checked (its formulas see the
+  // action's parameters).
+  private inStep = false;
   // What a `<Preview>` child of the tag being checked shows: the shape of the
   // content its preview opens, "broken" when that preview has errors
   // (already reported), or undefined without a preview.
@@ -1232,6 +1313,140 @@ class Validator {
       },
       shape: entered ?? { kind: "unknown", depth: shape.depth + 1 },
     };
+  }
+
+  // A step of an action: a Set, a Roll, or a FollowUp, checked in order.
+  private stepElement(
+    node: SheetElement,
+    spec: TagSpec,
+    scope: Shape,
+    invalid: (code: string, message: string) => InvalidNode,
+    broken: (message: string) => InvalidNode,
+  ): ValidatedNode {
+    const action = this.action!;
+    if (spec.name === "FollowUp") {
+      if (!action.rolled)
+        return invalid("follow-up-without-roll", "A <FollowUp> is offered on the entry of the <Roll> before it; put a <Roll> first");
+      if (action.depth >= maxFollowUpDepth)
+        return invalid("roll-limit", `Follow-ups can be nested at most ${maxFollowUpDepth} deep`);
+    }
+    const attrs = this.attributes(node, spec, scope);
+    if (!attrs) return broken(`<${spec.name}> has errors`);
+    if (spec.name === "Set") return this.setElement(node, spec, attrs, scope) ?? broken("<Set> has errors");
+    if (spec.name === "Roll") return this.rollElement(node, spec, attrs, scope) ?? broken("<Roll> has errors");
+
+    // FollowUp: its steps see the rolls before it; names it adds stay inside.
+    if (!node.children.some((child) => child.type === "element"))
+      return invalid("follow-up-empty", "<FollowUp> needs a step: a <Roll> or a <Set>");
+    this.action = {
+      ...action,
+      params: { ...action.params },
+      rolls: new Set(action.rolls),
+      rolled: false,
+      depth: action.depth + 1,
+    };
+    const children = this.children(node.children, spec, scope);
+    this.action = action;
+    return { type: "element", tag: spec.name, spec, attrs, children, loc: node.loc };
+  }
+
+  // A `<Roll>`: its formula may roll dice and must give a number; crit and
+  // fumble are conditions on each kept die (`face`, `sides`); a name makes a
+  // record later steps read.
+  private rollElement(
+    node: SheetElement,
+    spec: TagSpec,
+    attrs: Record<string, AttrValue>,
+    scope: Shape,
+  ): ValidatedElement | undefined {
+    const action = this.action!;
+    const compiled: Record<string, CompiledFormula> = {};
+    let ok = true;
+    for (const name of ["formula", "crit", "fumble"]) {
+      const attr = attrNamed(node, name);
+      if (!attr) continue;
+      if (!attr.valueLoc || !(attr.raw ?? "").trim()) {
+        this.error("invalid-attribute", `${name} on <Roll> needs a formula`, attr.loc);
+        ok = false;
+        continue;
+      }
+      const isFormula = name === "formula";
+      const params = isFormula ? undefined : { ...action.params, face: formulaTypes.number, sides: formulaTypes.number };
+      const formula = this.compileFormula(attr.raw ?? "", attr.valueLoc.start, scope, attr.valueLoc, params, { dice: isFormula });
+      if (!formula) {
+        ok = false;
+        continue;
+      }
+      const wanted: [FormulaBaseKind, string] = isFormula ? ["number", "a number"] : ["boolean", "true or false"];
+      if (!couldBe(formula.type, [wanted[0]])) {
+        this.error(
+          "formula-result-type",
+          `${name} on <Roll> must give ${wanted[1]}, but ${(attr.raw ?? "").trim()} gives ${describeType(formula.type)}`,
+          formula.loc,
+        );
+        ok = false;
+        continue;
+      }
+      if (isFormula && !this.checkDiceLimits(formula.ast, formula.loc)) ok = false;
+      compiled[name] = formula;
+    }
+    // Named after its formula, so a roll never reads itself.
+    const name = typeof attrs.name === "string" ? attrs.name : undefined;
+    if (name) {
+      const nameAttr = attrNamed(node, "name")!;
+      const nameLoc = nameAttr.valueLoc ?? nameAttr.loc;
+      if (dicePattern.test(name) || ["amount", "face", "sides", ...formulaReservedWords].includes(name)) {
+        this.error("invalid-attribute", `"${name}" can't name a roll; choose another name`, nameLoc);
+        ok = false;
+      } else if (action.names.has(name)) {
+        this.error("roll-name-duplicate", `Another <Roll> in this action is named ${name}`, nameLoc);
+        ok = false;
+      }
+    }
+    action.rolled = true;
+    if (!ok) return undefined;
+    if (name) {
+      action.names.add(name);
+      action.rolls.add(name);
+      action.params[name] = formulaTypes.record;
+    }
+    return {
+      type: "element",
+      tag: spec.name,
+      spec,
+      attrs: { ...attrs, ...compiled },
+      formula: { ast: compiled.formula!.ast, type: compiled.formula!.type },
+      children: [],
+      loc: node.loc,
+    };
+  }
+
+  // Dice a roll can have: 2 to 1000 sides, at most 100 dice in all, and a
+  // keep count from 1 to the number of dice.
+  private checkDiceLimits(ast: FormulaNode, loc: Loc) {
+    let count = 0;
+    let ok = true;
+    walkFormula(ast, (node) => {
+      if (node.type !== "dice") return;
+      count += node.count;
+      const problem =
+        node.sides < rollLimits.minSides || node.sides > rollLimits.maxSides
+          ? `Dice have ${rollLimits.minSides} to ${rollLimits.maxSides} sides, not ${node.sides}`
+          : node.count < 1
+            ? "Roll at least one die"
+            : node.keep && (node.keep.count < 1 || node.keep.count > node.count)
+              ? `Can't keep ${node.keep.count} of ${node.count} dice`
+              : undefined;
+      if (problem) {
+        this.error("roll-limit", problem, node.loc);
+        ok = false;
+      }
+    });
+    if (count > rollLimits.maxDice) {
+      this.error("roll-limit", `A roll can have at most ${rollLimits.maxDice} dice`, loc);
+      ok = false;
+    }
+    return ok;
   }
 
   // A `<Set>`: its field must hold a single value, and its formula (checked
@@ -1294,7 +1509,6 @@ class Validator {
       formulaAttr.valueLoc.start,
       targetScope,
       formulaAttr.valueLoc,
-      this.setParams,
     );
     if (!formula) return undefined;
     const binding: Binding = { path, field, label: "" };
@@ -1466,8 +1680,8 @@ class Validator {
     if (type.kind === "formula") {
       const raw = attr.raw ?? "";
       // A definition's body is checked with the other definitions, and a
-      // Set's in its own scope, with its Button's amount (see setElement).
-      if (spec.category === "definition" || spec.name === "Set") return raw;
+      // Set's in its own scope, and a Roll's with dice (see stepElement).
+      if (spec.category === "definition" || spec.name === "Set" || spec.name === "Roll") return raw;
       if (!attr.valueLoc) return fail(`${name} on <${spec.name}> needs a value`);
       return this.compileFormula(raw, attr.valueLoc.start, scope, attr.valueLoc);
     }

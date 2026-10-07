@@ -605,7 +605,7 @@ describe("formulas", () => {
     expect(errorCodes('<Value formula="nope(1)" />')).toEqual(["formula-unknown-function"]);
     expect(errorCodes('<Value formula="floor()" />')).toEqual(["formula-arity"]);
     expect(messages('<Value formula="2d6 + hp" />')).toEqual([
-      "error formula-dice: Dice rolls aren't available here yet",
+      "error dice-outside-roll: Dice can only be rolled in a <Roll>'s formula",
     ]);
   });
 

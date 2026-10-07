@@ -16,6 +16,7 @@ import {
 import {
   describeArity,
   diceNotAvailable,
+  diceNotHere,
   formulaFunctions,
   resolveFormulaCall,
 } from "./formula-functions";
@@ -46,7 +47,24 @@ export interface FormulaCheckHost<S> {
   definition(name: string): { params: readonly string[]; type: FormulaType } | undefined;
   // Inside a definition: its parameters' types.
   params?: Readonly<Record<string, FormulaType>>;
+  // A <Roll>'s formula: dice and dice(text) are allowed (in arithmetic and
+  // the branches of if).
+  dice?: boolean;
+  // Inside an action on a value tag: the type of the value it shows, which
+  // value() gives. Undefined elsewhere (value() is then an error).
+  shown?: FormulaType;
+  // Parameters that are named rolls (`hit`): read their fields, like hit.total.
+  rolls?: ReadonlySet<string>;
 }
+
+// The fields of a named roll (a <Roll name="…">), for later steps.
+export const rollRecordFields: Readonly<Record<string, FormulaType>> = {
+  total: formulaTypes.number,
+  dice: arrayOf(formulaTypes.number),
+  natural: formulaTypes.number,
+  crit: formulaTypes.boolean,
+  fumble: formulaTypes.boolean,
+};
 
 export interface FormulaCheckResult {
   type: FormulaType;
@@ -86,7 +104,20 @@ class Checker<S> {
     if (!couldBe(type, kinds)) this.error("formula-type", `${message}, not ${describeType(type)}`, loc);
   }
 
-  check(node: FormulaNode, scope: S, itemDepth: number): Checked<S> {
+  // A named roll used where a single value is needed: point at its fields.
+  private rollAsValue(node: FormulaNode, op: string) {
+    if (node.type !== "param" || !this.host.rolls?.has(node.name)) return false;
+    this.error(
+      "roll-record-as-number",
+      `${op} needs a number, but ${node.name} is a roll; use ${node.name}.total for its result`,
+      node.loc,
+    );
+    return true;
+  }
+
+  // `dice`: whether dice may be rolled at this spot (a <Roll>'s formula, in
+  // arithmetic or an if branch).
+  check(node: FormulaNode, scope: S, itemDepth: number, dice = false): Checked<S> {
     switch (node.type) {
       case "number":
         return { type: formulaTypes.number };
@@ -97,8 +128,9 @@ class Checker<S> {
       case "null":
         return { type: formulaTypes.null };
       case "dice":
-        this.error("formula-dice", diceNotAvailable, node.loc);
-        return { type: formulaTypes.any };
+        if (!this.host.dice) this.error("dice-outside-roll", diceNotAvailable, node.loc);
+        else if (!dice) this.error("dice-outside-roll", diceNotHere, node.loc);
+        return { type: formulaTypes.number };
       case "param":
         return { type: this.host.params?.[node.name] ?? formulaTypes.any };
       case "path": {
@@ -106,18 +138,19 @@ class Checker<S> {
         return resolved ?? { type: formulaTypes.any };
       }
       case "unary": {
-        const operand = this.check(node.operand, scope, itemDepth).type;
+        const operand = this.check(node.operand, scope, itemDepth, dice && node.op === "-").type;
         if (node.op === "not") {
           this.expect(operand, ["boolean"], "not needs true or false", node.operand.loc);
           return { type: formulaTypes.boolean };
         }
-        this.expect(operand, ["number"], "- needs a number", node.operand.loc);
+        if (!this.rollAsValue(node.operand, "-")) this.expect(operand, ["number"], "- needs a number", node.operand.loc);
         return { type: formulaTypes.number };
       }
       case "binary": {
-        const left = this.check(node.left, scope, itemDepth).type;
-        const right = this.check(node.right, scope, itemDepth).type;
         const { op } = node;
+        const diceHere = dice && (op === "+" || op === "-" || op === "*" || op === "/");
+        const left = this.check(node.left, scope, itemDepth, diceHere).type;
+        const right = this.check(node.right, scope, itemDepth, diceHere).type;
         if (op === "and" || op === "or") {
           this.expect(left, ["boolean"], `${op} needs true or false`, node.left.loc);
           this.expect(right, ["boolean"], `${op} needs true or false`, node.right.loc);
@@ -148,14 +181,28 @@ class Checker<S> {
           const hint = op === "+" && !couldBe(type, ["number"]) && couldBe(type, ["string"])
             ? " (use concat to join text)"
             : "";
-          if (!couldBe(type, ["number"]))
+          if (!couldBe(type, ["number"]) && !this.rollAsValue(side, op))
             this.error("formula-type", `${op} needs numbers${hint}, not ${describeType(type)}`, side.loc);
         }
         return { type: arithmeticOps.has(op) ? formulaTypes.number : formulaTypes.boolean };
       }
       case "call":
-        return this.call(node, scope, itemDepth);
+        return this.call(node, scope, itemDepth, dice);
       case "member": {
+        // A named roll's field: hit.total, hit.dice, hit.natural, hit.crit, hit.fumble.
+        if (node.target.type === "param" && this.host.rolls?.has(node.target.name)) {
+          const [field, ...more] = node.path.segments;
+          const type = field !== undefined && !more.length && !node.path.absolute ? rollRecordFields[field] : undefined;
+          if (!type) {
+            this.error(
+              "formula-type",
+              `${node.target.name} is a roll; it has total, dice, natural, crit, and fumble, not ${node.text.slice(1)}`,
+              node.loc,
+            );
+            return { type: formulaTypes.any };
+          }
+          return { type };
+        }
         const target = this.check(node.target, scope, itemDepth);
         const kinds = definiteKinds(target.type);
         if (kinds?.has("array") && kinds.size === 1) {
@@ -183,12 +230,37 @@ class Checker<S> {
     node: Extract<FormulaNode, { type: "call" }>,
     scope: S,
     itemDepth: number,
+    dice: boolean,
   ): Checked<S> {
     const target = resolveFormulaCall(node.name, (name) => !!this.host.definition(name));
 
+    // dice(text): rolls the dice written in a text value, like a field
+    // holding "2d8 + 3".
+    if (target === "dice" && node.name === "dice" && this.host.dice) {
+      if (!dice) this.error("dice-outside-roll", diceNotHere, node.nameLoc);
+      if (node.args.length !== 1) this.error("formula-arity", "dice takes 1 argument: dice(text)", node.loc);
+      for (const arg of node.args) {
+        const type = this.check(arg, scope, itemDepth).type;
+        this.expect(type, ["string"], "dice needs text, like '2d6 + 3'", arg.loc);
+      }
+      return { type: formulaTypes.number };
+    }
     if (target === "dice") {
-      this.error("formula-dice", diceNotAvailable, node.nameLoc);
+      this.error("dice-outside-roll", diceNotAvailable, node.nameLoc);
       return { type: formulaTypes.any };
+    }
+    // value(): the value of the tag an action is on.
+    if (target === "unknown" && node.name === "value") {
+      if (node.args.length) this.error("formula-arity", "value takes no arguments", node.loc);
+      if (this.host.shown === undefined) {
+        this.error(
+          "value-outside-value",
+          "value() works only in a step (Roll, Set, FollowUp) inside a <Value>, <Number>, or <Column>",
+          node.loc,
+        );
+        return { type: formulaTypes.any };
+      }
+      return { type: this.host.shown };
     }
     if (target === "unknown") {
       this.error("formula-unknown-function", `There's no function named ${node.name}`, node.nameLoc);
@@ -241,7 +313,7 @@ class Checker<S> {
         types.push(this.check(arg, this.host.itemScope(listScope), depth).type);
         return;
       }
-      const checked = this.check(arg, scope, itemDepth);
+      const checked = this.check(arg, scope, itemDepth, dice && fn.name === "if" && index > 0);
       if (index === 0) listScope = checked.scope;
       // A struct a per-item function repeats over: the evaluator walks its
       // schema entries, which it can't know, so they go on the path.
@@ -274,6 +346,6 @@ export function checkFormula<S>(
   scope: S,
 ): FormulaCheckResult {
   const checker = new Checker(host);
-  const { type } = checker.check(ast, scope, 0);
+  const { type } = checker.check(ast, scope, 0, host.dice ?? false);
   return { type, diagnostics: checker.diagnostics, calls: [...checker.calls] };
 }
