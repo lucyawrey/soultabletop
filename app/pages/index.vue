@@ -336,14 +336,16 @@ const continueItem = computed(() => {
   );
 });
 
-// Someone with nothing yet gets the first-visit heading and start cards.
+// Someone with nothing yet gets the first-visit heading and the Get started
+// card.
 const isNewUser = computed(() => !dashboardLoading.value && !continueItem.value);
 
-const startCards = [
-  { title: "Make a character", icon: "i-lucide-user", label: "New Character", to: "/characters?new=1", primary: true },
-  { title: "Start a campaign", icon: "i-lucide-flag", label: "New Campaign", to: "/campaigns?new=1" },
-  { title: "Find a system", icon: "i-lucide-globe", label: "Browse Systems", to: "/systems?tab=find" },
-  { title: "Build your own", icon: "i-lucide-shapes", label: "New System", to: "/systems?new=1" },
+// The Get started card's actions.
+const startActions = [
+  { icon: "i-lucide-user", label: "New Character", to: "/characters?new=1", primary: true },
+  { icon: "i-lucide-flag", label: "New Campaign", to: "/campaigns?new=1" },
+  { icon: "i-lucide-globe", label: "Browse Systems", to: "/systems?tab=find" },
+  { icon: "i-lucide-shapes", label: "New System", to: "/systems?new=1" },
 ];
 
 const relativeTime = new Intl.RelativeTimeFormat(undefined, {
@@ -497,34 +499,30 @@ function formatUpdated(updatedAt: string) {
         </section>
       </div>
 
-      <template v-else-if="isNewUser">
-        <div class="rounded-lg border-2 border-dashed border-accented px-[18px] py-4">
-          <p class="font-semibold text-toned">{{ copy.dashboard.welcome }}</p>
-        </div>
-        <ul class="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-          <li
-            v-for="card in startCards"
-            :key="card.title"
-            class="space-y-3 rounded-lg border border-default bg-default p-4"
-          >
-            <h2 class="flex items-center gap-2 font-bold text-highlighted">
-              <UIcon :name="card.icon" class="size-[18px] text-secondary" />
-              {{ card.title }}
-            </h2>
-            <UButton
-              :to="card.to"
-              :color="card.primary ? 'primary' : 'neutral'"
-              :variant="card.primary ? 'solid' : 'outline'"
-            >
-              {{ card.label }}
-            </UButton>
-          </li>
-        </ul>
-      </template>
-
       <template v-else>
+        <!-- Someone with nothing yet gets a Get started card in the Continue
+          card's place; the sections below are the same either way. -->
         <section
-          v-if="continueItem"
+          v-if="isNewUser"
+          class="space-y-3 rounded-xl border border-default bg-default px-[22px] py-5"
+        >
+          <p class="text-xs font-bold tracking-[0.1em] text-muted uppercase">Get started</p>
+          <p class="font-semibold text-toned">{{ copy.dashboard.welcome }}</p>
+          <div class="flex flex-wrap gap-2">
+            <UButton
+              v-for="action in startActions"
+              :key="action.label"
+              :to="action.to"
+              :icon="action.icon"
+              :color="action.primary ? 'primary' : 'neutral'"
+              :variant="action.primary ? 'solid' : 'outline'"
+            >
+              {{ action.label }}
+            </UButton>
+          </div>
+        </section>
+        <section
+          v-else-if="continueItem"
           class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-default bg-default px-[22px] py-5"
         >
           <div class="min-w-0">
