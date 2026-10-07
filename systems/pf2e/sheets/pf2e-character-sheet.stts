@@ -26,8 +26,9 @@
         formula="if(coalesce(range, 0) > 0, if(hasTrait(traits, 'Propulsive'), floor(max(0, attributes.str) / 2), 0), if(subclass.name == 'Thief' and hasTrait(traits, 'Finesse'), max(attributes.str, attributes.dex), attributes.str))" />
 <Define name="damageType" params="t" formula="switch(t, 'bludgeoning', 'B', 'piercing', 'P', 'slashing', 'S', '')" />
 <Define name="sneakDice" formula="if(level >= 17, 4, if(level >= 11, 3, if(level >= 5, 2, 1)))" />
-<Define name="defensesText"
-        formula="coalesce(join(list(join(map(resistances, concat('resist ', type, ' ', value)), ', '), join(map(weaknesses, concat('weak ', type, ' ', value)), ', '), if(length(coalesce(immunities, list())) > 0, concat('immune ', join(immunities, ', ')), '')), ' · '), 'none')" />
+<Define name="defensesList"
+        formula="join(list(join(map(resistances, concat('resist ', type, ' ', value)), ', '), join(map(weaknesses, concat('weak ', type, ' ', value)), ', '), if(length(coalesce(immunities, list())) > 0, concat('immune ', join(immunities, ', ')), '')), ' · ')" />
+<Define name="defensesText" formula="if(length(coalesce(defensesList(), '')) > 0, defensesList(), 'none')" />
 <Define name="hasFeat" params="cat, lv" formula="any(feats, category == cat and level == lv)" />
 <Define name="bulkText" params="b" formula="if(b == 0.1, 'L', if(coalesce(b, 0) == 0, '—', b))" />
 <Define name="bulk" formula="sum(inventory, if(state == 'dropped', 0, quantity * coalesce(item.bulk, 0)))" />
