@@ -7,13 +7,26 @@
 const props = defineProps<{ entry: SheetRollLogEntry; from?: SheetRollLogEntry }>();
 const emit = defineEmits<{ followUp: [index: number, label: string]; undo: [] }>();
 const time = computed(() => props.entry.when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
-// The total appears once the dice land.
+// The total appears once the dice land. A new roll in the same toast (the
+// next roll, or a follow-up) replaces the entry without remounting the card,
+// so the timer starts again and the content below is keyed by the entry,
+// which makes the dice tumble again.
 const landed = ref(false);
-onMounted(() => setTimeout(() => (landed.value = true), 750));
+let timer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  () => props.entry.id,
+  () => {
+    landed.value = false;
+    clearTimeout(timer);
+    timer = setTimeout(() => (landed.value = true), 750);
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => clearTimeout(timer));
 </script>
 
 <template>
-  <div class="roll-card w-full text-sm">
+  <div :key="entry.id" class="roll-card w-full text-sm">
     <div class="flex items-baseline gap-1.5 border-b border-default bg-elevated py-2 pr-11 pl-3">
       <span class="font-bold text-highlighted">{{ entry.title }}</span>
       <span class="text-muted">{{ entry.label }}</span>
