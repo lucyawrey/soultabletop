@@ -7,7 +7,7 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 - **Fork resources** merged (#102). The plan's "Agent defaults" stand unless the user changes them.
 - **GitHub HTTPS pushes fail** (2026-10-07): "Internal Server Error" on every push to this repo over HTTPS, while reads work. Pushing over SSH works: `git push git@github.com:lucyawrey/soultabletop.git <branch>`.
 - **Unconfirmed agent defaults** for forks (plan's "Agent defaults"): kept names, `-2` readable ID suffixes, copies start Limited, default sheet only on a copied type.
-- **PR #103** (Tier A: UI and docs), worktree `../soultabletop-worktrees/sheet-editor-preview`: the side by side / stacked layout switch on the Sheet editor and sheet page, and the sheet's own `<Preview>` in the preview pane. `pnpm check` and a browser check pass. After merge: remove the worktree and branch, and delete the TODO item "Show a sheet's own `<Preview>` in the Sheet editor".
+- **Sheet page layout and editor `<Preview>`** merged (#103): side by side / stacked switch shared by the sheet page and editor (`sheet-layout` cookie); the sheet page stacks preview first, the editor code first.
 - **Next:** the PF2e character sheet (`.claude/plans/pf2e-demo.md`, step 6). Cairn and the first-visit dashboard are on the demo list (TODO, Next up).
 - **On `docs`, not yet on `main`:** the usage changes (`sheet-code-map.md`, `test-sheet.mjs`, the slimmer SKILL.md), the skill's notes on the required root, the skill and code-map rows for previews; one docs-only PR when the user wants.
 - **Waiting on the user:** keep or delete `icons.html` in the PF2e mockup folder; whether the Initiative "rolls with" picker should offer Lore skills; compact density on a real, full sheet not yet seen.
