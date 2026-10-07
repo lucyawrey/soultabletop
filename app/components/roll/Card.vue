@@ -3,13 +3,9 @@
 // .claude/mockups/dice-rolls/): a header band with the action and the roll,
 // the dice tumbling in with the total right after them, the expression as
 // rolled, and the follow-ups.
-const props = defineProps<{ entry: SheetRollLogEntry }>();
+// `from`: the entry whose follow-up made this one.
+const props = defineProps<{ entry: SheetRollLogEntry; from?: SheetRollLogEntry }>();
 const emit = defineEmits<{ followUp: [index: number, label: string]; undo: [] }>();
-
-const rolls = injectSheetRolls();
-const from = computed(() =>
-  props.entry.from ? rolls?.entries.value.find((item) => item.id === props.entry.from) : undefined,
-);
 const time = computed(() => props.entry.when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
 // The total appears once the dice land.
 const landed = ref(false);

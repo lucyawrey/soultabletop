@@ -88,7 +88,11 @@ export function provideSheetRolls(): SheetRolls {
       progress: false,
       description: () =>
         h(RollCard, {
+          key: entry.id,
           entry,
+          // The toast renders outside the page, so it gets the entry its
+          // follow-up came from here.
+          from: entry.from ? entries.value.find((item) => item.id === entry.from) : undefined,
           onFollowUp: (index: number, label: string) => followUp(entry, index, label),
           onUndo: () => undo(entry),
         }),

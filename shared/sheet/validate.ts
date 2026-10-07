@@ -1048,7 +1048,8 @@ class Validator {
           `<${spec.name}> takes field or formula, not both`,
         );
       }
-      if (formula && !hasField) {
+      // With steps, live lets a click write with Edit off.
+      if (formula && !hasField && !hasSteps) {
         for (const flag of ["live", "locked"]) {
           const attr = attrNamed(node, flag);
           if (attr) {
