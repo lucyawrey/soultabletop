@@ -1,0 +1,189 @@
+{
+  "readableId": "pf2e-ancestry",
+  "name": "Ancestry",
+  "contentCategory": "general",
+  "hasStrictSchema": true,
+  "schema": {
+    "hp": {
+      "type": "number",
+      "label": "Hit Points",
+      "required": true
+    },
+    "size": {
+      "type": "string",
+      "options": [
+        {
+          "value": "tiny",
+          "label": "Tiny"
+        },
+        {
+          "value": "sm",
+          "label": "Small"
+        },
+        {
+          "value": "med",
+          "label": "Medium"
+        },
+        {
+          "value": "lg",
+          "label": "Large"
+        }
+      ],
+      "label": "Size",
+      "default": "med"
+    },
+    "speed": {
+      "type": "number",
+      "label": "Speed",
+      "default": 25
+    },
+    "boosts": {
+      "type": "array",
+      "label": "Attribute Boosts",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "choices": {
+            "type": "array",
+            "label": "Choices",
+            "itemType": {
+              "type": "string",
+              "options": [
+                {
+                  "value": "str",
+                  "label": "Strength"
+                },
+                {
+                  "value": "dex",
+                  "label": "Dexterity"
+                },
+                {
+                  "value": "con",
+                  "label": "Constitution"
+                },
+                {
+                  "value": "int",
+                  "label": "Intelligence"
+                },
+                {
+                  "value": "wis",
+                  "label": "Wisdom"
+                },
+                {
+                  "value": "cha",
+                  "label": "Charisma"
+                }
+              ],
+              "label": "Attribute"
+            }
+          }
+        }
+      }
+    },
+    "flaws": {
+      "type": "array",
+      "label": "Attribute Flaws",
+      "itemType": {
+        "type": "string",
+        "options": [
+          {
+            "value": "str",
+            "label": "Strength"
+          },
+          {
+            "value": "dex",
+            "label": "Dexterity"
+          },
+          {
+            "value": "con",
+            "label": "Constitution"
+          },
+          {
+            "value": "int",
+            "label": "Intelligence"
+          },
+          {
+            "value": "wis",
+            "label": "Wisdom"
+          },
+          {
+            "value": "cha",
+            "label": "Charisma"
+          }
+        ],
+        "label": "Attribute"
+      }
+    },
+    "languages": {
+      "type": "array",
+      "label": "Languages",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "additionalLanguages": {
+      "type": "number",
+      "label": "Additional Languages",
+      "default": 0
+    },
+    "vision": {
+      "type": "string",
+      "options": [
+        {
+          "value": "normal",
+          "label": "Normal"
+        },
+        {
+          "value": "low-light-vision",
+          "label": "Low-Light Vision"
+        },
+        {
+          "value": "darkvision",
+          "label": "Darkvision"
+        }
+      ],
+      "label": "Vision",
+      "default": "normal"
+    },
+    "traits": {
+      "type": "array",
+      "label": "Traits",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "rarity": {
+      "type": "string",
+      "options": [
+        {
+          "value": "common",
+          "label": "Common"
+        },
+        {
+          "value": "uncommon",
+          "label": "Uncommon"
+        },
+        {
+          "value": "rare",
+          "label": "Rare"
+        },
+        {
+          "value": "unique",
+          "label": "Unique"
+        }
+      ],
+      "label": "Rarity",
+      "default": "common"
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "description": "Rules text, in Markdown."
+    },
+    "source": {
+      "type": "string",
+      "label": "Source",
+      "description": "The book it was published in."
+    }
+  }
+}

@@ -1,0 +1,286 @@
+{
+  "readableId": "pf2e-item",
+  "name": "Item",
+  "contentCategory": "general",
+  "hasStrictSchema": true,
+  "schema": {
+    "kind": {
+      "type": "string",
+      "options": [
+        {
+          "value": "weapon",
+          "label": "Weapon"
+        },
+        {
+          "value": "armor",
+          "label": "Armor"
+        },
+        {
+          "value": "shield",
+          "label": "Shield"
+        },
+        {
+          "value": "consumable",
+          "label": "Consumable"
+        },
+        {
+          "value": "gear",
+          "label": "Gear"
+        },
+        {
+          "value": "container",
+          "label": "Container"
+        },
+        {
+          "value": "ammo",
+          "label": "Ammunition"
+        },
+        {
+          "value": "treasure",
+          "label": "Treasure"
+        }
+      ],
+      "label": "Kind",
+      "required": true
+    },
+    "level": {
+      "type": "number",
+      "label": "Level",
+      "default": 0
+    },
+    "price": {
+      "type": "number",
+      "label": "Price (cp)",
+      "description": "In copper pieces: 1 gp is 100 cp."
+    },
+    "bulk": {
+      "type": "number",
+      "label": "Bulk",
+      "description": "0.1 is light (L), 0 is negligible."
+    },
+    "usage": {
+      "type": "string",
+      "label": "Usage",
+      "description": "For example held in one hand, worn."
+    },
+    "weapon": {
+      "type": "struct",
+      "label": "Weapon",
+      "entries": {
+        "category": {
+          "type": "string",
+          "options": [
+            {
+              "value": "unarmed",
+              "label": "Unarmed"
+            },
+            {
+              "value": "simple",
+              "label": "Simple"
+            },
+            {
+              "value": "martial",
+              "label": "Martial"
+            },
+            {
+              "value": "advanced",
+              "label": "Advanced"
+            }
+          ],
+          "label": "Category"
+        },
+        "group": {
+          "type": "string",
+          "label": "Group"
+        },
+        "damageDice": {
+          "type": "number",
+          "label": "Damage Dice",
+          "default": 1
+        },
+        "damageDie": {
+          "type": "string",
+          "options": [
+            {
+              "value": "d4"
+            },
+            {
+              "value": "d6"
+            },
+            {
+              "value": "d8"
+            },
+            {
+              "value": "d10"
+            },
+            {
+              "value": "d12"
+            }
+          ],
+          "label": "Damage Die"
+        },
+        "damageType": {
+          "type": "string",
+          "options": [
+            {
+              "value": "bludgeoning",
+              "label": "Bludgeoning"
+            },
+            {
+              "value": "piercing",
+              "label": "Piercing"
+            },
+            {
+              "value": "slashing",
+              "label": "Slashing"
+            }
+          ],
+          "label": "Damage Type"
+        },
+        "range": {
+          "type": "number",
+          "label": "Range Increment",
+          "description": "In feet; empty for melee."
+        },
+        "reload": {
+          "type": "string",
+          "label": "Reload"
+        },
+        "hands": {
+          "type": "string",
+          "label": "Hands",
+          "description": "1, 1+, or 2."
+        }
+      }
+    },
+    "armor": {
+      "type": "struct",
+      "label": "Armor",
+      "entries": {
+        "category": {
+          "type": "string",
+          "options": [
+            {
+              "value": "unarmored",
+              "label": "Unarmored"
+            },
+            {
+              "value": "light",
+              "label": "Light"
+            },
+            {
+              "value": "medium",
+              "label": "Medium"
+            },
+            {
+              "value": "heavy",
+              "label": "Heavy"
+            }
+          ],
+          "label": "Category"
+        },
+        "group": {
+          "type": "string",
+          "label": "Group"
+        },
+        "acBonus": {
+          "type": "number",
+          "label": "AC Bonus"
+        },
+        "dexCap": {
+          "type": "number",
+          "label": "Dex Cap"
+        },
+        "checkPenalty": {
+          "type": "number",
+          "label": "Check Penalty"
+        },
+        "speedPenalty": {
+          "type": "number",
+          "label": "Speed Penalty"
+        },
+        "strength": {
+          "type": "number",
+          "label": "Strength",
+          "description": "The Strength modifier that removes the check penalty."
+        }
+      }
+    },
+    "shield": {
+      "type": "struct",
+      "label": "Shield",
+      "entries": {
+        "acBonus": {
+          "type": "number",
+          "label": "AC Bonus"
+        },
+        "hardness": {
+          "type": "number",
+          "label": "Hardness"
+        },
+        "hp": {
+          "type": "number",
+          "label": "Hit Points"
+        },
+        "brokenThreshold": {
+          "type": "number",
+          "label": "Broken Threshold"
+        }
+      }
+    },
+    "container": {
+      "type": "struct",
+      "label": "Container",
+      "entries": {
+        "capacity": {
+          "type": "number",
+          "label": "Capacity (Bulk)"
+        },
+        "ignored": {
+          "type": "number",
+          "label": "Bulk Ignored"
+        }
+      }
+    },
+    "traits": {
+      "type": "array",
+      "label": "Traits",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "rarity": {
+      "type": "string",
+      "options": [
+        {
+          "value": "common",
+          "label": "Common"
+        },
+        {
+          "value": "uncommon",
+          "label": "Uncommon"
+        },
+        {
+          "value": "rare",
+          "label": "Rare"
+        },
+        {
+          "value": "unique",
+          "label": "Unique"
+        }
+      ],
+      "label": "Rarity",
+      "default": "common"
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "description": "Rules text, in Markdown."
+    },
+    "source": {
+      "type": "string",
+      "label": "Source",
+      "description": "The book it was published in."
+    }
+  }
+}
