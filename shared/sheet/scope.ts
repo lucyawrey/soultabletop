@@ -57,6 +57,25 @@ export function refRecord(ref: SheetRef): Record<string, unknown> {
   return { ...ref.data, name: ref.name };
 }
 
+// What a List or Table row is called, for the roll entries of its actions:
+// a struct entry's label, else the row's `name` text, else the name of the
+// first loaded Content the row references (a Strike row's weapon).
+export function sheetRowTitle(
+  item: SheetScope["item"],
+  row: unknown,
+  refs: SheetRefs,
+): string | undefined {
+  if (!item) return undefined;
+  if (item.label) return item.label;
+  if (!isRecord(row)) return undefined;
+  if (typeof row.name === "string" && row.name) return row.name;
+  for (const value of Object.values(row)) {
+    const ref = typeof value === "string" ? findRef(refs, value) : undefined;
+    if (ref) return ref.name;
+  }
+  return undefined;
+}
+
 export function resolveSheetPath(
   path: SheetPath,
   root: SheetScope,

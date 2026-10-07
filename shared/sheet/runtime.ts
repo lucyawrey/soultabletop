@@ -56,6 +56,7 @@ export {
   ownProperty,
   refRecord,
   resolveSheetPath,
+  sheetRowTitle,
   type SheetEntry,
   type SheetRef,
   type SheetRefs,
