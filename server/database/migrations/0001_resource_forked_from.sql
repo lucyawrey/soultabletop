@@ -1,0 +1,1 @@
+ALTER TABLE "resource" ADD COLUMN "forked_from_id" uuid;

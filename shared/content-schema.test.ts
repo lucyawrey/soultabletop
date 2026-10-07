@@ -5,6 +5,7 @@ import {
   fieldOptions,
   fieldDefaultError,
   fieldOptionsError,
+  remapContentTypeIds,
   resolveShowSheetWarnings,
   type ContentTypeSchema,
 } from "./content-schema";
@@ -189,5 +190,28 @@ describe("defaults", () => {
       fieldDefaultError({ type: "array", itemType: { type: "resourceLink" }, default: ["x"] }),
     ).toMatch(/can't hold object, content, or resourceLink values/);
     expect(fieldDefaultError({ type: "object", default: {} } as never)).toMatch(/can't have a default/);
+  });
+});
+
+describe("remapContentTypeIds", () => {
+  it("points content fields at copied types, nested too, keeping the rest and the field order", () => {
+    const schema: ContentTypeSchema = {
+      ancestry: { type: "content", contentTypeId: "a", allow: "reference" },
+      level: { type: "number" },
+      feats: { type: "array", itemType: { type: "content", contentTypeId: "f", allow: "both" } },
+      gear: {
+        type: "struct",
+        entries: { weapon: { type: "content", contentTypeId: "other", allow: "local" } },
+      },
+    };
+    const remapped = remapContentTypeIds(schema, new Map([["a", "a2"], ["f", "f2"]]));
+    expect(Object.keys(remapped)).toEqual(["ancestry", "level", "feats", "gear"]);
+    expect(remapped.ancestry).toEqual({ type: "content", contentTypeId: "a2", allow: "reference" });
+    expect(remapped.feats).toEqual({
+      type: "array",
+      itemType: { type: "content", contentTypeId: "f2", allow: "both" },
+    });
+    expect(remapped.gear).toEqual(schema.gear);
+    expect(schema.ancestry).toEqual({ type: "content", contentTypeId: "a", allow: "reference" });
   });
 });

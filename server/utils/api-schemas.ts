@@ -71,6 +71,14 @@ export const resourceCreateSchema = Type.Object({
   isPubliclyReadable: Type.Optional(Type.Boolean()),
 });
 
+// POST /api/resource/:id/fork (see server/utils/resource-fork.ts).
+export const resourceForkSchema = Type.Object({
+  // A group to own the copies, or null/absent for the acting user.
+  ownerGroupId: Type.Optional(Type.Union([uuidSchema, Type.Null()])),
+  withParents: Type.Optional(Type.Boolean()),
+  include: Type.Optional(Type.Array(uuidSchema, { maxItems: 500 })),
+});
+
 export const resourcePatchSchema = Type.Partial(
   Type.Object({
     name: Type.String({ minLength: 1 }),

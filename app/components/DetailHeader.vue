@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { ResourceSource } from "#shared/resource-list";
+import type { ForkedFrom } from "#shared/forked-from";
+import { resourceLinkPath } from "#shared/sheet/runtime";
 
 // The top of a resource's detail page: a back link, the kind as a small
 // eyebrow, the name in the display font, the resource's system under it
-// (`systemId`, for kinds that belong to one), a meta row of badges (the
+// (`systemId`, for kinds that belong to one), what it was forked from
+// (`forkedFrom`, as single GETs return it), a meta row of badges (the
 // Source badge, then `#meta`), and the page's buttons (`#actions`, usually
 // Edit and Delete as outline buttons).
 defineProps<{
@@ -15,6 +18,7 @@ defineProps<{
   title: string;
   systemId?: string;
   source?: ResourceSource;
+  forkedFrom?: ForkedFrom;
 }>();
 </script>
 
@@ -46,6 +50,18 @@ defineProps<{
       </div>
       <p v-if="systemId" class="text-[15px] text-muted">
         System: <SystemLink :system-id="systemId" />
+      </p>
+      <p v-if="forkedFrom" class="text-[15px] text-muted">
+        <template v-if="forkedFrom.available">
+          Forked from
+          <NuxtLink
+            :to="resourceLinkPath(forkedFrom.id, forkedFrom)"
+            class="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+          >
+            {{ forkedFrom.name }}
+          </NuxtLink>
+        </template>
+        <template v-else>Forked from a resource that's no longer available</template>
       </p>
       <div v-if="source || $slots.meta" class="flex flex-wrap items-center gap-2">
         <SourceBadge v-if="source" :source="source" />
