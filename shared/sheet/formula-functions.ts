@@ -850,10 +850,13 @@ export const formulaFunctions: ReadonlyMap<string, FormulaFunction> = new Map(
   functionList.map((fn) => [fn.name, fn]),
 );
 
-// Names for dice rolls, kept free for a later version.
+// Names for dice rolls: `dice(text)` rolls dice written in text (only in a
+// <Roll>'s formula); the others are kept free for a later version.
 export const formulaDiceNames: readonly string[] = ["roll", "dice", "adv", "dis"];
 
-export const diceNotAvailable = "Dice rolls aren't available here yet";
+export const diceNotAvailable = "Dice can only be rolled in a <Roll>'s formula";
+export const diceNotHere =
+  "Dice can only be added, subtracted, multiplied, or divided, or picked with if()";
 
 // Built-in functions added after the first version. A sheet's `<Define>` with
 // one of these names keeps working (it wins in that sheet, with a warning);

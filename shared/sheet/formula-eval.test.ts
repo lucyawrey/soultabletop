@@ -325,7 +325,7 @@ describe("functions", () => {
   });
 
   it("rejects dice", () => {
-    expect(failure("2d6")).toEqual({ code: "dice", message: "Dice rolls aren't available here yet" });
+    expect(failure("2d6")).toEqual({ code: "dice", message: "Dice can only be rolled in a <Roll>'s formula" });
     expect(failure("roll(2d6)").code).toBe("dice");
     expect(failure("1 + adv()").code).toBe("dice");
   });

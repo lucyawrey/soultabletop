@@ -4,7 +4,9 @@ import { isFormulaError } from "#shared/sheet/formula";
 import {
   findRef,
   hasSheetParts,
+  isRecord,
   ownProperty,
+  sheetActionSteps,
   resourceLinkPath,
   sheetOverride,
   type SheetScope,
@@ -182,6 +184,23 @@ const tags = computed(() =>
 
 // The breakdown popover's text: the first part plain when the number isn't
 // signed (a base, like 10 for a DC), the others signed.
+// Steps (<Roll>, <Set>, <FollowUp>) run when the value is clicked: a die
+// button beside it when it also opens a breakdown or preview (or with
+// <Sheet rolls="button">), else the value itself. Entries are named after the
+// List or Table row (its label, or its name field), else the tag's label.
+const hasSteps = computed(() => sheetActionSteps(props.node));
+const rollButton = computed(
+  () => context.rollTarget.value === "button" || !!parts.value || !!previewTarget.value,
+);
+const rollTitle = computed(() => {
+  const item = scope.value.item;
+  const row = scope.value.value;
+  const rowName = item
+    ? (item.label ?? (isRecord(row) && typeof row.name === "string" ? row.name : undefined))
+    : undefined;
+  return rowName || label.value || "Roll";
+});
+
 const breakdownView = computed(() => {
   if (!parts.value) return undefined;
   const signed = props.node.attrs.format === "signed";
@@ -255,7 +274,7 @@ const imageSize = computed(
       row even without a label, so the reset button coming and going doesn't
       move the input either. -->
     <div
-      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || isEditableOverride || (breakdownView && asInput && !compact)"
+      v-if="(shownLabel && !compact && (display !== 'stat' || asInput)) || lockedEditable || isEditableOverride || (breakdownView && asInput && !compact) || (hasSteps && asInput)"
       class="flex min-h-4 items-center gap-1 text-muted"
       :class="compactSheet ? 'text-[0.6875rem] font-semibold tracking-wide uppercase' : 'text-xs font-medium'"
     >
@@ -287,6 +306,8 @@ const imageSize = computed(
       <SheetBreakdown v-if="breakdownView && asInput && !compact" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">
         <UIcon name="i-lucide-sigma" class="size-3.5 align-middle" />
       </SheetBreakdown>
+      <!-- An input's steps run from a die button beside its label. -->
+      <SheetRollTrigger v-if="hasSteps && asInput" :node="node" :shown="value" :title="rollTitle" button />
     </div>
 
     <div class="sheet-field-value">
@@ -326,15 +347,19 @@ const imageSize = computed(
         class="font-bold text-highlighted tabular-nums"
         :class="compactSheet ? 'text-2xl' : 'text-3xl'"
       >
-        <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-        <template v-else>{{ text || "—" }}</template>
+        <SheetRollTrigger :node="node" :shown="value" :title="rollTitle" :button="rollButton">
+          <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+          <template v-else>{{ text || "—" }}</template>
+        </SheetRollTrigger>
       </div>
     </template>
 
     <span v-else-if="display === 'number'" class="tabular-nums">
-      <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-      <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
-      <template v-else>{{ text || "—" }}</template>
+      <SheetRollTrigger :node="node" :shown="value" :title="rollTitle" :button="rollButton">
+        <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+        <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
+        <template v-else>{{ text || "—" }}</template>
+      </SheetRollTrigger>
     </span>
 
     <span
@@ -456,9 +481,11 @@ const imageSize = computed(
     >{{ value === undefined ? "—" : JSON.stringify(value, null, 2) }}</pre>
 
     <span v-else :class="text ? '' : 'text-dimmed'">
-      <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-      <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
-      <template v-else>{{ text || "—" }}</template>
+      <SheetRollTrigger :node="node" :shown="value" :title="rollTitle" :button="rollButton">
+        <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
+        <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
+        <template v-else>{{ text || "—" }}</template>
+      </SheetRollTrigger>
     </span>
     </div>
 

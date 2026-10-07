@@ -53,7 +53,7 @@ The full list of attributes and children is in `references/tags.md` (verified ag
 - Fields (need `field`, or `formula` where allowed; optional `label`, `hideLabel`, `hint`): `Field` (input chosen from the schema type), `Text`, `Number`, `Checkbox`, `Toggle`, `Select` (the field's schema options, else its own `options` list), `Tags`, `Tracker` (`max` optional), `Ref`, `Value` (never editable), `Markdown`, `Image`.
 - Repeaters: `List` (repeats its children per array item, or per entry of a struct whose entries are alike), `Table` (only `Column` and `RowDetails` children; `Column` takes `field` or `formula`, and `format`, and may hold `Part` and `Button` children).
 - Breakdowns: `Part` (`label`, `formula`, `show` only) inside `Value`, `Column`, or `Number`. See "Paths, formulas, and features".
-- Buttons: `Button` (`label` required, `icon`, `amount`, `toast`; only `Set` children) and `Set` (`field`, `formula`, both required). See "Paths, formulas, and features".
+- Buttons and rolls: `Button` (`label` required, `icon`, `amount`, `toast`; step children), and the steps `Set` (`field`, `formula`, both required), `Roll` (`formula` required, `name`, `label`, `crit`, `fumble`), and `FollowUp` (`label` required; step children). Steps also go directly in `Value`, `Number`, and `Column`. See "Paths, formulas, and features".
 - Definitions: `Define` (`name`, `params`, `formula`; top level or directly inside `Sheet`; renders nothing).
 - Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Button` takes `class`, `show`, and `live` only; `Define`, `Set`, and `Part` (only `show`) take none.
 
@@ -67,7 +67,8 @@ The details are in `docs/sheet-system.md`; grep for the section you need and rea
 - **Formulas** ("Formulas"): `formula="…"` on `Value`, `Column`, `Tracker` (read-only) and `Number`, `Text`, `Checkbox`, `Field` (overrides with `field`); `{…}` in text and text attributes; `show="…"` hides a tag. No `=`, `&&`, `||`, `?:`; use `and`, `or`, `if(c, a, b)`; text in single quotes inside attributes. Built-ins are listed in `shared/sheet/formula-functions.ts`. Reusable formulas: `<Define name params formula>`.
 - **`live`, `locked`, `display`** (section 5, "Per-field attributes" and "Display of non-editable fields"): `live` keeps a field editable (and saving at once) with Edit off, for things changed in play; `locked` needs a pencil click first; `display="box"` shows non-editable fields as disabled inputs (character sheets), `text` as plain values (stat blocks, cards).
 - **Breakdowns** ("Breakdowns"): `<Part label formula>` children on `Value`, `Column`, or `Number` (with a formula) list a number's parts in a popover; without a formula a `Value`/`Column` shows their sum.
-- **Buttons** ("Buttons"): `<Button label>` with `<Set field formula>` children changes fields when clicked (damage, rests, item moves); `amount` adds a number box, `*` in a Set's field changes every item, `toast` adds a toast with Undo (off by default), `live` makes it usable with Edit off.
+- **Buttons** ("Buttons"): `<Button label>` with `<Set field formula>` children changes fields when clicked (damage, rests, item moves); steps run in order, `amount` adds a number box, `*` in a Set's field changes every item, `toast` adds a toast with Undo (off by default), `live` makes it usable with Edit off.
+- **Rolls** ("Rolls"): `<Roll formula="d20 + value()" crit="face == 20" fumble="face == 1">` inside a `Value`, `Number`, or `Column` makes the value roll when clicked (or inside a `Button`); `<FollowUp label>` after it offers more steps on the result (damage, crit damage, a reroll that spends a resource). Dice only in a Roll's formula; `dice(field)` rolls dice written in a text field; `name="hit"` lets later steps read `hit.total`, `hit.natural`, `hit.crit`. `<Sheet rolls="button">` puts a die button beside every rollable value.
 - **Reference previews** ("Reference previews"): `preview` on `Ref`, `Value`, or `Column` makes the value show the content it comes from (`spell.name` → the spell): expanded below it by default (spells, feats), or `preview="card"` as a floating card (minor things like a background). Shows the tag's own `<Preview>` child if any, else the `<Preview>` beside `<Sheet>` in that content type's default sheet, else a view generated from the schema (paths relative to that content; read-only).
 - **Density** ("Tag catalog", `Sheet`): sheets are compact by default; `<Sheet density="roomy">` for form spacing.
 
@@ -105,7 +106,7 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 
 ## Known limits
 
-- Formulas can't roll dice or write data (only a `Button`'s `Set`s write, when clicked), and computed values aren't saved or returned by the API.
+- Formulas can't roll dice or write data (only `Roll` steps roll and `Set` steps write, when clicked), and computed values aren't saved or returned by the API.
 - `{…}` is always a formula, never a bare lookup: a field named like a keyword (`and`, `true`) or dice (`d6`) is reached as `{/and}`, `{/d6}`.
 - Dice buttons are planned in TODO.md, not available.
 
