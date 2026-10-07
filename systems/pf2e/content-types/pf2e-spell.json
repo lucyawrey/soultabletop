@@ -1,0 +1,138 @@
+{
+  "readableId": "pf2e-spell",
+  "name": "Spell",
+  "contentCategory": "general",
+  "hasStrictSchema": true,
+  "schema": {
+    "rank": {
+      "type": "number",
+      "label": "Rank",
+      "required": true,
+      "description": "0 for a cantrip."
+    },
+    "kind": {
+      "type": "string",
+      "options": [
+        {
+          "value": "spell",
+          "label": "Spell"
+        },
+        {
+          "value": "cantrip",
+          "label": "Cantrip"
+        },
+        {
+          "value": "focus",
+          "label": "Focus"
+        },
+        {
+          "value": "ritual",
+          "label": "Ritual"
+        }
+      ],
+      "label": "Kind",
+      "default": "spell"
+    },
+    "traditions": {
+      "type": "array",
+      "label": "Traditions",
+      "itemType": {
+        "type": "string",
+        "options": [
+          {
+            "value": "arcane",
+            "label": "Arcane"
+          },
+          {
+            "value": "divine",
+            "label": "Divine"
+          },
+          {
+            "value": "occult",
+            "label": "Occult"
+          },
+          {
+            "value": "primal",
+            "label": "Primal"
+          }
+        ]
+      }
+    },
+    "cast": {
+      "type": "string",
+      "label": "Cast",
+      "description": "Actions (1, 2, 3, 1 to 3, reaction, free) or a time such as 10 minutes."
+    },
+    "range": {
+      "type": "string",
+      "label": "Range"
+    },
+    "area": {
+      "type": "string",
+      "label": "Area"
+    },
+    "targets": {
+      "type": "string",
+      "label": "Targets"
+    },
+    "defense": {
+      "type": "string",
+      "label": "Defense",
+      "description": "For example basic Reflex, or AC."
+    },
+    "duration": {
+      "type": "string",
+      "label": "Duration"
+    },
+    "damage": {
+      "type": "string",
+      "label": "Damage",
+      "description": "Dice and type, for example 2d4 fire."
+    },
+    "heightened": {
+      "type": "string",
+      "label": "Heightened",
+      "description": "For example +1: 1d8, in Markdown."
+    },
+    "traits": {
+      "type": "array",
+      "label": "Traits",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "rarity": {
+      "type": "string",
+      "options": [
+        {
+          "value": "common",
+          "label": "Common"
+        },
+        {
+          "value": "uncommon",
+          "label": "Uncommon"
+        },
+        {
+          "value": "rare",
+          "label": "Rare"
+        },
+        {
+          "value": "unique",
+          "label": "Unique"
+        }
+      ],
+      "label": "Rarity",
+      "default": "common"
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "description": "Rules text, in Markdown."
+    },
+    "source": {
+      "type": "string",
+      "label": "Source",
+      "description": "The book it was published in."
+    }
+  }
+}

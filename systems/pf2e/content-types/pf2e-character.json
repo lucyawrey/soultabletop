@@ -1,0 +1,1614 @@
+{
+  "readableId": "pf2e-character",
+  "name": "Character",
+  "contentCategory": "playerCharacter",
+  "hasStrictSchema": true,
+  "schema": {
+    "level": {
+      "type": "number",
+      "label": "Level",
+      "required": true,
+      "default": 1
+    },
+    "xp": {
+      "type": "number",
+      "label": "Experience Points",
+      "default": 0
+    },
+    "heroPoints": {
+      "type": "number",
+      "label": "Hero Points",
+      "default": 1
+    },
+    "ancestry": {
+      "type": "content",
+      "label": "Ancestry",
+      "contentTypeId": "pf2e-ancestry",
+      "allow": "reference"
+    },
+    "heritage": {
+      "type": "content",
+      "label": "Heritage",
+      "contentTypeId": "pf2e-heritage",
+      "allow": "reference"
+    },
+    "background": {
+      "type": "content",
+      "label": "Background",
+      "contentTypeId": "pf2e-background",
+      "allow": "reference"
+    },
+    "class": {
+      "type": "content",
+      "label": "Class",
+      "contentTypeId": "pf2e-class",
+      "allow": "reference"
+    },
+    "subclass": {
+      "type": "content",
+      "label": "Subclass",
+      "contentTypeId": "pf2e-class-feature",
+      "allow": "reference",
+      "description": "The doctrine, racket, or other choice the class makes at 1st level."
+    },
+    "deity": {
+      "type": "content",
+      "label": "Deity",
+      "contentTypeId": "pf2e-deity",
+      "allow": "reference"
+    },
+    "keyAttribute": {
+      "type": "string",
+      "options": [
+        {
+          "value": "str",
+          "label": "Strength"
+        },
+        {
+          "value": "dex",
+          "label": "Dexterity"
+        },
+        {
+          "value": "con",
+          "label": "Constitution"
+        },
+        {
+          "value": "int",
+          "label": "Intelligence"
+        },
+        {
+          "value": "wis",
+          "label": "Wisdom"
+        },
+        {
+          "value": "cha",
+          "label": "Charisma"
+        }
+      ],
+      "label": "Key Attribute"
+    },
+    "attributes": {
+      "type": "struct",
+      "label": "Attribute Modifiers",
+      "entries": {
+        "str": {
+          "type": "number",
+          "label": "Strength",
+          "default": 0
+        },
+        "dex": {
+          "type": "number",
+          "label": "Dexterity",
+          "default": 0
+        },
+        "con": {
+          "type": "number",
+          "label": "Constitution",
+          "default": 0
+        },
+        "int": {
+          "type": "number",
+          "label": "Intelligence",
+          "default": 0
+        },
+        "wis": {
+          "type": "number",
+          "label": "Wisdom",
+          "default": 0
+        },
+        "cha": {
+          "type": "number",
+          "label": "Charisma",
+          "default": 0
+        }
+      }
+    },
+    "languages": {
+      "type": "array",
+      "label": "Languages",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "senses": {
+      "type": "array",
+      "label": "Senses",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "otherSpeeds": {
+      "type": "array",
+      "label": "Other Speeds",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "kind": {
+            "type": "string",
+            "label": "Kind",
+            "required": true
+          },
+          "speed": {
+            "type": "number",
+            "label": "Speed",
+            "required": true
+          }
+        }
+      }
+    },
+    "hp": {
+      "type": "number",
+      "label": "Hit Points",
+      "default": 0
+    },
+    "tempHp": {
+      "type": "number",
+      "label": "Temporary Hit Points",
+      "default": 0
+    },
+    "dying": {
+      "type": "number",
+      "label": "Dying",
+      "default": 0
+    },
+    "wounded": {
+      "type": "number",
+      "label": "Wounded",
+      "default": 0
+    },
+    "doomed": {
+      "type": "number",
+      "label": "Doomed",
+      "default": 0
+    },
+    "conditions": {
+      "type": "array",
+      "label": "Conditions",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "perception": {
+      "type": "number",
+      "options": [
+        {
+          "value": 0,
+          "label": "Untrained"
+        },
+        {
+          "value": 1,
+          "label": "Trained"
+        },
+        {
+          "value": 2,
+          "label": "Expert"
+        },
+        {
+          "value": 3,
+          "label": "Master"
+        },
+        {
+          "value": 4,
+          "label": "Legendary"
+        }
+      ],
+      "label": "Perception",
+      "default": 0
+    },
+    "initiative": {
+      "type": "struct",
+      "label": "Initiative",
+      "entries": {
+        "roll": {
+          "type": "string",
+          "options": [
+            {
+              "value": "perception",
+              "label": "Perception"
+            },
+            {
+              "value": "acrobatics",
+              "label": "Acrobatics"
+            },
+            {
+              "value": "arcana",
+              "label": "Arcana"
+            },
+            {
+              "value": "athletics",
+              "label": "Athletics"
+            },
+            {
+              "value": "crafting",
+              "label": "Crafting"
+            },
+            {
+              "value": "deception",
+              "label": "Deception"
+            },
+            {
+              "value": "diplomacy",
+              "label": "Diplomacy"
+            },
+            {
+              "value": "intimidation",
+              "label": "Intimidation"
+            },
+            {
+              "value": "medicine",
+              "label": "Medicine"
+            },
+            {
+              "value": "nature",
+              "label": "Nature"
+            },
+            {
+              "value": "occultism",
+              "label": "Occultism"
+            },
+            {
+              "value": "performance",
+              "label": "Performance"
+            },
+            {
+              "value": "religion",
+              "label": "Religion"
+            },
+            {
+              "value": "society",
+              "label": "Society"
+            },
+            {
+              "value": "stealth",
+              "label": "Stealth"
+            },
+            {
+              "value": "survival",
+              "label": "Survival"
+            },
+            {
+              "value": "thievery",
+              "label": "Thievery"
+            }
+          ],
+          "label": "Roll With",
+          "default": "perception"
+        },
+        "bonus": {
+          "type": "number",
+          "label": "Bonus",
+          "default": 0
+        }
+      }
+    },
+    "saves": {
+      "type": "struct",
+      "label": "Saving Throws",
+      "entries": {
+        "fortitude": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Fortitude",
+          "default": 0
+        },
+        "reflex": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Reflex",
+          "default": 0
+        },
+        "will": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Will",
+          "default": 0
+        }
+      }
+    },
+    "skills": {
+      "type": "struct",
+      "label": "Skills",
+      "entries": {
+        "acrobatics": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Acrobatics",
+          "default": 0
+        },
+        "arcana": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Arcana",
+          "default": 0
+        },
+        "athletics": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Athletics",
+          "default": 0
+        },
+        "crafting": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Crafting",
+          "default": 0
+        },
+        "deception": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Deception",
+          "default": 0
+        },
+        "diplomacy": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Diplomacy",
+          "default": 0
+        },
+        "intimidation": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Intimidation",
+          "default": 0
+        },
+        "medicine": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Medicine",
+          "default": 0
+        },
+        "nature": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Nature",
+          "default": 0
+        },
+        "occultism": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Occultism",
+          "default": 0
+        },
+        "performance": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Performance",
+          "default": 0
+        },
+        "religion": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Religion",
+          "default": 0
+        },
+        "society": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Society",
+          "default": 0
+        },
+        "stealth": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Stealth",
+          "default": 0
+        },
+        "survival": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Survival",
+          "default": 0
+        },
+        "thievery": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Thievery",
+          "default": 0
+        }
+      }
+    },
+    "lore": {
+      "type": "array",
+      "label": "Lore",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "name": {
+            "type": "string",
+            "label": "Name",
+            "required": true
+          },
+          "rank": {
+            "type": "number",
+            "options": [
+              {
+                "value": 0,
+                "label": "Untrained"
+              },
+              {
+                "value": 1,
+                "label": "Trained"
+              },
+              {
+                "value": 2,
+                "label": "Expert"
+              },
+              {
+                "value": 3,
+                "label": "Master"
+              },
+              {
+                "value": 4,
+                "label": "Legendary"
+              }
+            ],
+            "label": "Rank",
+            "default": 0
+          }
+        }
+      }
+    },
+    "classDc": {
+      "type": "number",
+      "options": [
+        {
+          "value": 0,
+          "label": "Untrained"
+        },
+        {
+          "value": 1,
+          "label": "Trained"
+        },
+        {
+          "value": 2,
+          "label": "Expert"
+        },
+        {
+          "value": 3,
+          "label": "Master"
+        },
+        {
+          "value": 4,
+          "label": "Legendary"
+        }
+      ],
+      "label": "Class DC",
+      "default": 0
+    },
+    "attacks": {
+      "type": "struct",
+      "label": "Attack Proficiency",
+      "entries": {
+        "unarmed": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Unarmed",
+          "default": 0
+        },
+        "simple": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Simple Weapons",
+          "default": 0
+        },
+        "martial": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Martial Weapons",
+          "default": 0
+        },
+        "advanced": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Advanced Weapons",
+          "default": 0
+        }
+      }
+    },
+    "defenses": {
+      "type": "struct",
+      "label": "Defense Proficiency",
+      "entries": {
+        "unarmored": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Unarmored",
+          "default": 0
+        },
+        "light": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Light Armor",
+          "default": 0
+        },
+        "medium": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Medium Armor",
+          "default": 0
+        },
+        "heavy": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Heavy Armor",
+          "default": 0
+        }
+      }
+    },
+    "armor": {
+      "type": "content",
+      "label": "Armor",
+      "contentTypeId": "pf2e-item",
+      "allow": "reference",
+      "description": "The armor worn."
+    },
+    "shield": {
+      "type": "content",
+      "label": "Shield",
+      "contentTypeId": "pf2e-item",
+      "allow": "reference",
+      "description": "The shield held."
+    },
+    "shieldRaised": {
+      "type": "boolean",
+      "label": "Shield Raised",
+      "default": false
+    },
+    "shieldHp": {
+      "type": "number",
+      "label": "Shield Hit Points"
+    },
+    "strikes": {
+      "type": "array",
+      "label": "Strikes",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "weapon": {
+            "type": "content",
+            "label": "Weapon",
+            "contentTypeId": "pf2e-item",
+            "allow": "reference"
+          },
+          "attribute": {
+            "type": "string",
+            "options": [
+              {
+                "value": "str",
+                "label": "Strength"
+              },
+              {
+                "value": "dex",
+                "label": "Dexterity"
+              },
+              {
+                "value": "con",
+                "label": "Constitution"
+              },
+              {
+                "value": "int",
+                "label": "Intelligence"
+              },
+              {
+                "value": "wis",
+                "label": "Wisdom"
+              },
+              {
+                "value": "cha",
+                "label": "Charisma"
+              }
+            ],
+            "label": "Attack Attribute",
+            "description": "Strength for melee, Dexterity for ranged and finesse."
+          },
+          "itemBonus": {
+            "type": "number",
+            "label": "Item Bonus",
+            "default": 0
+          },
+          "notes": {
+            "type": "string",
+            "label": "Notes"
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "label": "Actions and Reactions",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "action": {
+            "type": "content",
+            "label": "Action",
+            "contentTypeId": "pf2e-action",
+            "allow": "reference"
+          },
+          "feat": {
+            "type": "content",
+            "label": "Feat",
+            "contentTypeId": "pf2e-feat",
+            "allow": "reference"
+          },
+          "notes": {
+            "type": "string",
+            "label": "Notes"
+          }
+        }
+      }
+    },
+    "feats": {
+      "type": "array",
+      "label": "Feats",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "feat": {
+            "type": "content",
+            "label": "Feat",
+            "contentTypeId": "pf2e-feat",
+            "allow": "reference"
+          },
+          "category": {
+            "type": "string",
+            "options": [
+              {
+                "value": "ancestry",
+                "label": "Ancestry"
+              },
+              {
+                "value": "class",
+                "label": "Class"
+              },
+              {
+                "value": "general",
+                "label": "General"
+              },
+              {
+                "value": "skill",
+                "label": "Skill"
+              },
+              {
+                "value": "bonus",
+                "label": "Bonus"
+              }
+            ],
+            "label": "Slot"
+          },
+          "level": {
+            "type": "number",
+            "label": "Level Taken",
+            "default": 1
+          }
+        }
+      }
+    },
+    "spellcasting": {
+      "type": "struct",
+      "label": "Spellcasting",
+      "entries": {
+        "tradition": {
+          "type": "string",
+          "options": [
+            {
+              "value": "arcane",
+              "label": "Arcane"
+            },
+            {
+              "value": "divine",
+              "label": "Divine"
+            },
+            {
+              "value": "occult",
+              "label": "Occult"
+            },
+            {
+              "value": "primal",
+              "label": "Primal"
+            }
+          ],
+          "label": "Tradition"
+        },
+        "attribute": {
+          "type": "string",
+          "options": [
+            {
+              "value": "str",
+              "label": "Strength"
+            },
+            {
+              "value": "dex",
+              "label": "Dexterity"
+            },
+            {
+              "value": "con",
+              "label": "Constitution"
+            },
+            {
+              "value": "int",
+              "label": "Intelligence"
+            },
+            {
+              "value": "wis",
+              "label": "Wisdom"
+            },
+            {
+              "value": "cha",
+              "label": "Charisma"
+            }
+          ],
+          "label": "Attribute"
+        },
+        "rank": {
+          "type": "number",
+          "options": [
+            {
+              "value": 0,
+              "label": "Untrained"
+            },
+            {
+              "value": 1,
+              "label": "Trained"
+            },
+            {
+              "value": 2,
+              "label": "Expert"
+            },
+            {
+              "value": 3,
+              "label": "Master"
+            },
+            {
+              "value": 4,
+              "label": "Legendary"
+            }
+          ],
+          "label": "Proficiency",
+          "default": 0
+        },
+        "kind": {
+          "type": "string",
+          "options": [
+            {
+              "value": "prepared",
+              "label": "Prepared"
+            },
+            {
+              "value": "spontaneous",
+              "label": "Spontaneous"
+            }
+          ],
+          "label": "Kind"
+        }
+      }
+    },
+    "slots": {
+      "type": "array",
+      "label": "Spell Slots",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "rank": {
+            "type": "number",
+            "label": "Rank",
+            "required": true
+          },
+          "max": {
+            "type": "number",
+            "label": "Slots",
+            "default": 0
+          },
+          "used": {
+            "type": "number",
+            "label": "Used",
+            "default": 0
+          }
+        }
+      }
+    },
+    "spells": {
+      "type": "array",
+      "label": "Spells",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "spell": {
+            "type": "content",
+            "label": "Spell",
+            "contentTypeId": "pf2e-spell",
+            "allow": "reference"
+          },
+          "rank": {
+            "type": "number",
+            "label": "Cast at Rank",
+            "description": "The slot rank it's prepared in; 0 for a cantrip."
+          },
+          "cast": {
+            "type": "boolean",
+            "label": "Cast",
+            "default": false
+          }
+        }
+      }
+    },
+    "divineFont": {
+      "type": "struct",
+      "label": "Divine Font",
+      "entries": {
+        "spell": {
+          "type": "content",
+          "label": "Spell",
+          "contentTypeId": "pf2e-spell",
+          "allow": "reference"
+        },
+        "max": {
+          "type": "number",
+          "label": "Slots",
+          "default": 0
+        },
+        "used": {
+          "type": "number",
+          "label": "Used",
+          "default": 0
+        }
+      }
+    },
+    "focus": {
+      "type": "struct",
+      "label": "Focus",
+      "entries": {
+        "max": {
+          "type": "number",
+          "label": "Focus Points",
+          "default": 0
+        },
+        "used": {
+          "type": "number",
+          "label": "Used",
+          "default": 0
+        },
+        "spells": {
+          "type": "array",
+          "label": "Focus Spells",
+          "itemType": {
+            "type": "content",
+            "label": "Spell",
+            "contentTypeId": "pf2e-spell",
+            "allow": "reference"
+          }
+        }
+      }
+    },
+    "inventory": {
+      "type": "array",
+      "label": "Inventory",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "item": {
+            "type": "content",
+            "label": "Item",
+            "contentTypeId": "pf2e-item",
+            "allow": "reference"
+          },
+          "quantity": {
+            "type": "number",
+            "label": "Quantity",
+            "default": 1
+          },
+          "state": {
+            "type": "string",
+            "options": [
+              {
+                "value": "held",
+                "label": "Held"
+              },
+              {
+                "value": "worn",
+                "label": "Worn"
+              },
+              {
+                "value": "stowed",
+                "label": "Stowed"
+              },
+              {
+                "value": "dropped",
+                "label": "Dropped"
+              }
+            ],
+            "label": "State",
+            "default": "worn"
+          },
+          "invested": {
+            "type": "boolean",
+            "label": "Invested",
+            "default": false
+          }
+        }
+      }
+    },
+    "coins": {
+      "type": "struct",
+      "label": "Coins",
+      "entries": {
+        "pp": {
+          "type": "number",
+          "label": "Platinum",
+          "default": 0
+        },
+        "gp": {
+          "type": "number",
+          "label": "Gold",
+          "default": 0
+        },
+        "sp": {
+          "type": "number",
+          "label": "Silver",
+          "default": 0
+        },
+        "cp": {
+          "type": "number",
+          "label": "Copper",
+          "default": 0
+        }
+      }
+    },
+    "portrait": {
+      "type": "string",
+      "label": "Portrait",
+      "description": "An image URL."
+    },
+    "biography": {
+      "type": "struct",
+      "label": "Biography",
+      "entries": {
+        "pronouns": {
+          "type": "string",
+          "label": "Pronouns"
+        },
+        "age": {
+          "type": "string",
+          "label": "Age"
+        },
+        "height": {
+          "type": "string",
+          "label": "Height"
+        },
+        "weight": {
+          "type": "string",
+          "label": "Weight"
+        },
+        "appearance": {
+          "type": "string",
+          "label": "Appearance"
+        },
+        "personality": {
+          "type": "string",
+          "label": "Personality"
+        },
+        "backstory": {
+          "type": "string",
+          "label": "Backstory"
+        },
+        "allies": {
+          "type": "string",
+          "label": "Allies"
+        },
+        "enemies": {
+          "type": "string",
+          "label": "Enemies"
+        },
+        "organizations": {
+          "type": "string",
+          "label": "Organizations"
+        },
+        "edicts": {
+          "type": "array",
+          "label": "Edicts",
+          "itemType": {
+            "type": "string"
+          }
+        },
+        "anathema": {
+          "type": "array",
+          "label": "Anathema",
+          "itemType": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "label": "Notes"
+    }
+  }
+}
