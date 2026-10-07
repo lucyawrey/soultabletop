@@ -25,6 +25,12 @@ What changed from `mockup.html` besides the locked options: the CSS of rejected 
 
 - **Strikes: take parts from the dice mockup** (user, 2026-10-06: "it looks good"). When the sheet is built, consider the Strikes section of [the dice mockup](../dice-rolls/mockup.html) (v1.14): traits on their own muted line under the weapon name, the hit modifier with its roll button and the MAP steps as smaller rollable numbers in one cell, and the damage with "+1d6 sneak" beside it; on a phone, the hit cell moves beside the name and the damage below. The user's word was "aspects", so which parts to take is decided while building.
 - **Initiative doesn't offer Lore** (user, 2026-10-07: "it's okay"). The "rolls with" picker offers Perception and the 16 skills, the options of the schema's `initiative.roll`; Lore rows are a list, so they can't be choices.
+- **Review of the built sheet** (user, 2026-10-07):
+  - Spells are grouped as Spells and Cantrips, with the slots in their own group, not one group per rank.
+  - Edit mode keeps the play layout: rows stay in their grids, with pickers and inputs in the cells (not form rows); it needn't match play exactly.
+  - Rank option labels in the schema are the letters U/T/E/M/L, so edit's rank selects are badge-sized.
+  - Rollable values keep the roll system's die button beside them.
+  - Still to build: resist/weak/immune (schema fields; changing the schema is fine), the Bulk meter's encumbered mark (a Tracker feature), empty "Choose … feat" rows for coming levels, and Strike roll titles from the weapon's name (rows titled by a referenced content's name).
 
 ## Known issues in the frozen page
 
