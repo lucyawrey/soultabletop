@@ -1,6 +1,7 @@
-// Writes the PF2e content type files in content-types/. A `content` field's
-// `contentTypeId` holds the target type's readable ID here; the import script
-// swaps in the real UUID. Run: node systems/pf2e/build-types.mjs
+// Writes the PF2e content type files in systems/pf2e/content-types/. A
+// `content` field's `contentTypeId` holds the target type's readable ID there;
+// the loader swaps in the real UUID. Run: node scripts/pf2e/build-types.mjs
+// Temporary: once the authoring CLI exists, the JSON files are the source.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const choice = (type, values) => ({
@@ -325,9 +326,10 @@ const types = {
   }
 };
 
-mkdirSync(new URL("content-types/", import.meta.url), { recursive: true });
+const outDir = new URL("../../systems/pf2e/content-types/", import.meta.url);
+mkdirSync(outDir, { recursive: true });
 for (const [readableId, { name, contentCategory = "general", schema }] of Object.entries(types)) {
   const file = { readableId, name, contentCategory, hasStrictSchema: true, schema };
-  writeFileSync(new URL(`content-types/${readableId}.json`, import.meta.url), JSON.stringify(file, null, 2) + "\n");
+  writeFileSync(new URL(`${readableId}.json`, outDir), JSON.stringify(file, null, 2) + "\n");
 }
 console.log(Object.keys(types).join(" "));
