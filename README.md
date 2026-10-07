@@ -30,6 +30,18 @@ Start the development server on `http://localhost:3000`:
 pnpm dev
 ```
 
+To run the dev server of another git worktree of this repo (for example a
+feature branch in `../soultabletop-worktrees/`), from any checkout:
+
+```bash
+pnpm dev:worktree               # list the worktrees
+pnpm dev:worktree <branch>      # start that worktree's server on the first free port from 3000
+pnpm dev:worktree <branch> 3005 # or on a given port
+```
+
+It uses the main checkout's `.env.local` and installs the worktree's
+dependencies first if it has none.
+
 ## Environment variables
 
 | Variable             | Used for                                                                 |
