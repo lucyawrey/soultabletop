@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ForkedFrom } from "#shared/forked-from";
 import type { ResourceSource } from "#shared/resource-list";
 import {
   CONTENT_CATEGORY_LABELS,
@@ -18,6 +19,7 @@ interface SystemDetail {
   ownerGroupId: string | null;
   canChangeOwner: boolean;
   description: string | null;
+  forkedFrom: ForkedFrom;
 }
 
 interface ContentTypeOption {
@@ -40,6 +42,7 @@ followSystem(system.value?.id);
 // Logged-out visitors can view this if it's public; otherwise they're sent to
 // sign in, since it may be something their account can see.
 const loggedIn = await useLoggedIn();
+const isForkOpen = ref(false);
 if (!system.value && !loggedIn.value) {
   await navigateTo(signInRoute(route.fullPath), { replace: true });
 }
@@ -138,6 +141,7 @@ async function remove() {
         eyebrow="System"
         :title="system.name"
         :source="system.source"
+        :forked-from="system.forkedFrom"
       >
         <template #meta>
           <ReadableIdBadge
@@ -146,26 +150,36 @@ async function remove() {
           />
           <VisibilityBadge :is-publicly-readable="system.isPubliclyReadable" />
         </template>
-        <template v-if="system.canEdit" #actions>
+        <template v-if="loggedIn" #actions>
           <UButton
-            icon="i-lucide-pencil"
+            icon="i-lucide-git-fork"
             color="neutral"
             variant="outline"
-            @click="openEdit"
+            @click="isForkOpen = true"
           >
-            Edit
+            Fork
           </UButton>
-          <UButton
-            icon="i-lucide-trash"
-            color="error"
-            variant="outline"
-            @click="
-              deleteError = '';
-              isDeleteOpen = true;
-            "
-          >
-            Delete
-          </UButton>
+          <template v-if="system.canEdit">
+            <UButton
+              icon="i-lucide-pencil"
+              color="neutral"
+              variant="outline"
+              @click="openEdit"
+            >
+              Edit
+            </UButton>
+            <UButton
+              icon="i-lucide-trash"
+              color="error"
+              variant="outline"
+              @click="
+                deleteError = '';
+                isDeleteOpen = true;
+              "
+            >
+              Delete
+            </UButton>
+          </template>
         </template>
       </DetailHeader>
 
@@ -308,5 +322,6 @@ async function remove() {
         />
       </template>
     </UModal>
+    <ForkDialog v-if="loggedIn" v-model:open="isForkOpen" :resource-id="id" />
   </PageContainer>
 </template>

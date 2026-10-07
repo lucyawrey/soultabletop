@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { sheetButtonWrites, sheetValueAt } from "#shared/sheet/runtime";
+import { sheetActionWrites, sheetButtonWrites, sheetValueAt } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
-// <Button>: clicking it writes its <Set>s' values (see sheetButtonWrites);
-// with `toast`, a toast then offers Undo. A click that writes nothing because
-// of an error always says why. Shown only to viewers who can edit the Content;
-// with Edit off it's disabled unless `live`. With `amount`, it reads the
+// <Button>: clicking it runs its steps in order. With only Sets it writes
+// their values (see sheetButtonWrites), and with `toast` a toast then offers
+// Undo; with a Roll the click goes to Recent rolls (useSheetRolls), whose
+// toast offers Undo for its writes. A click that does nothing because of an
+// error always says why. A Button that writes is shown only to viewers who
+// can edit the Content, and with Edit off it's disabled unless `live`; one
+// with only Rolls works for everyone. With `amount`, it reads the
 // number box of its SheetButtonGroup. (Not disabled while the box is empty:
 // the box only takes what's typed when it loses focus, which clicking the
 // button does.)
@@ -21,9 +24,40 @@ const toast = useToast();
 const label = computed(() => attrText(props.node.attrs.label));
 const icon = computed(() => props.node.attrs.icon as string | undefined);
 const usesAmount = computed(() => props.node.attrs.amount === true);
-const disabled = computed(() => !sheetButtonUsable(context, flags.value, props.node));
+const writes = computed(() => sheetActionWrites(props.node));
+const rolls = computed(() =>
+  props.node.children.some((child) => child.type === "element" && (child.tag === "Roll" || child.tag === "FollowUp")),
+);
+const canWrite = () => sheetButtonUsable(context, flags.value, props.node);
+const shown = computed(() => context.canEdit.value || !writes.value);
+const disabled = computed(() => writes.value && !canWrite());
+const sheetRolls = injectSheetRolls();
 
 function click() {
+  if (rolls.value && sheetRolls) {
+    if (usesAmount.value && (amount.value === null || amount.value === undefined)) {
+      toast.add({ title: `${label.value} didn't work`, description: "Type an amount first", color: "error", icon: "i-lucide-triangle-alert" });
+      return;
+    }
+    sheetRolls.run(
+      props.node.children,
+      {
+        context: () => ({
+          root: context.root.value,
+          scope: scope.value,
+          refs: context.refs.value,
+          formulas: context.formulas.value,
+        }),
+        title: () => label.value,
+        canWrite,
+        update: context.update,
+        read: (path) => sheetValueAt(context.root.value.value, path),
+      },
+      usesAmount.value ? { amount: amount.value } : undefined,
+    );
+    if (usesAmount.value) amount.value = null;
+    return;
+  }
   const result = sheetButtonWrites(
     props.node,
     context.root.value,
@@ -88,7 +122,7 @@ function click() {
 
 <template>
   <UButton
-    v-if="context.canEdit.value"
+    v-if="shown"
     :class="sheetClasses(node)"
     :label="label"
     :icon="icon"

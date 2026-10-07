@@ -37,6 +37,7 @@ Where each part of the Sheet system lives, so you can grep for the function and 
 | `components/ContentDetail.vue`, `composables/useContentDraft.ts` | The content page around the sheet: Edit/Autosave switches, draft, saving (`live` edits save on their own). |
 | `server/utils/sheet-schemas.ts`, `server/api/content-type/[id]/preview.get.ts` | Which Sheet renders a content (`resolveContentSheet`), a type's preview sheet (`resolvePreviewSheet`), schema loading, markup and CSS checks on save. |
 | `pages/sheets/[id]/edit.vue` | The Sheet editor (markup, CSS, preview, reference panel grouped by tag category). |
+| `components/SheetPreviewPane.vue`, `SheetLayoutToggle.vue`, `composables/useSheetLayout.ts` | The preview pane of the Sheet editor and a sheet's page (Edit Fields, the Sheet \| Preview switch for its own `<Preview>`); the side by side / stacked layout switch both pages share (`sheet-layout` cookie). |
 
 ## Docs to update with a Sheet feature
 

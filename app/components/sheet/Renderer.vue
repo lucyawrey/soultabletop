@@ -10,7 +10,7 @@ import {
   type SheetRefs,
   type SheetScope,
 } from "#shared/sheet/runtime";
-import { SHEET_DENSITIES, type SheetDensity, type SheetDisplay } from "#shared/sheet/registry";
+import { SHEET_DENSITIES, SHEET_ROLL_TARGETS, type SheetDensity, type SheetDisplay, type SheetRollTarget } from "#shared/sheet/registry";
 import { compileSheet, type SheetSchemas } from "#shared/sheet/validate";
 
 // Renders Content with Sheet markup, for viewing and editing. See
@@ -67,6 +67,17 @@ const density = computed<SheetDensity>(() => {
   const given = sheet?.type === "element" ? sheet.attrs.density : undefined;
   return SHEET_DENSITIES.find((density) => density === given) ?? "compact";
 });
+// `<Sheet rolls>`: how values with steps are clicked (auto when not given).
+const rollTarget = computed<SheetRollTarget>(() => {
+  const sheet = compiled.value.nodes.find(
+    (node) => node.type === "element" && node.tag === "Sheet",
+  );
+  const given = sheet?.type === "element" ? sheet.attrs.rolls : undefined;
+  return SHEET_ROLL_TARGETS.find((target) => target === given) ?? "auto";
+});
+// Rolls go to the content page's Recent rolls; elsewhere (the Sheet editor's
+// preview) the renderer keeps its own.
+if (!injectSheetRolls()) provideSheetRolls();
 const editing = computed(() => (props.canEdit ?? false) && (props.editMode ?? false));
 const root = computed<SheetScope>(() => ({ value: props.data, path: [] }));
 
@@ -118,6 +129,7 @@ provideSheetContext({
   editMode: computed(() => props.editMode ?? false),
   defaultDisplay: computed(() => props.defaultDisplay ?? "text"),
   density,
+  rollTarget,
   update: (path, value) => setSheetValue(props.data, path, value),
   addRef: (id, ref) => emit("addRef", id, ref),
   addLink: (id, link) => emit("addLink", id, link),
