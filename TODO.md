@@ -16,10 +16,6 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 - **Pathfinder 2e demo system** · feature · on `docs` (`.claude/pf2e/`, `.claude/mockups/pf2e-sheet/`)
   Plan: [.claude/plans/pf2e-demo.md](.claude/plans/pf2e-demo.md) (decisions, references and their rules, density, steps).
   A small slice of the Pathfinder 2e system for the demo, and a head start on the official one (Phase 2): content types (character, ancestry, background, class, feat, spell, item) and a polished character sheet using formulas, choice fields, struct tables, list functions, and defaults. Agents design the types and sheets, reading the Foundry pf2e data for reference (`~/Developer/foundry-pf2e`); an import script loads a small ORC Remaster slice of content through the API with the user's API key, never agent-written content (see "Data sources and import scripts for official content"). Keep a copy of the schemas, sheets, and script in `.claude/` until the authoring CLI exists. The system's description credits the data source and states the ORC license notice from the start. Replaces the old `pf2e-test` system, which the reset removes.
-- **Fork resources ("make my own copy")** · feature · on `fork-resources`
-  Plan: [.claude/plans/fork-resources.md](.claude/plans/fork-resources.md) (decisions 2026-10-07: sheet, content type, system; source link kept after deletion; parents and extras only by the same owner, picked in the dialog).
-  User (2026-10-06, added to the demo list): copy a resource you can read into your own account, either alone or together with its parents. Mostly for forking an official character sheet, its content type, and its system: when you don't need your own system or schema, you fork just the sheet, which stays on the original content type; forking with parents copies the chain (sheet → content type → system) and points each copy at the copied parent. Also keeps your characters and campaigns safe from changes or deletions by the author. Pairs with the library's "no longer available" placeholders.
-
 # Next up
 
 The exact order: do these one at a time, top first.
