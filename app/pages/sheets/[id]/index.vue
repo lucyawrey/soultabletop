@@ -64,13 +64,12 @@ const contentType = computed(() =>
 
 // Preview against sample data, not tied to any content. Changes made in the
 // preview are never saved.
-const tab = ref("preview");
+const layout = useSheetLayout();
+const tab = ref("markup");
 const tabs = [
-  { label: "Preview", value: "preview", slot: "preview" as const },
   { label: "Markup", value: "markup", slot: "markup" as const },
   { label: "CSS", value: "css", slot: "css" as const },
 ];
-const previewEditMode = ref(false);
 const previewData = ref<Record<string, unknown>>({});
 // Content and resources picked in the preview, so they show by name.
 const previewRefs = ref<SheetRefs>({});
@@ -133,8 +132,10 @@ async function remove() {
           <VisibilityBadge :is-publicly-readable="sheet.isPubliclyReadable" />
           <LabelChip v-if="sheet.isDefault" tone="primarySoft">Default</LabelChip>
         </template>
-        <template v-if="loggedIn" #actions>
+        <template #actions>
+          <SheetLayoutToggle v-model="layout" />
           <UButton
+            v-if="loggedIn"
             icon="i-lucide-git-fork"
             color="neutral"
             variant="outline"
@@ -166,40 +167,31 @@ async function remove() {
         </template>
       </DetailHeader>
 
-      <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <!-- Side by side: the code and About on the left, the preview on the
+        right; on the widest screens About gets a third column. Stacked (and
+        on narrow screens): the preview, then the code and About below. -->
+      <div
+        class="grid items-start gap-6"
+        :class="
+          layout === 'columns'
+            ? 'lg:grid-cols-2 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_280px]'
+            : 'lg:grid-cols-[minmax(0,1fr)_280px]'
+        "
+      >
+        <div
+          class="min-w-0 space-y-6"
+          :class="
+            layout === 'stacked'
+              ? 'lg:col-span-2 lg:grid lg:grid-cols-subgrid lg:items-start lg:space-y-0'
+              : '2xl:contents'
+          "
+        >
         <UTabs
           v-model="tab"
           :items="tabs"
-          variant="link"
           :unmount-on-hide="false"
           class="min-w-0"
         >
-        <template #preview>
-          <div class="space-y-4 pt-2">
-            <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-              <p class="text-muted">
-                Shown with sample data. Changes made in the preview are never saved.
-              </p>
-              <USwitch v-model="previewEditMode" label="Edit Fields" />
-            </div>
-            <SheetRenderer
-              :markup="sheet.markup"
-              :css="sheet.css"
-              :scope-id="sheet.id"
-              :schemas="sheet.schemas"
-              :data="previewData"
-              :refs="previewRefs"
-              :links="previewLinks"
-              :can-edit-sheet="sheet.canEdit"
-              can-edit
-              :edit-mode="previewEditMode"
-              :default-display="sheet.defaultDisplay"
-              @add-ref="addPreviewRef"
-              @add-link="addPreviewLink"
-            />
-          </div>
-        </template>
-
         <template #markup>
           <ClientOnly v-if="sheet.markup">
             <CodeEditor
@@ -238,6 +230,7 @@ async function remove() {
         </UTabs>
 
         <AboutPanel
+          :class="{ '2xl:col-start-3 2xl:row-start-1': layout === 'columns' }"
           :facts="[
             { label: 'Owner', value: ownerLabel(sheet) },
             { label: 'ID', value: sheet.readableId, mono: true },
@@ -247,6 +240,26 @@ async function remove() {
             { label: 'Default', value: sheet.isDefault ? 'Yes' : 'No' },
             { label: 'Updated', value: formatShortDate(sheet.updatedAt) },
           ]"
+        />
+        </div>
+
+        <!-- On narrow screens the preview comes first, for readers. -->
+        <SheetPreviewPane
+          class="order-first"
+          :class="layout === 'stacked' ? 'lg:col-span-2' : 'lg:order-none 2xl:col-start-2 2xl:row-start-1'"
+          :markup="sheet.markup"
+          :css="sheet.css"
+          :scope-id="sheet.id"
+          :schemas="sheet.schemas"
+          :data="previewData"
+          :refs="previewRefs"
+          :links="previewLinks"
+          :content-type-id="sheet.contentTypeId"
+          :can-edit-sheet="sheet.canEdit"
+          :default-display="sheet.defaultDisplay"
+          note="Shown with sample data. Changes made in the preview are never saved."
+          @add-ref="addPreviewRef"
+          @add-link="addPreviewLink"
         />
       </div>
     </template>
