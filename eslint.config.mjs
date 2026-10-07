@@ -12,7 +12,7 @@ export default withNuxt(
   {
     rules: {
       // `sheet-*` classes are hooks for user-written Sheet CSS, not Tailwind.
-      "better-tailwindcss/no-unknown-classes": ["error", { ignore: ["^sheet-"] }],
+      "better-tailwindcss/no-unknown-classes": ["error", { ignore: ["^sheet-", "^roll-"] }],
     },
   },
   {

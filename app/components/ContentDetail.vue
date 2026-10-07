@@ -14,6 +14,9 @@ import { extractApiErrorMessage } from "~/utils/api-error";
 // Shared by /content/[id] and /characters/[id] (and their owner + readable ID
 // routes): both are `content` Resources, differing only in their
 // ContentType's category and where "back" goes.
+// This visit's rolls from the sheet (Recent rolls, and the roll toast).
+const rolls = provideSheetRolls();
+
 const props = defineProps<{
   section: "content" | "characters";
   label: string;
@@ -349,6 +352,17 @@ function printPage() {
           </span>
         </template>
         <template #actions>
+          <!-- Shown once the sheet has rolled something. -->
+          <UButton
+            v-if="rolls.entries.value.length"
+            icon="i-game-icons-rolling-dices"
+            color="neutral"
+            variant="outline"
+            aria-haspopup="dialog"
+            @click="rolls.drawerOpen.value = true"
+          >
+            Rolls <span class="font-normal text-muted">({{ rolls.entries.value.length }})</span>
+          </UButton>
           <!-- Print shows just the sheet (the app chrome hides itself). -->
           <UButton
             icon="i-lucide-printer"
@@ -381,6 +395,7 @@ function printPage() {
           </template>
         </template>
       </DetailHeader>
+      <RollRecentRolls />
 
       <div class="flex flex-wrap items-center justify-between gap-4 text-sm print:hidden">
         <div v-if="item.canEdit" class="flex flex-wrap items-center gap-4">
