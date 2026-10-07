@@ -1,0 +1,16 @@
+{
+  "name": "Arrows",
+  "readableId": "item-arrows",
+  "data": {
+    "kind": "ammo",
+    "level": 0,
+    "price": 10,
+    "bulk": 0.1,
+    "traits": [
+      "Consumable"
+    ],
+    "rarity": "common",
+    "description": "These projectiles are the ammunition for bows. The shaft of an arrow is made of wood. It is stabilized in flight by fletching at one end and bears a metal head on the other.",
+    "source": "Pathfinder Player Core"
+  }
+}

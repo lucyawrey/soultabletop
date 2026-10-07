@@ -1,0 +1,14 @@
+{
+  "name": "Religious Symbol (Wooden)",
+  "readableId": "item-religious-symbol-wooden",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 10,
+    "bulk": 0.1,
+    "usage": "Other",
+    "rarity": "common",
+    "description": "This piece of wood or silver is emblazoned with an image representing a deity. Some divine spellcasters, such as clerics, can use a religious symbol of their deity to use certain abilities and cast some spells. A religious symbol can be worn on the body on a chain or pin, or can be held.",
+    "source": "Pathfinder Player Core"
+  }
+}

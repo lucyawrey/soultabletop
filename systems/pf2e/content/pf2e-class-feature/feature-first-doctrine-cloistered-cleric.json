@@ -1,0 +1,14 @@
+{
+  "name": "First Doctrine (Cloistered Cleric)",
+  "readableId": "feature-first-doctrine-cloistered-cleric",
+  "data": {
+    "level": 1,
+    "actions": "passive",
+    "traits": [
+      "Cleric"
+    ],
+    "rarity": "common",
+    "description": "You gain the Domain Initiate cleric feat.",
+    "source": "Pathfinder Player Core"
+  }
+}
