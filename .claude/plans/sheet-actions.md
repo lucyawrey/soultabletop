@@ -66,6 +66,7 @@ The user decided the four marked (user); the rest are the agent's calls, open to
 
 - **Undo for an action that rolls and writes** (user): the roll's toast and its entry get an Undo button that writes back the click's writes (same rules as a Button's Undo: a value changed since is left as is, and a toast says how many). The roll stays in Recent rolls, marked "undone". One toast, nothing stacks. When a click makes several entries, Undo sits on the first.
 - **Follow-ups in a shared campaign log** (user, for when logs exist): the person who rolled and the campaign's GMs can click them; others see them disabled. A follow-up with a `Set` also needs edit rights on the content, and every follow-up reads the sheet at the click, so it runs only for someone who can still read the content.
+- **Private rolls in a campaign log** (user, for when logs exist): GMs and players can roll privately; a GM's private roll is seen only by GMs, a player's by that player and the GMs. Recorded with the campaigns item in `TODO.md`.
 
 ## Open
 
