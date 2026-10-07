@@ -142,6 +142,10 @@
   padding: calc(var(--d-pad) * .9) calc(var(--d-pad) + 14px);
 }
 .meta > * + * { border-left: 1px solid var(--st-border); }
+.meta > * { text-align: center; align-content: center; }
+.meta .sheet-field-label { display: block; text-align: center; }
+.meta > * > div { justify-content: center; }
+.meta .sheet-field-value { display: flex; justify-content: center; align-items: center; }
 .meta .sheet-field-value { font-size: calc(var(--d-big) * 1.15); line-height: 1; }
 .meta .word .sheet-field-value { font-size: calc(var(--d-big) * .7); }
 .facts { grid-column: 1; gap: 2px 14px; align-items: baseline; }
@@ -178,7 +182,8 @@
 }
 .defwrap { min-width: 0; }
 .defs { display: grid !important; grid-template-columns: .9fr 2fr 1.2fr; gap: var(--d-gap); }
-.ac { border-color: var(--st-primary); }
+.ac { border: 2px solid var(--st-primary); }
+.ac .sheet-value > div:first-child { justify-content: center; }
 .ac > .sheet-value:first-child .sheet-field-value { font-size: var(--d-hero); line-height: 1.05; }
 .ac .sub .sheet-field-value { font-size: var(--d-lfs); font-weight: 400; color: var(--st-ink-muted); }
 .ac .up .sheet-field-value { font-size: var(--d-lfs); color: var(--st-primary); }
@@ -196,7 +201,25 @@
 .srow > .sheet-value:nth-child(2) .sheet-field-value { font-size: calc(var(--d-big) * .8); }
 .strip { gap: 4px 12px; align-items: center; margin-top: var(--d-gap); font-size: var(--d-lfs); }
 .strip > *, .shieldrow { align-items: center; gap: 4px 8px; }
-.raise.pressed { background: var(--st-primary); color: var(--st-on-primary); }
+.sheet-button.raise {
+  height: calc(var(--d-h) + 4px);
+  padding: 0 12px;
+  border: 1px solid var(--st-primary);
+  border-radius: calc(var(--st-radius) * .66);
+  background: var(--st-panel);
+  color: var(--st-primary);
+  font-size: calc(var(--d-fs) - 1px);
+  font-weight: 700;
+  box-shadow: none;
+}
+.sheet-button.raise.pressed { background: var(--st-primary); color: var(--st-on-primary); }
+/* The strip under the defenses: labels beside their values, on one line. */
+.strip .sheet-number, .strip .sheet-tags, .strip .sheet-value, .resist { display: flex; align-items: center; gap: 4px 6px; }
+.strip .sheet-field-label { white-space: nowrap; }
+.strip .sheet-tags .sheet-field-value { min-width: 140px; }
+.strip .sheet-tags [data-slot="root"] { min-height: 24px; padding-block: 1px; }
+.strip .sheet-tags input { font-size: var(--d-lfs); }
+.coin input { height: 22px; font-weight: 700; }
 .coin input { width: 52px; text-align: center; }
 
 /* Rows: Strikes, Actions, and the tabs share one row style. */
@@ -253,7 +276,7 @@
 .prof { gap: 4px; align-items: center; }
 
 /* Tabs */
-.maintabs { min-width: 0; display: flex; flex-direction: column; }
+.maintabs { min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
 /* The tabs run as tall as the Skills and Proficiencies column. */
 .maintabs > [role="tabpanel"]:not([hidden]) { flex: 1; display: flex; flex-direction: column; }
 .maintabs .sheet-tab { flex: 1; }
@@ -319,7 +342,7 @@
 }
 .maintabs [data-slot="trigger"][data-state="active"] { background: var(--st-panel); border-color: var(--st-border-strong); color: var(--st-ink); }
 .maintabs [data-slot="leadingIcon"] { color: var(--st-primary); width: .95em; height: .95em; }
-.maintabs .sheet-tab { padding-top: calc(var(--d-pad) * 1.5); }
+.maintabs .sheet-tab { padding-top: calc(var(--d-pad) * 1.5); margin-top: 0; }
 
 /* Edit mode keeps the play layout: inputs sit in the row cells. */
 .sheet-field-value + p { display: none; }
