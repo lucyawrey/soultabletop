@@ -1,0 +1,14 @@
+{
+  "name": "Waterskin",
+  "readableId": "item-waterskin",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 5,
+    "bulk": 0.1,
+    "usage": "Held in one hand",
+    "rarity": "common",
+    "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature.",
+    "source": "Pathfinder Player Core"
+  }
+}

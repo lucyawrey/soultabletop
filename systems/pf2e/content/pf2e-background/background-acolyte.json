@@ -1,0 +1,32 @@
+{
+  "name": "Acolyte",
+  "readableId": "background-acolyte",
+  "data": {
+    "boosts": [
+      {
+        "choices": [
+          "int",
+          "wis"
+        ]
+      },
+      {
+        "choices": [
+          "cha",
+          "con",
+          "dex",
+          "int",
+          "str",
+          "wis"
+        ]
+      }
+    ],
+    "trainedSkills": [
+      "religion"
+    ],
+    "trainedLore": "Scribing Lore",
+    "skillFeat": "feat-student-of-the-canon",
+    "rarity": "common",
+    "description": "You spent your early days in a religious monastery or cloister. You may have traveled out into the world to spread the message of your religion or because you cast away the teachings of your faith, but deep down, you'll always carry within you the lessons you learned.\n\nChoose two attribute boosts. One must be to **Intelligence** or **Wisdom**, and one is a free attribute boost.\n\nYou're trained in the Religion skill and the Scribing Lore skill. You gain the Student of the Canon skill feat.",
+    "source": "Pathfinder Player Core"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Thieves' Toolkit",
+  "readableId": "item-thieves-toolkit",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 300,
+    "bulk": 0.1,
+    "usage": "Other",
+    "rarity": "common",
+    "description": "You need a thieves' toolkit to Pick Locks or Disable Devices (of some types) using the Thievery skill.\n\nIf your thieves' toolkit is broken, you can repair it by replacing the lock picks with Replacement Picks appropriate to your toolkit; this doesn't require using the Repair action. If you wear your thieves' toolkit, you can draw and replace it as part of the action that uses it.",
+    "source": "Pathfinder Player Core"
+  }
+}

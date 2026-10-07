@@ -1,0 +1,14 @@
+{
+  "name": "Bedroll",
+  "readableId": "item-bedroll",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 2,
+    "bulk": 0.1,
+    "usage": "Other",
+    "rarity": "common",
+    "description": "A rolled up bed.",
+    "source": "Pathfinder Player Core"
+  }
+}

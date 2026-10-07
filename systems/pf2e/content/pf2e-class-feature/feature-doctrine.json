@@ -1,0 +1,14 @@
+{
+  "name": "Doctrine",
+  "readableId": "feature-doctrine",
+  "data": {
+    "level": 1,
+    "actions": "passive",
+    "traits": [
+      "Cleric"
+    ],
+    "rarity": "common",
+    "description": "Even among followers of the same deity, approaches vary. At 1st level, you select cloistered cleric or warpriest and gain the benefits of its first doctrine. At 3rd level and every four levels thereafter, you gain another benefit from your doctrine.\n\n- Cloistered Cleric\n\n- Warpriest",
+    "source": "Pathfinder Player Core"
+  }
+}

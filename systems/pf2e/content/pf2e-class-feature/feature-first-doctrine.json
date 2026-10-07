@@ -1,0 +1,14 @@
+{
+  "name": "First Doctrine",
+  "readableId": "feature-first-doctrine",
+  "data": {
+    "level": 1,
+    "actions": "passive",
+    "traits": [
+      "Cleric"
+    ],
+    "rarity": "common",
+    "description": "You gain the first benefit of your doctrine:\n\n- Cloistered Cleric\n\n- Warpriest",
+    "source": "Pathfinder Player Core"
+  }
+}

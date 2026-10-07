@@ -1,0 +1,24 @@
+{
+  "name": "Fire Ray",
+  "readableId": "spell-fire-ray",
+  "data": {
+    "rank": 1,
+    "kind": "focus",
+    "cast": "2",
+    "range": "60 feet",
+    "targets": "1 creature",
+    "duration": "until the end of the target's next turn",
+    "damage": "2d6 fire",
+    "traits": [
+      "Attack",
+      "Cleric",
+      "Concentrate",
+      "Fire",
+      "Focus",
+      "Manipulate"
+    ],
+    "rarity": "uncommon",
+    "description": "A blazing band of fire arcs through the air, lighting your opponent and the ground they stand upon on fire. Make a spell attack roll against the target's AC. The ray deals 2d6 fire damage on a hit (or double damage on a critical hit). On any result other than a critical failure, the ground in the target's space catches fire, dealing @item.rankd6 fire damage to each creature that ends its turn in one of the squares.\n\n---\n\n**Heightened (+1)** The ray's initial damage increases by 2d6, and the fire damage dealt by the burning space increases by 1d6.",
+    "source": "Pathfinder Player Core"
+  }
+}

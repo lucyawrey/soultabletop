@@ -1,0 +1,7 @@
+{
+  "name": "Pathfinder Second Edition",
+  "readableId": "pf2e",
+  "owner": "soul",
+  "isPubliclyReadable": false,
+  "description": "Rules content imported from the Foundry VTT pf2e system's data (https://github.com/foundryvtt/pf2e): ORC-licensed Pathfinder Remaster content only.\n\nThe ORC License notice and the attribution for each source book are still to be added (step 7 of the PF2e demo plan). Until then the system stays Limited."
+}

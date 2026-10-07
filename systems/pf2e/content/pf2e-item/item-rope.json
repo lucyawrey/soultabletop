@@ -1,0 +1,14 @@
+{
+  "name": "Rope",
+  "readableId": "item-rope",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 50,
+    "bulk": 0.1,
+    "usage": "Held in two hands",
+    "rarity": "common",
+    "description": "50 feet of rope.",
+    "source": "Pathfinder Player Core"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Chalk",
+  "readableId": "item-chalk",
+  "data": {
+    "kind": "consumable",
+    "level": 0,
+    "price": 1,
+    "bulk": 0,
+    "usage": "Held in one hand",
+    "rarity": "common",
+    "source": "Pathfinder Player Core"
+  }
+}

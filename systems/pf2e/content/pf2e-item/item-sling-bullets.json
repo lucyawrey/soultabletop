@@ -1,0 +1,16 @@
+{
+  "name": "Sling Bullets",
+  "readableId": "item-sling-bullets",
+  "data": {
+    "kind": "ammo",
+    "level": 0,
+    "price": 1,
+    "bulk": 0.1,
+    "traits": [
+      "Consumable"
+    ],
+    "rarity": "common",
+    "description": "These are small metal balls, typically either iron or lead, designed to be used as ammunition in slings.",
+    "source": "Pathfinder Player Core"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Steel Shield",
+  "readableId": "item-steel-shield",
+  "data": {
+    "kind": "shield",
+    "level": 0,
+    "price": 200,
+    "bulk": 1,
+    "shield": {
+      "acBonus": 2,
+      "hardness": 5,
+      "hp": 20,
+      "brokenThreshold": 10
+    },
+    "rarity": "common",
+    "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.\n\nHardness HP BT\n\n5 20 10",
+    "source": "Pathfinder Player Core"
+  }
+}

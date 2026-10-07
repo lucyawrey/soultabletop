@@ -1,0 +1,26 @@
+{
+  "name": "Rapier",
+  "readableId": "item-rapier",
+  "data": {
+    "kind": "weapon",
+    "level": 0,
+    "price": 200,
+    "bulk": 1,
+    "usage": "Held in one hand",
+    "weapon": {
+      "category": "martial",
+      "group": "Sword",
+      "damageDice": 1,
+      "damageDie": "d6",
+      "damageType": "piercing"
+    },
+    "traits": [
+      "Deadly d8",
+      "Disarm",
+      "Finesse"
+    ],
+    "rarity": "common",
+    "description": "The rapier is a long and thin piercing blade with a basket hilt. It is prized among many as a dueling weapon.",
+    "source": "Pathfinder Player Core"
+  }
+}

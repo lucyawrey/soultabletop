@@ -1,0 +1,13 @@
+{
+  "name": "Rations",
+  "readableId": "item-rations",
+  "data": {
+    "kind": "consumable",
+    "level": 0,
+    "price": 40,
+    "bulk": 0.1,
+    "usage": "Held in one hand",
+    "rarity": "common",
+    "source": "Pathfinder Player Core"
+  }
+}
