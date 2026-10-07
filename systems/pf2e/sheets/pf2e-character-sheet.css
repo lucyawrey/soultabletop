@@ -239,7 +239,7 @@
 .acts .row { grid-template-columns: 30px 1fr auto; }
 
 /* Skills and proficiencies on the left, the tabs on the right. */
-.mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: start; }
+.mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
 .leftcol { gap: calc(var(--d-gap) + 10px); }
 .skills .row { grid-template-columns: 1fr 30px auto auto; }
 .rank-sel button { font-size: var(--d-lfs); }
@@ -253,10 +253,13 @@
 .prof { gap: 4px; align-items: center; }
 
 /* Tabs */
-.maintabs { min-width: 0; }
+.maintabs { min-width: 0; display: flex; flex-direction: column; }
+/* The tabs run as tall as the Skills and Proficiencies column. */
+.maintabs > [role="tabpanel"]:not([hidden]) { flex: 1; display: flex; flex-direction: column; }
+.maintabs .sheet-tab { flex: 1; }
 .sheet-tab {
   background: var(--st-panel);
-  border: 1px solid var(--st-border-strong);
+  border: 1px solid var(--st-border);
   border-radius: 0 var(--st-radius) var(--st-radius) var(--st-radius);
   padding: calc(var(--d-pad) * 1.5);
   min-height: 640px;
@@ -314,7 +317,7 @@
   font-weight: 700;
   color: var(--st-ink-muted);
 }
-.maintabs [data-slot="trigger"][data-state="active"] { background: var(--st-panel); border-color: var(--st-border-strong); color: var(--st-ink); }
+.maintabs [data-slot="trigger"][data-state="active"] { background: var(--st-panel); border-color: var(--st-border); color: var(--st-ink); }
 .maintabs [data-slot="leadingIcon"] { color: var(--st-primary); width: .95em; height: .95em; }
 .maintabs .sheet-tab { padding-top: calc(var(--d-pad) * 1.5); }
 
