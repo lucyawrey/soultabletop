@@ -21,6 +21,26 @@ Edit the script, not the JSON files. The script is temporary: system definitions
 
 The character keeps the build choices and the play state (level, XP, attribute modifiers, proficiency ranks, HP, conditions, hero and focus points, spell slots, coins, biography), and links to its ancestry, class, feats, spells, and items instead of copying them. Ranks are stored on the character, since they grow with level. Every rules type ends with traits, rarity, rules text, and source.
 
+## Content
+
+`content/<type>/<readable-id>.json` holds one resource each: `{ name, readableId, data }`. Readable IDs start with the type (`feat-shield-block`, `spell-heal`), so names can't collide across types. A reference to other content holds its readable ID. `system.json` names the system, its owner (the `soul` group, so it's Official), and its visibility.
+
+`scripts/pf2e/convert.mjs` writes these files from a local checkout of the Foundry pf2e data; it only reads that checkout and never clones or updates it. `scripts/pf2e/slice.json` lists what's converted: the demo slice, built around the iconics Kyra (cleric) and Merisiel (rogue) at 1st level. Only ORC-licensed Remaster items are converted, and their rules text becomes Markdown.
+
+```bash
+node scripts/pf2e/convert.mjs ~/Developer/foundry-pf2e
+```
+
+Like the type builder, the converter is temporary: the files are the system, and they're edited directly once the authoring CLI exists.
+
+## Loading
+
+`scripts/load-system.mjs` loads the folder into the app through the API with a read-write `SOUL_TABLETOP_API_KEY` (a site admin's key, to create resources for the `soul` group). It creates what's missing and updates what exists, matched by owner and readable ID, so it can be rerun:
+
+```bash
+node --env-file=.env.local scripts/load-system.mjs systems/pf2e --url http://localhost:3000
+```
+
 ## Sources and licenses
 
 The schemas are our own design. The [Foundry VTT pf2e system](https://github.com/foundryvtt/pf2e) is a data source: its packs are where the imported content comes from, and they were read to learn what each type needs to hold, but its data model isn't followed. Its code is licensed under the Apache License 2.0; the game system information in it is Paizo's, licensed under the ORC License (Remaster) and the Open Game License 1.0a (earlier books). Only ORC-licensed Remaster content is imported.

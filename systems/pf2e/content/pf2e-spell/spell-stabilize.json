@@ -1,0 +1,25 @@
+{
+  "name": "Stabilize",
+  "readableId": "spell-stabilize",
+  "data": {
+    "rank": 0,
+    "kind": "cantrip",
+    "traditions": [
+      "divine",
+      "primal"
+    ],
+    "cast": "2",
+    "range": "30 feet",
+    "targets": "1 dying creature",
+    "traits": [
+      "Cantrip",
+      "Concentrate",
+      "Healing",
+      "Manipulate",
+      "Vitality"
+    ],
+    "rarity": "common",
+    "description": "Life energy shuts death's door. The target loses the Dying condition, though it remains Unconscious at 0 Hit Points.",
+    "source": "Pathfinder Player Core"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "Elf",
+  "readableId": "ancestry-elf",
+  "data": {
+    "hp": 6,
+    "size": "med",
+    "speed": 30,
+    "boosts": [
+      {
+        "choices": [
+          "dex"
+        ]
+      },
+      {
+        "choices": [
+          "int"
+        ]
+      },
+      {
+        "choices": [
+          "str",
+          "dex",
+          "con",
+          "int",
+          "wis",
+          "cha"
+        ]
+      }
+    ],
+    "flaws": [
+      "con"
+    ],
+    "languages": [
+      "Common",
+      "Elven"
+    ],
+    "additionalLanguages": 0,
+    "vision": "low-light-vision",
+    "traits": [
+      "Elf",
+      "Humanoid"
+    ],
+    "rarity": "common",
+    "description": "*As an ancient people, elves have seen great change and have the perspective that can come only from watching the arc of history. After leaving the world in ancient times, they returned to a changed land, and they still struggle to reclaim their ancestral homes, most notably from terrible demons that have invaded parts of their lands. To some, the elves are objects of awe—graceful and beautiful, with immense talent and knowledge. Among themselves, however, the elves place far more importance on personal freedom than on living up to these ideals.*\n\n*Elf*",
+    "source": "Pathfinder Player Core"
+  }
+}

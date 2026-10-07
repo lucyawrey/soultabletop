@@ -1,0 +1,18 @@
+{
+  "name": "Healing Hands",
+  "readableId": "feat-healing-hands",
+  "data": {
+    "level": 1,
+    "category": "class",
+    "actions": "passive",
+    "prerequisites": [
+      "healing font"
+    ],
+    "traits": [
+      "Cleric"
+    ],
+    "rarity": "common",
+    "description": "Your vitality is even more vibrant and restorative. When you cast Heal, you roll d10s instead of d8s.",
+    "source": "Pathfinder Player Core"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Leather Armor",
+  "readableId": "item-leather-armor",
+  "data": {
+    "kind": "armor",
+    "level": 0,
+    "price": 200,
+    "bulk": 1,
+    "armor": {
+      "category": "light",
+      "group": "Leather",
+      "acBonus": 1,
+      "dexCap": 4,
+      "checkPenalty": -1,
+      "speedPenalty": 0,
+      "strength": 0
+    },
+    "rarity": "common",
+    "description": "A mix of flexible and molded boiled leather, a suit of this type of armor provides some protection with maximum flexibility.",
+    "source": "Pathfinder Player Core"
+  }
+}
