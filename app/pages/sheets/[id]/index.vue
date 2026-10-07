@@ -180,7 +180,6 @@ async function remove() {
         <UTabs
           v-model="tab"
           :items="tabs"
-          variant="link"
           :unmount-on-hide="false"
           class="min-w-0"
         >
