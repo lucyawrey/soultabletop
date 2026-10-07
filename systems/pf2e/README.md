@@ -1,6 +1,6 @@
 # Pathfinder Second Edition
 
-The official Pathfinder 2e system as files: its content types, and later its imported content and character sheet. This folder holds content only; the code that writes or loads it lives in `scripts/`. Everything is loaded into the app through the API, never by hand, so the system can be rebuilt after a database reset. The plan for the demo slice is in `.claude/plans/pf2e-demo.md` on the `docs` branch.
+The official Pathfinder 2e system as files: its content types, its imported content, and its character sheet. This folder holds content only; the code that writes or loads it lives in `scripts/`. Everything is loaded into the app through the API, never by hand, so the system can be rebuilt after a database reset. The plan for the demo slice is in `.claude/plans/pf2e-demo.md` on the `docs` branch.
 
 ## Content types
 
@@ -32,6 +32,10 @@ node scripts/pf2e/convert.mjs ~/Developer/foundry-pf2e
 ```
 
 Like the type builder, the converter is temporary: the files are the system, and they're edited directly once the authoring CLI exists.
+
+## Character sheet
+
+`sheets/pf2e-character-sheet.stts` (markup), `.css`, and `.json` (name, content type, default settings) are the character type's default Sheet, built from the approved mockup in `.claude/mockups/pf2e-sheet/` on the `docs` branch. Edit them here and reload; the Sheet editor's changes are overwritten by the next load. Derived numbers (AC, saves, skills, Strikes, Class DC, spell DC, Bulk) are formulas over the character and the content it references, so nothing computed is stored.
 
 ## Loading
 
