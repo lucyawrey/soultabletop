@@ -5,7 +5,7 @@ One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use an
 **Last updated:** 2026-10-07 (Linux)
 
 - **Fork resources** merged (#102). The plan's "Agent defaults" stand unless the user changes them.
-- **GitHub HTTPS pushes fail** (2026-10-07): "Internal Server Error" on every push to this repo over HTTPS, while reads work. Pushing over SSH works: `git push git@github.com:lucyawrey/soultabletop.git <branch>`.
+- **`origin` is now SSH on Linux** (2026-10-07, after HTTPS pushes failed). **On the Mac:** run `git remote set-url origin git@github.com:lucyawrey/soultabletop.git` and check that agent shells can push (`.claude/running-commands.md`).
 - **Unconfirmed agent defaults** for forks (plan's "Agent defaults"): kept names, `-2` readable ID suffixes, copies start Limited, default sheet only on a copied type.
 - **Sheet page layout and editor `<Preview>`** merged (#103): side by side / stacked switch shared by the sheet page and editor (`sheet-layout` cookie); the sheet page stacks preview first, the editor code first.
 - **Next:** the PF2e character sheet (`.claude/plans/pf2e-demo.md`, step 6). Cairn and the first-visit dashboard are on the demo list (TODO, Next up).
