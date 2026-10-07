@@ -2,14 +2,11 @@
 
 One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use and update this file; check it against git before relying on it.
 
-**Last updated:** 2026-10-07 (afternoon, Linux; paused for the usage reset)
+**Last updated:** 2026-10-07 (evening, Linux)
 
-- **Fork resources** merged (#102). The plan's "Agent defaults" stand unless the user changes them.
-- **`origin` is now SSH on Linux** (2026-10-07, after HTTPS pushes failed). **On the Mac:** run `git remote set-url origin git@github.com:lucyawrey/soultabletop.git` and check that agent shells can push, and set `nvm alias default 24.21.0` (`.claude/running-commands.md`).
-- **Unconfirmed agent defaults** for forks (plan's "Agent defaults"): kept names, `-2` readable ID suffixes, copies start Limited, default sheet only on a copied type.
-- **Sheet page layout and editor `<Preview>`** merged (#103): side by side / stacked switch shared by the sheet page and editor (`sheet-layout` cookie); the sheet page stacks preview first, the editor code first.
-- **First-visit dashboard** merged (#104).
-- **PF2e demo** (`.claude/plans/pf2e-demo.md`; sources in `systems/pf2e/`, code in `scripts/`): types merged (#106). Step 5 is PR #107 (converter, 90-item slice, generic loader `scripts/load-system.mjs`; auto-merge set by the user 2026-10-07, check with `gh pr view 107 --json state,mergedAt` before cleanup), worktree `../soultabletop-worktrees/pf2e-import`. After merge: run the loader for real (`node --env-file=.env.local scripts/load-system.mjs systems/pf2e --url <dev server>`; creates the Official `pf2e` system, Limited until step 7), then the sheet (step 6). Auto-merge stalled for a while on #106; if #107 is still open with checks green, ask the user.
-- **On `docs`, not yet on `main`:** the dice mockup folder, the fork, sheet-actions, and PF2e plans, the SSH remote and nvm notes (`CLAUDE.md`, `running-commands.md`), and the TODO and handoff; one docs-only PR when the user wants (`git diff origin/main` on `docs` lists them).
-- **Waiting on the user:** keep or delete `icons.html` in the PF2e mockup folder; whether the Initiative "rolls with" picker should offer Lore skills; compact density on a real, full sheet not yet seen.
-- **Unverified on the Mac:** that `code` is on the PATH. **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70).
+- **PF2e demo** (`.claude/plans/pf2e-demo.md`): step 5 merged (#107) and run for real: the Official `soul/pf2e` system is loaded (11 types, 90 items, and now the sheet). **Step 6 in progress** on `pf2e-sheet` (pushed, no PR yet), worktree `../soultabletop-worktrees/pf2e-sheet`: the character sheet in `systems/pf2e/sheets/`, and the loader now loads sheets. Dev server on port 3005 from that worktree (started by the agent; stop it when the user is done).
+- **Waiting on the user:** review of the built sheet against the frozen mockup, and the differences listed in chat (spells grouped as Spells/Cantrips, not by rank; list editing as form rows; rank selects show full labels in edit; no resist/weak/immune row or empty feat slots; Bulk meter without the threshold mark; die buttons beside rollable values; strike rolls titled "Roll", since a strike has no name field). Approved ones go in the spec's "Decided after the mockup", then open the PR.
+- **Initiative and Lore:** the picker can't offer Lore (the schema's `initiative.roll` options are the 16 skills); confirm that's fine.
+- **Test characters** in the user's account (`test-pf2e-kyra`, `test-pf2e-merisiel`), made through the API: delete after the PR merges (`DELETE /api/content/eac28915-17a6-4218-aa34-1156db0916b8` and `/api/content/10d94439-ce1d-48e4-a533-6e86ac5fb78a` with the API key).
+- **On `docs`, not yet on `main`:** the dice mockup folder, the fork, sheet-actions, and PF2e plans, the SSH remote and nvm notes, and the TODO and handoff; one docs-only PR when the user wants.
+- **Also waiting:** keep or delete `icons.html` in the PF2e mockup folder; on the Mac, set the SSH remote and `nvm alias default 24.21.0`, and check `code` is on the PATH. **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70).
