@@ -480,6 +480,11 @@ const tagList: TagSpec[] = [
         description:
           "Maximum: a number or a {formula}; without one (or at 0), only the value shows",
       },
+      mark: {
+        type: { kind: "number", min: 0, dynamic: true },
+        description:
+          "A mark on the bar at this value, like an encumbrance threshold: a number or a {formula} (bar style, not editable)",
+      },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
     },
     children: "none",

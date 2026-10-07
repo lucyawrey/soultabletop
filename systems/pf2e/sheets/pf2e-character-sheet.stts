@@ -26,6 +26,10 @@
         formula="if(coalesce(range, 0) > 0, if(hasTrait(traits, 'Propulsive'), floor(max(0, attributes.str) / 2), 0), if(subclass.name == 'Thief' and hasTrait(traits, 'Finesse'), max(attributes.str, attributes.dex), attributes.str))" />
 <Define name="damageType" params="t" formula="switch(t, 'bludgeoning', 'B', 'piercing', 'P', 'slashing', 'S', '')" />
 <Define name="sneakDice" formula="if(level >= 17, 4, if(level >= 11, 3, if(level >= 5, 2, 1)))" />
+<Define name="defensesText"
+        formula="coalesce(join(list(join(map(resistances, concat('resist ', type, ' ', value)), ', '), join(map(weaknesses, concat('weak ', type, ' ', value)), ', '), if(length(coalesce(immunities, list())) > 0, concat('immune ', join(immunities, ', ')), '')), ' · '), 'none')" />
+<Define name="hasFeat" params="cat, lv" formula="any(feats, category == cat and level == lv)" />
+<Define name="bulkText" params="b" formula="if(b == 0.1, 'L', if(coalesce(b, 0) == 0, '—', b))" />
 <Define name="bulk" formula="sum(inventory, if(state == 'dropped', 0, quantity * coalesce(item.bulk, 0)))" />
 
 <Sheet display="text">
@@ -143,6 +147,17 @@
             <Value formula="concat('/ ', shield.shield.hp, ' · BT ', shield.shield.brokenThreshold)" hideLabel class="dim" show="shield.name != null" />
             <Badge class="broken" color="error" show="shield.name != null and coalesce(shieldHp, shield.shield.hp) <= shield.shield.brokenThreshold">Broken</Badge>
           </Stack>
+          <Stack direction="row" wrap class="resist">
+            <Note class="label">Resist / weak / immune</Note>
+            <Value hideLabel class="dim" formula="defensesText()" show="not editing()" />
+            <List field="resistances" addLabel="Resistance" class="inline-list" show="editing()">
+              <Stack direction="row" class="pair-in"><Note>Resist</Note><Text field="type" hideLabel placeholder="fire" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
+            </List>
+            <List field="weaknesses" addLabel="Weakness" class="inline-list" show="editing()">
+              <Stack direction="row" class="pair-in"><Note>Weak</Note><Text field="type" hideLabel placeholder="cold iron" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
+            </List>
+            <Tags field="immunities" label="Immune" show="editing()" />
+          </Stack>
           <Tags field="conditions" label="Conditions" live />
         </Stack>
       </Stack>
@@ -153,13 +168,16 @@
   <Grid cols="2" class="pair">
     <Section title="Strikes" icon="i-game-icons-crossed-swords" class="folio strikes">
       <Note class="aside">MAP −5 / −10 · agile −4 / −8</Note>
-      <Stack direction="row" class="row th" show="not editing()">
+      <Stack direction="row" class="row th strike">
         <Note></Note><Note>Weapon</Note><Note>Hit · MAP</Note><Note>Damage</Note><Note>Traits</Note>
       </Stack>
       <List field="strikes" addLabel="Add strike" class="rows">
-        <Stack direction="row" class="row strike" show="not editing()">
-          <Note class="act" >◆</Note>
-          <Value field="weapon.name" hideLabel preview="card" class="name" />
+        <Stack direction="row" class="row strike">
+          <Note class="act">◆</Note>
+          <Stack class="cell">
+            <Value field="weapon.name" hideLabel preview="card" class="name" show="not editing()" />
+            <Ref field="weapon" hideLabel class="name" show="editing()" />
+          </Stack>
           <Stack direction="row" class="hit">
             <Value hideLabel format="signed" formula="strikeHit(weapon.weapon.category, attribute, itemBonus)">
               <Part label="{attrName(attribute)}" formula="get(/attributes, attribute)" />
@@ -173,39 +191,39 @@
                 <Roll label="Critical damage" formula="2 * (dice(concat(weapon.weapon.damageDice, weapon.weapon.damageDie)) + damageMod(weapon.weapon.range, weapon.traits))" />
               </FollowUp>
             </Value>
-            <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, attribute, itemBonus) - mapStep(weapon.traits)">
+            <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, attribute, itemBonus) - mapStep(weapon.traits)" show="not editing()">
               <Roll label="Attack (MAP)" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
             </Value>
-            <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, attribute, itemBonus) - 2 * mapStep(weapon.traits)">
+            <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, attribute, itemBonus) - 2 * mapStep(weapon.traits)" show="not editing()">
               <Roll label="Attack (MAP)" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
             </Value>
+            <Select field="attribute" hideLabel class="small-sel" show="editing()" />
+            <Number field="itemBonus" hideLabel format="signed" class="small-num" show="editing()" />
           </Stack>
           <Stack direction="row" class="dmg">
             <Value hideLabel formula="concat(weapon.weapon.damageDice, weapon.weapon.damageDie, if(damageMod(weapon.weapon.range, weapon.traits) != 0, signed(damageMod(weapon.weapon.range, weapon.traits)), ''), ' ', damageType(weapon.weapon.damageType))" />
             <Value hideLabel class="dim" formula="concat('+', sneakDice(), 'd6 sneak')" show="/class.name == 'Rogue'" />
           </Stack>
-          <Tags field="weapon.traits" hideLabel class="chips" />
-        </Stack>
-        <Stack direction="row" wrap class="row edit" show="editing()">
-          <Ref field="weapon" label="Weapon" />
-          <Select field="attribute" label="Attribute" />
-          <Number field="itemBonus" label="Item bonus" format="signed" />
-          <Text field="notes" label="Notes" />
+          <Stack direction="row" wrap class="traits">
+            <Tags field="weapon.traits" hideLabel class="chips" show="not editing()" />
+            <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
+            <Text field="notes" hideLabel placeholder="Notes" class="note-in" show="editing()" />
+          </Stack>
         </Stack>
       </List>
     </Section>
     <Section title="Actions &amp; Reactions" icon="i-game-icons-hand" class="folio acts">
       <List field="actions" addLabel="Add action" class="rows">
-        <Stack direction="row" class="row" show="not editing()">
+        <Stack direction="row" class="row">
           <Value hideLabel class="act" formula="glyph(coalesce(action.actions, feat.actions))" />
-          <Value field="action.name" hideLabel preview="card" class="name" show="action.name != null" />
-          <Value field="feat.name" hideLabel preview="card" class="name" show="action.name == null" />
-          <Value field="notes" hideLabel class="dim" />
-        </Stack>
-        <Stack direction="row" wrap class="row edit" show="editing()">
-          <Ref field="action" label="Action" />
-          <Ref field="feat" label="Or a feat" />
-          <Text field="notes" label="Notes" />
+          <Stack class="cell">
+            <Value field="action.name" hideLabel preview="card" class="name" show="not editing() and action.name != null" />
+            <Value field="feat.name" hideLabel preview="card" class="name" show="not editing() and action.name == null" />
+            <Ref field="action" label="Action" hideLabel class="name" show="editing() and (action.name != null or feat.name == null)" />
+            <Ref field="feat" label="Feat" class="name or-feat" show="editing() and action.name == null" />
+          </Stack>
+          <Value field="notes" hideLabel class="dim" show="not editing()" />
+          <Text field="notes" hideLabel placeholder="Notes" class="note-in" show="editing()" />
         </Stack>
       </List>
     </Section>
@@ -317,7 +335,7 @@
             <Value field="feature.name" hideLabel preview="card" class="name" />
           </Stack>
         </List>
-        <Stack class="rows kv" show="/class.name == 'Rogue' or editing()">
+        <Stack class="rows kv" show="/class.name == 'Rogue'">
           <Note class="grp">Racket</Note>
           <Stack direction="row" class="row"><Note class="label">Racket</Note><Ref field="subclass" hideLabel preview="card" /></Stack>
         </Stack>
@@ -336,22 +354,55 @@
       </Tab>
 
       <Tab label="Feats" icon="i-game-icons-stars-stack">
-        <Stack direction="row" class="row th feat" show="not editing()">
+        <Stack direction="row" class="row th feat">
           <Note>Level</Note><Note></Note><Note>Feat</Note><Note>Type</Note>
         </Stack>
         <List field="feats" addLabel="Add feat" class="rows feats">
-          <Stack direction="row" class="row feat" show="not editing()">
-            <Value field="level" hideLabel class="dim" />
-            <Value hideLabel class="act" formula="glyph(feat.actions)" />
-            <Value field="feat.name" hideLabel preview="card" class="name" />
-            <Value field="category" hideLabel class="chip" />
-          </Stack>
-          <Stack direction="row" wrap class="row edit" show="editing()">
-            <Number field="level" label="Level" min="1" max="20" />
-            <Ref field="feat" label="Feat" />
-            <Select field="category" label="Type" />
+          <Stack direction="row" class="row feat">
+            <Value field="level" hideLabel class="dim" show="not editing()" />
+            <Number field="level" hideLabel min="1" max="20" class="small-num" show="editing()" />
+            <Stack class="cell"><Value hideLabel class="act" formula="glyph(feat.actions)" show="glyph(feat.actions) != ''" /></Stack>
+            <Value field="feat.name" hideLabel preview="card" class="name" show="not editing()" />
+            <Ref field="feat" hideLabel class="name" show="editing()" />
+            <Value field="category" hideLabel class="chip" show="not editing()" />
+            <Select field="category" hideLabel class="small-sel" show="editing()" />
           </Stack>
         </List>
+        <Stack class="rows" show="editing()">
+          <Note class="grp">Open feat slots, to level {level + 2}</Note>
+          <List field="class.ancestryFeatLevels" class="rows slots-open">
+            <Stack direction="row" class="row feat open" show=". &lt;= /level + 2 and not hasFeat('ancestry', .)">
+              <Value field="." hideLabel class="dim" />
+              <Note></Note>
+              <Note class="dim">Choose ancestry feat</Note>
+              <Note class="chip-note">Ancestry</Note>
+            </Stack>
+          </List>
+          <List field="class.classFeatLevels" class="rows slots-open">
+            <Stack direction="row" class="row feat open" show=". &lt;= /level + 2 and not hasFeat('class', .)">
+              <Value field="." hideLabel class="dim" />
+              <Note></Note>
+              <Note class="dim">Choose class feat</Note>
+              <Note class="chip-note">Class</Note>
+            </Stack>
+          </List>
+          <List field="class.skillFeatLevels" class="rows slots-open">
+            <Stack direction="row" class="row feat open" show=". &lt;= /level + 2 and not hasFeat('skill', .)">
+              <Value field="." hideLabel class="dim" />
+              <Note></Note>
+              <Note class="dim">Choose skill feat</Note>
+              <Note class="chip-note">Skill</Note>
+            </Stack>
+          </List>
+          <List field="class.generalFeatLevels" class="rows slots-open">
+            <Stack direction="row" class="row feat open" show=". &lt;= /level + 2 and not hasFeat('general', .)">
+              <Value field="." hideLabel class="dim" />
+              <Note></Note>
+              <Note class="dim">Choose general feat</Note>
+              <Note class="chip-note">General</Note>
+            </Stack>
+          </List>
+        </Stack>
       </Tab>
 
       <Tab label="Spells" icon="i-game-icons-spell-book" show="length(coalesce(spellcasting.tradition, '')) > 0 or editing()">
@@ -396,42 +447,37 @@
           </List>
         </Stack>
 
-        <Stack direction="row" class="row th spell" show="not editing()">
+        <Stack direction="row" class="row th spell">
           <Note></Note><Note></Note><Note>Spell</Note><Note>Range</Note><Note>Defense</Note><Note>Effect</Note>
         </Stack>
-        <Stack class="rows" show="divineFont.max > 0">
+        <Stack class="rows" show="divineFont.max > 0 or editing()">
           <Stack direction="row" class="grp">
             <Note>Divine Font</Note>
             <Tracker field="divineFont.used" hideLabel max="{divineFont.max}" style="pips" live class="sq" />
-            <Value hideLabel formula="concat(divineFont.max - divineFont.used, ' of ', divineFont.max, ' left')" />
+            <Value hideLabel formula="concat(divineFont.max - divineFont.used, ' of ', divineFont.max, ' left')" show="not editing()" />
+            <Number field="divineFont.max" label="Uses" min="0" class="small-num inline" show="editing()" />
           </Stack>
-          <Stack direction="row" class="row spell" show="not editing()">
+          <Stack direction="row" class="row spell">
             <Note></Note>
             <Value hideLabel class="act" formula="glyph(divineFont.spell.cast)" />
-            <Value field="divineFont.spell.name" hideLabel preview="card" class="name" />
+            <Value field="divineFont.spell.name" hideLabel preview="card" class="name" show="not editing()" />
+            <Ref field="divineFont.spell" hideLabel class="name" show="editing()" />
             <Value field="divineFont.spell.range" hideLabel />
             <Value field="divineFont.spell.defense" hideLabel />
             <Value field="divineFont.spell.damage" hideLabel class="dim" />
           </Stack>
-          <Stack direction="row" wrap class="row edit" show="editing()">
-            <Ref field="divineFont.spell" label="Font spell" />
-            <Number field="divineFont.max" label="Uses" min="0" />
-          </Stack>
         </Stack>
 
-        <Note class="grp" show="not editing()">Spells</Note>
+        <Note class="grp">Spells</Note>
         <List field="spells" addLabel="Add spell" class="rows spells">
-          <Stack direction="row" class="row spell" show="not editing() and spell.kind != 'cantrip'">
+          <Stack direction="row" class="row spell" show="editing() or spell.kind != 'cantrip'">
             <Checkbox field="cast" hideLabel style="dot" live />
             <Value hideLabel class="act" formula="glyph(spell.cast)" />
-            <Value field="spell.name" hideLabel preview="card" class="name" />
+            <Value field="spell.name" hideLabel preview="card" class="name" show="not editing()" />
+            <Ref field="spell" hideLabel class="name" show="editing()" />
             <Value field="spell.range" hideLabel />
             <Value field="spell.defense" hideLabel />
             <Value field="spell.damage" hideLabel class="dim" />
-          </Stack>
-          <Stack direction="row" wrap class="row edit" show="editing()">
-            <Ref field="spell" label="Spell" />
-            <Number field="rank" label="Prepared at rank" min="0" max="10" />
           </Stack>
         </List>
         <Stack class="rows" show="not editing() and any(spells, spell.kind == 'cantrip')">
@@ -476,7 +522,7 @@
         <Stack direction="row" wrap class="strip">
           <Stack direction="row" wrap class="bulk">
             <Value label="Bulk" formula="round(bulk(), 1)" />
-            <Tracker formula="round(bulk(), 1)" max="{10 + attributes.str}" hideLabel class="bmeter" />
+            <Tracker formula="round(bulk(), 1)" max="{10 + attributes.str}" mark="{5 + attributes.str}" hideLabel class="bmeter" />
             <Value hideLabel class="dim" formula="concat('encumbered over ', 5 + attributes.str, ' · limit ', 10 + attributes.str)" show="bulk() <= 5 + attributes.str" />
             <Badge color="error" show="bulk() > 5 + attributes.str">Encumbered</Badge>
           </Stack>
@@ -486,8 +532,8 @@
           <Number field="coins.sp" label="sp" min="0" live class="coin" />
           <Number field="coins.cp" label="cp" min="0" live class="coin" />
         </Stack>
-        <Stack direction="row" class="row th inv" show="not editing()">
-          <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>Move</Note><Note>Inv</Note>
+        <Stack direction="row" class="row th inv">
+          <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>{if(editing(), 'State', 'Move')}</Note><Note>Inv</Note>
         </Stack>
         <Stack class="rows" show="not editing() and any(inventory, state == 'held')">
           <Note class="grp">Held</Note>
@@ -495,7 +541,7 @@
             <Stack direction="row" class="row inv" show="state == 'held'">
               <Value field="quantity" hideLabel />
               <Value field="item.name" hideLabel preview="card" class="name" />
-              <Value hideLabel class="dim" formula="if(item.bulk == 0.1, 'L', if(coalesce(item.bulk, 0) == 0, '—', item.bulk))" />
+              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
                 <Button label="◆ Wear" live><Set field="state" formula="'worn'" /></Button>
                 <Button label="◆ Stow" live><Set field="state" formula="'stowed'" /></Button>
@@ -510,7 +556,7 @@
             <Stack direction="row" class="row inv" show="state == 'worn'">
               <Value field="quantity" hideLabel />
               <Value field="item.name" hideLabel preview="card" class="name" />
-              <Value hideLabel class="dim" formula="if(item.bulk == 0.1, 'L', if(coalesce(item.bulk, 0) == 0, '—', item.bulk))" />
+              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
                 <Button label="◆ Draw" live><Set field="state" formula="'held'" /></Button>
                 <Button label="◆ Stow" live><Set field="state" formula="'stowed'" /></Button>
@@ -525,7 +571,7 @@
             <Stack direction="row" class="row inv" show="state == 'stowed'">
               <Value field="quantity" hideLabel />
               <Value field="item.name" hideLabel preview="card" class="name" />
-              <Value hideLabel class="dim" formula="if(item.bulk == 0.1, 'L', if(coalesce(item.bulk, 0) == 0, '—', item.bulk))" />
+              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
                 <Button label="◆ Retrieve" live><Set field="state" formula="'held'" /></Button>
               </Stack>
@@ -534,11 +580,12 @@
           </List>
         </Stack>
         <List field="inventory" addLabel="Add item" class="rows" show="editing()">
-          <Stack direction="row" wrap class="row edit">
-            <Number field="quantity" label="Qty" min="0" />
-            <Ref field="item" label="Item" />
-            <Select field="state" label="State" />
-            <Checkbox field="invested" label="Invested" />
+          <Stack direction="row" class="row inv">
+            <Number field="quantity" hideLabel min="0" class="small-num" />
+            <Ref field="item" hideLabel class="name" />
+            <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
+            <Select field="state" hideLabel class="small-sel" />
+            <Checkbox field="invested" hideLabel />
           </Stack>
         </List>
       </Tab>

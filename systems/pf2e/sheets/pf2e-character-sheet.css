@@ -235,14 +235,13 @@
 .strikes .row { grid-template-columns: 30px 1.1fr 130px 1fr 1.6fr; }
 .hit { align-items: baseline; gap: 6px; }
 .map .sheet-field-value { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
-.dmg { align-items: baseline; gap: 6px; white-space: nowrap; }
+.dmg { align-items: baseline; gap: 0 6px; flex-wrap: wrap; }
 .acts .row { grid-template-columns: 30px 1fr auto; }
 
 /* Skills and proficiencies on the left, the tabs on the right. */
 .mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: start; }
 .leftcol { gap: calc(var(--d-gap) + 10px); }
 .skills .row { grid-template-columns: 1fr 30px auto auto; }
-.rank-sel .sheet-field-value { width: 104px; }
 .rank-sel button { font-size: var(--d-lfs); }
 .skills .row:has(.rank:not(.on)) .name .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
 .lead h4 { font-family: var(--st-font-display); font-size: var(--d-h2); margin: 0; }
@@ -267,13 +266,15 @@
 .features .row:has(.future) .name .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
 .kv .row { grid-template-columns: 130px 1fr; }
 .kv > .sheet-text, .kv > .sheet-markdown { padding: 3px 0; border-bottom: 1px solid var(--st-border); }
-.feat { grid-template-columns: 40px 40px 1fr 90px; }
+.feat { grid-template-columns: 52px 40px 1fr 110px; }
+.feat .small-sel .sheet-field-value { width: 104px; }
 .spell { grid-template-columns: 22px 64px minmax(120px, 1fr) 110px 90px 1.4fr; }
 .slot { display: flex !important; gap: 12px; }
 .inv { grid-template-columns: 36px 1fr 44px 170px 30px; }
 .moves { gap: 4px; }
 .bulk { flex-basis: 100%; align-items: center; gap: 4px 8px; }
 .bmeter { width: 90px; }
+.chip-note { font-size: var(--d-lfs); border: 1px dashed var(--st-border-strong); border-radius: 4px; padding: 0 4px; color: var(--st-ink-muted); justify-self: start; }
 .trad { gap: 4px; }
 .bio { display: grid !important; grid-template-columns: 140px 1fr; gap: calc(var(--d-gap) * 2); align-items: start; }
 .biocols { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important; }
@@ -317,6 +318,27 @@
 .maintabs [data-slot="leadingIcon"] { color: var(--st-primary); width: .95em; height: .95em; }
 .maintabs .sheet-tab { padding-top: calc(var(--d-pad) * 1.5); }
 
+/* Edit mode keeps the play layout: inputs sit in the row cells. */
+.sheet-field-value + p { display: none; }
+.rows .sheet-list-item { align-items: center; }
+.rows .sheet-list-item > div:last-child:not(:first-child) { flex-direction: row; gap: 0; }
+.rows .sheet-list-item > div:last-child:not(:first-child) button { padding: 2px; }
+.cell { min-width: 0; }
+.row .sheet-ref .sheet-field-value, .note-in .sheet-field-value, .note-in { width: 100%; }
+.or-feat { margin-top: 2px; }
+.kv .sheet-ref .sheet-field-value { width: auto; min-width: 200px; }
+.small-num .sheet-field-value { width: 52px; }
+.small-sel .sheet-field-value { width: 76px; }
+.rank-sel .sheet-field-value { width: 48px; }
+.strikes .row { grid-template-columns: 30px minmax(130px, 1.1fr) minmax(130px, auto) minmax(110px, 1fr) 1.4fr; }
+.traits { gap: 2px 4px; align-items: center; }
+.inline { display: flex; align-items: center; gap: 4px; }
+.inline .sheet-field-label { color: inherit; }
+.resist { gap: 4px 8px; align-items: center; }
+.inline-list > div { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.pair-in { gap: 4px; align-items: center; }
+.pair-in .sheet-text .sheet-field-value { width: 90px; }
+
 /* Phones */
 @media (max-width: 900px) {
   .head > div:last-child { grid-template-columns: 1fr; }
@@ -341,5 +363,10 @@
   .inv { grid-template-columns: 24px 1fr 30px 150px; }
   .inv > :nth-child(5) { display: none; }
   .bio { grid-template-columns: 1fr; }
+  /* Editing (pickers only render then): the picker gets its own line. */
+  .strikes .row:has(.sheet-ref) > :nth-child(n + 2), .acts .row:has(.sheet-ref) > :nth-child(n + 2) { grid-column: 2 / -1; }
+  .acts .row:has(.sheet-ref) { grid-template-columns: 22px 1fr; }
+  .feat:has(.sheet-ref) { grid-template-columns: 52px 1fr 110px; }
+  .feat:has(.sheet-ref) > .cell { display: none; }
   .sheet-tab { min-height: 0; }
 }
