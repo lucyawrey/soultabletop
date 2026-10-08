@@ -108,15 +108,16 @@
 .head > div:last-child {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: var(--d-gap) 20px;
+  gap: calc(var(--d-gap) + 4px) 20px;
   align-items: start;
   padding: var(--d-pad);
 }
-.head > div:last-child > div > * + * { margin-top: 0; }
+/* The section's stack spacing would push the grid items apart and lift the level box. */
+.head > div:last-child > div > * { margin: 0 !important; }
 .head > div:last-child > div { display: contents; }
 .charname input { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); height: auto; }
 .charname .sheet-field-value { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); line-height: 1; }
-.refs { gap: 6px 8px; margin-top: 8px; }
+.refs { gap: 6px 8px; margin-top: 0; }
 .refgroup { gap: 6px 8px; flex-wrap: nowrap; }
 .card {
   border: 1px solid var(--st-border-strong);
@@ -126,6 +127,7 @@
 }
 .card .sheet-field-value { font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
 .meta {
+  /* Centered against the whole header, name to facts. */
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
