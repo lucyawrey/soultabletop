@@ -742,13 +742,13 @@ const functionList: FormulaFunction[] = [
     minArgs: 1,
     maxArgs: 1,
     signature: "signed(n)",
-    description: "A number as text with its sign: +3, 0, -1",
+    description: "A number as text with its sign: +3, +0, -1",
     result: () => formulaTypes.string,
     check: (types, problems) => expect(types, problems, "signed", ["number"], "a number"),
     eager: ([value]) => {
       if (value === null) return null;
       if (typeof value !== "number") return typeError("signed", "a number", value!);
-      return value > 0 ? `+${formatFormulaNumber(value)}` : formatFormulaNumber(value);
+      return value >= 0 ? `+${formatFormulaNumber(value)}` : formatFormulaNumber(value);
     },
   },
 

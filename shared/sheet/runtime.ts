@@ -91,7 +91,7 @@ export function formatSheetValue(
 ): string {
   if (value === undefined || value === null) return "";
   if (typeof value === "number") {
-    return format === "signed" && value > 0 ? `+${value}` : String(value);
+    return format === "signed" && value >= 0 ? `+${value}` : String(value);
   }
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "string") return findRef(refs, value)?.name ?? value;
@@ -648,7 +648,7 @@ export function formatFormulaValue(
   if (isFormulaError(value)) return "";
   if (typeof value === "number") {
     const text = formatFormulaNumber(value);
-    return format === "signed" && value > 0 ? `+${text}` : text;
+    return format === "signed" && value >= 0 ? `+${text}` : text;
   }
   return formatSheetValue(value, refs, format);
 }
