@@ -155,6 +155,21 @@
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
 .facts .sheet-value .sheet-field-value { font-weight: 400; }
 .speeds > div:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
+.speedchips { display: flex; align-items: baseline; gap: 6px; }
+.speedchips > div:last-child { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.speedchips .sheet-list-item { margin: 0 !important; }
+.speedchip .sheet-field-value {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 5px;
+  font-size: var(--d-lfs);
+  font-weight: 500;
+  line-height: 1;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+  background: var(--ui-bg-elevated);
+}
 
 /* Attributes and defenses */
 .top { display: grid !important; grid-template-columns: auto 1fr; gap: var(--d-gap); align-items: stretch; }
@@ -188,12 +203,12 @@
 /* The shield line sits at the bottom of the attributes block, not below it. */
 .defwrap { min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
 .defwrap > .strip { margin-top: 0; }
-.ghost { visibility: hidden; }
 .defs { display: grid !important; grid-template-columns: .9fr 2fr 1.2fr; gap: var(--d-gap); }
 .ac { border: 2px solid var(--st-primary); }
 .ac .sheet-value > div:first-child { justify-content: center; }
 .ac > .sheet-value:first-child .sheet-field-value { font-size: var(--d-hero); line-height: 1.05; }
 .ac .sub .sheet-field-value { font-size: var(--d-lfs); font-weight: 400; color: var(--st-ink-muted); }
+.subline { justify-content: center; align-items: baseline; gap: 4px; flex-wrap: wrap; }
 .ac .up .sheet-field-value { font-size: var(--d-lfs); color: var(--st-primary); }
 .hp { text-align: left; gap: 3px; }
 .hpline { align-items: center; gap: 6px 14px; }
@@ -229,12 +244,13 @@
 .strip .sheet-field-label { white-space: nowrap; }
 /* IWR and Conditions move to the next line together, and share it: each wraps inside itself first. */
 .iwrcond { flex: 0 1 auto; min-width: 0; align-items: center; gap: 4px 12px; }
-.iwrcond > .resist, .iwrcond > .sheet-tags { flex: 0 1 auto; }
+.iwrcond > .resist { flex: 0 1 auto; min-width: 0; }
+.iwrcond > .resist > .rgroup, .rgroup > .inline-list { min-width: 0; }
 .iwrcond > .resist { flex-wrap: nowrap; align-items: baseline; }
 .iwrcond > .resist > .label { flex: none; }
 .iwrcond > .resist:has(> .rgroup) { flex-wrap: wrap; }
-/* Conditions give way to IWR only down to room for a few chips. */
-.iwrcond > .sheet-tags { min-width: 16em; }
+/* Conditions keep their width (up to a long list); IWR's entries wrap first. */
+.iwrcond > .sheet-tags { flex: 0 0 auto; max-width: 28em; }
 /* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
 .sheet-sheet .strip .sheet-tags [data-slot="root"], .sheet-sheet .facts .sheet-tags [data-slot="root"] {
   border: 0;
@@ -253,6 +269,15 @@
   border: 1px dashed var(--st-border-strong);
   border-radius: 4px;
   background: var(--st-panel-muted);
+}
+/* Chips match the "+ Add" input beside them, and read-only tags (Traits) match the chips. */
+.strip .sheet-tags [data-slot="item"], .facts .sheet-tags [data-slot="item"],
+.strip .sheet-tags .sheet-field-value > .flex-wrap > span, .facts .sheet-tags .sheet-field-value > .flex-wrap > span {
+  height: 20px;
+  padding: 0 5px;
+  font-size: var(--d-lfs);
+  line-height: 1;
+  border-radius: 4px;
 }
 .strip .sheet-tags input:focus, .facts .sheet-tags input:focus { width: 110px; background: transparent; }
 .strip .sheet-tags input::placeholder, .facts .sheet-tags input::placeholder { color: var(--st-primary); font-weight: 700; opacity: 1; }
@@ -492,6 +517,8 @@
 .inline-list .sheet-list-item { gap: 0; }
 .inline-list .small-num .sheet-field-value { width: 30px; }
 .inline-list input[data-slot="base"] { height: 20px; font-size: var(--d-lfs); padding: 0 4px; }
+/* Its "+ Add" is as tall as the entries it adds. */
+.inline-list > .flex-wrap > button[data-slot="base"] { height: 20px; padding: 0 5px; line-height: 1; }
 .inline-list > .flex-wrap { margin-top: 0; }
 .inline-list { display: flex; align-items: center; gap: 4px; }
 .inline-list > * + * { margin-top: 0 !important; }
