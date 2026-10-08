@@ -219,7 +219,7 @@
         <Stack direction="row" class="row strike">
           <Note class="act">◆</Note>
           <Stack class="cell">
-            <Value field="weapon.name" hideLabel preview="card" class="name" show="not editing()" />
+            <Value field="weapon.name" hideLabel preview class="name" show="not editing()" />
             <Ref field="weapon" hideLabel class="name" show="editing()" />
           </Stack>
           <Stack direction="row" class="hit">
@@ -261,8 +261,8 @@
         <Stack direction="row" class="row">
           <Value hideLabel class="act" formula="glyph(coalesce(action.actions, feat.actions))" />
           <Stack class="cell">
-            <Value field="action.name" hideLabel preview="card" class="name" show="not editing() and action.name != null" />
-            <Value field="feat.name" hideLabel preview="card" class="name" show="not editing() and action.name == null" />
+            <Value field="action.name" hideLabel preview class="name" show="not editing() and action.name != null" />
+            <Value field="feat.name" hideLabel preview class="name" show="not editing() and action.name == null" />
             <Ref field="action" label="Action" hideLabel class="name" show="editing() and (action.name != null or feat.name == null)" />
             <Ref field="feat" label="Feat" class="name or-feat" show="editing() and action.name == null" />
           </Stack>
@@ -389,7 +389,7 @@
           <Stack direction="row" class="row">
             <Value field="level" hideLabel class="dim" show="level <= /level" />
             <Value field="level" hideLabel class="dim future" show="level > /level" />
-            <Value field="feature.name" hideLabel preview="card" class="name" />
+            <Value field="feature.name" hideLabel preview class="name" />
           </Stack>
         </List>
         <Stack class="rows kv" show="/class.name == 'Rogue'">
@@ -419,7 +419,7 @@
             <Value field="level" hideLabel class="dim" show="not editing()" />
             <Number field="level" hideLabel min="1" max="20" class="small-num" show="editing()" />
             <Stack class="cell"><Value hideLabel class="act" formula="glyph(feat.actions)" show="glyph(feat.actions) != ''" /></Stack>
-            <Value field="feat.name" hideLabel preview="card" class="name" show="not editing()" />
+            <Value field="feat.name" hideLabel preview class="name" show="not editing()" />
             <Ref field="feat" hideLabel class="name" show="editing()" />
             <Value field="category" hideLabel class="chip" show="not editing()" />
             <Select field="category" hideLabel class="small-sel" show="editing()" />
@@ -520,7 +520,7 @@
           <Stack direction="row" class="row spell">
             <Note></Note>
             <Value hideLabel class="act" formula="glyph(divineFont.spell.cast)" />
-            <Value field="divineFont.spell.name" hideLabel preview="card" class="name" show="not editing()" />
+            <Value field="divineFont.spell.name" hideLabel preview class="name" show="not editing()" />
             <Ref field="divineFont.spell" hideLabel class="name" show="editing()" />
             <Value field="divineFont.spell.range" hideLabel />
             <Value field="divineFont.spell.defense" hideLabel />
@@ -533,7 +533,7 @@
           <Stack direction="row" class="row spell" show="spell.kind != 'cantrip'">
             <Checkbox field="cast" hideLabel style="dot" live />
             <Value hideLabel class="act" formula="glyph(spell.cast)" />
-            <Value field="spell.name" hideLabel preview="card" class="name" show="not editing()" />
+            <Value field="spell.name" hideLabel preview class="name" show="not editing()" />
             <Ref field="spell" hideLabel class="name" show="editing()" />
             <Value field="spell.range" hideLabel show="not editing()" />
             <Stack direction="row" class="inline" show="editing()"><Note class="dim">Rank</Note><Number field="rank" hideLabel min="1" max="10" class="small-num" /></Stack>
@@ -550,7 +550,7 @@
             <Stack direction="row" class="row spell" show="spell.kind == 'cantrip'">
               <Note></Note>
               <Value hideLabel class="act" formula="glyph(spell.cast)" />
-              <Value field="spell.name" hideLabel preview="card" class="name" show="not editing()" />
+              <Value field="spell.name" hideLabel preview class="name" show="not editing()" />
               <Ref field="spell" hideLabel class="name" show="editing()" />
               <Value field="spell.range" hideLabel />
               <Value field="spell.defense" hideLabel />
@@ -570,7 +570,7 @@
             <Stack direction="row" class="row spell" show="not editing()">
               <Note></Note>
               <Value hideLabel class="act" formula="glyph(cast)" />
-              <Value field="name" hideLabel preview="card" class="name" />
+              <Value field="name" hideLabel preview class="name" />
               <Value field="range" hideLabel />
               <Value field="defense" hideLabel />
               <Value field="damage" hideLabel class="dim" />
@@ -605,7 +605,7 @@
             <Stack direction="row" class="row inv" show="state == 'held'">
               <Value field="quantity" hideLabel show="not editing()" />
               <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
-              <Value field="item.name" hideLabel preview="card" class="name" show="not editing()" />
+              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
               <Ref field="item" hideLabel class="name" show="editing()" />
               <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
@@ -623,7 +623,7 @@
             <Stack direction="row" class="row inv" show="state == 'worn'">
               <Value field="quantity" hideLabel show="not editing()" />
               <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
-              <Value field="item.name" hideLabel preview="card" class="name" show="not editing()" />
+              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
               <Ref field="item" hideLabel class="name" show="editing()" />
               <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
@@ -641,7 +641,7 @@
             <Stack direction="row" class="row inv" show="state == 'stowed'">
               <Value field="quantity" hideLabel show="not editing()" />
               <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
-              <Value field="item.name" hideLabel preview="card" class="name" show="not editing()" />
+              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
               <Ref field="item" hideLabel class="name" show="editing()" />
               <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
