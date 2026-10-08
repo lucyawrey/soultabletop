@@ -323,6 +323,7 @@ const imageError = computed(() =>
     v-else-if="display === 'tags'"
     v-model="tags"
     :disabled="disabled"
+    :placeholder="placeholder"
     :aria-label="label"
     class="w-full"
   />
