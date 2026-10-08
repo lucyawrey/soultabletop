@@ -266,7 +266,7 @@
             <Ref field="action" label="Action" hideLabel class="name" show="editing() and (action.name != null or feat.name == null)" />
             <Ref field="feat" label="Feat" class="name or-feat" show="editing() and action.name == null" />
           </Stack>
-          <Value field="notes" hideLabel class="dim" show="not editing()" />
+          <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
           <Text field="notes" hideLabel placeholder="Notes" class="note-in" show="editing()" />
         </Stack>
       </List>
