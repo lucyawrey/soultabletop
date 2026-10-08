@@ -172,7 +172,7 @@
 }
 
 /* Attributes and defenses */
-.top { display: grid !important; grid-template-columns: auto 1fr; gap: var(--d-gap); align-items: stretch; }
+.top { display: grid !important; grid-template-columns: auto auto 1fr; gap: 0 var(--d-gap); align-items: start; }
 .attrs { align-self: start; display: grid !important; grid-template-columns: repeat(3, 76px) !important; grid-auto-rows: 1fr; gap: 6px !important; }
 .box {
   position: relative;
@@ -200,9 +200,16 @@
   background: var(--st-primary);
   color: var(--st-on-primary);
 }
-/* The shield line sits at the bottom of the attributes block, not below it. */
-.defwrap { min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
-.defwrap > .strip { margin-top: 0; }
+/* One grid under the attributes and defenses: the attributes run down to the bottom of the shield
+   button's row, which keeps one height; Conditions and IWR start in that row, and their extra lines
+   take a row of their own, so neither the attributes nor the shield info move. */
+.top { grid-template-rows: auto calc(var(--d-h) + 4px) 1fr; }
+.defwrap, .defwrap > .strip { display: contents !important; }
+.top > .attrs { grid-column: 1; grid-row: 1 / 3; align-self: stretch; }
+.defs { grid-column: 2 / 4; grid-row: 1; align-self: stretch; margin-bottom: var(--d-gap); }
+.shieldrow { grid-column: 2; grid-row: 2; align-self: center; flex-wrap: nowrap !important; }
+.iwrcond { grid-column: 3; grid-row: 2 / 4; margin-left: 6px; }
+.top:not(:has(.shieldrow)) .iwrcond { grid-column: 2 / 4; margin-left: 0; }
 .defs { display: grid !important; grid-template-columns: .9fr 2fr 1.2fr; gap: var(--d-gap); }
 .ac { border: 2px solid var(--st-primary); }
 .ac .sheet-value > div:first-child { justify-content: center; }
@@ -222,7 +229,7 @@
 .saves { text-align: left; justify-content: start; gap: 2px; }
 .srow { display: grid !important; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; }
 .srow > .sheet-value:nth-child(2) .sheet-field-value { font-size: calc(var(--d-big) * .8); }
-.strip { gap: 4px 12px; align-items: center; margin-top: var(--d-gap); font-size: var(--d-lfs); }
+.strip { font-size: var(--d-lfs); }
 .strip > *, .shieldrow { align-items: center; gap: 4px 8px; }
 .sheet-button.raise {
   /* One width for both labels, so pressing it doesn't move the line. */
@@ -242,15 +249,13 @@
 /* The strip under the defenses: labels beside their values, on one line. */
 .strip .sheet-number, .strip .sheet-tags, .strip .sheet-value, .resist { display: flex; align-items: center; gap: 4px 6px; }
 .strip .sheet-field-label { white-space: nowrap; }
-/* IWR and Conditions move to the next line together, and share it: each wraps inside itself first. */
-.iwrcond { flex: 0 1 auto; min-width: 0; align-items: center; gap: 4px 12px; }
-.iwrcond > .resist { flex: 0 1 auto; min-width: 0; }
-.iwrcond > .resist > .rgroup, .rgroup > .inline-list { min-width: 0; }
-.iwrcond > .resist { flex-wrap: nowrap; align-items: baseline; }
-.iwrcond > .resist > .label { flex: none; }
-.iwrcond > .resist:has(> .rgroup) { flex-wrap: wrap; }
-/* Conditions keep their width (up to a long list); IWR's entries wrap first. */
-.iwrcond > .sheet-tags { flex: 0 0 auto; max-width: 28em; }
+/* Conditions and IWR flow like text: IWR continues after the conditions, and its next lines start under them. */
+.iwrcond { display: block !important; min-width: 0; line-height: 20px; padding-top: 4px; }
+.iwrcond > .sheet-tags { display: inline-flex !important; vertical-align: top; max-width: 100%; margin-right: 14px; }
+.iwrcond > .resist { display: inline !important; }
+.iwrcond > .resist > *, .iwrcond > .resist > .sheet-value > .sheet-field-value { display: inline; margin-right: 6px; }
+.iwrcond > .resist > .rgroup { display: inline-flex !important; flex-wrap: wrap; vertical-align: top; max-width: 100%; margin-right: 10px; }
+.rgroup > .inline-list { min-width: 0; }
 /* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
 .sheet-sheet .strip .sheet-tags [data-slot="root"], .sheet-sheet .facts .sheet-tags [data-slot="root"] {
   border: 0;
@@ -551,7 +556,9 @@
   .meta .sheet-tracker .sheet-field-value button { width: 14px; height: 14px; }
   .meta .sheet-tracker .sheet-field-value > div > div:first-child { flex-wrap: nowrap; gap: 2px; }
   .maintabs [data-slot="trigger"] { padding: 4px 8px; }
-  .top { grid-template-columns: 1fr; }
+  .top { grid-template-columns: 1fr; grid-template-rows: none; }
+  .top > .attrs, .defs, .shieldrow, .iwrcond { grid-column: 1 !important; grid-row: auto !important; margin-left: 0; }
+  .shieldrow { flex-wrap: wrap !important; margin-bottom: var(--d-gap); }
   .attrs { grid-template-columns: repeat(6, 1fr) !important; }
   .defs { grid-template-columns: 1fr 1.3fr; grid-template-areas: "hp hp" "ac saves"; }
   .ac { grid-area: ac; }
