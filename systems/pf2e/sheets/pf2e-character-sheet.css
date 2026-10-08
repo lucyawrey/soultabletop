@@ -250,18 +250,20 @@
 /* The strip under the defenses: labels beside their values, on one line. */
 .strip .sheet-number, .strip .sheet-tags, .strip .sheet-value, .resist { display: flex; align-items: center; gap: 4px 6px; }
 .strip .sheet-field-label { white-space: nowrap; }
-/* Conditions and IWR flow like text: IWR continues after the conditions, and its next lines start under them. */
-.iwrcond { display: block !important; min-width: 0; line-height: 20px; padding-top: 4px; }
-.iwrcond > .sheet-tags { display: inline-flex !important; vertical-align: top; max-width: 100%; margin-right: 14px; }
-/* Labels stay on the first line when their chips take more. */
-.iwrcond .sheet-tags, .iwrview { align-items: flex-start !important; }
-.iwrcond .sheet-tags > div:first-child { min-height: 20px; }
-.iwrcond > .resist { display: inline !important; }
-.iwrcond > .resist > *, .iwrcond > .resist > .sheet-value > .sheet-field-value { display: inline; margin-right: 6px; }
-.iwrcond > .resist > .rgroup { display: inline-flex !important; flex-wrap: wrap; vertical-align: top; max-width: 100%; margin-right: 10px; }
+/* Conditions and IWR are one flow of labels and chips: the wrappers step aside (display: contents), so
+   IWR follows the last condition, and every next line starts at the left edge. Edit's entry groups
+   stay whole. */
+.iwrcond { display: flex !important; flex-wrap: wrap; align-items: baseline; align-content: flex-start; gap: 4px; min-width: 0; line-height: 20px; padding-top: 4px; }
+.iwrcond > .sheet-tags, .iwrcond > .sheet-tags > div, .iwrcond > .sheet-tags [data-slot="root"],
+.iwrcond > .resist, .iwrview, .iwrview > .chiplist, .iwrview > .chiplist > div, .iwrview .sheet-list-item,
+.iwrview > .sheet-tags, .iwrview > .sheet-tags > .sheet-field-value, .iwrview > .sheet-tags .sheet-field-value > .flex-wrap { display: contents !important; }
+.iwrcond > .sheet-tags .sheet-field-label { margin-right: 2px; }
+.iwrcond > .resist > .label { margin-left: 10px; }
+.iwrview > .sheet-note { margin: 0 2px 0 6px; }
+.iwrview .sheet-list-item > div { flex: none !important; margin: 0 !important; }
+.chip20 .sheet-field-value { white-space: nowrap; }
+.iwrcond > .resist > .rgroup { flex-wrap: wrap; max-width: 100%; margin-left: 6px; }
 .rgroup > .inline-list { min-width: 0; }
-.iwrview > .sheet-note { line-height: 20px; }
-.iwrview > .chiplist, .iwrview > .sheet-tags { min-width: 0; }
 /* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
 .sheet-sheet .strip .sheet-tags [data-slot="root"], .sheet-sheet .facts .sheet-tags [data-slot="root"] {
   border: 0;
