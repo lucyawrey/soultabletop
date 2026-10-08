@@ -355,6 +355,12 @@
 .strikes .row > .cell, .strikes .row > .cell > .sheet-value, .acts .row > .cell, .acts .row > .cell > .sheet-value,
 .row > .sheet-value.name { display: contents; }
 .row .sheet-preview-frame { grid-column: 1 / -1; order: 99; margin: 2px 0 6px; }
+/* The whole name cell opens the preview, not just the text: the button fills its cell, and the
+   hover tint shows how far it reaches. Rolls and breakdowns in other cells keep their own clicks. */
+.row .sheet-field-value:has(> span > .sheet-preview-trigger) { align-self: stretch; display: flex; margin: -2px 0; }
+.row .sheet-field-value > span:has(> .sheet-preview-trigger) { display: flex; flex: 1; }
+.row .sheet-preview-trigger { flex: 1; padding: 0 4px; margin-left: -4px; border-radius: 4px; }
+.row .sheet-preview-trigger:hover { background: color-mix(in srgb, var(--st-primary) 7%, transparent); }
 
 /* Skills and proficiencies on the left, the tabs on the right. */
 .mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
