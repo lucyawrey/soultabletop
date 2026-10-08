@@ -312,6 +312,8 @@
   align-items: center;
   gap: 6px;
   min-height: calc(var(--d-h) + 6px);
+  /* The first line keeps that height when an expanded preview adds a second, so nothing moves. */
+  grid-template-rows: minmax(calc(var(--d-h) + 6px - var(--d-gap) * .6 - 1px), auto);
   border-bottom: 1px solid var(--st-border);
   padding: calc(var(--d-gap) * .3) 0;
 }
