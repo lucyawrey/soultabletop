@@ -139,7 +139,7 @@
   align-items: center;
   justify-items: center;
   gap: 2px;
-  padding: calc(var(--d-pad) * .9) calc(var(--d-pad) + 14px);
+  padding: calc(var(--d-pad) * .9) calc(var(--d-pad) + 8px);
 }
 .meta > * + * { border-left: 1px solid var(--st-border); }
 .meta > * { text-align: center; align-content: center; }
@@ -148,8 +148,14 @@
 .meta .sheet-field-value { display: flex; justify-content: center; align-items: center; }
 .meta .sheet-field-value { font-size: calc(var(--d-big) * 1.15); line-height: 1; }
 .meta .word .sheet-field-value { font-size: calc(var(--d-big) * .7); }
+.meta .cellv { display: grid; }
+.per { align-items: baseline; justify-content: center; gap: 3px; }
+.unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
 .facts { grid-column: 1; gap: 2px 14px; align-items: baseline; }
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
+.facts .sheet-value .sheet-field-value { font-weight: 400; }
+.speeds > div:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
+.facts .sheet-tags .sheet-field-value { min-width: 120px; }
 
 /* Attributes and defenses */
 .top { display: grid !important; grid-template-columns: auto 1fr; gap: var(--d-gap); align-items: stretch; }
@@ -272,7 +278,8 @@
 .lead > .sheet-value:last-child .sheet-field-value { font-size: calc(var(--d-big) * .8); }
 .lore { border-top: 1px solid var(--st-border); }
 .profrow { display: grid !important; grid-template-columns: 70px 1fr; gap: 4px 12px; align-items: start; padding: 2px 0; }
-.proflist > div { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.proflist > div { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.prof .sheet-field-value { font-size: calc(var(--d-fs) - 2px); }
 .prof { gap: 4px; align-items: center; }
 
 /* Tabs */
@@ -300,15 +307,16 @@
 .moves { gap: 4px; }
 .bulk { flex-basis: 100%; align-items: center; gap: 4px 8px; }
 .bmeter { width: 90px; }
-.chip-note { font-size: var(--d-lfs); border: 1px dashed var(--st-border-strong); border-radius: 4px; padding: 0 4px; color: var(--st-ink-muted); justify-self: start; }
+.bmeter [data-slot="base"] { height: 7px; }
 .trad { gap: 4px; }
 .bio { display: grid !important; grid-template-columns: 140px 1fr; gap: calc(var(--d-gap) * 2); align-items: start; }
-.biocols { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important; }
+.biocols { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important; }
+.kv > .sheet-text, .kv > .sheet-tags { display: grid; grid-template-columns: 130px 1fr; gap: 6px; align-items: center; }
 
 /* Inputs keep the size of the values they replace: no steppers, narrow boxes. */
 [data-slot="increment"], [data-slot="decrement"] { display: none; }
 .sheet-number input { padding-inline: 4px; }
-.meta .sheet-number .sheet-field-value { width: 64px; }
+.meta .sheet-number .sheet-field-value:has(input) { width: 48px; }
 .meta .sheet-number input { font-size: calc(var(--d-big) * .9); font-weight: 700; height: calc(var(--d-big) * 1.3); }
 .now .sheet-number .sheet-field-value { width: 72px; }
 .temp .sheet-field-value, .coin .sheet-field-value { width: 52px; }
@@ -344,18 +352,100 @@
 .maintabs [data-slot="leadingIcon"] { color: var(--st-primary); width: .95em; height: .95em; }
 .maintabs .sheet-tab { padding-top: calc(var(--d-pad) * 1.5); margin-top: 0; }
 
-/* Edit mode keeps the play layout: inputs sit in the row cells. */
+/* Edit mode keeps the play layout: controls sit in the row cells and look like the values they replace
+   (spec, "States"): dashed edges, no fill, the size of the value. */
 .sheet-field-value + p { display: none; }
-.rows .sheet-list-item { align-items: center; }
-.rows .sheet-list-item > div:last-child:not(:first-child) { flex-direction: row; gap: 0; }
-.rows .sheet-list-item > div:last-child:not(:first-child) button { padding: 2px; }
 .cell { min-width: 0; }
-.row .sheet-ref .sheet-field-value, .note-in .sheet-field-value, .note-in { width: 100%; }
-.or-feat { margin-top: 2px; }
-.kv .sheet-ref .sheet-field-value { width: auto; min-width: 200px; }
-.small-num .sheet-field-value { width: 52px; }
-.small-sel .sheet-field-value { width: 76px; }
-.rank-sel .sheet-field-value { width: 48px; }
+.sheet-sheet input[data-slot="base"], .sheet-sheet textarea[data-slot="base"],
+.sheet-sheet button[data-slot="base"][role="combobox"], .sheet-sheet button[data-slot="base"][aria-haspopup="listbox"],
+.sheet-sheet .sheet-tags [data-slot="root"] {
+  background: transparent;
+  box-shadow: none;
+  border: 1px dashed var(--st-border-strong);
+  border-radius: 4px;
+}
+.sheet-sheet input[data-slot="base"]:focus-visible, .sheet-sheet textarea[data-slot="base"]:focus-visible,
+.sheet-sheet button[data-slot="base"]:focus-visible, .sheet-sheet .sheet-tags [data-slot="root"]:focus-within {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 1px;
+}
+.sheet-sheet button[data-slot="base"][role="combobox"], .sheet-sheet button[data-slot="base"][aria-haspopup="listbox"] {
+  height: var(--d-h);
+  padding: 0 18px 0 6px;
+  font-size: inherit;
+  font-weight: 700;
+}
+.sheet-sheet [data-slot="trailing"] { padding-right: 4px; }
+.sheet-sheet [data-slot="trailingIcon"] { width: 12px; height: 12px; }
+.row input[data-slot="base"], .strip input[data-slot="base"], .grp input[data-slot="base"] { height: var(--d-h); padding: 0 6px; font-size: inherit; }
+/* Initiative's "rolls with" is a real select in play and edit alike. */
+.init button[data-slot="base"][role="combobox"] { border-style: solid; font-weight: 400; }
+
+/* Pickers of a referenced name look like the underlined name, with a small ▾. */
+.sheet-sheet .name button[data-slot="base"][aria-haspopup], .sheet-sheet .card button[data-slot="base"][aria-haspopup],
+.sheet-sheet .kv .sheet-ref button[data-slot="base"][aria-haspopup] {
+  width: auto;
+  max-width: 100%;
+  border: 0;
+  padding: 0 16px 0 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: var(--st-ink);
+}
+.name .sheet-field-value, .kv .sheet-ref .sheet-field-value { width: auto; min-width: 0; }
+.sheet-sheet .card button[data-slot="base"][aria-haspopup] { height: auto; font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
+.card:has(button[data-slot="base"]) { border-style: dashed; }
+.card:has(button[data-slot="base"]), .rankcell:has(.rank-sel) .rank.on .sheet-field-value {
+  outline: 2px solid color-mix(in srgb, var(--st-primary) 22%, transparent);
+  outline-offset: 2px;
+}
+.ident .sheet-field-value > .space-y-2 { margin: 0; }
+
+/* Rank badges stay in edit, dashed; an invisible select over each one opens the choices. */
+.rankcell { position: relative; display: grid !important; place-items: center; }
+.rankcell .rank-sel { position: absolute; inset: 0; }
+.rankcell .rank-sel .sheet-field-value { width: 100%; height: 100%; }
+.rankcell .rank-sel button[data-slot="base"] { width: 100%; height: 100%; min-height: 0; padding: 0; opacity: 0; cursor: pointer; }
+.rankcell:has(.rank-sel) .rank:not(.on) .sheet-field-value { border-style: dashed; }
+.rankcell:has(button:focus-visible) .rank .sheet-field-value { outline: 2px solid var(--st-primary); outline-offset: 1px; }
+
+/* "+ Add …" are small dashed pills; rows lose their move buttons and remove with a ×. */
+.sheet-list > .flex-wrap > button[data-slot="base"], .sheet-list > .flex-wrap button[data-slot="base"][aria-haspopup="listbox"] {
+  height: auto;
+  padding: 1px 6px;
+  font-size: var(--d-lfs);
+  font-weight: 700;
+  color: var(--st-primary);
+  background: var(--st-panel-muted);
+  border: 1px dashed var(--st-border-strong);
+  border-radius: 4px;
+  box-shadow: none;
+}
+.sheet-list > .flex-wrap { margin-top: 4px; }
+.sheet-list > .flex-wrap > .w-56 { width: auto; }
+.sheet-list > .flex-wrap > button [data-slot="leadingIcon"] { display: none; }
+.sheet-list > .flex-wrap > button [data-slot="label"]::before { content: "+ "; }
+.noadd > .flex-wrap { display: none; }
+.sheet-list-item button[aria-label="Move up"], .sheet-list-item button[aria-label="Move down"] { display: none; }
+.rows .sheet-list-item { align-items: center; gap: 2px; }
+.sheet-list-item > div:last-child:not(:first-child) { flex-direction: row; gap: 0; }
+.sheet-list-item button[aria-label="Remove"] { padding: 0 4px; color: var(--st-ink-muted); }
+.sheet-list-item button[aria-label="Remove"]:hover { color: var(--ui-error); background: transparent; }
+.sheet-list-item button[aria-label="Remove"] [data-slot="leadingIcon"] { display: none; }
+.sheet-list-item button[aria-label="Remove"]::after { content: "×"; font-size: 16px; line-height: 1; }
+
+.note-in .sheet-field-value, .note-in { width: 100%; }
+.traits { flex-wrap: nowrap !important; }
+.traits .note-in, .traits .note-in .sheet-field-value { width: 64px; }
+.or-feat { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.gear { flex-basis: auto; }
+.inv .small-num .sheet-field-value { width: 32px; }
+.sheet-list > .flex-wrap > .w-56 button[data-slot="base"] { min-width: 130px; padding-right: 18px; }
+.spell .sheet-checkbox button, .spell .sheet-field-value > button { width: 13px; height: 13px; border-radius: 2px; }
+.spell > .sheet-value:not(.name) .sheet-field-value { font-weight: 400; }
+.small-num .sheet-field-value { width: 44px; }
+.small-num input { text-align: center; }
+.small-sel .sheet-field-value { width: auto; }
 .strikes .row { grid-template-columns: 30px minmax(130px, 1.1fr) minmax(130px, auto) minmax(110px, 1fr) 1.4fr; }
 .traits { gap: 2px 4px; align-items: center; }
 .inline { display: flex; align-items: center; gap: 4px; }
@@ -364,6 +454,25 @@
 .inline-list > div { display: flex; flex-wrap: wrap; gap: 4px 8px; }
 .pair-in { gap: 4px; align-items: center; }
 .pair-in .sheet-text .sheet-field-value { width: 90px; }
+.sheet-note.chip {
+  justify-self: start;
+  border: 1px solid var(--st-border);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: var(--d-lfs);
+  color: var(--st-ink-muted);
+}
+.choose {
+  justify-self: start;
+  padding: 1px 6px;
+  font-size: var(--d-lfs);
+  font-weight: 700;
+  color: var(--st-primary);
+  background: var(--st-panel-muted);
+  border: 1px dashed var(--st-border-strong);
+  border-radius: 4px;
+}
+.open-slots { margin-top: 0 !important; }
 
 /* Phones */
 @media (max-width: 900px) {
@@ -389,10 +498,8 @@
   .inv { grid-template-columns: 24px 1fr 30px 150px; }
   .inv > :nth-child(5) { display: none; }
   .bio { grid-template-columns: 1fr; }
-  /* Editing (pickers only render then): the picker gets its own line. */
-  .strikes .row:has(.sheet-ref) > :nth-child(n + 2), .acts .row:has(.sheet-ref) > :nth-child(n + 2) { grid-column: 2 / -1; }
-  .acts .row:has(.sheet-ref) { grid-template-columns: 22px 1fr; }
-  .feat:has(.sheet-ref) { grid-template-columns: 52px 1fr 110px; }
-  .feat:has(.sheet-ref) > .cell { display: none; }
+  /* Edit keeps the play layout on a phone too; notes inputs stay narrow. */
+  .acts .note-in, .acts .note-in .sheet-field-value { width: 96px; }
+  .feat { grid-template-columns: 40px 24px 1fr auto; }
   .sheet-tab { min-height: 0; }
 }
