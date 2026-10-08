@@ -29,6 +29,7 @@
 <Define name="defensesList"
         formula="join(list(join(map(resistances, concat('resist ', type, ' ', value)), ', '), join(map(weaknesses, concat('weak ', type, ' ', value)), ', '), if(length(coalesce(immunities, list())) > 0, concat('immune ', join(immunities, ', ')), '')), ' · ')" />
 <Define name="defensesText" formula="if(length(coalesce(defensesList(), '')) > 0, defensesList(), 'none')" />
+<Define name="profLabel" params="k" formula="switch(k, 'unarmed', 'Unarmed', 'simple', 'Simple', 'martial', 'Martial', 'advanced', 'Advanced', 'unarmored', 'Unarmored', 'light', 'Light', 'medium', 'Medium', 'heavy', 'Heavy', k)" />
 <Define name="hasFeat" params="cat, lv" formula="any(feats, category == cat and level == lv)" />
 <Define name="bulkText" params="b" formula="if(b == 0.1, 'L', if(coalesce(b, 0) == 0, '—', b))" />
 <Define name="bulk" formula="sum(inventory, if(state == 'dropped', 0, quantity * coalesce(item.bulk, 0)))" />
@@ -50,21 +51,29 @@
     </Stack>
     <Stack direction="row" class="meta">
       <Number field="level" label="Level" min="1" max="20" />
-      <Number field="xp" label="XP" min="0" live />
+      <Stack class="cellv">
+        <Note class="label">XP</Note>
+        <Stack direction="row" class="per"><Number field="xp" hideLabel min="0" /><Note class="unit">/ 1000</Note></Stack>
+      </Stack>
       <Tracker field="heroPoints" label="Hero Points" max="3" style="pips" live />
-      <Value formula="concat(coalesce(ancestry.speed, 25), ' ft')" label="Speed" />
+      <Stack class="cellv">
+        <Note class="label">Speed</Note>
+        <Stack direction="row" class="per"><Value formula="coalesce(ancestry.speed, 25)" hideLabel /><Note class="unit">ft</Note></Stack>
+      </Stack>
       <Value field="ancestry.size" label="Size" class="word" />
     </Stack>
     <Stack direction="row" wrap class="facts">
       <Tags field="ancestry.traits" label="Traits" />
-      <Tags field="senses" label="Senses" show="editing() or length(senses) > 0" />
+      <Value label="Senses" formula="join(senses, ', ')" show="not editing() and length(coalesce(senses, list())) > 0" />
+      <Tags field="senses" label="Senses" show="editing()" />
       <List field="otherSpeeds" label="Other speeds" addLabel="Add speed" class="speeds" show="editing() or length(otherSpeeds) > 0">
         <Stack direction="row" class="speed">
           <Text field="kind" hideLabel placeholder="Swim" />
           <Number field="speed" hideLabel />
         </Stack>
       </List>
-      <Tags field="languages" label="Languages" />
+      <Value label="Languages" formula="join(languages, ', ')" show="not editing()" />
+      <Tags field="languages" label="Languages" show="editing()" />
     </Stack>
   </Section>
 
@@ -91,7 +100,6 @@
             </Value>
             <Value formula="coalesce(armor.name, 'No armor')" hideLabel class="sub" />
             <Value formula="concat('+', shield.shield.acBonus, ' shield')" hideLabel class="up" show="shieldRaised and shield.shield.acBonus > 0" />
-            <Ref field="armor" label="Armor" show="editing()" />
           </Stack>
           <Stack class="box hp">
             <Stack direction="row" wrap class="hpline">
@@ -127,22 +135,23 @@
                   <Part label="{rankName(.)}" formula="prof(.)" />
                   <Roll name="save" label="Save" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
                 </Value>
-                <Value formula="rankLetter(.)" hideLabel class="rank" show="not editing() and coalesce(., 0) == 0" />
-                <Value formula="rankLetter(.)" hideLabel class="rank on" show="not editing() and . > 0" />
-                <Select field="." hideLabel class="rank-sel" show="editing()" />
+                <Stack class="rankcell">
+                  <Value formula="rankLetter(.)" hideLabel class="rank" show="coalesce(., 0) == 0" />
+                  <Value formula="rankLetter(.)" hideLabel class="rank on" show=". > 0" />
+                  <Select field="." hideLabel class="rank-sel" show="editing()" />
+                </Stack>
               </Stack>
             </List>
           </Stack>
         </Stack>
         <Stack direction="row" wrap class="strip">
-          <Stack direction="row" wrap class="shieldrow" show="shield.name != null or editing()">
+          <Stack direction="row" wrap class="shieldrow" show="shield.name != null">
             <Button label="◆ Raise Shield" class="raise" show="shield.name != null and not shieldRaised" live>
               <Set field="shieldRaised" formula="true" />
             </Button>
             <Button label="Shield Raised" class="raise pressed" show="shield.name != null and shieldRaised" live>
               <Set field="shieldRaised" formula="false" />
             </Button>
-            <Ref field="shield" label="Shield" show="editing()" />
             <Value formula="concat(shield.name, ' · Hardness ', coalesce(shield.shield.hardness, 0))" hideLabel class="dim" show="shield.name != null" />
             <Number field="shieldHp" label="HP" min="0" live class="coin" show="shield.name != null" />
             <Value formula="concat('/ ', shield.shield.hp, ' · BT ', shield.shield.brokenThreshold)" hideLabel class="dim" show="shield.name != null" />
@@ -206,7 +215,7 @@
             <Value hideLabel class="dim" formula="concat('+', sneakDice(), 'd6 sneak')" show="/class.name == 'Rogue'" />
           </Stack>
           <Stack direction="row" wrap class="traits">
-            <Tags field="weapon.traits" hideLabel class="chips" show="not editing()" />
+            <Tags field="weapon.traits" hideLabel class="chips" />
             <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
             <Text field="notes" hideLabel placeholder="Notes" class="note-in" show="editing()" />
           </Stack>
@@ -238,9 +247,11 @@
         <Stack direction="row" class="row lead">
           <Heading level="3">Perception</Heading>
           <Note class="dim">Wis</Note>
-          <Value hideLabel class="rank" formula="rankLetter(perception)" show="not editing() and coalesce(perception, 0) == 0" />
-          <Value hideLabel class="rank on" formula="rankLetter(perception)" show="not editing() and perception > 0" />
-          <Select field="perception" hideLabel class="rank-sel" show="editing()" />
+          <Stack class="rankcell">
+            <Value formula="rankLetter(perception)" hideLabel class="rank" show="coalesce(perception, 0) == 0" />
+            <Value formula="rankLetter(perception)" hideLabel class="rank on" show="perception > 0" />
+            <Select field="perception" hideLabel class="rank-sel" show="editing()" />
+          </Stack>
           <Value hideLabel format="signed" formula="perceptionMod()">
             <Part label="Wis" formula="attributes.wis" />
             <Part label="{rankName(perception)}" formula="prof(perception)" />
@@ -260,9 +271,11 @@
           <Stack direction="row" class="row skill">
             <Value formula="itemLabel()" hideLabel class="name" />
             <Value formula="attrName(skillAttr(itemKey()))" hideLabel class="dim" />
-            <Value formula="rankLetter(.)" hideLabel class="rank" show="not editing() and coalesce(., 0) == 0" />
-            <Value formula="rankLetter(.)" hideLabel class="rank on" show="not editing() and . > 0" />
-            <Select field="." hideLabel class="rank-sel" show="editing()" />
+            <Stack class="rankcell">
+              <Value formula="rankLetter(.)" hideLabel class="rank" show="coalesce(., 0) == 0" />
+              <Value formula="rankLetter(.)" hideLabel class="rank on" show=". > 0" />
+              <Select field="." hideLabel class="rank-sel" show="editing()" />
+            </Stack>
             <Value hideLabel format="signed" formula="skillMod(itemKey())">
               <Part label="{attrName(skillAttr(itemKey()))}" formula="get(/attributes, skillAttr(itemKey()))" />
               <Part label="{rankName(.)}" formula="prof(.)" />
@@ -275,9 +288,11 @@
           <Stack direction="row" class="row skill">
             <Text field="name" hideLabel placeholder="… Lore" class="name" />
             <Note class="dim">Int</Note>
-            <Value formula="rankLetter(rank)" hideLabel class="rank" show="not editing() and coalesce(rank, 0) == 0" />
-            <Value formula="rankLetter(rank)" hideLabel class="rank on" show="not editing() and rank > 0" />
-            <Select field="rank" hideLabel class="rank-sel" show="editing()" />
+            <Stack class="rankcell">
+              <Value formula="rankLetter(rank)" hideLabel class="rank" show="coalesce(rank, 0) == 0" />
+              <Value formula="rankLetter(rank)" hideLabel class="rank on" show="rank > 0" />
+              <Select field="rank" hideLabel class="rank-sel" show="editing()" />
+            </Stack>
             <Value hideLabel format="signed" formula="/attributes.int + prof(rank)">
               <Part label="Int" formula="/attributes.int" />
               <Part label="{rankName(rank)}" formula="prof(rank)" />
@@ -291,10 +306,12 @@
           <Note class="label">Attacks</Note>
           <List field="attacks" class="proflist">
             <Stack direction="row" class="prof">
-              <Value formula="rankLetter(.)" hideLabel class="rank" show="not editing() and coalesce(., 0) == 0" />
-              <Value formula="rankLetter(.)" hideLabel class="rank on" show="not editing() and . > 0" />
-              <Select field="." hideLabel class="rank-sel" show="editing()" />
-              <Value formula="itemLabel()" hideLabel />
+              <Stack class="rankcell">
+                <Value formula="rankLetter(.)" hideLabel class="rank" show="coalesce(., 0) == 0" />
+                <Value formula="rankLetter(.)" hideLabel class="rank on" show=". > 0" />
+                <Select field="." hideLabel class="rank-sel" show="editing()" />
+              </Stack>
+              <Value formula="profLabel(itemKey())" hideLabel />
             </Stack>
           </List>
         </Stack>
@@ -302,10 +319,12 @@
           <Note class="label">Defenses</Note>
           <List field="defenses" class="proflist">
             <Stack direction="row" class="prof">
-              <Value formula="rankLetter(.)" hideLabel class="rank" show="not editing() and coalesce(., 0) == 0" />
-              <Value formula="rankLetter(.)" hideLabel class="rank on" show="not editing() and . > 0" />
-              <Select field="." hideLabel class="rank-sel" show="editing()" />
-              <Value formula="itemLabel()" hideLabel />
+              <Stack class="rankcell">
+                <Value formula="rankLetter(.)" hideLabel class="rank" show="coalesce(., 0) == 0" />
+                <Value formula="rankLetter(.)" hideLabel class="rank on" show=". > 0" />
+                <Select field="." hideLabel class="rank-sel" show="editing()" />
+              </Stack>
+              <Value formula="profLabel(itemKey())" hideLabel />
             </Stack>
           </List>
         </Stack>
@@ -322,11 +341,14 @@
               <Part label="Key {attrName(keyAttribute)}" formula="keyMod()" />
               <Part label="{rankName(classDc)}" formula="prof(classDc)" />
             </Value>
-            <Value formula="rankLetter(classDc)" hideLabel class="rank" show="not editing() and coalesce(classDc, 0) == 0" />
-            <Value formula="rankLetter(classDc)" hideLabel class="rank on" show="not editing() and classDc > 0" />
-            <Select field="classDc" hideLabel class="rank-sel" show="editing()" />
+            <Stack class="rankcell">
+              <Value formula="rankLetter(classDc)" hideLabel class="rank" show="coalesce(classDc, 0) == 0" />
+              <Value formula="rankLetter(classDc)" hideLabel class="rank on" show="classDc > 0" />
+              <Select field="classDc" hideLabel class="rank-sel" show="editing()" />
+            </Stack>
           </Stack>
-          <Select field="keyAttribute" label="Key attribute" />
+          <Value label="Key attribute" formula="attrName(keyAttribute)" show="not editing()" />
+          <Stack direction="row" class="kvp" show="editing()"><Note class="label">Key attribute</Note><Select field="keyAttribute" hideLabel class="small-sel" /></Stack>
         </Stack>
         <Note class="grp">Class features</Note>
         <List field="class.features" class="rows features">
@@ -343,12 +365,12 @@
         <Stack class="rows kv" show="deity.name != null or editing()">
           <Note class="grp">Deity</Note>
           <Stack direction="row" class="row"><Note class="label">Deity</Note><Ref field="deity" hideLabel preview="card" /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Divine font</Note><Field field="deity.font" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Divine font</Note><Value formula="join(map(deity.font, switch(., 'heal', 'Heal', 'harm', 'Harm', .)), ' or ')" hideLabel /></Stack>
           <Stack direction="row" class="row"><Note class="label">Sanctification</Note><Value field="deity.sanctification" hideLabel /></Stack>
           <Stack direction="row" class="row"><Note class="label">Divine skill</Note><Value field="deity.skill" hideLabel /></Stack>
           <Stack direction="row" class="row"><Note class="label">Favored weapon</Note><Value field="deity.favoredWeapon" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Domains</Note><Tags field="deity.domains" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Divine attributes</Note><Field field="deity.attributes" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Domains</Note><Value formula="join(deity.domains, ', ')" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Divine attributes</Note><Value formula="join(map(deity.attributes, attrName(.)), ' or ')" hideLabel /></Stack>
           <Stack direction="row" class="row"><Note class="label">Edicts</Note><Value field="deity.edicts" hideLabel /></Stack>
           <Stack direction="row" class="row"><Note class="label">Anathema</Note><Value field="deity.anathema" hideLabel /></Stack>
         </Stack>
@@ -369,38 +391,37 @@
             <Select field="category" hideLabel class="small-sel" show="editing()" />
           </Stack>
         </List>
-        <Stack class="rows" show="editing()">
-          <Note class="grp">Open feat slots, to level {level + 2}</Note>
+        <Stack class="rows open-slots" show="editing()">
           <List field="class.ancestryFeatLevels" class="rows slots-open">
             <Stack direction="row" class="row feat open" show=". &lt;= /level + 2 and not hasFeat('ancestry', .)">
               <Value field="." hideLabel class="dim" />
               <Note></Note>
-              <Note class="dim">Choose ancestry feat</Note>
-              <Note class="chip-note">Ancestry</Note>
+              <Note class="choose">Choose ancestry feat</Note>
+              <Note class="chip">Ancestry</Note>
             </Stack>
           </List>
           <List field="class.classFeatLevels" class="rows slots-open">
             <Stack direction="row" class="row feat open" show=". &lt;= /level + 2 and not hasFeat('class', .)">
               <Value field="." hideLabel class="dim" />
               <Note></Note>
-              <Note class="dim">Choose class feat</Note>
-              <Note class="chip-note">Class</Note>
+              <Note class="choose">Choose class feat</Note>
+              <Note class="chip">Class</Note>
             </Stack>
           </List>
           <List field="class.skillFeatLevels" class="rows slots-open">
             <Stack direction="row" class="row feat open" show=". &lt;= /level + 2 and not hasFeat('skill', .)">
               <Value field="." hideLabel class="dim" />
               <Note></Note>
-              <Note class="dim">Choose skill feat</Note>
-              <Note class="chip-note">Skill</Note>
+              <Note class="choose">Choose skill feat</Note>
+              <Note class="chip">Skill</Note>
             </Stack>
           </List>
           <List field="class.generalFeatLevels" class="rows slots-open">
             <Stack direction="row" class="row feat open" show=". &lt;= /level + 2 and not hasFeat('general', .)">
               <Value field="." hideLabel class="dim" />
               <Note></Note>
-              <Note class="dim">Choose general feat</Note>
-              <Note class="chip-note">General</Note>
+              <Note class="choose">Choose general feat</Note>
+              <Note class="chip">General</Note>
             </Stack>
           </List>
         </Stack>
@@ -409,18 +430,22 @@
       <Tab label="Spells" icon="i-game-icons-spell-book" show="length(coalesce(spellcasting.tradition, '')) > 0 or editing()">
         <Stack direction="row" wrap class="strip">
           <Stack direction="row" class="trad" show="not editing()"><Value field="spellcasting.tradition" hideLabel class="strong" /><Value field="spellcasting.kind" hideLabel class="strong" /></Stack>
-          <Select field="spellcasting.tradition" label="Tradition" show="editing()" />
-          <Select field="spellcasting.kind" label="Casting" show="editing()" />
-          <Select field="spellcasting.attribute" label="Attribute" show="editing()" />
+          <Stack direction="row" class="trad" show="editing()">
+            <Select field="spellcasting.tradition" hideLabel class="small-sel" />
+            <Select field="spellcasting.kind" hideLabel class="small-sel" />
+            <Select field="spellcasting.attribute" hideLabel class="small-sel" />
+          </Stack>
           <Stack direction="row" class="kvp">
             <Value label="Spell DC" formula="10 + spellMod()">
               <Part label="Base" formula="10" />
               <Part label="{attrName(coalesce(spellcasting.attribute, keyAttribute))}" formula="coalesce(get(attributes, coalesce(spellcasting.attribute, keyAttribute)), 0)" />
               <Part label="{rankName(spellcasting.rank)}" formula="prof(spellcasting.rank)" />
             </Value>
-            <Value formula="rankLetter(spellcasting.rank)" hideLabel class="rank" show="not editing() and coalesce(spellcasting.rank, 0) == 0" />
-            <Value formula="rankLetter(spellcasting.rank)" hideLabel class="rank on" show="not editing() and spellcasting.rank > 0" />
-            <Select field="spellcasting.rank" hideLabel class="rank-sel" show="editing()" />
+            <Stack class="rankcell">
+              <Value formula="rankLetter(spellcasting.rank)" hideLabel class="rank" show="coalesce(spellcasting.rank, 0) == 0" />
+              <Value formula="rankLetter(spellcasting.rank)" hideLabel class="rank on" show="spellcasting.rank > 0" />
+              <Select field="spellcasting.rank" hideLabel class="rank-sel" show="editing()" />
+            </Stack>
           </Stack>
           <Value label="Attack" format="signed" formula="spellMod()">
             <Part label="{attrName(coalesce(spellcasting.attribute, keyAttribute))}" formula="coalesce(get(attributes, coalesce(spellcasting.attribute, keyAttribute)), 0)" />
@@ -440,10 +465,10 @@
           <List field="slots" addLabel="Add slots" class="slots">
             <Stack direction="row" class="row slot">
               <Value hideLabel class="strong" formula="concat('Rank ', rank)" show="not editing()" />
-              <Number field="rank" label="Rank" min="1" max="10" show="editing()" />
+              <Stack direction="row" class="inline" show="editing()"><Note class="strong">Rank</Note><Number field="rank" hideLabel min="1" max="10" class="small-num" /></Stack>
               <Tracker field="used" hideLabel max="{max}" style="pips" live class="sq" />
               <Value hideLabel class="dim" formula="concat(max - used, ' of ', max, ' left')" show="not editing()" />
-              <Number field="max" label="Slots" min="0" show="editing()" />
+              <Stack direction="row" class="inline" show="editing()"><Number field="max" hideLabel min="0" class="small-num" /><Note class="dim">slots</Note></Stack>
             </Stack>
           </List>
         </Stack>
@@ -456,7 +481,7 @@
             <Note>Divine Font</Note>
             <Tracker field="divineFont.used" hideLabel max="{divineFont.max}" style="pips" live class="sq" />
             <Value hideLabel formula="concat(divineFont.max - divineFont.used, ' of ', divineFont.max, ' left')" show="not editing()" />
-            <Number field="divineFont.max" label="Uses" min="0" class="small-num inline" show="editing()" />
+            <Stack direction="row" class="inline" show="editing()"><Number field="divineFont.max" hideLabel min="0" class="small-num" /><Note>uses</Note></Stack>
           </Stack>
           <Stack direction="row" class="row spell">
             <Note></Note>
@@ -471,7 +496,7 @@
 
         <Note class="grp">Spells</Note>
         <List field="spells" addLabel="Add spell" class="rows spells">
-          <Stack direction="row" class="row spell" show="editing() or spell.kind != 'cantrip'">
+          <Stack direction="row" class="row spell" show="spell.kind != 'cantrip'">
             <Checkbox field="cast" hideLabel style="dot" live />
             <Value hideLabel class="act" formula="glyph(spell.cast)" />
             <Value field="spell.name" hideLabel preview="card" class="name" show="not editing()" />
@@ -481,16 +506,17 @@
             <Value field="spell.damage" hideLabel class="dim" />
           </Stack>
         </List>
-        <Stack class="rows" show="not editing() and any(spells, spell.kind == 'cantrip')">
+        <Stack class="rows" show="any(spells, spell.kind == 'cantrip')">
           <Stack direction="row" class="grp">
             <Note>Cantrips</Note>
             <Value hideLabel formula="concat('heightened to rank ', max(1, ceil(level / 2)), ' · at will')" />
           </Stack>
-          <List field="spells" class="rows spells">
+          <List field="spells" class="rows spells noadd">
             <Stack direction="row" class="row spell" show="spell.kind == 'cantrip'">
               <Note></Note>
               <Value hideLabel class="act" formula="glyph(spell.cast)" />
-              <Value field="spell.name" hideLabel preview="card" class="name" />
+              <Value field="spell.name" hideLabel preview="card" class="name" show="not editing()" />
+              <Ref field="spell" hideLabel class="name" show="editing()" />
               <Value field="spell.range" hideLabel />
               <Value field="spell.defense" hideLabel />
               <Value field="spell.damage" hideLabel class="dim" />
@@ -502,9 +528,9 @@
           <Stack direction="row" class="grp">
             <Note>Focus spells</Note>
             <Tracker field="focus.used" hideLabel max="{focus.max}" style="pips" live class="sq" />
-            <Value hideLabel formula="concat(focus.max - focus.used, ' of ', focus.max, ' focus points')" />
+            <Value hideLabel formula="concat(focus.max - focus.used, ' of ', focus.max, ' focus points')" show="not editing()" />
+            <Stack direction="row" class="inline" show="editing()"><Number field="focus.max" hideLabel min="0" max="3" class="small-num" /><Note>focus points</Note></Stack>
           </Stack>
-          <Number field="focus.max" label="Focus points" min="0" max="3" show="editing()" />
           <List field="focus.spells" addLabel="Add focus spell" class="rows spells">
             <Stack direction="row" class="row spell" show="not editing()">
               <Note></Note>
@@ -532,62 +558,68 @@
           <Number field="coins.gp" label="gp" min="0" live class="coin" />
           <Number field="coins.sp" label="sp" min="0" live class="coin" />
           <Number field="coins.cp" label="cp" min="0" live class="coin" />
+          <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Armor</Note><Ref field="armor" hideLabel class="name" /></Stack>
+          <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Shield</Note><Ref field="shield" hideLabel class="name" /></Stack>
         </Stack>
         <Stack direction="row" class="row th inv">
           <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>{if(editing(), 'State', 'Move')}</Note><Note>Inv</Note>
         </Stack>
-        <Stack class="rows" show="not editing() and any(inventory, state == 'held')">
+        <Stack class="rows" show="any(inventory, state == 'held')">
           <Note class="grp">Held</Note>
-          <List field="inventory" class="rows">
+          <List field="inventory" class="rows noadd">
             <Stack direction="row" class="row inv" show="state == 'held'">
-              <Value field="quantity" hideLabel />
-              <Value field="item.name" hideLabel preview="card" class="name" />
+              <Value field="quantity" hideLabel show="not editing()" />
+              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
+              <Value field="item.name" hideLabel preview="card" class="name" show="not editing()" />
+              <Ref field="item" hideLabel class="name" show="editing()" />
               <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
                 <Button label="◆ Wear" live><Set field="state" formula="'worn'" /></Button>
                 <Button label="◆ Stow" live><Set field="state" formula="'stowed'" /></Button>
               </Stack>
-              <Note show="invested">✓</Note>
+              <Note show="not editing() and invested">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing()" />
             </Stack>
           </List>
         </Stack>
-        <Stack class="rows" show="not editing() and any(inventory, state == 'worn')">
+        <Stack class="rows" show="any(inventory, state == 'worn')">
           <Note class="grp">Worn</Note>
-          <List field="inventory" class="rows">
+          <List field="inventory" class="rows noadd">
             <Stack direction="row" class="row inv" show="state == 'worn'">
-              <Value field="quantity" hideLabel />
-              <Value field="item.name" hideLabel preview="card" class="name" />
+              <Value field="quantity" hideLabel show="not editing()" />
+              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
+              <Value field="item.name" hideLabel preview="card" class="name" show="not editing()" />
+              <Ref field="item" hideLabel class="name" show="editing()" />
               <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
                 <Button label="◆ Draw" live><Set field="state" formula="'held'" /></Button>
                 <Button label="◆ Stow" live><Set field="state" formula="'stowed'" /></Button>
               </Stack>
-              <Note show="invested">✓</Note>
+              <Note show="not editing() and invested">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing()" />
             </Stack>
           </List>
         </Stack>
-        <Stack class="rows" show="not editing() and any(inventory, state == 'stowed')">
+        <Stack class="rows" show="any(inventory, state == 'stowed')">
           <Note class="grp">Stowed</Note>
-          <List field="inventory" class="rows">
+          <List field="inventory" class="rows noadd">
             <Stack direction="row" class="row inv" show="state == 'stowed'">
-              <Value field="quantity" hideLabel />
-              <Value field="item.name" hideLabel preview="card" class="name" />
+              <Value field="quantity" hideLabel show="not editing()" />
+              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
+              <Value field="item.name" hideLabel preview="card" class="name" show="not editing()" />
+              <Ref field="item" hideLabel class="name" show="editing()" />
               <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
                 <Button label="◆ Retrieve" live><Set field="state" formula="'held'" /></Button>
               </Stack>
-              <Note show="invested">✓</Note>
+              <Note show="not editing() and invested">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing()" />
             </Stack>
           </List>
         </Stack>
-        <List field="inventory" addLabel="Add item" class="rows" show="editing()">
-          <Stack direction="row" class="row inv">
-            <Number field="quantity" hideLabel min="0" class="small-num" />
-            <Ref field="item" hideLabel class="name" />
-            <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
-            <Select field="state" hideLabel class="small-sel" />
-            <Checkbox field="invested" hideLabel />
-          </Stack>
+        <!-- Only its Add button shows: new items are worn (the schema's default) and join that group. -->
+        <List field="inventory" addLabel="Add item" class="rows addonly" show="editing()">
+          <Note class="none" show="false"></Note>
         </List>
       </Tab>
 
