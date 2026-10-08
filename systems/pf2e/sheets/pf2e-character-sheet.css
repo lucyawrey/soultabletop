@@ -186,7 +186,10 @@
   background: var(--st-primary);
   color: var(--st-on-primary);
 }
-.defwrap { min-width: 0; }
+/* The shield line sits at the bottom of the attributes block, not below it. */
+.defwrap { min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
+.defwrap > .strip { margin-top: 0; }
+.ghost { visibility: hidden; }
 .defs { display: grid !important; grid-template-columns: .9fr 2fr 1.2fr; gap: var(--d-gap); }
 .ac { border: 2px solid var(--st-primary); }
 .ac .sheet-value > div:first-child { justify-content: center; }
@@ -208,6 +211,8 @@
 .strip { gap: 4px 12px; align-items: center; margin-top: var(--d-gap); font-size: var(--d-lfs); }
 .strip > *, .shieldrow { align-items: center; gap: 4px 8px; }
 .sheet-button.raise {
+  min-width: 124px;
+  justify-content: center;
   height: calc(var(--d-h) + 4px);
   padding: 0 12px;
   border: 1px solid var(--st-primary);

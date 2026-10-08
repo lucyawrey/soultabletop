@@ -99,7 +99,9 @@
               <Part label="Shield raised" formula="shield.shield.acBonus" show="shieldRaised" />
             </Value>
             <Value formula="coalesce(armor.name, 'No armor')" hideLabel class="sub" />
+            <!-- The shield line keeps its room while the shield is down, so raising it doesn't move the box. -->
             <Value formula="concat('+', shield.shield.acBonus, ' shield')" hideLabel class="up" show="shieldRaised and shield.shield.acBonus > 0" />
+            <Value formula="concat('+', shield.shield.acBonus, ' shield')" hideLabel class="up ghost" show="not shieldRaised and shield.shield.acBonus > 0" />
           </Stack>
           <Stack class="box hp">
             <Stack direction="row" wrap class="hpline">
