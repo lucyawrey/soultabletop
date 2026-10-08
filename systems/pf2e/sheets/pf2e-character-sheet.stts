@@ -27,7 +27,7 @@
 <Define name="damageType" params="t" formula="switch(t, 'bludgeoning', 'B', 'piercing', 'P', 'slashing', 'S', '')" />
 <Define name="sneakDice" formula="if(level >= 17, 4, if(level >= 11, 3, if(level >= 5, 2, 1)))" />
 <Define name="defensesList"
-        formula="join(list(join(map(resistances, concat('resist ', type, ' ', value)), ', '), join(map(weaknesses, concat('weak ', type, ' ', value)), ', '), if(length(coalesce(immunities, list())) > 0, concat('immune ', join(immunities, ', ')), '')), ' · ')" />
+        formula="join(list(if(length(coalesce(resistances, list())) > 0, concat('Resist ', join(map(resistances, concat(type, ' ', value)), ', ')), ''), if(length(coalesce(weaknesses, list())) > 0, concat('Weak ', join(map(weaknesses, concat(type, ' ', value)), ', ')), ''), if(length(coalesce(immunities, list())) > 0, concat('Immune ', join(immunities, ', ')), '')), ' · ')" />
 <Define name="defensesText" formula="if(length(coalesce(defensesList(), '')) > 0, defensesList(), 'none')" />
 <Define name="profLabel" params="k" formula="switch(k, 'unarmed', 'Unarmed', 'simple', 'Simple', 'martial', 'Martial', 'advanced', 'Advanced', 'unarmored', 'Unarmored', 'light', 'Light', 'medium', 'Medium', 'heavy', 'Heavy', k)" />
 <Define name="hasFeat" params="cat, lv" formula="any(feats, category == cat and level == lv)" />
@@ -151,35 +151,39 @@
             <Button label="◆ Raise Shield" class="raise" show="shield.name != null and not shieldRaised" live>
               <Set field="shieldRaised" formula="true" />
             </Button>
-            <Button label="Shield Raised" class="raise pressed" show="shield.name != null and shieldRaised" live>
+            <Button label="◆ Shield Raised" class="raise pressed" show="shield.name != null and shieldRaised" live>
               <Set field="shieldRaised" formula="false" />
             </Button>
-            <Value formula="concat(shield.name, ' · Hardness ', coalesce(shield.shield.hardness, 0))" hideLabel class="dim" show="shield.name != null" />
+            <Ref field="shield" hideLabel preview="card" class="shieldname" show="shield.name != null and not editing()" />
+            <Value formula="shield.name" hideLabel class="dim" show="shield.name != null and editing()" />
             <Number field="shieldHp" label="HP" min="0" live class="coin" show="shield.name != null" />
-            <Value formula="concat('/ ', shield.shield.hp, ' · BT ', shield.shield.brokenThreshold)" hideLabel class="dim" show="shield.name != null" />
+            <Value formula="concat('/ ', shield.shield.hp, ' (BT ', shield.shield.brokenThreshold, ')')" hideLabel class="dim" show="shield.name != null" />
             <Badge class="broken" color="error" show="shield.name != null and coalesce(shieldHp, shield.shield.hp) <= shield.shield.brokenThreshold">Broken</Badge>
           </Stack>
-          <Stack direction="row" wrap class="resist">
-            <Note class="label">Resist / weak / immune</Note>
-            <Value hideLabel class="dim" formula="defensesText()" show="not editing()" />
-            <Stack direction="row" class="rgroup" show="editing()">
-              <Note>Resist</Note>
-              <List field="resistances" addLabel="Add" class="inline-list">
-                <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="fire" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
-              </List>
+          <!-- IWR and Conditions move together, and share a line: each wraps inside itself first. -->
+          <Stack direction="row" class="iwrcond">
+            <Stack direction="row" wrap class="resist">
+              <Note class="label">IWR</Note>
+              <Value hideLabel class="dim" formula="defensesText()" show="not editing()" />
+              <Stack direction="row" class="rgroup" show="editing()">
+                <Note>Resist</Note>
+                <List field="resistances" addLabel="Add" class="inline-list">
+                  <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="fire" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
+                </List>
+              </Stack>
+              <Stack direction="row" class="rgroup" show="editing()">
+                <Note>Weak</Note>
+                <List field="weaknesses" addLabel="Add" class="inline-list">
+                  <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="cold iron" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
+                </List>
+              </Stack>
+              <Stack direction="row" class="rgroup" show="editing()">
+                <Note>Immune</Note>
+                <Tags field="immunities" hideLabel placeholder="+ Add" />
+              </Stack>
             </Stack>
-            <Stack direction="row" class="rgroup" show="editing()">
-              <Note>Weak</Note>
-              <List field="weaknesses" addLabel="Add" class="inline-list">
-                <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="cold iron" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
-              </List>
-            </Stack>
-            <Stack direction="row" class="rgroup" show="editing()">
-              <Note>Immune</Note>
-              <Tags field="immunities" hideLabel placeholder="+ Add" />
-            </Stack>
+            <Tags field="conditions" label="Conditions" placeholder="+ Add" live />
           </Stack>
-          <Tags field="conditions" label="Conditions" placeholder="+ Add" live />
         </Stack>
       </Stack>
     </Stack>
