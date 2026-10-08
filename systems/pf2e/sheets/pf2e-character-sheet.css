@@ -287,7 +287,8 @@
 }
 /* Chips match the "+ Add" input beside them, and read-only tags (Traits) match the chips. */
 .strip .sheet-tags [data-slot="item"], .facts .sheet-tags [data-slot="item"],
-.strip .sheet-tags .sheet-field-value > .flex-wrap > span, .facts .sheet-tags .sheet-field-value > .flex-wrap > span {
+.strip .sheet-tags .sheet-field-value > .flex-wrap > span, .facts .sheet-tags .sheet-field-value > .flex-wrap > span,
+.traits .sheet-tags .sheet-field-value > .flex-wrap > span {
   height: 20px;
   padding: 0 5px;
   font-size: var(--d-lfs);
@@ -339,8 +340,14 @@
 .strikes .row { grid-template-columns: 30px 1.1fr 130px 1fr 1.6fr; }
 .hit { align-items: baseline; gap: 6px; }
 .map .sheet-field-value { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
+/* MAP steps still roll, but stay quiet: muted, with a dotted underline like other clickable values. */
+.map .sheet-roll-trigger { color: var(--st-ink-muted); font-weight: 400; border-bottom: 1px dotted currentColor; }
 .dmg { align-items: baseline; gap: 0 6px; flex-wrap: wrap; }
+.dmg .sheet-field-value { font-weight: 400; }
+.dmg .dim .sheet-field-value { font-size: var(--d-lfs); }
+.traits .sheet-tags .sheet-field-value > .flex-wrap { gap: 4px; }
 .acts .row { grid-template-columns: 30px 1fr auto; }
+.acts .row > .dim .sheet-field-value { font-size: var(--d-lfs); }
 
 /* Skills and proficiencies on the left, the tabs on the right. */
 .mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
