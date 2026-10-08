@@ -155,10 +155,11 @@
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
 .facts .sheet-value .sheet-field-value { font-weight: 400; }
 .speeds > div:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
-.speedchips { display: flex; align-items: baseline; gap: 6px; }
-.speedchips > div:last-child { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
-.speedchips .sheet-list-item { margin: 0 !important; }
-.speedchip .sheet-field-value {
+/* Chips built from list entries (other speeds, IWR in view), the size of the tag chips. */
+.chiplist { display: flex; align-items: baseline; gap: 6px; }
+.chiplist > div:last-child { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.chiplist .sheet-list-item { margin: 0 !important; }
+.chip20 .sheet-field-value {
   display: inline-flex;
   align-items: center;
   height: 20px;
@@ -252,10 +253,15 @@
 /* Conditions and IWR flow like text: IWR continues after the conditions, and its next lines start under them. */
 .iwrcond { display: block !important; min-width: 0; line-height: 20px; padding-top: 4px; }
 .iwrcond > .sheet-tags { display: inline-flex !important; vertical-align: top; max-width: 100%; margin-right: 14px; }
+/* Labels stay on the first line when their chips take more. */
+.iwrcond .sheet-tags, .iwrview { align-items: flex-start !important; }
+.iwrcond .sheet-tags > div:first-child { min-height: 20px; }
 .iwrcond > .resist { display: inline !important; }
 .iwrcond > .resist > *, .iwrcond > .resist > .sheet-value > .sheet-field-value { display: inline; margin-right: 6px; }
 .iwrcond > .resist > .rgroup { display: inline-flex !important; flex-wrap: wrap; vertical-align: top; max-width: 100%; margin-right: 10px; }
 .rgroup > .inline-list { min-width: 0; }
+.iwrview > .sheet-note { line-height: 20px; }
+.iwrview > .chiplist, .iwrview > .sheet-tags { min-width: 0; }
 /* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
 .sheet-sheet .strip .sheet-tags [data-slot="root"], .sheet-sheet .facts .sheet-tags [data-slot="root"] {
   border: 0;
