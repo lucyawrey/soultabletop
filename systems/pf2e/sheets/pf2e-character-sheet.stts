@@ -35,10 +35,11 @@
 <Define name="bulk" formula="sum(inventory, if(state == 'dropped', 0, quantity * coalesce(item.bulk, 0)))" />
 
 <Sheet display="text">
-  <!-- Header: the name and level strip, then build choices and facts across the full width. -->
+  <!-- Header: name, build choices, the level strip, and facts. -->
   <Section class="head">
-    <Text field="name" hideLabel class="charname" />
-    <Stack direction="row" wrap class="refs">
+    <Stack class="ident">
+      <Text field="name" hideLabel class="charname" />
+      <Stack direction="row" wrap class="refs">
         <Ref field="ancestry" label="Ancestry" preview="card" class="card" />
         <Ref field="heritage" label="Heritage" preview="card" class="card" />
         <Ref field="background" label="Background" preview="card" class="card" />
@@ -46,6 +47,7 @@
           <Ref field="class" label="Class" preview="card" class="card" />
           <Ref field="subclass" label="{switch(class.name, 'Rogue', 'Racket', 'Cleric', 'Doctrine', 'Subclass')}" preview="card" class="card" />
         </Stack>
+      </Stack>
     </Stack>
     <Stack direction="row" class="meta">
       <Number field="level" label="Level" min="1" max="20" />
