@@ -130,8 +130,7 @@
 .head > div:last-child > div { display: contents; }
 .charname input { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); height: auto; }
 .charname .sheet-field-value { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); line-height: 1; }
-.charname { grid-column: 1; grid-row: 1; align-self: center; }
-.refs { grid-column: 1 / -1; grid-row: 2; gap: 6px 8px; }
+.refs { gap: 6px 8px; margin-top: 8px; }
 .refgroup { gap: 6px 8px; flex-wrap: nowrap; }
 .card {
   border: 1px solid var(--st-border-strong);
@@ -142,7 +141,7 @@
 .card .sheet-field-value { font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
 .meta {
   grid-column: 2;
-  grid-row: 1;
+  grid-row: 1 / span 2;
   align-self: center;
   border: 1px solid var(--st-border);
   border-radius: var(--st-radius);
@@ -166,7 +165,7 @@
 .meta .cellv { display: grid; }
 .per { align-items: baseline; justify-content: center; gap: 3px; }
 .unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
-.facts { grid-column: 1 / -1; grid-row: 3; gap: 2px 14px; align-items: baseline; }
+.facts { grid-column: 1; gap: 2px 14px; align-items: baseline; }
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
 .facts .sheet-value .sheet-field-value { font-weight: 400; }
 .speeds > div:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
@@ -438,6 +437,7 @@
   outline: 2px solid color-mix(in srgb, var(--st-primary) 22%, transparent);
   outline-offset: 2px;
 }
+.ident .sheet-field-value > .space-y-2 { margin: 0; }
 
 /* Rank badges stay in edit, dashed; an invisible select over each one opens the choices. */
 .rankcell { position: relative; display: grid !important; place-items: center; }
@@ -521,9 +521,7 @@
 /* Phones */
 @media (max-width: 900px) {
   .head > div:last-child { grid-template-columns: 1fr; }
-  .charname, .refs, .meta, .facts { grid-column: 1; }
-  .meta { grid-row: 3; }
-  .facts { grid-row: 4; }
+  .meta, .facts { grid-column: 1; grid-row: auto; }
   .meta > * { flex: 1 1 0; min-width: 0; padding: 6px 4px; }
   .meta .sheet-field-value { font-size: var(--d-big); }
   .meta .sheet-tracker .sheet-field-value button { width: 14px; height: 14px; }
