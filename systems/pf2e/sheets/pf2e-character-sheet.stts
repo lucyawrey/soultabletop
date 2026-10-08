@@ -510,7 +510,8 @@
             <Value hideLabel class="act" formula="glyph(spell.cast)" />
             <Value field="spell.name" hideLabel preview="card" class="name" show="not editing()" />
             <Ref field="spell" hideLabel class="name" show="editing()" />
-            <Value field="spell.range" hideLabel />
+            <Value field="spell.range" hideLabel show="not editing()" />
+            <Stack direction="row" class="inline" show="editing()"><Note class="dim">Rank</Note><Number field="rank" hideLabel min="1" max="10" class="small-num" /></Stack>
             <Value field="spell.defense" hideLabel />
             <Value field="spell.damage" hideLabel class="dim" />
           </Stack>
