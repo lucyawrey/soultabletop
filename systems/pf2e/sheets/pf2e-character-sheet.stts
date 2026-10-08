@@ -122,7 +122,11 @@
               </Stack>
               <Number field="tempHp" label="Temp" min="0" live class="temp" />
             </Stack>
-            <Tracker formula="hp" max="{maxHp()}" hideLabel class="meter" />
+            <!-- Temp HP draws over the HP bar from the left, in another color. -->
+            <Stack class="hpbar">
+              <Tracker formula="hp" max="{maxHp()}" hideLabel class="meter" />
+              <Tracker formula="coalesce(tempHp, 0)" max="{maxHp()}" hideLabel class="meter tempbar" />
+            </Stack>
             <Stack direction="row" wrap class="death">
               <Tracker field="dying" label="Dying" max="4" style="pips" live class="bad" />
               <Tracker field="wounded" label="Wounded" max="3" style="pips" live class="bad sq" />
