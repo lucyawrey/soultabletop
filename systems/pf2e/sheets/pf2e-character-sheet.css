@@ -100,6 +100,20 @@
 }
 .rank.on .sheet-field-value { background: var(--st-primary); color: var(--st-on-primary); border-color: var(--st-primary); }
 
+/* Roll buttons: a small muted die beside the value, in full color when its row is hovered or it has focus. */
+.sheet-roll-trigger {
+  width: 18px;
+  height: 18px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--st-ink-muted);
+  opacity: .5;
+}
+.sheet-roll-trigger .iconify { width: 14px; height: 14px; }
+.row:hover .sheet-roll-trigger, .srow:hover .sheet-roll-trigger, .kvp:hover .sheet-roll-trigger, .strip > .sheet-value:hover .sheet-roll-trigger,
+.sheet-roll-trigger:focus-visible { opacity: 1; color: var(--st-primary); }
+.sheet-sheet .sheet-roll-trigger:hover { opacity: 1; background: var(--st-primary); color: var(--st-on-primary); border-color: var(--st-primary); }
+
 /* Action glyphs */
 .act { color: var(--st-primary); font-weight: 700; font-size: 1.15em; line-height: 1; white-space: nowrap; }
 .act .sheet-field-value { color: inherit; }
