@@ -26,9 +26,8 @@
         formula="if(coalesce(range, 0) > 0, if(hasTrait(traits, 'Propulsive'), floor(max(0, attributes.str) / 2), 0), if(subclass.name == 'Thief' and hasTrait(traits, 'Finesse'), max(attributes.str, attributes.dex), attributes.str))" />
 <Define name="damageType" params="t" formula="switch(t, 'bludgeoning', 'B', 'piercing', 'P', 'slashing', 'S', '')" />
 <Define name="sneakDice" formula="if(level >= 17, 4, if(level >= 11, 3, if(level >= 5, 2, 1)))" />
-<Define name="defensesList"
-        formula="join(list(join(map(resistances, concat('resist ', type, ' ', value)), ', '), join(map(weaknesses, concat('weak ', type, ' ', value)), ', '), if(length(coalesce(immunities, list())) > 0, concat('immune ', join(immunities, ', ')), '')), ' · ')" />
-<Define name="defensesText" formula="if(length(coalesce(defensesList(), '')) > 0, defensesList(), 'none')" />
+<Define name="pairsText" params="xs" formula="join(map(xs, concat(type, ' ', value)), ', ')" />
+<Define name="hasAny" params="xs" formula="length(coalesce(xs, list())) > 0" />
 <Define name="hasFeat" params="cat, lv" formula="any(feats, category == cat and level == lv)" />
 <Define name="bulkText" params="b" formula="if(b == 0.1, 'L', if(coalesce(b, 0) == 0, '—', b))" />
 <Define name="bulk" formula="sum(inventory, if(state == 'dropped', 0, quantity * coalesce(item.bulk, 0)))" />
@@ -148,17 +147,30 @@
             <Value formula="concat('/ ', shield.shield.hp, ' · BT ', shield.shield.brokenThreshold)" hideLabel class="dim" show="shield.name != null" />
             <Badge class="broken" color="error" show="shield.name != null and coalesce(shieldHp, shield.shield.hp) <= shield.shield.brokenThreshold">Broken</Badge>
           </Stack>
-          <Stack direction="row" wrap class="resist">
-            <Note class="label">Resist / weak / immune</Note>
-            <Value hideLabel class="dim" formula="defensesText()" show="not editing()" />
-            <List field="resistances" addLabel="Resistance" class="inline-list" show="editing()">
-              <Stack direction="row" class="pair-in"><Note>Resist</Note><Text field="type" hideLabel placeholder="fire" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
-            </List>
-            <List field="weaknesses" addLabel="Weakness" class="inline-list" show="editing()">
-              <Stack direction="row" class="pair-in"><Note>Weak</Note><Text field="type" hideLabel placeholder="cold iron" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
-            </List>
-            <Tags field="immunities" label="Immune" show="editing()" />
+          <Stack direction="row" wrap class="resist" show="not editing()">
+            <Value label="Resist" formula="pairsText(resistances)" show="hasAny(resistances)" />
+            <Value label="Weak" formula="pairsText(weaknesses)" show="hasAny(weaknesses)" />
+            <Value label="Immune" formula="join(immunities, ', ')" show="hasAny(immunities)" />
+            <Value label="Resist / weak / immune" formula="'none'" show="not (hasAny(resistances) or hasAny(weaknesses) or hasAny(immunities))" />
           </Stack>
+          <Grid cols="3" class="resist-edit" show="editing()">
+            <Stack>
+              <Note class="label">Resist</Note>
+              <List field="resistances" addLabel="Resistance">
+                <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="fire" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
+              </List>
+            </Stack>
+            <Stack>
+              <Note class="label">Weak</Note>
+              <List field="weaknesses" addLabel="Weakness">
+                <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="cold iron" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
+              </List>
+            </Stack>
+            <Stack>
+              <Note class="label">Immune</Note>
+              <Tags field="immunities" hideLabel />
+            </Stack>
+          </Grid>
           <Tags field="conditions" label="Conditions" live />
         </Stack>
       </Stack>
