@@ -348,6 +348,11 @@
 .traits .sheet-tags .sheet-field-value > .flex-wrap { gap: 4px; }
 .acts .row { grid-template-columns: 30px 1fr auto; }
 .acts .row > .dim .sheet-field-value { font-size: var(--d-lfs); }
+/* An expanded preview opens as a full-width line under its row: the name's wrappers step aside so
+   the preview panel is a cell of the row's own grid, placed after the row's other cells. */
+.strikes .row > .cell, .strikes .row > .cell > .sheet-value, .acts .row > .cell, .acts .row > .cell > .sheet-value,
+.row > .sheet-value.name { display: contents; }
+.row .sheet-preview-frame { grid-column: 1 / -1; order: 99; margin: 2px 0 6px; }
 
 /* Skills and proficiencies on the left, the tabs on the right. */
 .mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
