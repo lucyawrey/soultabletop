@@ -28,7 +28,6 @@
 <Define name="sneakDice" formula="if(level >= 17, 4, if(level >= 11, 3, if(level >= 5, 2, 1)))" />
 <Define name="defensesList"
         formula="join(list(if(length(coalesce(resistances, list())) > 0, concat('Resist ', join(map(resistances, concat(type, ' ', value)), ', ')), ''), if(length(coalesce(weaknesses, list())) > 0, concat('Weak ', join(map(weaknesses, concat(type, ' ', value)), ', ')), ''), if(length(coalesce(immunities, list())) > 0, concat('Immune ', join(immunities, ', ')), '')), ' · ')" />
-<Define name="defensesText" formula="if(length(coalesce(defensesList(), '')) > 0, defensesList(), 'none')" />
 <Define name="profLabel" params="k" formula="switch(k, 'unarmed', 'Unarmed', 'simple', 'Simple', 'martial', 'Martial', 'advanced', 'Advanced', 'unarmored', 'Unarmored', 'light', 'Light', 'medium', 'Medium', 'heavy', 'Heavy', k)" />
 <Define name="hasFeat" params="cat, lv" formula="any(feats, category == cat and level == lv)" />
 <Define name="bulkText" params="b" formula="if(b == 0.1, 'L', if(coalesce(b, 0) == 0, '—', b))" />
@@ -66,8 +65,8 @@
       <Tags field="ancestry.traits" label="Traits" />
       <Tags field="senses" label="Senses" placeholder="+ Add" show="editing() or length(coalesce(senses, list())) > 0" />
       <!-- In play, other speeds are chips like the tags beside them. -->
-      <List field="otherSpeeds" label="Other speeds" class="speeds speedchips" show="not editing() and length(coalesce(otherSpeeds, list())) > 0">
-        <Value formula="concat(kind, ' ', speed, ' ft')" hideLabel class="speedchip" />
+      <List field="otherSpeeds" label="Other speeds" class="speeds chiplist" show="not editing() and length(coalesce(otherSpeeds, list())) > 0">
+        <Value formula="concat(kind, ' ', speed, ' ft')" hideLabel class="chip20" />
       </List>
       <List field="otherSpeeds" label="Other speeds" addLabel="Add speed" class="speeds" show="editing()">
         <Stack direction="row" class="speed">
@@ -168,7 +167,20 @@
             <Tags field="conditions" label="Conditions" placeholder="+ Add" live />
             <Stack direction="row" wrap class="resist">
               <Note class="label">IWR</Note>
-              <Value hideLabel class="dim" formula="defensesText()" show="not editing()" />
+              <Value hideLabel class="dim" formula="'none'" show="not editing() and length(coalesce(defensesList(), '')) == 0" />
+              <!-- In view, each kind's entries are chips, like Conditions. -->
+              <Stack direction="row" class="rgroup iwrview" show="not editing() and length(coalesce(resistances, list())) > 0">
+                <Note>Resist</Note>
+                <List field="resistances" class="chiplist"><Value formula="concat(type, ' ', value)" hideLabel class="chip20" /></List>
+              </Stack>
+              <Stack direction="row" class="rgroup iwrview" show="not editing() and length(coalesce(weaknesses, list())) > 0">
+                <Note>Weak</Note>
+                <List field="weaknesses" class="chiplist"><Value formula="concat(type, ' ', value)" hideLabel class="chip20" /></List>
+              </Stack>
+              <Stack direction="row" class="rgroup iwrview" show="not editing() and length(coalesce(immunities, list())) > 0">
+                <Note>Immune</Note>
+                <Tags field="immunities" hideLabel />
+              </Stack>
               <Stack direction="row" class="rgroup" show="editing()">
                 <Note>Resist</Note>
                 <List field="resistances" addLabel="Add" class="inline-list">
