@@ -326,7 +326,7 @@
 
 /* Tabs: folio tabs on the panel's top edge. */
 .maintabs [data-slot="list"] { background: transparent; padding: 0; gap: 2px; border-radius: 0; margin-bottom: -1px; z-index: 1; }
-.maintabs [data-slot="indicator"] { display: none; }
+.maintabs [data-slot="list"] > [data-slot="indicator"] { display: none; }
 .maintabs [data-slot="list"] { flex-wrap: wrap; }
 .maintabs [data-slot="label"] { overflow: visible; }
 .maintabs [data-slot="trigger"] {
@@ -360,8 +360,16 @@
 .traits { gap: 2px 4px; align-items: center; }
 .inline { display: flex; align-items: center; gap: 4px; }
 .inline .sheet-field-label { color: inherit; }
-.resist { gap: 4px 8px; align-items: center; }
-.inline-list > div { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+/* Resist / weak / immune: a full-width row of three groups; in edit, three columns of short rows. */
+.resist, .resist-edit { flex-basis: 100%; }
+.resist { gap: 4px 20px; align-items: baseline; }
+.resist .sheet-value { align-items: baseline; }
+.resist .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
+.resist-edit { gap: 4px var(--d-gap); align-items: start; }
+.resist-edit .sheet-list-item { align-items: center; gap: 2px; }
+.resist-edit .sheet-list-item > div:first-child { flex: none; }
+.resist-edit .sheet-list-item > div:last-child { flex-direction: row; }
+.resist-edit [aria-label="Move up"], .resist-edit [aria-label="Move down"] { display: none; }
 .pair-in { gap: 4px; align-items: center; }
 .pair-in .sheet-text .sheet-field-value { width: 90px; }
 
