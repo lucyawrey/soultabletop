@@ -32,7 +32,7 @@ What changed from `mockup.html` besides the locked options: the CSS of rejected 
   - Rollable values keep the roll system's die button beside them.
   - Still to build: resist/weak/immune (schema fields; changing the schema is fine), the Bulk meter's encumbered mark (a Tracker feature), empty "Choose … feat" rows for coming levels, and Strike roll titles from the weapon's name (rows titled by a referenced content's name).
   - Second look (user, 2026-10-07): every panel, the tab panel and selected tab included, has the strong border (`--st-border-strong`); the tabs run as tall as the Skills and Proficiencies column and sit flush on their panel; the Level box and its value are centered.
-  - Third look (user, 2026-10-08): the decisions above and the "agent, approved" list below stand. The Bulk meter shows how full the character is (a filled bar), not only the encumbered tick. Resist / weak / immune get their own full-width row under the shield: in play, three labeled groups (Resist, Weak, Immune; only the ones with entries, or "Resist / weak / immune: none"); in edit, three columns of short rows (type, value, remove; no move buttons) with "+ Add" under each, stacked on a phone.
+  - Third look (user, 2026-10-08): the decisions above and the "agent, approved" list below stand. The Bulk meter shows how full the character is (a filled bar). Resist / weak / immune: set aside for now; Attributes & Defenses stay compact and shouldn't change size much (a full-width row was tried and dropped). Edit mode should look like the mockup: every "agent, unconfirmed" choice was reverted to `frozen.html` unless the Sheet system can't do it (listed below), then gone over with the user. Fields the mockup has no edit control for (armor and shield, a Strike's attribute, item bonus, and notes, an action's notes) are small inline controls no taller than the play row; rows remove with a ×, with no reorder buttons; armor and shield are picked in the Inventory tab's strip, so the AC box doesn't change in edit.
 
 ## Differences from frozen.html that remain
 
@@ -51,24 +51,21 @@ Where the built sheet (draft PR #108, as of 2026-10-07) still differs from `froz
 - A die button beside every rollable value (the roll system's default).
 - Resist / weak / immune, the Bulk mark, open feat slots, and Strike roll titles were gaps the user chose to build; how each looks is the agent's (below), except Resist / weak / immune and the Bulk fill, which the user decided (third look, above).
 
-**Agent, unconfirmed**
-- Strikes: the MAP steps are rollable numbers in the hit cell, and "+1d6 sneak" sits beside the damage (from the dice mockup); traits stay in their own column, not a muted line under the name. A Strike's notes show after its traits.
-- Edit mode:
-  - pickers and selects are the app's standard ones (chevron, solid edge), not the mockup's dashed badges and build cards with ▾, and there's no soft ring on controls that look like play values;
-  - every list row has move up, move down, and remove buttons, and each list an "Add …" button;
-  - the inventory is one list with a State select (not grouped Held/Worn/Stowed with move badges), and spells one list with cantrips;
-  - Actions show an action picker, plus a "Feat" picker while no action is chosen;
-  - open feat slots are their own group after the feats ("Open feat slots, to level N", up to two levels ahead), not interleaved by level;
-  - a spell's prepared rank (`spells.rank`) has no input on the sheet (a gap to fix).
-- Header: XP has no "/ 1000" (the schema has no maximum); Speed shows "25 ft" as one value; Languages and Senses are chips in play (the mockup listed languages as plain text).
-- Conditions are the app's tag input (chips with ×, type to add), not chips plus a "+ Add" button.
-- Signed values show 0 without a sign (the Sheet system's `signed` format); the mockup showed "+0".
-- The Skills aside ("armor −1 on Str/Dex skills") shows only when the penalty applies: not when the character meets the armor's Strength, so Merisiel shows none.
-- Proficiencies use the schema's labels ("Simple Weapons"), and the class's other weapon proficiencies ("Rapier, sap, shortbow, …") aren't shown.
-- Class tab: the Racket group has no Benefits row (the racket opens a preview card instead); class features show only what the class data holds (level 1 for both classes), so no coming levels appear muted yet.
-- Spells tab: the tradition and casting show as "Divine Prepared"; the slots are their own group (above).
-- Inventory: the Bulk meter is the app's progress bar (filled to the current Bulk) with the mark; Invested shows "0 / 10".
-- Biography follows the character schema's fields (Pronouns, Age, Height, Weight, Appearance; Personality, Edicts, Anathema; Allies, Enemies, Organizations; Backstory; Notes), not the mockup's list (which had Ethnicity, Nationality, Birthplace, Beliefs, Likes, Dislikes, Catchphrases).
+**Agent, unconfirmed** (after the third look's rework, 2026-10-08; go over these with the user)
+- Edit controls are the app's own restyled through Sheet CSS: inputs and selects get dashed edges and no fill; pickers draw as the underlined name with a small ▾; rank selects are invisible over the badge.
+- Strikes in edit: the attribute select and item bonus input sit in the hit cell (the MAP steps hide); a 64px notes input follows the traits.
+- Actions in edit: a "Feat" picker shows inline while no action is chosen.
+- Inventory in edit: quantity input, item picker, and an Invested checkbox in each grouped row; the move buttons stay; one "+ Add item" after the groups (new items are worn, the schema's default). Armor and shield pickers follow the coins.
+- Spells in edit: the strip's tradition, casting, and attribute are small selects; slots, Divine Font uses, and focus points are small inputs in their rows and bands.
+- Senses, Languages, Conditions, and Immune edit as the app's tag input, dashed, not chips plus a "+ Add" pill.
+- Open feat slots follow the feats (after "+ Add feat") as rows with a "Choose … feat" pill, not interleaved by level; the pill doesn't open a picker ("+ Add feat" adds).
+- The portrait edits as a URL input, not the mockup's dashed "No portrait" box.
+- A spell's prepared rank (`spells.rank`) has no input on the sheet (a gap to fix).
+- Signed values show 0 without a sign (the Sheet system's `signed` format); the mockup showed "+0". Changing it is a Sheet system change.
+- The header's build cards wrap to a second row when the page is narrower than the mockup's 1180px (the app's page is 1112px wide in a 1400px window).
+- The Skills aside ("armor −1 on Str/Dex skills") shows only when the penalty applies.
+- Class tab: the Racket group has no Benefits row (the racket opens a preview card instead); class features show only what the class data holds (level 1 for both classes), so no coming levels appear muted yet; the class's other weapon proficiencies ("Rapier, sap, shortbow, …") aren't shown.
+- Biography follows the character schema's fields, not the mockup's list (which had Ethnicity, Nationality, Birthplace, Beliefs, Likes, Dislikes, Catchphrases).
 - Reference previews and breakdowns are the Sheet system's (a card under the value; a popover), not the mockup's bottom-right card. Decided for the system when those features were built, not for this sheet.
 - Section labels are placed by styling Nuxt UI's card header element; Roomy density hasn't been looked at.
 
