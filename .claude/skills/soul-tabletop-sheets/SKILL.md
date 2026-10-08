@@ -57,7 +57,7 @@ The full list of attributes and children is in `references/tags.md` (verified ag
 - Definitions: `Define` (`name`, `params`, `formula`; top level or directly inside `Sheet`; renders nothing).
 - Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Button` takes `class`, `show`, and `live` only; `Define`, `Set`, and `Part` (only `show`) take none.
 
-Rendering notes: `Number variant="stat"` shows a big number with its label small. `format="signed"` (on `Number` and `Value`) shows `+2` for positives; an editable `Number` input shows the sign too, while the saved value stays a plain number. `Tracker style="pips"` shows boxes instead of a bar; a `Tracker` without `max` (or at 0) shows just its value. `Checkbox style="dot"` shows a filled or empty circle with no Yes/No text. On phones, `Table` rows stack their cells with labels. `Ref` shows a link to the referenced resource or Content.
+Rendering notes: `Number variant="stat"` shows a big number with its label small. `format="signed"` (on `Number` and `Value`) shows `+2` for positives and `+0` for zero; an editable `Number` input shows the sign too, while the saved value stays a plain number. `Tracker style="pips"` shows boxes instead of a bar; a `Tracker` without `max` (or at 0) shows just its value. `Checkbox style="dot"` shows a filled or empty circle with no Yes/No text. On phones, `Table` rows stack their cells with labels. `Ref` shows a link to the referenced resource or Content.
 
 ## Paths, formulas, and features
 
