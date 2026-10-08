@@ -250,7 +250,7 @@ describe("functions", () => {
     ["length(list(missing))", 1],
     ["count(list(level, missing))", 1],
     ["signed(3)", "+3"],
-    ["signed(0)", "0"],
+    ["signed(0)", "+0"],
     ["signed(-1)", "-1"],
     ["signed(missing)", null],
     ["number(text) + 1", 13],
@@ -506,9 +506,9 @@ describe("formatFormulaValue", () => {
     expect(formatFormulaValue(value, refs)).toBe(text);
   });
 
-  it("signs positive numbers when asked", () => {
+  it("signs zero and positive numbers when asked", () => {
     expect(formatFormulaValue(0.1 + 0.2, refs, "signed")).toBe("+0.3");
-    expect(formatFormulaValue(0, refs, "signed")).toBe("0");
+    expect(formatFormulaValue(0, refs, "signed")).toBe("+0");
   });
 });
 

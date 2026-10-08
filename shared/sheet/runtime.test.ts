@@ -121,9 +121,9 @@ describe("formatSheetValue", () => {
     expect(formatSheetValue(value, refs)).toBe(text);
   });
 
-  it("signs positive numbers when asked", () => {
+  it("signs zero and positive numbers when asked", () => {
     expect(formatSheetValue(2, refs, "signed")).toBe("+2");
-    expect(formatSheetValue(0, refs, "signed")).toBe("0");
+    expect(formatSheetValue(0, refs, "signed")).toBe("+0");
     expect(formatSheetValue(-1, refs, "signed")).toBe("-1");
   });
 });
