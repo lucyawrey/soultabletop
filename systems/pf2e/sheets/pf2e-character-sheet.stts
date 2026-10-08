@@ -64,16 +64,18 @@
     </Stack>
     <Stack direction="row" wrap class="facts">
       <Tags field="ancestry.traits" label="Traits" />
-      <Value label="Senses" formula="join(senses, ', ')" show="not editing() and length(coalesce(senses, list())) > 0" />
-      <Tags field="senses" label="Senses" placeholder="+ Add" show="editing()" />
-      <List field="otherSpeeds" label="Other speeds" addLabel="Add speed" class="speeds" show="editing() or length(otherSpeeds) > 0">
+      <Tags field="senses" label="Senses" placeholder="+ Add" show="editing() or length(coalesce(senses, list())) > 0" />
+      <!-- In play, other speeds are chips like the tags beside them. -->
+      <List field="otherSpeeds" label="Other speeds" class="speeds speedchips" show="not editing() and length(coalesce(otherSpeeds, list())) > 0">
+        <Value formula="concat(kind, ' ', speed, ' ft')" hideLabel class="speedchip" />
+      </List>
+      <List field="otherSpeeds" label="Other speeds" addLabel="Add speed" class="speeds" show="editing()">
         <Stack direction="row" class="speed">
           <Text field="kind" hideLabel placeholder="Swim" />
           <Number field="speed" hideLabel />
         </Stack>
       </List>
-      <Value label="Languages" formula="join(languages, ', ')" show="not editing()" />
-      <Tags field="languages" label="Languages" placeholder="+ Add" show="editing()" />
+      <Tags field="languages" label="Languages" placeholder="+ Add" />
     </Stack>
   </Section>
 
@@ -98,10 +100,11 @@
               <Part label="Armor" formula="armor.armor.acBonus" />
               <Part label="Shield raised" formula="shield.shield.acBonus" show="shieldRaised" />
             </Value>
-            <Value formula="coalesce(armor.name, 'No armor')" hideLabel class="sub" />
-            <!-- The shield line keeps its room while the shield is down, so raising it doesn't move the box. -->
-            <Value formula="concat('+', shield.shield.acBonus, ' shield')" hideLabel class="up" show="shieldRaised and shield.shield.acBonus > 0" />
-            <Value formula="concat('+', shield.shield.acBonus, ' shield')" hideLabel class="up ghost" show="not shieldRaised and shield.shield.acBonus > 0" />
+            <!-- A raised shield shows beside the armor, as in the mockup. -->
+            <Stack direction="row" class="subline">
+              <Value formula="coalesce(armor.name, 'No armor')" hideLabel class="sub" />
+              <Value formula="concat('· +', shield.shield.acBonus, ' shield')" hideLabel class="up" show="shieldRaised and shield.shield.acBonus > 0" />
+            </Stack>
           </Stack>
           <Stack class="box hp">
             <Stack direction="row" wrap class="hpline">
@@ -157,11 +160,12 @@
             <Ref field="shield" hideLabel preview="card" class="shieldname" show="shield.name != null and not editing()" />
             <Value formula="shield.name" hideLabel class="dim" show="shield.name != null and editing()" />
             <Number field="shieldHp" label="HP" min="0" live class="coin" show="shield.name != null" />
-            <Value formula="concat('/ ', shield.shield.hp, ' (BT ', shield.shield.brokenThreshold, ')')" hideLabel class="dim" show="shield.name != null" />
+            <Value formula="concat('/ ', shield.shield.hp, ' (', shield.shield.brokenThreshold, ')')" hideLabel class="dim" show="shield.name != null" />
             <Badge class="broken" color="error" show="shield.name != null and coalesce(shieldHp, shield.shield.hp) <= shield.shield.brokenThreshold">Broken</Badge>
           </Stack>
-          <!-- IWR and Conditions move together, and share a line: each wraps inside itself first. -->
+          <!-- Conditions and IWR move together, and share a line: each wraps inside itself first. -->
           <Stack direction="row" class="iwrcond">
+            <Tags field="conditions" label="Conditions" placeholder="+ Add" live />
             <Stack direction="row" wrap class="resist">
               <Note class="label">IWR</Note>
               <Value hideLabel class="dim" formula="defensesText()" show="not editing()" />
@@ -182,7 +186,6 @@
                 <Tags field="immunities" hideLabel placeholder="+ Add" />
               </Stack>
             </Stack>
-            <Tags field="conditions" label="Conditions" placeholder="+ Add" live />
           </Stack>
         </Stack>
       </Stack>
