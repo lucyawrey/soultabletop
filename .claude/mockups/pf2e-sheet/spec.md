@@ -33,6 +33,7 @@ What changed from `mockup.html` besides the locked options: the CSS of rejected 
   - Still to build: resist/weak/immune (schema fields; changing the schema is fine), the Bulk meter's encumbered mark (a Tracker feature), empty "Choose … feat" rows for coming levels, and Strike roll titles from the weapon's name (rows titled by a referenced content's name).
   - Second look (user, 2026-10-07): every panel, the tab panel and selected tab included, has the strong border (`--st-border-strong`); the tabs run as tall as the Skills and Proficiencies column and sit flush on their panel; the Level box and its value are centered.
   - Third look (user, 2026-10-08): the decisions above and the "agent, approved" list below stand. The Bulk meter shows how full the character is (a filled bar). Resist / weak / immune: set aside for now; Attributes & Defenses stay compact and shouldn't change size much (a full-width row was tried and dropped). Edit mode should look like the mockup: every "agent, unconfirmed" choice was reverted to `frozen.html` unless the Sheet system can't do it (listed below), then gone over with the user. Fields the mockup has no edit control for (armor and shield, a Strike's attribute, item bonus, and notes, an action's notes) are small inline controls no taller than the play row; rows remove with a ×, with no reorder buttons; armor and shield are picked in the Inventory tab's strip, so the AC box doesn't change in edit.
+  - After the third look (user, 2026-10-08): the sheet is close enough to `frozen.html`; from now on it's improved on its own terms, not measured against the mockup (the mockup stays a reference where the user points to it). Done since: raising the shield doesn't move the AC box and the shield line sits at the bottom of the attributes block (as in the mockup); the level strip sits beside the name with the build cards and facts full width below; conditions and resist / weak / immune stay on the shield line (tag inputs without a box, "+ Add" placeholders; resists edit inline as type, value, ×); roll dice are small and muted until their row is hovered; a spell's prepared rank has an input.
 
 ## Differences from frozen.html that remain
 
@@ -60,7 +61,6 @@ Where the built sheet (draft PR #108, as of 2026-10-07) still differs from `froz
 - Senses, Languages, Conditions, and Immune edit as the app's tag input, dashed, not chips plus a "+ Add" pill.
 - Open feat slots follow the feats (after "+ Add feat") as rows with a "Choose … feat" pill, not interleaved by level; the pill doesn't open a picker ("+ Add feat" adds).
 - The portrait edits as a URL input, not the mockup's dashed "No portrait" box.
-- A spell's prepared rank (`spells.rank`) has no input on the sheet (a gap to fix).
 - Signed values show 0 without a sign (the Sheet system's `signed` format); the mockup showed "+0". Changing it is a Sheet system change.
 - The header's build cards wrap to a second row when the page is narrower than the mockup's 1180px (the app's page is 1112px wide in a 1400px window).
 - The Skills aside ("armor −1 on Str/Dex skills") shows only when the penalty applies.
