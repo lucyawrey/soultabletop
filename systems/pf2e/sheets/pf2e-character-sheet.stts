@@ -63,7 +63,7 @@
     <Stack direction="row" wrap class="facts">
       <Tags field="ancestry.traits" label="Traits" />
       <Value label="Senses" formula="join(senses, ', ')" show="not editing() and length(coalesce(senses, list())) > 0" />
-      <Tags field="senses" label="Senses" show="editing()" />
+      <Tags field="senses" label="Senses" placeholder="+ Add" show="editing()" />
       <List field="otherSpeeds" label="Other speeds" addLabel="Add speed" class="speeds" show="editing() or length(otherSpeeds) > 0">
         <Stack direction="row" class="speed">
           <Text field="kind" hideLabel placeholder="Swim" />
@@ -71,7 +71,7 @@
         </Stack>
       </List>
       <Value label="Languages" formula="join(languages, ', ')" show="not editing()" />
-      <Tags field="languages" label="Languages" show="editing()" />
+      <Tags field="languages" label="Languages" placeholder="+ Add" show="editing()" />
     </Stack>
   </Section>
 
@@ -160,15 +160,24 @@
           <Stack direction="row" wrap class="resist">
             <Note class="label">Resist / weak / immune</Note>
             <Value hideLabel class="dim" formula="defensesText()" show="not editing()" />
-            <List field="resistances" addLabel="Resistance" class="inline-list" show="editing()">
-              <Stack direction="row" class="pair-in"><Note>Resist</Note><Text field="type" hideLabel placeholder="fire" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
-            </List>
-            <List field="weaknesses" addLabel="Weakness" class="inline-list" show="editing()">
-              <Stack direction="row" class="pair-in"><Note>Weak</Note><Text field="type" hideLabel placeholder="cold iron" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
-            </List>
-            <Tags field="immunities" label="Immune" show="editing()" />
+            <Stack direction="row" class="rgroup" show="editing()">
+              <Note>Resist</Note>
+              <List field="resistances" addLabel="Add" class="inline-list">
+                <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="fire" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
+              </List>
+            </Stack>
+            <Stack direction="row" class="rgroup" show="editing()">
+              <Note>Weak</Note>
+              <List field="weaknesses" addLabel="Add" class="inline-list">
+                <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="cold iron" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
+              </List>
+            </Stack>
+            <Stack direction="row" class="rgroup" show="editing()">
+              <Note>Immune</Note>
+              <Tags field="immunities" hideLabel placeholder="+ Add" />
+            </Stack>
           </Stack>
-          <Tags field="conditions" label="Conditions" live />
+          <Tags field="conditions" label="Conditions" placeholder="+ Add" live />
         </Stack>
       </Stack>
     </Stack>

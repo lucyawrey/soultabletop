@@ -156,7 +156,6 @@
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
 .facts .sheet-value .sheet-field-value { font-weight: 400; }
 .speeds > div:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
-.facts .sheet-tags .sheet-field-value { min-width: 120px; }
 
 /* Attributes and defenses */
 .top { display: grid !important; grid-template-columns: auto 1fr; gap: var(--d-gap); align-items: stretch; }
@@ -228,9 +227,29 @@
 /* The strip under the defenses: labels beside their values, on one line. */
 .strip .sheet-number, .strip .sheet-tags, .strip .sheet-value, .resist { display: flex; align-items: center; gap: 4px 6px; }
 .strip .sheet-field-label { white-space: nowrap; }
-.strip .sheet-tags .sheet-field-value { min-width: 140px; }
-.strip .sheet-tags [data-slot="root"] { min-height: 24px; padding-block: 1px; }
-.strip .sheet-tags input { font-size: var(--d-lfs); }
+/* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
+.sheet-sheet .strip .sheet-tags [data-slot="root"], .sheet-sheet .facts .sheet-tags [data-slot="root"] {
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  gap: 4px;
+}
+.strip .sheet-tags input, .facts .sheet-tags input {
+  flex: none;
+  width: 52px;
+  min-width: 0;
+  height: 20px;
+  padding: 0 5px;
+  font-size: var(--d-lfs);
+  border: 1px dashed var(--st-border-strong);
+  border-radius: 4px;
+  background: var(--st-panel-muted);
+}
+.strip .sheet-tags input:focus, .facts .sheet-tags input:focus { width: 110px; background: transparent; }
+.strip .sheet-tags input::placeholder, .facts .sheet-tags input::placeholder { color: var(--st-primary); font-weight: 700; opacity: 1; }
+.rgroup { align-items: center; gap: 4px; }
+.rgroup > .sheet-note { font-weight: 700; }
 .coin input { height: 22px; font-weight: 700; }
 .coin input { width: 52px; text-align: center; }
 
@@ -458,7 +477,13 @@
 .resist { gap: 4px 8px; align-items: center; }
 .inline-list > div { display: flex; flex-wrap: wrap; gap: 4px 8px; }
 .pair-in { gap: 4px; align-items: center; }
-.pair-in .sheet-text .sheet-field-value { width: 90px; }
+.pair-in .sheet-text .sheet-field-value { width: 72px; }
+.inline-list .sheet-list-item { gap: 0; }
+.inline-list .small-num .sheet-field-value { width: 30px; }
+.inline-list input[data-slot="base"] { height: 20px; font-size: var(--d-lfs); padding: 0 4px; }
+.inline-list > .flex-wrap { margin-top: 0; }
+.inline-list { display: flex; align-items: center; gap: 4px; }
+.inline-list > * + * { margin-top: 0 !important; }
 .sheet-note.chip {
   justify-self: start;
   border: 1px solid var(--st-border);

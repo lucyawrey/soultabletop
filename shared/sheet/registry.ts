@@ -464,7 +464,7 @@ const tagList: TagSpec[] = [
     name: "Tags",
     category: "field",
     description: "A list of short texts",
-    attrs: { ...fieldAttrs },
+    attrs: { ...fieldAttrs, placeholder: text("Shown in the empty input while editing") },
     children: "none",
     binds: ["stringArray"],
   },

@@ -162,7 +162,7 @@ View mode renders formatted values, edit mode renders the input.
 | `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "exceptZero"` so the input shows "+3" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
 | `Checkbox` / `Toggle` | Checkbox: `style` (check/dot) | boolean | `UCheckbox` / `USwitch`; `style="dot"` is a filled or empty circle in every mode, with no Yes/No text (e.g. proficiency marks) |
 | `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
-| `Tags` | — | array of string (not of choices) | `UInputTags` |
+| `Tags` | `placeholder` | array of string (not of choices) | `UInputTags` |
 | `Tracker` | `max` (optional, at least 0), `mark` (optional), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max". `mark` (a number or one `{formula}`) draws a tick across a bar that isn't editable at that value, for a threshold like encumbrance (hook class `sheet-tracker-mark`); none at or below 0 or at or above `max` |
 | `Ref` | `preview` (see "Reference previews") | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format`, `formula`, `preview` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
