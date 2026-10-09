@@ -107,27 +107,27 @@ export default defineAppConfig({
     textarea: {
       variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
     },
-    // Menus fit their options rather than their field: at least 16rem or the
+    // Menus fit their options rather than their field: at least 10rem or the
     // field's width, up to 28rem (or the space on screen), so narrow fields
     // (a Sheet's pickers) still show names and badges.
     select: {
       slots: {
         content:
-          "w-max min-w-[max(var(--reka-select-trigger-width),16rem)] max-w-[min(28rem,var(--reka-select-content-available-width,28rem))]",
+          "w-max min-w-[max(var(--reka-select-trigger-width),10rem)] max-w-[min(28rem,var(--reka-select-content-available-width,28rem))]",
       },
       variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
     },
     selectMenu: {
       slots: {
         content:
-          "w-max min-w-[max(var(--reka-combobox-trigger-width),16rem)] max-w-[min(28rem,var(--reka-combobox-content-available-width,28rem))]",
+          "w-max min-w-[max(var(--reka-combobox-trigger-width),10rem)] max-w-[min(28rem,var(--reka-combobox-content-available-width,28rem))]",
       },
       variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
     },
     inputMenu: {
       slots: {
         content:
-          "w-max min-w-[max(var(--reka-combobox-trigger-width),16rem)] max-w-[min(28rem,var(--reka-combobox-content-available-width,28rem))]",
+          "w-max min-w-[max(var(--reka-combobox-trigger-width),10rem)] max-w-[min(28rem,var(--reka-combobox-content-available-width,28rem))]",
       },
     },
     button: {
