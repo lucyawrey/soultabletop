@@ -679,6 +679,7 @@ async function insertPath(path: string) {
         >
           <template #controls>
             <USelect
+              :content="{ align: 'start' }"
               v-model="previewSource"
               :items="previewOptions"
               class="w-48"
