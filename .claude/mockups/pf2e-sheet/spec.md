@@ -131,7 +131,7 @@ From `frozen.html`'s CSS. Phones are below 901px.
 - Proficiencies: two labeled rows, Attacks and Defenses, each a wrap of rank badge + name.
 
 **Tabs** (right column, `1.75fr`; phone: below, full width)
-- Class, Feats, Spells (Cleric only), Inventory, Biography. Tab labels in the display font at `--d-h2` with their icon; selected tab joins the panel.
+- Class, Feats, Inventory, Spells (Cleric only), Biography (Inventory before Spells: user, 2026-10-09). Tab labels in the display font at `--d-h2` with their icon; selected tab joins the panel.
 - Panel: padding `--d-pad × 1.5`, min height 640px on desktop (so switching tabs doesn't move the page), none on a phone.
 - Every tab uses the Strikes row style, with group headers as tinted bands (`--st-panel-muted`, radius 4px, `--d-lfs` uppercase).
 - **Class:** a strip (class, Class DC with rank, key attribute), class features by level (coming levels muted), then Deity (Cleric) or Racket (Rogue) as label/value rows (`130px 1fr`).
