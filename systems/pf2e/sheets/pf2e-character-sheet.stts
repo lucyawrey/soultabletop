@@ -386,8 +386,11 @@
           <Stack direction="row" class="kvp" show="editing()"><Note class="label">Key attribute</Note><Select field="keyAttribute" hideLabel class="small-sel" /></Stack>
         </Stack>
         <Note class="grp">Class features</Note>
+        <Stack direction="row" class="row th feature">
+          <Note>Level</Note><Note>Feature</Note>
+        </Stack>
         <List field="class.features" class="rows features">
-          <Stack direction="row" class="row">
+          <Stack direction="row" class="row feature">
             <Value field="level" hideLabel class="dim" show="level <= /level" />
             <Value field="level" hideLabel class="dim future" show="level > /level" />
             <Value field="feature.name" hideLabel preview class="name" />
