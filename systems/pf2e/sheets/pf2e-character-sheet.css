@@ -367,20 +367,21 @@
 .mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
 .leftcol { gap: calc(var(--d-gap) + 10px); }
 /* Fixed columns, so attributes, ranks, and modifiers line up from row to row. */
-.skills .row { grid-template-columns: 1fr 32px 30px 64px; }
+.skills .row { grid-template-columns: 1fr 32px 30px 58px; }
 .skills .row > :last-child { justify-self: end; }
 .rank-sel button { font-size: var(--d-lfs); }
 .skills .row:has(.rank:not(.on)) .name .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
 /* Perception and Initiative sit on each other like list rows, without the section's spacing. */
 .lead:not(.init) { margin-bottom: 0 !important; }
-.lead h4 { font-family: var(--st-font-display); font-size: var(--d-h2); margin: 0; }
+/* Perception and Initiative look like skill rows: the same name and modifier sizes. */
+.lead h4 { font-family: inherit; font-size: calc(var(--d-fs) + 1px); font-weight: 400; margin: 0; }
 /* The "rolls with" select fits its label; the modifier stays at the right edge like Perception's. */
 .lead.init { grid-template-columns: auto auto 1fr; border-bottom: 2px solid var(--st-border-strong); margin-bottom: calc(var(--d-gap) * .5); }
 .lead.init > :last-child { justify-self: end; }
 .lead.init:has(.ibonus) { grid-template-columns: auto auto 1fr auto; }
 .lead.init .ibonus { justify-self: end; }
-.lead > .sheet-value:last-child .sheet-field-value { font-size: calc(var(--d-big) * .8); }
-.lore { border-top: 1px solid var(--st-border); }
+/* Lore continues the skill list: no gap or extra divider between them. */
+.skills .rows:not(.lore) { margin-bottom: 0 !important; }
 .profrow { display: grid !important; grid-template-columns: 70px 1fr; gap: 4px 12px; align-items: start; padding: 2px 0; }
 .proflist > div { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .prof .sheet-field-value { font-size: calc(var(--d-fs) - 2px); }
