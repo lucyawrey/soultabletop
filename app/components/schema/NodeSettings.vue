@@ -78,6 +78,7 @@ watch(
   <div v-else-if="node.type === 'array' && node.item" class="space-y-2">
     <UFormField size="md" label="Item Type">
       <USelect
+        :content="{ align: 'start' }"
         v-model="node.item.type"
         :items="typeOptions"
         class="w-40"
@@ -104,6 +105,7 @@ watch(
       required
     >
       <USelect
+        :content="{ align: 'start' }"
         v-model="node.contentTypeId"
         :items="contentTypeOptions"
         placeholder="Choose a content type"
@@ -113,6 +115,7 @@ watch(
     </UFormField>
     <UFormField size="md" label="Allow">
       <USelect
+        :content="{ align: 'start' }"
         v-model="node.allow"
         :items="allowOptions"
         class="w-full"
@@ -128,6 +131,7 @@ watch(
     description="Limit links to one kind of resource, or allow any."
   >
     <USelect
+      :content="{ align: 'start' }"
       v-model="kind"
       :items="kindOptions"
       class="w-48"

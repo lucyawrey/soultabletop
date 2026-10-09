@@ -1,6 +1,6 @@
 # Site theme
 
-Soul Tabletop has one light theme, called "Folio": a lightly warm page with near-white panels, plum as the primary color, gilt as the accent, Nunito Sans for text, and Cormorant Garamond for large headings. There is no dark mode. Sheet designers get one consistent theme to design against.
+Soul Tabletop has one light theme, called "Folio": a lightly warm page with near-white panels, plum as the primary color, gilt as the accent, steel blue as a contrast color, Nunito Sans for text, and Cormorant Garamond for large headings. There is no dark mode. Sheet designers get one consistent theme to design against.
 
 The look was chosen from four mockups. They live in `.claude/mockups/ui-redesign/mockup.html`, an interactive page with a live contrast table; open it in a browser. Folio is direction D there. `frozen.html` beside it is the approved design locked to the chosen options, and `spec.md` lists its decisions and measurements; use them as the reference when checking the site or changing the theme.
 
@@ -19,7 +19,7 @@ The look was chosen from four mockups. They live in `.claude/mockups/ui-redesign
 
 `main.css` defines the theme in three layers. Each layer refers only to the one above it.
 
-1. **Palettes** (`@theme static`): three Tailwind color scales, 50 to 950. `plum` is primary, `gilt` is secondary (the accent), and `folio` is the warm neutral. `app.config.ts` assigns them by name (`colors: { primary: "plum", secondary: "gilt", neutral: "folio" }`). Nuxt UI then builds `--ui-color-primary-50…950` and the `primary-*` utilities from them. The scales also give Tailwind classes such as `bg-plum-100`, but prefer the semantic classes below.
+1. **Palettes** (`@theme static`): four Tailwind color scales, 50 to 950. `plum` is primary, `gilt` is secondary (the accent), `steel` is tertiary (a contrast color: a blue set against plum, for a second thing beside a primary one, like temp HP over HP), and `folio` is the warm neutral. `app.config.ts` assigns them by name (`colors: { primary: "plum", secondary: "gilt", tertiary: "steel", neutral: "folio" }`); `tertiary` is our own color name, so `nuxt.config.ts` lists it in `ui.theme.colors`. Nuxt UI then builds `--ui-color-primary-50…950` and the `primary-*` utilities from them. The scales also give Tailwind classes such as `bg-plum-100`, but prefer the semantic classes below.
 2. **Semantic tokens** (`:root`): Nuxt UI's own variables, set to the theme's roles. They are unlayered, so they win over Nuxt UI's defaults, which sit in `@layer theme`. Components and pages use them through Nuxt UI's semantic classes (`text-muted`, `bg-elevated`, `border-accented`, `text-primary`), never raw hex values.
 3. **Sheet tokens** (`--st-*`, also in `:root`): aliases of layer 2 that Sheet CSS may use. Their names are a public contract (see below).
 
@@ -43,7 +43,8 @@ The look was chosen from four mockups. They live in `.claude/mockups/ui-redesign
 | `--ui-border-accented` | **outlines of controls** (inputs, outline buttons, toggles); 3:1 | folio-500 `#8a7f72` |
 | `--ui-primary` | primary actions, links, current nav item, focus rings | plum-700 `#6b2d4e` |
 | `--ui-secondary` | accent | gilt-700 `#765a14` |
-| `--ui-primary-soft`, `--ui-secondary-soft` | soft chip fills behind primary and accent text (ours, not Nuxt UI's) | plum-100 `#f1dfe7`, gilt-100 `#f2e7c9` |
+| `--ui-tertiary` | contrast color (ours, not Nuxt UI's) | steel-700 `#2e5d7d` |
+| `--ui-primary-soft`, `--ui-secondary-soft`, `--ui-tertiary-soft` | soft chip fills behind primary, accent, and contrast text (ours, not Nuxt UI's) | plum-100 `#f1dfe7`, gilt-100 `#f2e7c9`, steel-100 `#e0ebf2` |
 | `--ui-success`, `--ui-info`, `--ui-warning`, `--ui-error` | status | `#166534`, `#1d4ed8`, `#92400e`, `#b91c1c` |
 | `--ui-radius` | base radius; `rounded-md` (buttons, inputs) is 1.5×, `rounded-lg` (cards) 2× | `0.3125rem` |
 
@@ -109,6 +110,7 @@ Sheet CSS (`docs/sheet-system.md`, section 6) can match the site with these toke
 | `--st-ink`, `--st-ink-muted` | main text, secondary text |
 | `--st-primary`, `--st-on-primary` | primary color, text on it |
 | `--st-accent` | accent color |
+| `--st-contrast` | contrast color (steel blue), for something set against the primary color |
 | `--st-border`, `--st-border-strong` | dividers, outlines that must stand out |
 | `--st-radius` | corner radius of buttons and inputs |
 | `--st-font-body`, `--st-font-display` | body font, display font |

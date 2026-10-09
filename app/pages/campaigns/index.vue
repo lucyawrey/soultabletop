@@ -299,6 +299,7 @@ async function remove() {
           />
           <UFormField name="systemId" label="System" required>
             <USelect
+              :content="{ align: 'start' }"
               v-model="form.systemId"
               :items="systemOptions"
               class="w-full"

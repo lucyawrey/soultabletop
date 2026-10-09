@@ -1,11 +1,12 @@
 // Palette names are defined in app/assets/css/main.css (docs/theme.md).
-const colors = ["primary", "secondary", "success", "info", "warning", "error"] as const;
+const colors = ["primary", "secondary", "tertiary", "success", "info", "warning", "error"] as const;
 
 export default defineAppConfig({
   ui: {
     colors: {
       primary: "plum",
       secondary: "gilt",
+      tertiary: "steel",
       neutral: "folio",
     },
     // Roll toasts stay until closed, so every toast's close button is a
@@ -107,11 +108,30 @@ export default defineAppConfig({
     textarea: {
       variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
     },
+    // Menus fit their options rather than their field: at least as wide as the
+    // field, up to 28rem (or the space on screen), so narrow fields
+    // (a Sheet's pickers) still show names and badges. Each one sets
+    // `:content="{ align: 'start' }"`, so a wider menu lines up with its
+    // field's left edge instead of centering on it.
     select: {
+      slots: {
+        content:
+          "w-max min-w-(--reka-select-trigger-width) max-w-[min(28rem,var(--reka-select-content-available-width,28rem))]",
+      },
       variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
     },
     selectMenu: {
+      slots: {
+        content:
+          "w-max min-w-(--reka-combobox-trigger-width) max-w-[min(28rem,var(--reka-combobox-content-available-width,28rem))]",
+      },
       variants: { size: { lg: { base: "px-3 py-2.5 text-[15px]/5" } } },
+    },
+    inputMenu: {
+      slots: {
+        content:
+          "w-max min-w-(--reka-combobox-trigger-width) max-w-[min(28rem,var(--reka-combobox-content-available-width,28rem))]",
+      },
     },
     button: {
       // The mockup's buttons: semibold 14px, 9px by 14px, 15px icons.

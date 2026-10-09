@@ -380,6 +380,7 @@ async function remove() {
             required
           >
             <USelect
+              :content="{ align: 'start' }"
               v-model="form.systemId"
               :items="systemOptions"
               class="w-full"
@@ -392,6 +393,7 @@ async function remove() {
           </UFormField>
           <UFormField name="contentCategory" label="Category" required>
             <USelect
+              :content="{ align: 'start' }"
               v-model="form.contentCategory"
               :items="categoryOptions"
               class="w-full"

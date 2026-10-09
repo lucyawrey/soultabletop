@@ -87,6 +87,7 @@ async function select(id: unknown) {
 
 <template>
   <USelectMenu
+    :content="{ align: 'start' }"
     :model-value="modelValue"
     :items="items"
     value-key="value"

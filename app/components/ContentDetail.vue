@@ -410,6 +410,7 @@ function printPage() {
             size-class="h-8 w-56"
           />
           <USelect
+            :content="{ align: 'start' }"
             v-else
             :model-value="viewSheetId ?? item.sheet.id ?? GENERATED"
             :items="sheetOptions"
@@ -512,6 +513,7 @@ function printPage() {
             description="Used for everyone viewing this; they can still switch for themselves."
           >
             <USelect
+              :content="{ align: 'start' }"
               v-model="form.sheetId"
               :items="savedSheetOptions"
               class="w-full"
