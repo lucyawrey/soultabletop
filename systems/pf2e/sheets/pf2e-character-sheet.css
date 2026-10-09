@@ -382,8 +382,9 @@
 .lead.init .ibonus { justify-self: end; }
 /* Lore continues the skill list: no gap or extra divider between them. */
 .skills .rows:not(.lore) { margin-bottom: 0 !important; }
-.profrow { display: grid !important; grid-template-columns: 70px 1fr; gap: 4px 12px; align-items: start; padding: 2px 0; }
-.proflist > div { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+/* Each label sits on its first line of badges; the badges are an aligned two-column grid. */
+.profrow { display: grid !important; grid-template-columns: 70px 1fr; gap: 4px 12px; align-items: baseline; padding: 2px 0; }
+.proflist > div { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
 .prof .sheet-field-value { font-size: calc(var(--d-fs) - 2px); }
 .prof { gap: 4px; align-items: center; }
 
