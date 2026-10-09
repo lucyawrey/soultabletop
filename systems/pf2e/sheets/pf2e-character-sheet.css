@@ -318,7 +318,8 @@
   padding: calc(var(--d-gap) * .3) 0;
 }
 .row.edit { display: flex !important; flex-wrap: wrap; align-items: end; }
-.row.th { min-height: 0; }
+/* Header rows sit on their list like the rows below them, without the section's spacing. */
+.row.th { min-height: 0; margin-bottom: 0 !important; }
 .row.th > * { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 .name .sheet-field-value { font-size: calc(var(--d-fs) + 1px); }
 .skill .name .sheet-field-value, .srow .name .sheet-field-value, .prof .sheet-field-value { font-weight: 400; }
