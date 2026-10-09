@@ -639,7 +639,7 @@
   .inv > :nth-child(5) { display: none; }
   .bio { grid-template-columns: 1fr; }
   /* On its own line, the portrait keeps about its desktop size. */
-  .portrait img { width: auto; max-width: 100%; max-height: 260px; }
+  .portrait img { width: auto; max-width: 100%; max-height: 320px; margin: 0 auto; }
   /* Edit keeps the play layout on a phone too; notes inputs stay narrow. */
   .acts .note-in, .acts .note-in .sheet-field-value { width: 96px; }
   .feat { grid-template-columns: 40px 24px 1fr auto; }
