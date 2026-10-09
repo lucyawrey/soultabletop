@@ -10,6 +10,8 @@
   --d-h2: 15px;
   font-size: var(--d-fs);
   color: var(--st-ink);
+  /* The narrow layout follows the sheet's own width, not the window's (the app's sidebar takes some). */
+  container-type: inline-size;
 }
 .sheet-sheet {
   display: grid;
@@ -613,7 +615,7 @@
 .open-slots { margin-top: 0 !important; }
 
 /* Phones */
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .head > div:last-child { grid-template-columns: 1fr; }
   .meta, .facts { grid-column: 1; grid-row: auto; }
   .meta > * { flex: 1 1 0; min-width: 0; padding: 6px 4px; }
@@ -635,7 +637,7 @@
   .strikes .row > :nth-child(4), .strikes .row > :nth-child(5) { grid-column: 2 / -1; font-size: var(--d-lfs); }
   .spell { grid-template-columns: 22px 76px 1fr; row-gap: 0; }
   .spell > :nth-child(n + 4) { grid-column: 3; font-size: var(--d-lfs); }
-  .inv { grid-template-columns: 24px 1fr 30px 150px; }
+  .inv, .sheet-tab:not(:has(.invcol)) .inv { grid-template-columns: 24px 1fr 30px 96px; }
   .inv > :nth-child(5) { display: none; }
   .bio { grid-template-columns: 1fr; }
   /* On its own line, the portrait keeps about its desktop size. */
