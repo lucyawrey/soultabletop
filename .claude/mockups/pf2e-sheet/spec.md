@@ -101,16 +101,18 @@ From `frozen.html`'s CSS. Phones are below 901px.
 
 **Breakpoints** (user, 2026-10-09: keep this list current). The sheet's layout follows its own width (container queries on the sheet root), not the window's: the app's sidebar is 288px with its padding, can be collapsed on a desktop, and becomes a hamburger menu below a 1024px window (Nuxt UI's `lg`), so the same window can give very different sheet widths.
 
-| Sheet width | CSS | What changes | Example windows (sidebar open / hamburger) |
-|---|---|---|---|
-| over 1080px | none | the wide layout, as in the reference (max width 1180px) | 1380 (1092) |
-| 961–1080px | `@container (max-width: 1080px)` | tighter header strip and chips; Hit Points gets more of the defenses row | 1280 (992); 1000 hamburger (968) |
-| 861–960px | `@container (max-width: 960px)` | tighter again: Hit Points line, Strikes columns | 1180 (892); 900 hamburger (868) |
-| 860px and under | `@container (max-width: 860px)` | the narrow layout: everything stacks | 1024–1148 with the sidebar (736–860); under 893 hamburger |
+| Sheet width | CSS | What changes |
+|---|---|---|
+| over 1080px | none | the wide layout, as in the reference (max width 1180px) |
+| 961–1080px | `@container (max-width: 1080px)` | tighter header strip and chips; Hit Points gets more of the defenses row |
+| 881–960px | `@container (max-width: 960px)` | tighter again: Hit Points line, Strikes columns |
+| 821–880px | `@container (max-width: 880px)` | the header's Level/XP strip moves under the chips; attributes go six across, then Hit Points, then AC and saves |
+| 621–820px | `@container (max-width: 820px)` | Strikes and Actions stack, and Skills and the tabs stack; their rows stay wide |
+| 620px and under | `@container (max-width: 620px)` | phones: Strikes, spell, and inventory rows fold into two lines, column headers and the Inv column drop, Biography's portrait goes above |
 
-Sheet width at a window (measured 2026-10-09): the sidebar has three states. Full: the window minus 288px. Minimized (the icon rail; the sheet editor starts this way): minus 120px. Gone (a hamburger menu, below a 1024px window): minus 32px.
+Sheet width at a window (measured 2026-10-09): the sidebar has three states. Full: the window minus 288px. Minimized (the icon rail; the sheet editor starts this way): minus 120px. Gone (a hamburger menu, below a 1024px window): minus 32px. Hiding the sidebar gives the sheet 256px back, so shrinking the window can step back to a wider layout at 1024px; the steps keep each change to one or two areas (user, 2026-10-09: follow the sheet's width so a minimized sidebar's room is used).
 
-Where each area stops fitting in its wide form (measured with the narrow layout switched off, 2026-10-09): header (chips + Level/XP strip) ~880px, then the chips wrap; Attributes & Defenses ~880px, then Hit Points wraps (very tall by 700, spills out at 620); Strikes | Actions ~790px; Skills | tabs ~800px on the Spells tab, ~670px on Inventory, under 620px on Class and Feats. Known problem: shrinking the window crosses wide → narrow (1149px) → wide (1023px, the sidebar hides) → narrow (892px); the narrow layout changes everything at once, so it reads as a jump.
+Where each area stops fitting in its wide form (measured with the narrow layout switched off, 2026-10-09): header (chips + Level/XP strip) ~880px, then the chips wrap; Attributes & Defenses ~880px, then Hit Points wraps (very tall by 700, spills out at 620); Strikes | Actions ~790px; Skills | tabs ~800px on the Spells tab, ~670px on Inventory, under 620px on Class and Feats. Hiding the sidebar (below a 1024px window) gives the sheet 256px back, so shrinking the window can step back to a wider layout there; the steps above keep each change to one or two areas (user, 2026-10-09: follow the sheet's width so a minimized sidebar's room is used).
 
 **Page**
 - Sheet max 1180px wide, centered; block gap `--d-gap + 10px` vertically (room for the folio-tab labels), `--d-gap` horizontally.
