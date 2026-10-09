@@ -449,7 +449,7 @@
 .bmeter [data-slot="base"] { height: 7px; }
 .trad { gap: 4px; }
 .bio { display: grid !important; grid-template-columns: 180px 1fr; gap: calc(var(--d-gap) * 2); align-items: start; }
-.biocols { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important; }
+.biocols { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; }
 .kv > .sheet-text, .kv > .sheet-tags { display: grid; grid-template-columns: 130px 1fr; gap: 6px; align-items: center; }
 
 /* Inputs keep the size of the values they replace: no steppers, narrow boxes. */
@@ -636,14 +636,12 @@
   .now .sheet-number input { width: 60px; }
   .strikes .row { grid-template-columns: 30px minmax(96px, 1fr) minmax(120px, auto) minmax(84px, .8fr) 1.4fr; }
 }
-@container (max-width: 860px) {
+/* Under 880px the header and the Attributes & Defenses row stop fitting side by side
+   (breakpoint list: .claude/mockups/pf2e-sheet/spec.md, "Breakpoints"). */
+@container (max-width: 880px) {
   .head > div:last-child { grid-template-columns: 1fr; }
   .meta, .facts { grid-column: 1; grid-row: auto; }
-  .meta > * { flex: 1 1 0; min-width: 0; padding: 6px 4px; }
-  .meta .sheet-field-value { font-size: var(--d-big); }
-  .meta .sheet-tracker .sheet-field-value button { width: 14px; height: 14px; }
-  .meta .sheet-tracker .sheet-field-value > div > div:first-child { flex-wrap: nowrap; gap: 2px; }
-  .maintabs [data-slot="trigger"] { padding: 4px 8px; }
+  .meta > * { flex: 1 1 0; min-width: 0; }
   .top { grid-template-columns: 1fr; grid-template-rows: none; }
   .top > .attrs, .defs, .shieldrow, .iwrcond { grid-column: 1 !important; grid-row: auto !important; margin-left: 0; }
   .shieldrow { flex-wrap: wrap !important; margin-bottom: var(--d-gap); }
@@ -652,7 +650,18 @@
   .ac { grid-area: ac; }
   .hp { grid-area: hp; }
   .saves { grid-area: saves; }
+}
+/* Under 820px Strikes and Actions, then Skills and the tabs, stack; each keeps its wide rows. */
+@container (max-width: 820px) {
   .mid, .pair { grid-template-columns: 1fr !important; }
+}
+/* Phones: rows fold into two lines and columns drop. */
+@container (max-width: 620px) {
+  .meta > * { padding: 6px 4px; }
+  .meta .sheet-field-value { font-size: var(--d-big); }
+  .meta .sheet-tracker .sheet-field-value button { width: 14px; height: 14px; }
+  .meta .sheet-tracker .sheet-field-value > div > div:first-child { flex-wrap: nowrap; gap: 2px; }
+  .maintabs [data-slot="trigger"] { padding: 4px 8px; }
   .row.th { display: none !important; }
   .strikes .row { grid-template-columns: 22px 1fr auto; row-gap: 0; }
   .strikes .row > :nth-child(4), .strikes .row > :nth-child(5) { grid-column: 2 / -1; font-size: var(--d-lfs); }
