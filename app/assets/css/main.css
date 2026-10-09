@@ -7,8 +7,9 @@
  * shared/theme.test.ts reads it and checks contrast.
  */
 
-/* Layer 1: palettes. `plum` is primary, `gilt` secondary (the accent), and
-   `folio` the warm neutral (app.config.ts picks them by name). */
+/* Layer 1: palettes. `plum` is primary, `gilt` secondary (the accent),
+   `steel` tertiary (a contrast color, a blue set against plum), and `folio`
+   the warm neutral (app.config.ts picks them by name). */
 @theme static {
   --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Cormorant Garamond", Georgia, ui-serif, serif;
@@ -38,6 +39,18 @@
   --color-gilt-900: #4a380d;
   --color-gilt-950: #2c2107;
 
+  --color-steel-50: #f2f7fa;
+  --color-steel-100: #e0ebf2;
+  --color-steel-200: #c2d7e5;
+  --color-steel-300: #99bad1;
+  --color-steel-400: #6a99b9;
+  --color-steel-500: #467ea4;
+  --color-steel-600: #396c8e;
+  --color-steel-700: #2e5d7d;
+  --color-steel-800: #234861;
+  --color-steel-900: #1b384b;
+  --color-steel-950: #0f222e;
+
   --color-folio-50: #fffdf8;
   --color-folio-100: #f6f1e7;
   --color-folio-200: #efe7d8;
@@ -58,6 +71,7 @@
 :root {
   --ui-primary: var(--color-plum-700);
   --ui-secondary: var(--color-gilt-700);
+  --ui-tertiary: var(--color-steel-700);
   --ui-success: #166534;
   --ui-info: #1d4ed8;
   --ui-warning: #92400e;
@@ -76,10 +90,11 @@
   --ui-bg-accented: #e6dccb;
   --ui-bg-inverted: var(--color-folio-900);
 
-  /* Not Nuxt UI's: the soft fills behind primary and accent text on chips
-     (`LabelChip`), the mockup's primary-soft and accent-soft. */
+  /* Not Nuxt UI's: the soft fills behind primary, accent, and contrast text
+     on chips (`LabelChip`), the mockup's primary-soft and accent-soft. */
   --ui-primary-soft: var(--color-plum-100);
   --ui-secondary-soft: var(--color-gilt-100);
+  --ui-tertiary-soft: var(--color-steel-100);
 
   /* Dividers only. Anything that outlines a control uses `-accented`,
      which keeps 3:1 against the panel and the page (WCAG 1.4.11). */
@@ -101,6 +116,7 @@
   --st-primary: var(--ui-primary);
   --st-on-primary: var(--ui-text-inverted);
   --st-accent: var(--ui-secondary);
+  --st-contrast: var(--ui-tertiary);
   --st-border: var(--ui-border);
   --st-border-strong: var(--ui-border-accented);
   --st-radius: calc(var(--ui-radius) * 1.5);

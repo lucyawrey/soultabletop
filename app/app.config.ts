@@ -1,11 +1,12 @@
 // Palette names are defined in app/assets/css/main.css (docs/theme.md).
-const colors = ["primary", "secondary", "success", "info", "warning", "error"] as const;
+const colors = ["primary", "secondary", "tertiary", "success", "info", "warning", "error"] as const;
 
 export default defineAppConfig({
   ui: {
     colors: {
       primary: "plum",
       secondary: "gilt",
+      tertiary: "steel",
       neutral: "folio",
     },
     // Roll toasts stay until closed, so every toast's close button is a
