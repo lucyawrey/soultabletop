@@ -615,6 +615,16 @@
 .open-slots { margin-top: 0 !important; }
 
 /* Phones */
+/* A little narrower than 1092px (a 1280px window): the same wide layout, with tighter spacing so nothing wraps. */
+@container (max-width: 1080px) {
+  .head > div:last-child { column-gap: 12px; }
+  .meta > * { padding-left: calc(var(--d-pad) + 2px); padding-right: calc(var(--d-pad) + 2px); }
+  .card { padding-left: 9px; padding-right: 9px; }
+  .refs, .refgroup { column-gap: 6px; }
+  .defs { grid-template-columns: .85fr 2.25fr 1fr; }
+  .hpline { column-gap: 8px; }
+  .death { column-gap: 8px; }
+}
 @container (max-width: 900px) {
   .head > div:last-child { grid-template-columns: 1fr; }
   .meta, .facts { grid-column: 1; grid-row: auto; }
