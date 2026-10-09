@@ -24,9 +24,9 @@ const chars = [
     strikes: [{ weapon: await id("item-scimitar"), attribute: "str", itemBonus: 0 }, { weapon: await id("item-sling"), attribute: "dex", itemBonus: 0 }],
     actions: [{ action: await id("action-raise-a-shield"), notes: "+2 circumstance to AC" }, { feat: await id("feat-shield-block"), notes: "Reduce damage by Hardness" }, { action: await id("action-seek") }],
     feats: [{ feat: await id("feat-natural-ambition"), category: "ancestry", level: 1 }, { feat: await id("feat-student-of-the-canon"), category: "skill", level: 1 }, { feat: await id("feat-shield-block"), category: "general", level: 1 }],
-    spellcasting: { tradition: "divine", attribute: "wis", rank: 1, kind: "prepared" }, slots: [{ rank: 1, max: 2, used: 1 }],
+    spellcasting: { tradition: "divine", attribute: "wis", rank: 1, kind: "prepared" }, slots: [{ rank: 1, max: 2, left: 1 }],
     spells: [{ spell: await id("spell-bless"), rank: 1, cast: true }, { spell: await id("spell-command"), rank: 1 }, { spell: await id("spell-divine-lance"), rank: 1 }, { spell: await id("spell-guidance"), rank: 1 }, { spell: await id("spell-light"), rank: 1 }, { spell: await id("spell-shield"), rank: 1 }, { spell: await id("spell-stabilize"), rank: 1 }],
-    divineFont: { spell: await id("spell-heal"), max: 4, used: 1 }, focus: { max: 0, used: 0, spells: [] },
+    divineFont: { spell: await id("spell-heal"), max: 4, left: 3 }, focus: { max: 0, left: 0, spells: [] },
     inventory: [{ item: await id("item-scimitar"), quantity: 1, state: "held" }, { item: await id("item-wooden-shield"), quantity: 1, state: "held" }, { item: await id("item-sling"), quantity: 1, state: "worn" }, { item: await id("item-chain-shirt"), quantity: 1, state: "worn" }, { item: await id("item-religious-symbol-wooden"), quantity: 1, state: "worn" }, { item: await id("item-backpack"), quantity: 1, state: "worn" }, { item: await id("item-bedroll"), quantity: 1, state: "stowed" }, { item: await id("item-rations"), quantity: 1, state: "stowed" }],
     coins: { gp: 4, sp: 3 }, biography: { pronouns: "she/her" } }) },
   { name: "Test: Merisiel", readableId: "test-pf2e-merisiel", data: async () => ({
