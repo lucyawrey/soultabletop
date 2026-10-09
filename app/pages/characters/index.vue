@@ -238,6 +238,7 @@ async function remove() {
     >
       <template #filters>
         <USelect
+          :content="{ align: 'start' }"
           v-if="characterTypes.length > 0"
           v-model="filter"
           :items="filterOptions"
@@ -364,6 +365,7 @@ async function remove() {
           />
           <UFormField name="systemId" label="System" required>
             <USelect
+              :content="{ align: 'start' }"
               :model-value="form.systemId"
               :items="systemOptions"
               class="w-full"
@@ -376,6 +378,7 @@ async function remove() {
           </UFormField>
           <UFormField name="contentTypeId" label="Character Type" required>
             <USelect
+              :content="{ align: 'start' }"
               :model-value="form.contentTypeId"
               :items="typeOptions"
               class="w-full"

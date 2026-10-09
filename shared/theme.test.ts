@@ -51,7 +51,7 @@ function contrast(a: string, b: string) {
 }
 
 const surfaces = ["ui-bg", "st-page", "ui-bg-muted", "ui-bg-elevated"];
-const statusColors = ["ui-primary", "ui-secondary", "ui-success", "ui-info", "ui-warning", "ui-error"];
+const statusColors = ["ui-primary", "ui-secondary", "ui-tertiary", "ui-success", "ui-info", "ui-warning", "ui-error"];
 
 // Text needs 4.5:1 (WCAG AA).
 const textPairs: [string, string][] = [
@@ -71,6 +71,7 @@ const textPairs: [string, string][] = [
   // Chips: primary and accent text on their soft fills.
   ["ui-primary", "ui-primary-soft"],
   ["ui-secondary", "ui-secondary-soft"],
+  ["ui-tertiary", "ui-tertiary-soft"],
   // Code editor syntax colors (CodeEditor.client.vue) on its active line.
   ...[...statusColors, "ui-text", "ui-text-dimmed"].map(
     (c): [string, string] => [c, "ui-primary/8@ui-bg"],
