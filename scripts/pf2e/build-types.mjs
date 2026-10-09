@@ -296,7 +296,7 @@ const types = {
         rank: rank("Proficiency"),
         kind: { ...choice("string", [["prepared", "Prepared"], ["spontaneous", "Spontaneous"]]), label: "Kind" },
       }),
-      slots: list("Spell Slots", { type: "struct", entries: { rank: num("Rank", { required: true }), max: num("Slots", { default: 0 }), used: num("Used", { default: 0 }) } }),
+      slots: list("Spell Slots", { type: "struct", entries: { rank: num("Rank", { required: true }), max: num("Slots", { default: 0 }), left: num("Left", { default: 0 }) } }),
       spells: list("Spells", {
         type: "struct",
         entries: {
@@ -305,8 +305,8 @@ const types = {
           cast: bool("Cast", { default: false }),
         },
       }),
-      divineFont: struct("Divine Font", { spell: ref("Spell", "pf2e-spell"), max: num("Slots", { default: 0 }), used: num("Used", { default: 0 }) }),
-      focus: struct("Focus", { max: num("Focus Points", { default: 0 }), used: num("Used", { default: 0 }), spells: list("Focus Spells", ref("Spell", "pf2e-spell")) }),
+      divineFont: struct("Divine Font", { spell: ref("Spell", "pf2e-spell"), max: num("Slots", { default: 0 }), left: num("Left", { default: 0 }) }),
+      focus: struct("Focus", { max: num("Focus Points", { default: 0 }), left: num("Left", { default: 0 }), spells: list("Focus Spells", ref("Spell", "pf2e-spell")) }),
       inventory: list("Inventory", {
         type: "struct",
         entries: {

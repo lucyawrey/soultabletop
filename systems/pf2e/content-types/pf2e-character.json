@@ -1458,9 +1458,9 @@
             "label": "Slots",
             "default": 0
           },
-          "used": {
+          "left": {
             "type": "number",
-            "label": "Used",
+            "label": "Left",
             "default": 0
           }
         }
@@ -1506,9 +1506,9 @@
           "label": "Slots",
           "default": 0
         },
-        "used": {
+        "left": {
           "type": "number",
-          "label": "Used",
+          "label": "Left",
           "default": 0
         }
       }
@@ -1522,9 +1522,9 @@
           "label": "Focus Points",
           "default": 0
         },
-        "used": {
+        "left": {
           "type": "number",
-          "label": "Used",
+          "label": "Left",
           "default": 0
         },
         "spells": {
