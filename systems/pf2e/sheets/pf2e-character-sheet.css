@@ -411,6 +411,8 @@
   min-height: 640px;
 }
 .kvp { gap: 6px; align-items: center; }
+/* Spell DC, spell attack, and Class DC: the tab's key numbers, larger than the rest of its strip. */
+.keystat .sheet-field-value { font-size: calc(var(--d-big) * .9); font-weight: 700; line-height: 1; }
 .feature { grid-template-columns: 52px 1fr; }
 .features .row:has(.future) .name .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
 .kv .row { grid-template-columns: 130px 1fr; }
