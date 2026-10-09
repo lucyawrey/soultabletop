@@ -492,9 +492,9 @@
           </Value>
           <Button label="Daily preparations" icon="i-lucide-sunrise" live toast>
             <Set field="spells.*.cast" formula="false" />
-            <Set field="slots.*.used" formula="0" />
-            <Set field="divineFont.used" formula="0" />
-            <Set field="focus.used" formula="0" />
+            <Set field="slots.*.left" formula="max" />
+            <Set field="divineFont.left" formula="divineFont.max" />
+            <Set field="focus.left" formula="focus.max" />
           </Button>
         </Stack>
 
@@ -504,8 +504,8 @@
             <Stack direction="row" class="row slot">
               <Value hideLabel class="strong" formula="concat('Rank ', rank)" show="not editing()" />
               <Stack direction="row" class="inline" show="editing()"><Note class="strong">Rank</Note><Number field="rank" hideLabel min="1" max="10" class="small-num" /></Stack>
-              <Tracker field="used" hideLabel max="{max}" style="pips" live class="sq" />
-              <Value hideLabel class="dim" formula="concat(max - used, ' of ', max, ' left')" show="not editing()" />
+              <Tracker field="left" hideLabel max="{max}" style="pips" live class="sq" />
+              <Value hideLabel class="dim" formula="concat(left, ' of ', max, ' left')" show="not editing()" />
               <Stack direction="row" class="inline" show="editing()"><Number field="max" hideLabel min="0" class="small-num" /><Note class="dim">slots</Note></Stack>
             </Stack>
           </List>
@@ -517,8 +517,8 @@
         <Stack class="rows" show="divineFont.max > 0 or editing()">
           <Stack direction="row" class="grp">
             <Note>Divine Font</Note>
-            <Tracker field="divineFont.used" hideLabel max="{divineFont.max}" style="pips" live class="sq" />
-            <Value hideLabel formula="concat(divineFont.max - divineFont.used, ' of ', divineFont.max, ' left')" show="not editing()" />
+            <Tracker field="divineFont.left" hideLabel max="{divineFont.max}" style="pips" live class="sq" />
+            <Value hideLabel formula="concat(divineFont.left, ' of ', divineFont.max, ' left')" show="not editing()" />
             <Stack direction="row" class="inline" show="editing()"><Number field="divineFont.max" hideLabel min="0" class="small-num" /><Note>uses</Note></Stack>
           </Stack>
           <Stack direction="row" class="row spell">
@@ -568,8 +568,8 @@
         <Stack class="rows" show="focus.max > 0 or editing()">
           <Stack direction="row" class="grp">
             <Note>Focus spells</Note>
-            <Tracker field="focus.used" hideLabel max="{focus.max}" style="pips" live class="sq" />
-            <Value hideLabel formula="concat(focus.max - focus.used, ' of ', focus.max, ' focus points')" show="not editing()" />
+            <Tracker field="focus.left" hideLabel max="{focus.max}" style="pips" live class="sq" />
+            <Value hideLabel formula="concat(focus.left, ' of ', focus.max, ' focus points')" show="not editing()" />
             <Stack direction="row" class="inline" show="editing()"><Number field="focus.max" hideLabel min="0" max="3" class="small-num" /><Note>focus points</Note></Stack>
           </Stack>
           <List field="focus.spells" addLabel="Add focus spell" class="rows spells">
