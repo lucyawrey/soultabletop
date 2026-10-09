@@ -368,10 +368,10 @@
 
     <Tabs class="maintabs">
       <Tab label="Class" icon="i-game-icons-medal">
-        <Stack direction="row" wrap class="strip">
+        <Stack direction="row" wrap class="strip keyline">
           <Value field="class.name" hideLabel class="strong" />
           <Stack direction="row" class="kvp">
-            <Value label="Class DC" class="keystat">
+            <Value label="Class DC">
               <Part label="Base" formula="10" />
               <Part label="Key {attrName(keyAttribute)}" formula="keyMod()" />
               <Part label="{rankName(classDc)}" formula="prof(classDc)" />
@@ -466,7 +466,7 @@
       </Tab>
 
       <Tab label="Spells" icon="i-game-icons-spell-book" show="length(coalesce(spellcasting.tradition, '')) > 0 or editing()">
-        <Stack direction="row" wrap class="strip">
+        <Stack direction="row" wrap class="strip keyline">
           <Stack direction="row" class="trad" show="not editing()"><Value field="spellcasting.tradition" hideLabel class="strong" /><Value field="spellcasting.kind" hideLabel class="strong" /></Stack>
           <Stack direction="row" class="trad" show="editing()">
             <Select field="spellcasting.tradition" hideLabel class="small-sel" />
@@ -474,7 +474,7 @@
             <Select field="spellcasting.attribute" hideLabel class="small-sel" />
           </Stack>
           <Stack direction="row" class="kvp">
-            <Value label="Spell DC" formula="10 + spellMod()" class="keystat">
+            <Value label="Spell DC" formula="10 + spellMod()">
               <Part label="Base" formula="10" />
               <Part label="{attrName(coalesce(spellcasting.attribute, keyAttribute))}" formula="coalesce(get(attributes, coalesce(spellcasting.attribute, keyAttribute)), 0)" />
               <Part label="{rankName(spellcasting.rank)}" formula="prof(spellcasting.rank)" />
@@ -485,7 +485,7 @@
               <Select field="spellcasting.rank" hideLabel class="rank-sel" show="editing()" />
             </Stack>
           </Stack>
-          <Value label="Attack" format="signed" formula="spellMod()" class="keystat">
+          <Value label="Attack" format="signed" formula="spellMod()">
             <Part label="{attrName(coalesce(spellcasting.attribute, keyAttribute))}" formula="coalesce(get(attributes, coalesce(spellcasting.attribute, keyAttribute)), 0)" />
             <Part label="{rankName(spellcasting.rank)}" formula="prof(spellcasting.rank)" />
             <Roll label="Spell attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
