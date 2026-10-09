@@ -99,6 +99,17 @@ From `frozen.html`'s CSS. Phones are below 901px.
 
 **Wide-layout reference (user, 2026-10-09):** view mode at a 1380px window (sheet 1092px wide), with the markup and CSS of `pf2e-sheet` commit `7504d2b` (`systems/pf2e/sheets/`), is the goal for the wide layout. Narrower wide windows, starting with 1280 (sheet 992px), should look like it. The narrow layout applies below a 901px sheet width (a container query, not the window's width, since the app's sidebar takes some of the window).
 
+**Breakpoints** (user, 2026-10-09: keep this list current). The sheet's layout follows its own width (container queries on the sheet root), not the window's: the app's sidebar is 288px with its padding, can be collapsed on a desktop, and becomes a hamburger menu below a 1024px window (Nuxt UI's `lg`), so the same window can give very different sheet widths.
+
+| Sheet width | CSS | What changes | Example windows (sidebar open / hamburger) |
+|---|---|---|---|
+| over 1080px | none | the wide layout, as in the reference (max width 1180px) | 1380 (1092) |
+| 961–1080px | `@container (max-width: 1080px)` | tighter header strip and chips; Hit Points gets more of the defenses row | 1280 (992); 1000 hamburger (968) |
+| 861–960px | `@container (max-width: 960px)` | tighter again: Hit Points line, Strikes columns | 1180 (892); 900 hamburger (868) |
+| 860px and under | `@container (max-width: 860px)` | the narrow layout: everything stacks | 1024–1148 with the sidebar (736–860); under 893 hamburger |
+
+Sheet width at a window: the window minus 288px with the sidebar open, minus 32px with it hidden or collapsed (measured 2026-10-09). Known problem: shrinking the window crosses wide → narrow (1149px) → wide (1023px, the sidebar hides) → narrow (892px); the narrow layout changes everything at once, so it reads as a jump.
+
 **Page**
 - Sheet max 1180px wide, centered; block gap `--d-gap + 10px` vertically (room for the folio-tab labels), `--d-gap` horizontally.
 - Panels: `--st-panel`, 1px `--st-border`, radius `--st-radius`, padding `--d-pad + 6px` top, `--d-pad` elsewhere.
