@@ -344,7 +344,7 @@
 /* Each group (a bar and its rows) has the same space above its bar and below it. */
 .rows:has(> .grp) { gap: 0 !important; padding-top: 4px; }
 .rows > .grp { margin-top: 0 !important; margin-bottom: 4px !important; }
-.row.th.spell { margin-bottom: 8px !important; }
+.row.th.spell, .row.th.inv { margin-bottom: 8px !important; }
 /* Divine Font's pips sit beside its count, on the right. */
 .grp > .sq { margin-left: auto; }
 .grp .sheet-field-value { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--st-ink-muted); }
@@ -426,6 +426,13 @@
 .slot { display: flex !important; gap: 12px; }
 .inv { grid-template-columns: 36px 1fr 44px 170px 30px; }
 .moves { gap: 4px; }
+/* Move buttons fit inside a 30px row. */
+.moves .sheet-button { height: 22px; padding: 0 6px; font-size: var(--d-lfs); }
+/* No item can be invested: drop the Inv column. */
+.sheet-tab:not(:has(.invcol)) .inv { grid-template-columns: 36px 1fr 44px 170px; }
+/* An empty coin shows its 0 like a stored one, without a reset button. */
+.coin input::placeholder { color: inherit; opacity: 1; }
+.coin button[aria-label="Use automatic value"] { display: none; }
 .bulk { flex-basis: 100%; align-items: center; gap: 4px 8px; }
 .hpbar { position: relative; gap: 0 !important; }
 .hpbar > .tempbar { position: absolute; inset: 0; }
