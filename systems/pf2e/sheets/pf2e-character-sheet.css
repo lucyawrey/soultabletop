@@ -440,8 +440,7 @@
 .hpbar { position: relative; gap: 0 !important; }
 .hpbar > .tempbar { position: absolute; inset: 0; }
 .tempbar [data-slot="base"] { background: transparent; }
-/* --st-contrast comes with #109; the fallback is its value until that merges. */
-.tempbar [data-slot="indicator"] { background: var(--st-contrast, #2e5d7d); }
+.tempbar [data-slot="indicator"] { background: var(--st-contrast); }
 .bmeter { width: 90px; }
 .bmeter [data-slot="base"] { height: 7px; }
 .trad { gap: 4px; }
