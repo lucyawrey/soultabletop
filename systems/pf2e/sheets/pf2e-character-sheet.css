@@ -423,6 +423,8 @@
 .kv .sheet-field-value { font-weight: 400; }
 /* An empty portrait's "No image" is a quiet placeholder, not a value. */
 .portrait .sheet-field-value { font-weight: 400; color: var(--st-ink-muted); }
+/* The portrait sits in a frame under its group bar, like the Details column beside it. */
+.portrait img { display: block; width: 100%; padding: 6px; border: 1px solid var(--st-border); border-radius: var(--st-radius); background: var(--st-panel); }
 .feat { grid-template-columns: 40px 18px 1fr 110px; }
 .feat .small-sel .sheet-field-value { width: 104px; }
 .spell { grid-template-columns: 22px 76px minmax(120px, 1fr) 110px 90px 1.4fr; }
@@ -444,7 +446,7 @@
 .bmeter { width: 90px; }
 .bmeter [data-slot="base"] { height: 7px; }
 .trad { gap: 4px; }
-.bio { display: grid !important; grid-template-columns: 140px 1fr; gap: calc(var(--d-gap) * 2); align-items: start; }
+.bio { display: grid !important; grid-template-columns: 180px 1fr; gap: calc(var(--d-gap) * 2); align-items: start; }
 .biocols { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important; }
 .kv > .sheet-text, .kv > .sheet-tags { display: grid; grid-template-columns: 130px 1fr; gap: 6px; align-items: center; }
 
