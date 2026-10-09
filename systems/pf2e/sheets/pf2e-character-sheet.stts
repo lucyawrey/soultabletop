@@ -17,7 +17,7 @@
 <Define name="keyMod" formula="coalesce(get(attributes, keyAttribute), 0)" />
 <Define name="spellMod" formula="coalesce(get(attributes, coalesce(spellcasting.attribute, keyAttribute)), 0) + prof(spellcasting.rank)" />
 <Define name="glyph" params="a"
-        formula="switch(a, '1', '◆', '2', '◆◆', '3', '◆◆◆', '1 to 3', '◆–◆◆◆', '1 to 2', '◆–◆◆', '2 to 3', '◆◆–◆◆◆', 'reaction', '↺', 'free', '◇', '')" />
+        formula="switch(a, '1', '◆', '2', '◆◆', '3', '◆◆◆', '1 to 3', '◆ to ◆◆◆', '1 to 2', '◆ to ◆◆', '2 to 3', '◆◆ to ◆◆◆', 'reaction', '↺', 'free', '◇', '')" />
 <Define name="hasTrait" params="traits, t" formula="any(traits, . == t)" />
 <!-- Strikes: the hit modifier, the multiple attack penalty steps, and damage. Thieves add Dex to finesse melee damage. -->
 <Define name="strikeHit" params="category, attr, bonus" formula="get(attributes, attr) + prof(get(attacks, coalesce(category, 'simple'))) + coalesce(bonus, 0)" />
@@ -532,19 +532,21 @@
           </Stack>
         </Stack>
 
-        <Note class="grp">Spells</Note>
-        <List field="spells" addLabel="Add spell" class="rows spells">
-          <Stack direction="row" class="row spell" show="spell.kind != 'cantrip'">
-            <Checkbox field="cast" hideLabel style="dot" live />
-            <Value hideLabel class="act" formula="glyph(spell.cast)" />
-            <Value field="spell.name" hideLabel preview class="name" show="not editing()" />
-            <Ref field="spell" hideLabel class="name" show="editing()" />
-            <Value field="spell.range" hideLabel show="not editing()" />
-            <Stack direction="row" class="inline" show="editing()"><Note class="dim">Rank</Note><Number field="rank" hideLabel min="1" max="10" class="small-num" /></Stack>
-            <Value field="spell.defense" hideLabel />
-            <Value field="spell.damage" hideLabel class="dim" />
-          </Stack>
-        </List>
+        <Stack class="rows">
+          <Note class="grp">Spells</Note>
+          <List field="spells" addLabel="Add spell" class="rows spells">
+            <Stack direction="row" class="row spell" show="spell.kind != 'cantrip'">
+              <Checkbox field="cast" hideLabel style="dot" live />
+              <Value hideLabel class="act" formula="glyph(spell.cast)" />
+              <Value field="spell.name" hideLabel preview class="name" show="not editing()" />
+              <Ref field="spell" hideLabel class="name" show="editing()" />
+              <Value field="spell.range" hideLabel show="not editing()" />
+              <Stack direction="row" class="inline" show="editing()"><Note class="dim">Rank</Note><Number field="rank" hideLabel min="1" max="10" class="small-num" /></Stack>
+              <Value field="spell.defense" hideLabel />
+              <Value field="spell.damage" hideLabel class="dim" />
+            </Stack>
+          </List>
+        </Stack>
         <Stack class="rows" show="any(spells, spell.kind == 'cantrip')">
           <Stack direction="row" class="grp">
             <Note>Cantrips</Note>

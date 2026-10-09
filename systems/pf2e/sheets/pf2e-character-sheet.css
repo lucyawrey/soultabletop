@@ -341,6 +341,12 @@
   text-transform: uppercase;
   letter-spacing: .04em;
 }
+/* Each group (a bar and its rows) has the same space above its bar and below it. */
+.rows:has(> .grp) { gap: 0 !important; padding-top: 4px; }
+.rows > .grp { margin-top: 0 !important; margin-bottom: 4px !important; }
+.row.th.spell { margin-bottom: 8px !important; }
+/* Divine Font's pips sit beside its count, on the right. */
+.grp > .sq { margin-left: auto; }
 .grp .sheet-field-value { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--st-ink-muted); }
 
 .pair { grid-template-columns: 1.5fr 1fr !important; gap: calc(var(--d-gap) + 10px) var(--d-gap) !important; align-items: stretch; }
@@ -412,12 +418,11 @@
 .kv { gap: 0 !important; }
 .kv > .sheet-text, .kv > .sheet-tags, .kv > .sheet-markdown { min-height: calc(var(--d-h) + 6px); padding: calc(var(--d-gap) * .3) 0; border-bottom: 1px solid var(--st-border); }
 .kv .sheet-field-value { font-weight: 400; }
-.kv .grp { margin-bottom: calc(var(--d-gap) * .3) !important; }
 /* An empty portrait's "No image" is a quiet placeholder, not a value. */
 .portrait .sheet-field-value { font-weight: 400; color: var(--st-ink-muted); }
 .feat { grid-template-columns: 40px 18px 1fr 110px; }
 .feat .small-sel .sheet-field-value { width: 104px; }
-.spell { grid-template-columns: 22px 64px minmax(120px, 1fr) 110px 90px 1.4fr; }
+.spell { grid-template-columns: 22px 76px minmax(120px, 1fr) 110px 90px 1.4fr; }
 .slot { display: flex !important; gap: 12px; }
 .inv { grid-template-columns: 36px 1fr 44px 170px 30px; }
 .moves { gap: 4px; }
@@ -617,7 +622,7 @@
   .row.th { display: none !important; }
   .strikes .row { grid-template-columns: 22px 1fr auto; row-gap: 0; }
   .strikes .row > :nth-child(4), .strikes .row > :nth-child(5) { grid-column: 2 / -1; font-size: var(--d-lfs); }
-  .spell { grid-template-columns: 22px 64px 1fr; row-gap: 0; }
+  .spell { grid-template-columns: 22px 76px 1fr; row-gap: 0; }
   .spell > :nth-child(n + 4) { grid-column: 3; font-size: var(--d-lfs); }
   .inv { grid-template-columns: 24px 1fr 30px 150px; }
   .inv > :nth-child(5) { display: none; }
