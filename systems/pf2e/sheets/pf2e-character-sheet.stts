@@ -686,13 +686,13 @@
               <Tags field="biography.edicts" label="Edicts" />
               <Tags field="biography.anathema" label="Anathema" />
             </Stack>
-            <Stack class="rows kv">
-              <Note class="grp">Relationships</Note>
-              <Text field="biography.allies" label="Allies" />
-              <Text field="biography.enemies" label="Enemies" />
-              <Text field="biography.organizations" label="Organizations" />
-            </Stack>
           </Grid>
+        </Stack>
+        <Stack class="rows kv">
+          <Note class="grp">Relationships</Note>
+          <Text field="biography.allies" label="Allies" />
+          <Text field="biography.enemies" label="Enemies" />
+          <Text field="biography.organizations" label="Organizations" />
         </Stack>
         <Stack class="rows kv">
           <Note class="grp">Backstory</Note>
