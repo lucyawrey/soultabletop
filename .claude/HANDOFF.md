@@ -2,13 +2,12 @@
 
 One session's notes for the next. See "Handoff" in `CLAUDE.md` for how to use and update this file; check it against git before relying on it.
 
-**Last updated:** 2026-10-06 (late night, Linux)
+**Last updated:** 2026-10-09 (Linux; user wrapped up for the day; #109 and #110 merged and merged into `pf2e-sheet`)
 
-- **In progress: dice buttons, design only.** Decisions so far are in [plans/sheet-actions.md](plans/sheet-actions.md) (actions with ordered `Roll`/`Set` steps on Buttons and values, `FollowUp`s, roll records, log-ready entries, server-ready engine). No code or branch yet. Next: a mockup in `.claude/mockups/dice-rolls/` (read `.claude/ui-mockups.md` first) showing three result looks (rolling number, tumbling die glyphs, result card) with the toast and Recent rolls list, for the user to pick; then the markup details and a build branch. Reference previews are done (#96 to #98); #99 merged.
-- **Open gap from step 3:** in `TODO.md` (end of Phase 4), "Show a sheet's own `<Preview>` in the Sheet editor".
-- **After dice:** the PF2e character sheet (`.claude/plans/pf2e-demo.md`, step 6).
-- **On `docs`, not yet on `main`:** the usage changes (`sheet-code-map.md`, `test-sheet.mjs`, the slimmer SKILL.md), the skill's notes on the required root, the skill and code-map rows for previews. They depend on each other, so they reach `main` in one docs-only PR when the user wants.
-- **Not yet seen by the user:** compact density on a real, full sheet.
-- **Waiting on the user:** keep or delete `icons.html` in the mockup folder; whether the Initiative "rolls with" picker should offer Lore skills.
-- The nine reference content types in `.claude/pf2e/content-types/` are drafted but not validated against the API or reviewed.
-- **Unverified on the Mac:** that `code` is on the PATH. **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70).
+- **PF2e demo** (`.claude/plans/pf2e-demo.md`): the Official `soul/pf2e` system is loaded and Public. **Step 6, the character sheet, is draft PR #108** (`pf2e-sheet`, worktree `../soultabletop-worktrees/pf2e-sheet`, pushed, clean). How to work on it: the plan's step 6. Decisions: the mockup spec's "After the third look" and "View mode, area by area" (`.claude/mockups/pf2e-sheet/spec.md`).
+- **Next:** the user does one last check of view mode, then edit mode starts. Approved so far: the Spells tab and the Class/Spells first line. Waiting on that check: Skills, Proficiencies, and the Class, Feats, Inventory, and Biography tabs (all reworked 2026-10-09). Known for edit mode: the IWR labels and "+ Add" pills sit a few px low; a lore row's × squeezes its columns left of the other skill rows. After edit mode, in order: a usability pass, the readability pass, custom `<Preview>`s (all in `TODO.md`, In progress).
+- **Slots store `left`, not `used`** (slots, Divine Font, focus) since 2026-10-09. A schema change the stored sheet depends on needs a three-step load (schema with both fields, sheet, final schema); the server refuses a change that breaks a sheet.
+- **Screenshots:** a throwaway user copies a test character (`.claude/running-commands.md`, "Browser checks"). On Linux, `tmp/shots/tab.mjs` in the worktree opens one tab in view or edit mode and runs a measurement (gitignored, so not on the Mac; the Mac has `tmp/shots/shot.mjs`). No dev server is left running.
+- **Test characters** `test-pf2e-kyra` and `test-pf2e-merisiel`: `.claude/pf2e/test-characters.mjs` resets them; run it with `delete` after #108 merges.
+- **On `docs`, not yet on `main`:** plans, the PF2e spec and test-character script, notes, TODO, and handoff; one docs-only PR when the user wants.
+- **Also waiting:** keep or delete `icons.html` in the PF2e mockup folder; on the Mac, pull `claude-config` (tmux extended keys, UI-approval rule), set the SSH remote, `nvm alias default 24.21.0`, check `code` is on the PATH. **Unverified:** Chrome's choice between `favicon.svg` and `favicon.ico` (#70).
