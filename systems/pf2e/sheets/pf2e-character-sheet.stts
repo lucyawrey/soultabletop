@@ -295,9 +295,10 @@
         <Stack direction="row" class="row lead init">
           <Heading level="3">Initiative</Heading>
           <Select field="initiative.roll" hideLabel live />
+          <Stack direction="row" class="kvp ibonus" show="editing()"><Note class="label">Bonus</Note><Number field="initiative.bonus" hideLabel format="signed" class="small-num" /></Stack>
           <Value hideLabel format="signed" formula="initMod()">
             <Part label="{if(initiative.roll == 'perception', 'Perception', 'Skill')}" formula="if(initiative.roll == 'perception', perceptionMod(), skillMod(initiative.roll))" />
-            <Part label="Bonus" formula="initiative.bonus" show="initiative.bonus != 0" />
+            <Part label="Bonus" formula="initiative.bonus" />
             <Roll label="Initiative" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
           </Value>
         </Stack>
