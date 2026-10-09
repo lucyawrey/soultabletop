@@ -464,7 +464,7 @@ const tagList: TagSpec[] = [
     name: "Tags",
     category: "field",
     description: "A list of short texts",
-    attrs: { ...fieldAttrs },
+    attrs: { ...fieldAttrs, placeholder: text("Shown in the empty input while editing") },
     children: "none",
     binds: ["stringArray"],
   },
@@ -479,6 +479,11 @@ const tagList: TagSpec[] = [
         type: { kind: "number", min: 0, dynamic: true },
         description:
           "Maximum: a number or a {formula}; without one (or at 0), only the value shows",
+      },
+      mark: {
+        type: { kind: "number", min: 0, dynamic: true },
+        description:
+          "A mark on the bar at this value, like an encumbrance threshold: a number or a {formula} (bar style, not editable)",
       },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
     },

@@ -90,7 +90,7 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list | formula | condition | name; required; default), allowed children, and which schema field types it may bind to.
-Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one
+Number attrs read when rendering (`Tracker` `max` and `mark`; `Number` `min`, `max`, `step`) accept one
 `{formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
 mixed with text.
 Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`), `show` (conditional display; not on `Column`), and
@@ -159,11 +159,11 @@ View mode renders formatted values, edit mode renders the input.
 | Tag | Extra attrs | Binds | Edit input |
 |---|---|---|---|
 | `Text` | `multiline`, `placeholder` | string | `UInput` / `UTextarea` |
-| `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "exceptZero"` so the input shows "+3" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
+| `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "always"` so the input shows "+3" and "+0" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
 | `Checkbox` / `Toggle` | Checkbox: `style` (check/dot) | boolean | `UCheckbox` / `USwitch`; `style="dot"` is a filled or empty circle in every mode, with no Yes/No text (e.g. proficiency marks) |
 | `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
-| `Tags` | — | array of string (not of choices) | `UInputTags` |
-| `Tracker` | `max` (optional, at least 0), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max" |
+| `Tags` | `placeholder` | array of string (not of choices) | `UInputTags` |
+| `Tracker` | `max` (optional, at least 0), `mark` (optional), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max". `mark` (a number or one `{formula}`) draws a tick across a bar that isn't editable at that value, for a threshold like encumbrance (hook class `sheet-tracker-mark`); none at or below 0 or at or above `max` |
 | `Ref` | `preview` (see "Reference previews") | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
 | `Value` | `format`, `formula`, `preview` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
@@ -489,7 +489,7 @@ action, not a formula: formulas stay pure, and dice are allowed only in a `<Roll
   `formula`, or parts). Steps can't be in a `<Preview>` (`step-in-preview`); elsewhere they're `step-misplaced`.
 - **`Roll`:** `formula` (required), `name`, `label` (text with `{…}`; default "Roll"), `crit`, `fumble`, and `show`
   (skips the step); no other common attributes. One entry per Roll: its title is the action's name (a Button's
-  label; a value's label; in a `List` or `Table` row, the row's label or its `name` field, like "Rapier") and the
+  label; a value's label; in a `List` or `Table` row, the row's label, its `name` field, or else the name of the first loaded Content it references, like a Strike row's weapon, "Rapier") and the
   Roll's label ("Rapier · Attack").
 - **Dice:** `NdM` and `dM`, with `khK`/`klK` keeping the highest or lowest K (`2d20kh1`, `4d6kh3`). Only in a Roll's
   `formula` (elsewhere `dice-outside-roll`), and only added, subtracted, multiplied, divided, or picked with `if()`
@@ -879,7 +879,7 @@ use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`,
 | Min/max | `min(…)`, `max(…)`: numbers, or one list of numbers; empty values skipped; nothing if none |
 | Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)`, `list(a, b, …)` (builds a list from separate values: `join(list(speed, flySpeed), ", ")`, `max(list(a, b))`; empty values stay in it and `join`, `sum`, `min`, and `max` skip them; single values only) |
 | Nulls | `coalesce(a, b, …)`: the first value that isn't empty (errors aren't skipped) |
-| Text | `concat(…)`, `join(list, separator)` (skips nothing and empty text `""`), `signed(n)` ("+3", "0", "-1") |
+| Text | `concat(…)`, `join(list, separator)` (skips nothing and empty text `""`), `signed(n)` ("+3", "+0", "-1") |
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |

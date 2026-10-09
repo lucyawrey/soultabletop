@@ -828,6 +828,8 @@ describe("dynamic number attributes", () => {
     expect(errorCodes('<Section span="{2}">x</Section>')).toEqual(["invalid-attribute"]);
     expect(messages('<Number field="hp" min="{0}" max="{hpMax}" step="{1}" />')).toEqual([]);
     expect(messages('<Tracker field="hp" max="{hpMax}" />')).toEqual([]);
+    expect(messages('<Tracker field="hp" max="{hpMax}" mark="{hpMax / 2}" />')).toEqual([]);
+    expect(errorCodes('<Tracker field="hp" max="10" mark="-1" />')).toEqual(["invalid-attribute"]);
   });
 });
 

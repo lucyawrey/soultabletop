@@ -1,0 +1,679 @@
+/* Pathfinder 2e character sheet. Layout and measurements from .claude/mockups/pf2e-sheet/spec.md. */
+:root {
+  --d-gap: 6px;
+  --d-pad: 8px;
+  --d-h: 24px;
+  --d-fs: 13px;
+  --d-lfs: 10.5px;
+  --d-big: 22px;
+  --d-hero: 30px;
+  --d-h2: 15px;
+  font-size: var(--d-fs);
+  color: var(--st-ink);
+  /* The narrow layout follows the sheet's own width, not the window's (the app's sidebar takes some). */
+  container-type: inline-size;
+}
+.sheet-sheet {
+  display: grid;
+  gap: calc(var(--d-gap) + 10px) var(--d-gap);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-top: 10px;
+}
+.sheet-sheet > * + * { margin-top: 0 !important; }
+.sheet-tab > * + * { margin-top: 0; }
+
+/* Labels */
+.sheet-field-label, .label, .sheet-note.label {
+  font-size: var(--d-lfs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--st-ink-muted);
+  line-height: 1.2;
+}
+.sheet-field-value { font-weight: 700; font-variant-numeric: tabular-nums; }
+.dim .sheet-field-value, .dim { color: var(--st-ink-muted); font-weight: 400; }
+.strong .sheet-field-value { font-weight: 700; }
+.sheet-note { font-size: inherit; color: inherit; margin: 0; }
+
+/* Panels; each section's label sits on its top edge like a folio tab. */
+.sheet-section {
+  position: relative;
+  overflow: visible;
+  background: var(--st-panel);
+  border: 1px solid var(--st-border-strong);
+  border-radius: var(--st-radius);
+  min-width: 0;
+}
+.folio > div:first-child {
+  position: absolute;
+  top: 0;
+  left: var(--d-pad);
+  transform: translateY(-55%);
+  width: auto;
+  padding: 3px 10px 4px;
+  background: var(--st-panel);
+  border: 1px solid var(--st-border-strong);
+  border-bottom-color: var(--st-panel);
+  border-radius: calc(var(--st-radius) * .8) calc(var(--st-radius) * .8) 0 0;
+  z-index: 1;
+}
+.folio > div:first-child h2 { font-family: var(--st-font-display); font-size: var(--d-h2); line-height: 1; font-weight: 700; }
+.folio > div:first-child > * { align-items: center; gap: .3em; }
+.folio > div:first-child .text-primary { width: .95em; height: .95em; margin: 0; }
+.folio > div:last-child { padding: calc(var(--d-pad) + 6px) var(--d-pad) var(--d-pad); }
+.aside {
+  position: absolute;
+  top: 0;
+  right: var(--d-pad);
+  transform: translateY(-50%);
+  font-size: var(--d-lfs);
+  font-weight: 700;
+  color: var(--st-ink-muted);
+  background: var(--st-panel);
+  padding: 0 6px;
+  z-index: 1;
+}
+
+/* Chips (a feat's type) look like the Strikes trait chips. */
+.chip .sheet-field-value, .sheet-note.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--st-panel-muted);
+  box-shadow: inset 0 0 0 1px var(--st-border-strong);
+  font-size: var(--d-lfs);
+  line-height: 1;
+  color: var(--st-ink);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Rank badges */
+.rank .sheet-field-value {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 17px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border: 1px solid var(--st-border-strong);
+  color: var(--st-ink-muted);
+}
+.rank.on .sheet-field-value { background: var(--st-primary); color: var(--st-on-primary); border-color: var(--st-primary); }
+
+/* Action glyphs */
+.act { color: var(--st-primary); font-weight: 700; font-size: 1.15em; line-height: 1; white-space: nowrap; }
+.act .sheet-field-value { color: inherit; }
+
+/* Header */
+.head > div:last-child {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: calc(var(--d-gap) + 4px) 20px;
+  align-items: start;
+  padding: var(--d-pad);
+}
+/* The section's stack spacing would push the grid items apart and lift the level box. */
+.head > div:last-child > div > * { margin: 0 !important; }
+.head > div:last-child > div { display: contents; }
+.charname input { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); height: auto; }
+.charname .sheet-field-value { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); line-height: 1; }
+.refs { gap: 6px 8px; margin-top: 0; }
+.refgroup { gap: 6px 8px; flex-wrap: nowrap; }
+.card {
+  border: 1px solid var(--st-border-strong);
+  border-radius: calc(var(--st-radius) * .8);
+  padding: 3px 12px 4px;
+  background: var(--st-panel-muted);
+}
+.card .sheet-field-value { font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
+.meta {
+  /* Centered against the whole header, name to facts. */
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  border: 1px solid var(--st-border);
+  border-radius: var(--st-radius);
+  background: var(--st-panel-muted);
+}
+.meta > * {
+  display: grid;
+  grid-template-rows: auto calc(var(--d-big) * 1.5);
+  align-items: center;
+  justify-items: center;
+  gap: 2px;
+  padding: calc(var(--d-pad) * .9) calc(var(--d-pad) + 8px);
+}
+.meta > * + * { border-left: 1px solid var(--st-border); }
+.meta > * { text-align: center; align-content: center; }
+.meta .sheet-field-label { display: block; text-align: center; }
+.meta > * > div { justify-content: center; }
+.meta .sheet-field-value { display: flex; justify-content: center; align-items: center; }
+.meta .sheet-field-value { font-size: calc(var(--d-big) * 1.15); line-height: 1; }
+.meta .word .sheet-field-value { font-size: calc(var(--d-big) * .7); }
+.meta .cellv { display: grid; }
+.per { align-items: baseline; justify-content: center; gap: 3px; }
+.unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
+.facts { grid-column: 1; gap: 2px 14px; align-items: baseline; }
+.facts > * { display: flex; gap: 6px; align-items: baseline; }
+.facts .sheet-value .sheet-field-value { font-weight: 400; }
+.speeds > div:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
+/* Chips built from list entries (other speeds, IWR in view), the size of the tag chips. */
+.chiplist { display: flex; align-items: baseline; gap: 6px; }
+.chiplist > div:last-child { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.chiplist .sheet-list-item { margin: 0 !important; }
+.chip20 .sheet-field-value {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 5px;
+  font-size: var(--d-lfs);
+  font-weight: 500;
+  line-height: 1;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--ui-border-accented);
+  background: var(--ui-bg-elevated);
+}
+
+/* Attributes and defenses */
+.top { display: grid !important; grid-template-columns: auto auto 1fr; gap: 0 var(--d-gap); align-items: start; }
+.attrs { align-self: start; display: grid !important; grid-template-columns: repeat(3, 76px) !important; grid-auto-rows: 1fr; gap: 6px !important; }
+.box {
+  position: relative;
+  border: 1px solid var(--st-border-strong);
+  border-radius: var(--st-radius);
+  padding: calc(var(--d-pad) * .45);
+  background: var(--st-panel);
+  text-align: center;
+  justify-content: center;
+}
+.attr { padding: calc(var(--d-pad) * .6 + 4px) 4px calc(var(--d-pad) * .6); }
+.attr .sheet-number > div:first-child { justify-content: center; }
+.attr .sheet-field-value { font-size: calc(var(--d-big) * 1.2); line-height: 1.05; }
+.attr input { font-size: calc(var(--d-big) * 1.2); font-weight: 700; height: calc(var(--d-big) * 1.2 + 6px); }
+.attr:has(.keytag) { border-color: var(--st-primary); box-shadow: inset 0 0 0 1px var(--st-primary); }
+.attr > div:has(.keytag) { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); }
+.keytag {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: var(--st-primary);
+  color: var(--st-on-primary);
+}
+/* One grid under the attributes and defenses: the attributes run down to the bottom of the shield
+   button's row, which keeps one height; Conditions and IWR start in that row, and their extra lines
+   take a row of their own, so neither the attributes nor the shield info move. */
+.top { grid-template-rows: auto calc(var(--d-h) + 4px) 1fr; }
+.defwrap, .defwrap > .strip { display: contents !important; }
+.top > .attrs { grid-column: 1; grid-row: 1 / 3; align-self: stretch; }
+.defs { grid-column: 2 / 4; grid-row: 1; align-self: stretch; margin-bottom: var(--d-gap); }
+.shieldrow { grid-column: 2; grid-row: 2; align-self: center; flex-wrap: nowrap !important; }
+.iwrcond { grid-column: 3; grid-row: 2 / 4; margin-left: 6px; }
+.top:not(:has(.shieldrow)) .iwrcond { grid-column: 2 / 4; margin-left: 0; }
+.defs { display: grid !important; grid-template-columns: .9fr 2fr 1.2fr; gap: var(--d-gap); }
+.ac { border: 2px solid var(--st-primary); }
+.ac .sheet-value > div:first-child { justify-content: center; }
+.ac > .sheet-value:first-child .sheet-field-value { font-size: var(--d-hero); line-height: 1.05; }
+.ac .sub .sheet-field-value { font-size: var(--d-lfs); font-weight: 400; color: var(--st-ink-muted); }
+.subline { justify-content: center; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+.ac .up .sheet-field-value { font-size: var(--d-lfs); color: var(--st-primary); }
+.hp { text-align: left; gap: 3px; }
+.hpline { align-items: center; gap: 6px 14px; }
+.now { align-items: flex-end; gap: 4px; }
+.now .sheet-number input { width: 70px; font-size: var(--d-hero); font-weight: 700; height: calc(var(--d-hero) + 4px); }
+.max .sheet-field-value { font-size: calc(var(--d-hero) * .7); color: var(--st-ink-muted); }
+.adj { align-items: center; gap: 4px; }
+.temp { margin-left: auto; }
+.death { gap: 2px 12px; align-items: center; }
+.bad { --ui-primary: var(--ui-error); }
+.saves { text-align: left; justify-content: start; gap: 2px; }
+.srow { display: grid !important; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; }
+.srow > .sheet-value:nth-child(2) .sheet-field-value { font-size: calc(var(--d-big) * .8); }
+.strip { font-size: var(--d-lfs); }
+.strip > *, .shieldrow { align-items: center; gap: 4px 8px; }
+.sheet-button.raise {
+  /* One width for both labels, so pressing it doesn't move the line. */
+  min-width: 10.4em;
+  justify-content: center;
+  height: calc(var(--d-h) + 4px);
+  padding: 0 12px;
+  border: 1px solid var(--st-primary);
+  border-radius: calc(var(--st-radius) * .66);
+  background: var(--st-panel);
+  color: var(--st-primary);
+  font-size: var(--d-lfs);
+  font-weight: 700;
+  box-shadow: none;
+}
+.sheet-button.raise.pressed { background: var(--st-primary); color: var(--st-on-primary); }
+/* The strip under the defenses: labels beside their values, on one line. */
+.strip .sheet-number, .strip .sheet-tags, .strip .sheet-value, .resist { display: flex; align-items: center; gap: 4px 6px; }
+.strip .sheet-field-label { white-space: nowrap; }
+/* Conditions and IWR are one flow of labels and chips: the wrappers step aside (display: contents), so
+   IWR follows the last condition, and every next line starts at the left edge. Edit's entry groups
+   stay whole. */
+.iwrcond { display: flex !important; flex-wrap: wrap; align-items: baseline; align-content: flex-start; gap: 4px; min-width: 0; line-height: 20px; padding-top: 4px; }
+.iwrcond > .sheet-tags, .iwrcond > .sheet-tags > div, .iwrcond > .sheet-tags [data-slot="root"],
+.iwrcond > .resist, .iwrview, .iwrview > .chiplist, .iwrview > .chiplist > div, .iwrview .sheet-list-item,
+.iwrview > .sheet-tags, .iwrview > .sheet-tags > .sheet-field-value, .iwrview > .sheet-tags .sheet-field-value > .flex-wrap { display: contents !important; }
+.iwrcond > .sheet-tags .sheet-field-label { margin-right: 2px; }
+.iwrcond > .resist > .label { margin-left: 10px; }
+.iwrview > .sheet-note { margin: 0 2px 0 6px; }
+.iwrview .sheet-list-item > div { flex: none !important; margin: 0 !important; }
+.chip20 .sheet-field-value { white-space: nowrap; }
+.iwrcond > .resist > .rgroup { flex-wrap: wrap; max-width: 100%; margin-left: 6px; }
+.rgroup > .inline-list { min-width: 0; }
+/* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
+.sheet-sheet .strip .sheet-tags [data-slot="root"], .sheet-sheet .facts .sheet-tags [data-slot="root"] {
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  gap: 4px;
+}
+.strip .sheet-tags input, .facts .sheet-tags input {
+  flex: none;
+  width: 52px;
+  min-width: 0;
+  height: 20px;
+  padding: 0 5px;
+  font-size: var(--d-lfs);
+  border: 1px dashed var(--st-border-strong);
+  border-radius: 4px;
+  background: var(--st-panel-muted);
+}
+/* Chips match the "+ Add" input beside them, and read-only tags (Traits) match the chips. */
+.strip .sheet-tags [data-slot="item"], .facts .sheet-tags [data-slot="item"],
+.strip .sheet-tags .sheet-field-value > .flex-wrap > span, .facts .sheet-tags .sheet-field-value > .flex-wrap > span,
+.traits .sheet-tags .sheet-field-value > .flex-wrap > span {
+  height: 20px;
+  padding: 0 5px;
+  font-size: var(--d-lfs);
+  line-height: 1;
+  border-radius: 4px;
+}
+.strip .sheet-tags input:focus, .facts .sheet-tags input:focus { width: 110px; background: transparent; }
+.strip .sheet-tags input::placeholder, .facts .sheet-tags input::placeholder { color: var(--st-primary); font-weight: 700; opacity: 1; }
+.rgroup { align-items: center; gap: 4px; }
+.rgroup > .sheet-note { font-weight: 700; }
+.coin input { height: 22px; font-weight: 700; }
+.coin input { width: 52px; text-align: center; }
+.shieldrow .coin input, .shieldrow .coin .sheet-field-value { width: 44px; }
+.shieldname .sheet-field-value { font-size: var(--d-lfs); font-weight: 400; }
+
+/* Rows: Strikes, Actions, and the tabs share one row style. */
+.sheet-list .sheet-list-item { margin: 0 !important; }
+.rows .sheet-list-item:not(:has(.row)) { display: none; }
+.row {
+  display: grid !important;
+  align-items: center;
+  gap: 6px;
+  min-height: calc(var(--d-h) + 6px);
+  /* The first line keeps that height when an expanded preview adds a second, so nothing moves. */
+  grid-template-rows: minmax(calc(var(--d-h) + 6px - var(--d-gap) * .6 - 1px), auto);
+  border-bottom: 1px solid var(--st-border);
+  padding: calc(var(--d-gap) * .3) 0;
+}
+.row.edit { display: flex !important; flex-wrap: wrap; align-items: end; }
+/* Header rows sit on their list like the rows below them, without the section's spacing. */
+.row.th { min-height: 0; margin-bottom: 0 !important; }
+.row.th > * { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.name .sheet-field-value { font-size: calc(var(--d-fs) + 1px); }
+.skill .name .sheet-field-value, .srow .name .sheet-field-value, .prof .sheet-field-value { font-weight: 400; }
+.grp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  margin-top: calc(var(--d-gap) * .8);
+  background: var(--st-panel-muted);
+  border-radius: 4px;
+  font-size: var(--d-lfs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+/* Each group (a bar and its rows) has the same space above its bar and below it. */
+.rows:has(> .grp) { gap: 0 !important; padding-top: 4px; }
+.rows > .grp { margin-top: 0 !important; margin-bottom: 4px !important; }
+.row.th.spell, .row.th.inv { margin-bottom: 8px !important; }
+/* Divine Font's pips sit beside its count, on the right. */
+.grp > .sq { margin-left: auto; }
+.grp .sheet-field-value { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--st-ink-muted); }
+
+.pair { grid-template-columns: 1.5fr 1fr !important; gap: calc(var(--d-gap) + 10px) var(--d-gap) !important; align-items: stretch; }
+.strikes .row { grid-template-columns: 30px 1.1fr 130px 1fr 1.6fr; }
+.hit { align-items: baseline; gap: 6px; }
+.map .sheet-field-value { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
+/* MAP steps still roll, but stay quiet: muted, with a dotted underline like other clickable values. */
+.map .sheet-roll-trigger { color: var(--st-ink-muted); font-weight: 400; border-bottom: 1px dotted currentColor; }
+.dmg { align-items: baseline; gap: 0 6px; flex-wrap: wrap; }
+.dmg .sheet-field-value { font-weight: 400; }
+.dmg .dim .sheet-field-value { font-size: var(--d-lfs); }
+.traits .sheet-tags .sheet-field-value > .flex-wrap { gap: 4px; }
+.acts .row { grid-template-columns: 30px 1fr auto; }
+.acts .row > .dim .sheet-field-value { font-size: var(--d-lfs); }
+/* An expanded preview opens as a full-width line under its row: the name's wrappers step aside so
+   the preview panel is a cell of the row's own grid, placed after the row's other cells. */
+.strikes .row > .cell, .strikes .row > .cell > .sheet-value, .acts .row > .cell, .acts .row > .cell > .sheet-value,
+.row > .sheet-value.name { display: contents; }
+.row .sheet-preview-frame { grid-column: 1 / -1; order: 99; margin: 2px 0 6px; }
+/* The whole name cell opens the preview, not just the text: the button fills its cell, and the
+   hover tint shows how far it reaches. Rolls and breakdowns in other cells keep their own clicks. */
+.row .sheet-field-value:has(> span > .sheet-preview-trigger) { align-self: stretch; display: flex; margin: -2px 0; }
+.row .sheet-field-value > span:has(> .sheet-preview-trigger) { display: flex; flex: 1; }
+.row .sheet-preview-trigger { flex: 1; padding: 0 4px; margin-left: -4px; border-radius: 4px; }
+.row .sheet-preview-trigger:hover { background: color-mix(in srgb, var(--st-primary) 7%, transparent); }
+
+/* Skills and proficiencies on the left, the tabs on the right. */
+.mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
+.leftcol { gap: calc(var(--d-gap) + 10px); }
+/* Fixed columns, so attributes, ranks, and modifiers line up from row to row. */
+.skills .row { grid-template-columns: 1fr 32px 30px 58px; }
+.skills .row > :last-child { justify-self: end; }
+.rank-sel button { font-size: var(--d-lfs); }
+.skills .row:has(.rank:not(.on)) .name .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
+/* Perception and Initiative sit on each other like list rows, without the section's spacing. */
+.lead:not(.init) { margin-bottom: 0 !important; }
+/* Perception and Initiative look like skill rows: the same name and modifier sizes. */
+.lead h4 { font-family: inherit; font-size: calc(var(--d-fs) + 1px); font-weight: 400; margin: 0; }
+/* The "rolls with" select fits its label; the modifier stays at the right edge like Perception's. */
+.lead.init { grid-template-columns: auto auto 1fr; border-bottom: 2px solid var(--st-border-strong); margin-bottom: calc(var(--d-gap) * .5); }
+.lead.init > :last-child { justify-self: end; }
+.lead.init:has(.ibonus) { grid-template-columns: auto auto 1fr auto; }
+.lead.init .ibonus { justify-self: end; }
+/* Lore continues the skill list: no gap or extra divider between them. */
+.skills .rows:not(.lore) { margin-bottom: 0 !important; }
+/* Each label sits on its first line of badges; the badges are an aligned two-column grid. */
+.profrow { display: grid !important; grid-template-columns: 70px 1fr; gap: 4px 12px; align-items: baseline; padding: 2px 0; }
+.proflist > div { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+.prof .sheet-field-value { font-size: calc(var(--d-fs) - 2px); }
+.prof { gap: 4px; align-items: baseline; }
+
+/* Tabs */
+.maintabs { min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+/* The tabs run as tall as the Skills and Proficiencies column. */
+.maintabs > [role="tabpanel"]:not([hidden]) { flex: 1; display: flex; flex-direction: column; }
+.maintabs .sheet-tab { flex: 1; }
+.sheet-tab {
+  background: var(--st-panel);
+  border: 1px solid var(--st-border-strong);
+  border-radius: 0 var(--st-radius) var(--st-radius) var(--st-radius);
+  padding: calc(var(--d-pad) * 1.5);
+  min-height: 640px;
+}
+.kvp { gap: 6px; align-items: center; }
+/* The Class and Spells tabs' first line is their main information: larger labels and values (rank badges keep their size). */
+.keyline .sheet-field-label { font-size: calc(var(--d-lfs) + 1px); }
+.keyline .sheet-field-value:not(.rank .sheet-field-value) { font-size: calc(var(--d-fs) + 3px); font-weight: 700; line-height: 1; }
+.feature { grid-template-columns: 52px 1fr; }
+.features .row:has(.future) .name .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
+.kv .row { grid-template-columns: 130px 1fr; }
+/* Key-value rows (Deity, Biography) are list rows: no section spacing between them, a divider under each, regular values. */
+.kv { gap: 0 !important; }
+.kv > .sheet-text, .kv > .sheet-tags, .kv > .sheet-markdown { min-height: calc(var(--d-h) + 6px); padding: calc(var(--d-gap) * .3) 0; border-bottom: 1px solid var(--st-border); }
+.kv .sheet-field-value { font-weight: 400; }
+/* An empty portrait's "No image" is a quiet placeholder, not a value. */
+.portrait .sheet-field-value { font-weight: 400; color: var(--st-ink-muted); }
+/* The portrait sits in a frame under its group bar, like the Details column beside it. */
+.portrait img { display: block; width: 100%; padding: 6px; border: 1px solid var(--st-border); border-radius: var(--st-radius); background: var(--st-panel); }
+.feat { grid-template-columns: 40px 18px 1fr 110px; }
+.feat .small-sel .sheet-field-value { width: 104px; }
+.spell { grid-template-columns: 22px 76px minmax(120px, 1fr) 110px 90px 1.4fr; }
+.slot { display: flex !important; gap: 12px; }
+.inv { grid-template-columns: 36px 1fr 44px 170px 30px; }
+.moves { gap: 4px; }
+/* Move buttons fit inside a 30px row. */
+.moves .sheet-button { height: 22px; padding: 0 6px; font-size: var(--d-lfs); }
+/* No item can be invested: drop the Inv column. */
+.sheet-tab:not(:has(.invcol)) .inv { grid-template-columns: 36px 1fr 44px 170px; }
+/* An empty coin shows its 0 like a stored one, without a reset button. */
+.coin input::placeholder { color: inherit; opacity: 1; }
+.coin button[aria-label="Use automatic value"] { display: none; }
+.bulk { flex-basis: 100%; align-items: center; gap: 4px 8px; }
+.hpbar { position: relative; gap: 0 !important; }
+.hpbar > .tempbar { position: absolute; inset: 0; }
+.tempbar [data-slot="base"] { background: transparent; }
+.tempbar [data-slot="indicator"] { background: var(--st-contrast); }
+.bmeter { width: 90px; }
+.bmeter [data-slot="base"] { height: 7px; }
+.trad { gap: 4px; }
+.bio { display: grid !important; grid-template-columns: 180px 1fr; gap: calc(var(--d-gap) * 2); align-items: start; }
+.biocols { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; }
+.kv > .sheet-text, .kv > .sheet-tags { display: grid; grid-template-columns: 130px 1fr; gap: 6px; align-items: center; }
+
+/* Inputs keep the size of the values they replace: no steppers, narrow boxes. */
+[data-slot="increment"], [data-slot="decrement"] { display: none; }
+.sheet-number input { padding-inline: 4px; }
+.meta .sheet-number .sheet-field-value:has(input) { width: 48px; }
+.meta .sheet-number input { font-size: calc(var(--d-big) * .9); font-weight: 700; height: calc(var(--d-big) * 1.3); }
+.now .sheet-number .sheet-field-value { width: 72px; }
+.temp .sheet-field-value, .coin .sheet-field-value { width: 52px; }
+.temp input { font-size: var(--d-big); font-weight: 700; height: calc(var(--d-big) + 6px); }
+.adj .sheet-button { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Pips: label beside them, no count under them. */
+.death .sheet-tracker, .meta .sheet-tracker { display: flex; align-items: center; gap: 4px; }
+.meta .sheet-tracker { display: grid; }
+.death .sheet-field-value > div > div:last-child, .bmeter .sheet-field-value > div > div:last-child, .meter .sheet-field-value > div > div:last-child, .meta .sheet-tracker .sheet-field-value > div > div:last-child,
+.grp .sheet-tracker .sheet-field-value > div > div:last-child, .slot .sheet-tracker .sheet-field-value > div > div:last-child { display: none; }
+.death .sheet-field-value button, .grp .sheet-field-value button, .slot .sheet-field-value button { width: 13px; height: 13px; }
+.meta .sheet-tracker .sheet-field-value button { width: 19px; height: 19px; }
+.sq .sheet-field-value button { border-radius: 2px; }
+
+/* Tabs: folio tabs on the panel's top edge. */
+.maintabs [data-slot="list"] { background: transparent; padding: 0; gap: 2px; border-radius: 0; margin-bottom: -1px; z-index: 1; }
+.maintabs [data-slot="list"] > [data-slot="indicator"] { display: none; }
+.maintabs [data-slot="list"] { flex-wrap: wrap; }
+.maintabs [data-slot="label"] { overflow: visible; }
+.maintabs [data-slot="trigger"] {
+  flex-grow: 0;
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: calc(var(--st-radius) * .8) calc(var(--st-radius) * .8) 0 0;
+  font-family: var(--st-font-display);
+  font-size: var(--d-h2);
+  font-weight: 700;
+  color: var(--st-ink-muted);
+}
+.maintabs [data-slot="trigger"][data-state="active"] { background: var(--st-panel); border-color: var(--st-border-strong); color: var(--st-ink); }
+.maintabs [data-slot="leadingIcon"] { color: var(--st-primary); width: .95em; height: .95em; }
+.maintabs .sheet-tab { padding-top: calc(var(--d-pad) * 1.5); margin-top: 0; }
+
+/* Edit mode keeps the play layout: controls sit in the row cells and look like the values they replace
+   (spec, "States"): dashed edges, no fill, the size of the value. */
+.sheet-field-value + p { display: none; }
+.cell { min-width: 0; }
+.sheet-sheet input[data-slot="base"], .sheet-sheet textarea[data-slot="base"],
+.sheet-sheet button[data-slot="base"][role="combobox"], .sheet-sheet button[data-slot="base"][aria-haspopup="listbox"],
+.sheet-sheet .sheet-tags [data-slot="root"] {
+  background: transparent;
+  box-shadow: none;
+  border: 1px dashed var(--st-border-strong);
+  border-radius: 4px;
+}
+.sheet-sheet input[data-slot="base"]:focus-visible, .sheet-sheet textarea[data-slot="base"]:focus-visible,
+.sheet-sheet button[data-slot="base"]:focus-visible, .sheet-sheet .sheet-tags [data-slot="root"]:focus-within {
+  outline: 2px solid var(--st-primary);
+  outline-offset: 1px;
+}
+.sheet-sheet button[data-slot="base"][role="combobox"], .sheet-sheet button[data-slot="base"][aria-haspopup="listbox"] {
+  height: var(--d-h);
+  padding: 0 18px 0 6px;
+  font-size: inherit;
+  font-weight: 700;
+}
+.sheet-sheet [data-slot="trailing"] { padding-right: 4px; }
+.sheet-sheet [data-slot="trailingIcon"] { width: 12px; height: 12px; }
+.row input[data-slot="base"], .strip input[data-slot="base"], .grp input[data-slot="base"] { height: var(--d-h); padding: 0 6px; font-size: inherit; }
+/* Initiative's "rolls with" is a real select in play and edit alike. */
+.init button[data-slot="base"][role="combobox"] { border-style: solid; font-weight: 400; }
+
+/* Pickers of a referenced name look like the underlined name, with a small ▾. */
+.sheet-sheet .name button[data-slot="base"][aria-haspopup], .sheet-sheet .card button[data-slot="base"][aria-haspopup],
+.sheet-sheet .kv .sheet-ref button[data-slot="base"][aria-haspopup] {
+  width: auto;
+  max-width: 100%;
+  border: 0;
+  padding: 0 16px 0 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: var(--st-ink);
+}
+.name .sheet-field-value, .kv .sheet-ref .sheet-field-value { width: auto; min-width: 0; }
+.sheet-sheet .card button[data-slot="base"][aria-haspopup] { height: auto; font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
+.card:has(button[data-slot="base"]) { border-style: dashed; }
+.card:has(button[data-slot="base"]), .rankcell:has(.rank-sel) .rank.on .sheet-field-value {
+  outline: 2px solid color-mix(in srgb, var(--st-primary) 22%, transparent);
+  outline-offset: 2px;
+}
+.ident .sheet-field-value > .space-y-2 { margin: 0; }
+
+/* Rank badges stay in edit, dashed; an invisible select over each one opens the choices. */
+.rankcell { position: relative; display: grid !important; place-items: center; }
+.rankcell .rank-sel { position: absolute; inset: 0; }
+.rankcell .rank-sel .sheet-field-value { width: 100%; height: 100%; }
+.rankcell .rank-sel button[data-slot="base"] { width: 100%; height: 100%; min-height: 0; padding: 0; opacity: 0; cursor: pointer; }
+.rankcell:has(.rank-sel) .rank:not(.on) .sheet-field-value { border-style: dashed; }
+.rankcell:has(button:focus-visible) .rank .sheet-field-value { outline: 2px solid var(--st-primary); outline-offset: 1px; }
+
+/* "+ Add …" are small dashed pills; rows lose their move buttons and remove with a ×. */
+.sheet-list > .flex-wrap > button[data-slot="base"], .sheet-list > .flex-wrap button[data-slot="base"][aria-haspopup="listbox"] {
+  height: auto;
+  padding: 1px 6px;
+  font-size: var(--d-lfs);
+  font-weight: 700;
+  color: var(--st-primary);
+  background: var(--st-panel-muted);
+  border: 1px dashed var(--st-border-strong);
+  border-radius: 4px;
+  box-shadow: none;
+}
+.sheet-list > .flex-wrap { margin-top: 4px; }
+.sheet-list > .flex-wrap > .w-56 { width: auto; }
+.sheet-list > .flex-wrap > button [data-slot="leadingIcon"] { display: none; }
+.sheet-list > .flex-wrap > button [data-slot="label"]::before { content: "+ "; }
+.noadd > .flex-wrap { display: none; }
+.sheet-list-item button[aria-label="Move up"], .sheet-list-item button[aria-label="Move down"] { display: none; }
+.rows .sheet-list-item { align-items: center; gap: 2px; }
+.sheet-list-item > div:last-child:not(:first-child) { flex-direction: row; gap: 0; }
+.sheet-list-item button[aria-label="Remove"] { padding: 0 4px; color: var(--st-ink-muted); }
+.sheet-list-item button[aria-label="Remove"]:hover { color: var(--ui-error); background: transparent; }
+.sheet-list-item button[aria-label="Remove"] [data-slot="leadingIcon"] { display: none; }
+.sheet-list-item button[aria-label="Remove"]::after { content: "×"; font-size: 16px; line-height: 1; }
+
+.note-in .sheet-field-value, .note-in { width: 100%; }
+.traits { flex-wrap: nowrap !important; }
+.traits .note-in, .traits .note-in .sheet-field-value { width: 64px; }
+.or-feat { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.gear { flex-basis: auto; }
+.inv .small-num .sheet-field-value { width: 32px; }
+.sheet-list > .flex-wrap > .w-56 button[data-slot="base"] { min-width: 130px; padding-right: 18px; }
+.spell .sheet-checkbox button, .spell .sheet-field-value > button { width: 13px; height: 13px; border-radius: 2px; }
+.spell > .sheet-value:not(.name) .sheet-field-value { font-weight: 400; }
+.small-num .sheet-field-value { width: 44px; }
+.small-num input { text-align: center; }
+.small-sel .sheet-field-value { width: auto; }
+.strikes .row { grid-template-columns: 30px minmax(130px, 1.1fr) minmax(130px, auto) minmax(110px, 1fr) 1.4fr; }
+.traits { gap: 2px 4px; align-items: center; }
+.inline { display: flex; align-items: center; gap: 4px; }
+.inline .sheet-field-label { color: inherit; }
+.resist { gap: 4px 8px; align-items: center; }
+.inline-list > div { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.pair-in { gap: 4px; align-items: center; }
+.pair-in .sheet-text .sheet-field-value { width: 72px; }
+.inline-list .sheet-list-item { gap: 0; }
+.inline-list .small-num .sheet-field-value { width: 30px; }
+.inline-list input[data-slot="base"] { height: 20px; font-size: var(--d-lfs); padding: 0 4px; }
+/* Its "+ Add" is as tall as the entries it adds. */
+.inline-list > .flex-wrap > button[data-slot="base"] { height: 20px; padding: 0 5px; line-height: 1; }
+.inline-list > .flex-wrap { margin-top: 0; }
+.inline-list { display: flex; align-items: center; gap: 4px; }
+.inline-list > * + * { margin-top: 0 !important; }
+.sheet-note.chip { justify-self: start; }
+.choose {
+  justify-self: start;
+  padding: 1px 6px;
+  font-size: var(--d-lfs);
+  font-weight: 700;
+  color: var(--st-primary);
+  background: var(--st-panel-muted);
+  border: 1px dashed var(--st-border-strong);
+  border-radius: 4px;
+}
+.open-slots { margin-top: 0 !important; }
+
+/* Phones */
+/* A little narrower than 1092px (a 1280px window): the same wide layout, with tighter spacing so nothing wraps. */
+@container (max-width: 1080px) {
+  .head > div:last-child { column-gap: 12px; }
+  .meta > * { padding-left: calc(var(--d-pad) + 2px); padding-right: calc(var(--d-pad) + 2px); }
+  .card { padding-left: 9px; padding-right: 9px; }
+  .refs, .refgroup { column-gap: 6px; }
+  .defs { grid-template-columns: .85fr 2.25fr 1fr; }
+  .hpline { column-gap: 8px; }
+  .death { column-gap: 8px; }
+}
+/* Narrower still (a 1180px window, sheet about 890px): tighter again, still the wide layout. */
+@container (max-width: 960px) {
+  .meta > * { padding-left: 5px; padding-right: 5px; }
+  .card { padding-left: 7px; padding-right: 7px; }
+  .defs { grid-template-columns: .75fr 2.6fr .85fr; }
+  .hpline, .death { column-gap: 6px; }
+  .adj input { width: 44px; }
+  .adj .sheet-button { padding-left: 6px; padding-right: 6px; letter-spacing: .02em; }
+  .now .sheet-number input { width: 60px; }
+  .strikes .row { grid-template-columns: 30px minmax(96px, 1fr) minmax(120px, auto) minmax(84px, .8fr) 1.4fr; }
+}
+/* Under 880px the header and the Attributes & Defenses row stop fitting side by side
+   (breakpoint list: .claude/mockups/pf2e-sheet/spec.md, "Breakpoints"). */
+@container (max-width: 880px) {
+  .head > div:last-child { grid-template-columns: 1fr; }
+  .meta, .facts { grid-column: 1; grid-row: auto; }
+  .meta > * { flex: 1 1 0; min-width: 0; }
+  .top { grid-template-columns: 1fr; grid-template-rows: none; }
+  .top > .attrs, .defs, .shieldrow, .iwrcond { grid-column: 1 !important; grid-row: auto !important; margin-left: 0; }
+  .shieldrow { flex-wrap: wrap !important; margin-bottom: var(--d-gap); }
+  .attrs { grid-template-columns: repeat(6, 1fr) !important; }
+  .defs { grid-template-columns: 1fr 1.3fr; grid-template-areas: "hp hp" "ac saves"; }
+  .ac { grid-area: ac; }
+  .hp { grid-area: hp; }
+  .saves { grid-area: saves; }
+}
+/* Under 820px Strikes and Actions, then Skills and the tabs, stack; each keeps its wide rows. */
+@container (max-width: 820px) {
+  .mid, .pair { grid-template-columns: 1fr !important; }
+}
+/* Phones: rows fold into two lines and columns drop. */
+@container (max-width: 620px) {
+  .meta > * { padding: 6px 4px; }
+  .meta .sheet-field-value { font-size: var(--d-big); }
+  .meta .sheet-tracker .sheet-field-value button { width: 14px; height: 14px; }
+  .meta .sheet-tracker .sheet-field-value > div > div:first-child { flex-wrap: nowrap; gap: 2px; }
+  .maintabs [data-slot="trigger"] { padding: 4px 8px; }
+  .row.th { display: none !important; }
+  .strikes .row { grid-template-columns: 22px 1fr auto; row-gap: 0; }
+  .strikes .row > :nth-child(4), .strikes .row > :nth-child(5) { grid-column: 2 / -1; font-size: var(--d-lfs); }
+  .spell { grid-template-columns: 22px 76px 1fr; row-gap: 0; }
+  .spell > :nth-child(n + 4) { grid-column: 3; font-size: var(--d-lfs); }
+  .inv, .sheet-tab:not(:has(.invcol)) .inv { grid-template-columns: 24px 1fr 30px 96px; }
+  .inv > :nth-child(5) { display: none; }
+  .bio { grid-template-columns: 1fr; }
+  /* On its own line, the portrait keeps about its desktop size. */
+  .portrait img { width: auto; max-width: 100%; max-height: 320px; margin: 0 auto; }
+  /* Edit keeps the play layout on a phone too; notes inputs stay narrow. */
+  .acts .note-in, .acts .note-in .sheet-field-value { width: 96px; }
+  .feat { grid-template-columns: 40px 24px 1fr auto; }
+  .sheet-tab { min-height: 0; }
+}

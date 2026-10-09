@@ -52,8 +52,8 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Checkbox` | `formula`, `style` (`check` \| `dot`, default check) | boolean | `formula` overrides; `style="dot"` is a filled or empty circle with no Yes/No text (proficiency marks) |
 | `Toggle` | none | boolean | On/off switch |
 | `Select` | `options` (comma-separated; only on a text field without schema options) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
-| `Tags` | none | array of strings | |
-| `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value |
+| `Tags` | `placeholder` | array of strings | |
+| `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `mark` (same), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value; `mark` ticks a bar that isn't editable at a threshold (`mark="{5 + str}"`) |
 | `Ref` | `preview` (`expand` \| `card`; bare = `expand`) | resourceLink, content | Link to the referenced resource or Content; with `preview` (content fields only), clicking shows it instead (see "Reference previews"); may hold one `Preview` |
 | `Value` | `formula`, `format` (`plain` \| `signed`), `preview` (`expand` \| `card`) | any value | Never editable; `formula` (read-only) instead of `field`; with `Part` children and no formula, shows their sum; `preview` (see "Reference previews") |
 | `Markdown` | none | string | Formatted long text |

@@ -42,7 +42,7 @@ Read these when in doubt; this skill is a summary and the code wins if they disa
 - Escapes: `\{` `\}` `\\` for literal braces and backslash. Entities `&lt; &gt; &amp; &quot; &apos;` and numeric `&#123;` / `&#x7B;`. A bare `<` in text is an error (write `&lt;`).
 - Comments: `<!-- ... -->` (an unterminated comment is an error).
 - Limits: 100,000 characters, 32 levels of nesting, 5,000 nodes. CSS: 50,000 characters.
-- Some attributes take a `{formula}` instead of a literal: `Tracker`'s `max` and `Number`'s `min`, `max`, and `step` accept exactly one `{formula}` (e.g. `max="{hp.max}"`, `max="{hp.base + level * 2}"`); other number attributes (`cols`, `span`, `level`) take plain numbers only; text attributes accept both mixed with text; enum, boolean, icon, class, list, and field attributes cannot use `{...}`.
+- Some attributes take a `{formula}` instead of a literal: `Tracker`'s `max` and `mark` and `Number`'s `min`, `max`, and `step` accept exactly one `{formula}` (e.g. `max="{hp.max}"`, `max="{hp.base + level * 2}"`); other number attributes (`cols`, `span`, `level`) take plain numbers only; text attributes accept both mixed with text; enum, boolean, icon, class, list, and field attributes cannot use `{...}`.
 - No raw HTML, `style`, `on*` events, or URLs. Icons are Iconify names from Lucide (`i-lucide-sword`) or game-icons.net (`i-game-icons-crossed-swords`); no other icon sets. Images are `https` URLs held in a string field.
 
 ## Tags
@@ -57,7 +57,7 @@ The full list of attributes and children is in `references/tags.md` (verified ag
 - Definitions: `Define` (`name`, `params`, `formula`; top level or directly inside `Sheet`; renders nothing).
 - Every tag also takes `class`, `show`, `live`, `locked`, `display`, except `Tab` and `RowDetails` (their parents render them), which take only `class` and `show`; `Column` takes no `show`; `Button` takes `class`, `show`, and `live` only; `Define`, `Set`, and `Part` (only `show`) take none.
 
-Rendering notes: `Number variant="stat"` shows a big number with its label small. `format="signed"` (on `Number` and `Value`) shows `+2` for positives; an editable `Number` input shows the sign too, while the saved value stays a plain number. `Tracker style="pips"` shows boxes instead of a bar; a `Tracker` without `max` (or at 0) shows just its value. `Checkbox style="dot"` shows a filled or empty circle with no Yes/No text. On phones, `Table` rows stack their cells with labels. `Ref` shows a link to the referenced resource or Content.
+Rendering notes: `Number variant="stat"` shows a big number with its label small. `format="signed"` (on `Number` and `Value`) shows `+2` for positives and `+0` for zero; an editable `Number` input shows the sign too, while the saved value stays a plain number. `Tracker style="pips"` shows boxes instead of a bar; a `Tracker` without `max` (or at 0) shows just its value. `Checkbox style="dot"` shows a filled or empty circle with no Yes/No text. On phones, `Table` rows stack their cells with labels. `Ref` shows a link to the referenced resource or Content.
 
 ## Paths, formulas, and features
 

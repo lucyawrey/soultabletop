@@ -188,31 +188,73 @@
         "type": "string"
       }
     },
+    "resistances": {
+      "type": "array",
+      "label": "Resistances",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "type": {
+            "type": "string",
+            "label": "Damage Type"
+          },
+          "value": {
+            "type": "number",
+            "label": "Value"
+          }
+        }
+      }
+    },
+    "weaknesses": {
+      "type": "array",
+      "label": "Weaknesses",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "type": {
+            "type": "string",
+            "label": "Damage Type"
+          },
+          "value": {
+            "type": "number",
+            "label": "Value"
+          }
+        }
+      }
+    },
+    "immunities": {
+      "type": "array",
+      "label": "Immunities",
+      "itemType": {
+        "type": "string"
+      }
+    },
     "perception": {
       "type": "number",
       "options": [
         {
           "value": 0,
-          "label": "Untrained"
+          "label": "U"
         },
         {
           "value": 1,
-          "label": "Trained"
+          "label": "T"
         },
         {
           "value": 2,
-          "label": "Expert"
+          "label": "E"
         },
         {
           "value": 3,
-          "label": "Master"
+          "label": "M"
         },
         {
           "value": 4,
-          "label": "Legendary"
+          "label": "L"
         }
       ],
       "label": "Perception",
+      "description": "Untrained, Trained, Expert, Master, or Legendary.",
       "default": 0
     },
     "initiative": {
@@ -310,26 +352,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Fortitude",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "reflex": {
@@ -337,26 +380,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Reflex",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "will": {
@@ -364,26 +408,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Will",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         }
       }
@@ -397,26 +442,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Acrobatics",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "arcana": {
@@ -424,26 +470,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Arcana",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "athletics": {
@@ -451,26 +498,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Athletics",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "crafting": {
@@ -478,26 +526,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Crafting",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "deception": {
@@ -505,26 +554,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Deception",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "diplomacy": {
@@ -532,26 +582,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Diplomacy",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "intimidation": {
@@ -559,26 +610,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Intimidation",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "medicine": {
@@ -586,26 +638,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Medicine",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "nature": {
@@ -613,26 +666,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Nature",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "occultism": {
@@ -640,26 +694,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Occultism",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "performance": {
@@ -667,26 +722,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Performance",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "religion": {
@@ -694,26 +750,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Religion",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "society": {
@@ -721,26 +778,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Society",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "stealth": {
@@ -748,26 +806,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Stealth",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "survival": {
@@ -775,26 +834,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Survival",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "thievery": {
@@ -802,26 +862,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Thievery",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         }
       }
@@ -842,26 +903,27 @@
             "options": [
               {
                 "value": 0,
-                "label": "Untrained"
+                "label": "U"
               },
               {
                 "value": 1,
-                "label": "Trained"
+                "label": "T"
               },
               {
                 "value": 2,
-                "label": "Expert"
+                "label": "E"
               },
               {
                 "value": 3,
-                "label": "Master"
+                "label": "M"
               },
               {
                 "value": 4,
-                "label": "Legendary"
+                "label": "L"
               }
             ],
             "label": "Rank",
+            "description": "Untrained, Trained, Expert, Master, or Legendary.",
             "default": 0
           }
         }
@@ -872,26 +934,27 @@
       "options": [
         {
           "value": 0,
-          "label": "Untrained"
+          "label": "U"
         },
         {
           "value": 1,
-          "label": "Trained"
+          "label": "T"
         },
         {
           "value": 2,
-          "label": "Expert"
+          "label": "E"
         },
         {
           "value": 3,
-          "label": "Master"
+          "label": "M"
         },
         {
           "value": 4,
-          "label": "Legendary"
+          "label": "L"
         }
       ],
       "label": "Class DC",
+      "description": "Untrained, Trained, Expert, Master, or Legendary.",
       "default": 0
     },
     "attacks": {
@@ -903,26 +966,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Unarmed",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "simple": {
@@ -930,26 +994,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Simple Weapons",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "martial": {
@@ -957,26 +1022,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Martial Weapons",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "advanced": {
@@ -984,26 +1050,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Advanced Weapons",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         }
       }
@@ -1017,26 +1084,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Unarmored",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "light": {
@@ -1044,26 +1112,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Light Armor",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "medium": {
@@ -1071,26 +1140,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Medium Armor",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "heavy": {
@@ -1098,26 +1168,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Heavy Armor",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         }
       }
@@ -1162,27 +1233,27 @@
             "options": [
               {
                 "value": "str",
-                "label": "Strength"
+                "label": "Str"
               },
               {
                 "value": "dex",
-                "label": "Dexterity"
+                "label": "Dex"
               },
               {
                 "value": "con",
-                "label": "Constitution"
+                "label": "Con"
               },
               {
                 "value": "int",
-                "label": "Intelligence"
+                "label": "Int"
               },
               {
                 "value": "wis",
-                "label": "Wisdom"
+                "label": "Wis"
               },
               {
                 "value": "cha",
-                "label": "Charisma"
+                "label": "Cha"
               }
             ],
             "label": "Attack Attribute",
@@ -1332,26 +1403,27 @@
           "options": [
             {
               "value": 0,
-              "label": "Untrained"
+              "label": "U"
             },
             {
               "value": 1,
-              "label": "Trained"
+              "label": "T"
             },
             {
               "value": 2,
-              "label": "Expert"
+              "label": "E"
             },
             {
               "value": 3,
-              "label": "Master"
+              "label": "M"
             },
             {
               "value": 4,
-              "label": "Legendary"
+              "label": "L"
             }
           ],
           "label": "Proficiency",
+          "description": "Untrained, Trained, Expert, Master, or Legendary.",
           "default": 0
         },
         "kind": {
@@ -1386,9 +1458,9 @@
             "label": "Slots",
             "default": 0
           },
-          "used": {
+          "left": {
             "type": "number",
-            "label": "Used",
+            "label": "Left",
             "default": 0
           }
         }
@@ -1434,9 +1506,9 @@
           "label": "Slots",
           "default": 0
         },
-        "used": {
+        "left": {
           "type": "number",
-          "label": "Used",
+          "label": "Left",
           "default": 0
         }
       }
@@ -1450,9 +1522,9 @@
           "label": "Focus Points",
           "default": 0
         },
-        "used": {
+        "left": {
           "type": "number",
-          "label": "Used",
+          "label": "Left",
           "default": 0
         },
         "spells": {

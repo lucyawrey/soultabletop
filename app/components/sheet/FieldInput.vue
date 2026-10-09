@@ -166,7 +166,7 @@ const step = computed(() => number(props.node.attrs.step));
 // still the plain number.
 const numberFormat = computed(() =>
   props.node.attrs.format === "signed"
-    ? ({ signDisplay: "exceptZero" } as const)
+    ? ({ signDisplay: "always" } as const)
     : undefined,
 );
 
@@ -325,6 +325,7 @@ const imageError = computed(() =>
     v-else-if="display === 'tags'"
     v-model="tags"
     :disabled="disabled"
+    :placeholder="placeholder"
     :aria-label="label"
     class="w-full"
   />
