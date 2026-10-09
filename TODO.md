@@ -10,6 +10,7 @@ Quick, rough ideas go here, in any form. Nothing is built from them until they'r
 - Question: "is using nuxtui instead of raw html in custom character sheets causing performance or developer overhead?" (user, 2026-10-06; the Sheet renderer maps tags to Nuxt UI components, e.g. `UInputNumber`, `UTable`, `USelect`)
 - "searchable dropdowns like the ones in sheets, used for more of the site's base UI (e.g. system selection)" (user, 2026-10-06; the sheet's `sheet/ContentPicker.vue` is a server-searched `USelectMenu`; candidates include `SystemSelector.vue`, `OwnerField.vue`, and the list pages' filters)
 - "preventing duplicates in lists is a seperate issue" (user, 2026-10-06, reporting that a sheet's Add row picker didn't reset, fixed in #99; whether a List or Table of content may hold the same content twice, e.g. an option on the field or the tag)
+- Question: "how do we handle rolling spell attacks? are they strikes or only on the spell list? do we have a way to do rolls from the spell menu right now" (user, 2026-10-09, on the PF2e sheet; as of #108 the Spells tab has one generic Spell attack roll and the Spell DC in its spellcasting block, and spell rows have no rolls of their own, for attack or damage)
 
 # In progress
 
