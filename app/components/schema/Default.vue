@@ -43,6 +43,7 @@ const choiceItems = computed(() => [
     :error="errors.get(defaultErrorId(node.id))"
   >
     <USelect
+      :content="{ align: 'start' }"
       v-if="isChoice"
       v-model="choice"
       :items="choiceItems"

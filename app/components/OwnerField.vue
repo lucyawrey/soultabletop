@@ -63,7 +63,7 @@ const targetName = computed(
     label="Owner"
     description="Group-owned resources can be edited by the group's admins and editors."
   >
-    <USelect v-model="selected" :items="options" class="w-full" />
+    <USelect :content="{ align: 'start' }" v-model="selected" :items="options" class="w-full" />
     <UAlert
       v-if="movingToGroup"
       class="mt-2"

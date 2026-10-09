@@ -352,6 +352,7 @@ async function remove() {
           />
           <UFormField name="systemId" label="System" required>
             <USelect
+              :content="{ align: 'start' }"
               :model-value="form.systemId"
               :items="systemOptions"
               class="w-full"
@@ -369,6 +370,7 @@ async function remove() {
             required
           >
             <USelect
+              :content="{ align: 'start' }"
               :model-value="form.contentTypeId"
               :items="typeOptions"
               class="w-full"

@@ -259,10 +259,10 @@ async function remove() {
             />
           </UFormField>
           <UFormField name="access" label="Access" required>
-            <USelect v-model="form.access" :items="accessOptions" class="w-full" />
+            <USelect :content="{ align: 'start' }" v-model="form.access" :items="accessOptions" class="w-full" />
           </UFormField>
           <UFormField name="expiry" label="Expires" required>
-            <USelect v-model="form.expiry" :items="expiryOptions" class="w-full" />
+            <USelect :content="{ align: 'start' }" v-model="form.expiry" :items="expiryOptions" class="w-full" />
           </UFormField>
           <UAlert
             v-if="formError"
