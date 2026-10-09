@@ -412,8 +412,8 @@
 }
 .kvp { gap: 6px; align-items: center; }
 /* The Class and Spells tabs' first line is their main information: larger labels and values (rank badges keep their size). */
-.keyline .sheet-field-label { font-size: var(--d-fs); }
-.keyline .sheet-field-value:not(.rank .sheet-field-value) { font-size: calc(var(--d-big) * .9); font-weight: 700; line-height: 1; }
+.keyline .sheet-field-label { font-size: calc(var(--d-lfs) + 1px); }
+.keyline .sheet-field-value:not(.rank .sheet-field-value) { font-size: calc(var(--d-fs) + 3px); font-weight: 700; line-height: 1; }
 .feature { grid-template-columns: 52px 1fr; }
 .features .row:has(.future) .name .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
 .kv .row { grid-template-columns: 130px 1fr; }
