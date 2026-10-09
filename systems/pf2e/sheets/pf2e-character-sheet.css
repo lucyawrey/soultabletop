@@ -370,7 +370,9 @@
 .rank-sel button { font-size: var(--d-lfs); }
 .skills .row:has(.rank:not(.on)) .name .sheet-field-value { color: var(--st-ink-muted); font-weight: 400; }
 .lead h4 { font-family: var(--st-font-display); font-size: var(--d-h2); margin: 0; }
-.lead.init { grid-template-columns: auto 1fr auto; border-bottom: 2px solid var(--st-border-strong); margin-bottom: calc(var(--d-gap) * .5); }
+/* The "rolls with" select fits its label; the modifier stays at the right edge like Perception's. */
+.lead.init { grid-template-columns: auto auto 1fr; border-bottom: 2px solid var(--st-border-strong); margin-bottom: calc(var(--d-gap) * .5); }
+.lead.init > :last-child { justify-self: end; }
 .lead > .sheet-value:last-child .sheet-field-value { font-size: calc(var(--d-big) * .8); }
 .lore { border-top: 1px solid var(--st-border); }
 .profrow { display: grid !important; grid-template-columns: 70px 1fr; gap: 4px 12px; align-items: start; padding: 2px 0; }
