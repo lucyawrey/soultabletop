@@ -108,7 +108,9 @@ From `frozen.html`'s CSS. Phones are below 901px.
 | 861–960px | `@container (max-width: 960px)` | tighter again: Hit Points line, Strikes columns | 1180 (892); 900 hamburger (868) |
 | 860px and under | `@container (max-width: 860px)` | the narrow layout: everything stacks | 1024–1148 with the sidebar (736–860); under 893 hamburger |
 
-Sheet width at a window: the window minus 288px with the sidebar open, minus 32px with it hidden (measured 2026-10-09; collapsed, not measured yet). Known problem: shrinking the window crosses wide → narrow (1149px) → wide (1023px, the sidebar hides) → narrow (892px); the narrow layout changes everything at once, so it reads as a jump.
+Sheet width at a window (measured 2026-10-09): the sidebar has three states. Full: the window minus 288px. Minimized (the icon rail; the sheet editor starts this way): minus 120px. Gone (a hamburger menu, below a 1024px window): minus 32px.
+
+Where each area stops fitting in its wide form (measured with the narrow layout switched off, 2026-10-09): header (chips + Level/XP strip) ~880px, then the chips wrap; Attributes & Defenses ~880px, then Hit Points wraps (very tall by 700, spills out at 620); Strikes | Actions ~790px; Skills | tabs ~800px on the Spells tab, ~670px on Inventory, under 620px on Class and Feats. Known problem: shrinking the window crosses wide → narrow (1149px) → wide (1023px, the sidebar hides) → narrow (892px); the narrow layout changes everything at once, so it reads as a jump.
 
 **Page**
 - Sheet max 1180px wide, centered; block gap `--d-gap + 10px` vertically (room for the folio-tab labels), `--d-gap` horizontally.
