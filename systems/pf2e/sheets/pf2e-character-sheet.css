@@ -625,7 +625,18 @@
   .hpline { column-gap: 8px; }
   .death { column-gap: 8px; }
 }
-@container (max-width: 900px) {
+/* Narrower still (a 1180px window, sheet about 890px): tighter again, still the wide layout. */
+@container (max-width: 960px) {
+  .meta > * { padding-left: 5px; padding-right: 5px; }
+  .card { padding-left: 7px; padding-right: 7px; }
+  .defs { grid-template-columns: .75fr 2.6fr .85fr; }
+  .hpline, .death { column-gap: 6px; }
+  .adj input { width: 44px; }
+  .adj .sheet-button { padding-left: 6px; padding-right: 6px; letter-spacing: .02em; }
+  .now .sheet-number input { width: 60px; }
+  .strikes .row { grid-template-columns: 30px minmax(96px, 1fr) minmax(120px, auto) minmax(84px, .8fr) 1.4fr; }
+}
+@container (max-width: 860px) {
   .head > div:last-child { grid-template-columns: 1fr; }
   .meta, .facts { grid-column: 1; grid-row: auto; }
   .meta > * { flex: 1 1 0; min-width: 0; padding: 6px 4px; }
