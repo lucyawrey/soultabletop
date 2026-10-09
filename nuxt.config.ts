@@ -34,6 +34,8 @@ export default defineNuxtConfig({
   // One light theme, no dark mode (see docs/theme.md).
   ui: {
     colorMode: false,
+    // `tertiary` is ours (steel, the contrast color); the rest are Nuxt UI's.
+    theme: { colors: ["primary", "secondary", "tertiary", "info", "success", "warning", "error"] },
   },
 
   runtimeConfig: {

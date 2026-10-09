@@ -18,6 +18,7 @@ export const sheetThemeTokens: SheetThemeToken[] = [
   { name: "--st-primary", description: "Primary color, for emphasis and links" },
   { name: "--st-on-primary", description: "Text on a primary background" },
   { name: "--st-accent", description: "Accent color (gilt)" },
+  { name: "--st-contrast", description: "Contrast color (steel blue), set against primary" },
   { name: "--st-border", description: "Dividers" },
   { name: "--st-border-strong", description: "Outlines that must stand out" },
   { name: "--st-radius", description: "Corner radius of buttons and inputs" },

@@ -15,6 +15,6 @@ defineProps<{
     <span v-if="option.systemName" class="shrink-0 text-xs text-muted">
       {{ option.systemName }}
     </span>
-    <SourceBadge v-if="option.source" :source="option.source" class="shrink-0" />
+    <SourceBadge v-if="option.source" :source="option.source" size="sm" class="shrink-0" />
   </span>
 </template>

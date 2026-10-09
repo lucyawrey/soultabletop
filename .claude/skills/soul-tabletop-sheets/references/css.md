@@ -46,6 +46,7 @@ them, from `shared/sheet/theme-tokens.ts`; the values and rules are in `docs/the
 | `--st-ink`, `--st-ink-muted` | main text, secondary text |
 | `--st-primary`, `--st-on-primary` | primary color, text on it |
 | `--st-accent` | accent color |
+| `--st-contrast` | contrast color (steel blue), set against the primary color |
 | `--st-border`, `--st-border-strong` | dividers, outlines that must stand out |
 | `--st-radius` | corner radius of buttons and inputs |
 | `--st-font-body`, `--st-font-display` | body font, display font (large headings only) |

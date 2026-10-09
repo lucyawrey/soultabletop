@@ -1,0 +1,14 @@
+{
+  "name": "Soap",
+  "readableId": "item-soap",
+  "data": {
+    "kind": "gear",
+    "level": 0,
+    "price": 2,
+    "bulk": 0,
+    "usage": "Held in one hand",
+    "rarity": "common",
+    "description": "Bar of soap.",
+    "source": "Pathfinder Player Core"
+  }
+}
