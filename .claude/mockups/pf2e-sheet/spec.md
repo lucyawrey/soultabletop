@@ -97,7 +97,7 @@ Fonts: section labels, tabs, the name, and the Perception/Initiative row labels 
 
 From `frozen.html`'s CSS. Phones are below 901px.
 
-**Wide-layout reference (user, 2026-10-09):** view mode at a 1380px window (sheet 1092px wide), as of `pf2e-sheet` commit `7504d2b`, is the goal for the wide layout: [reference-1380/](reference-1380/) (`top.png` is the sheet above the tabs, the rest one tab each; Kyra's data). Narrower wide windows, starting with 1280 (sheet 992px), should look like it. The narrow layout applies below a 901px sheet width (a container query, not the window's width, since the app's sidebar takes some of the window).
+**Wide-layout reference (user, 2026-10-09):** view mode at a 1380px window (sheet 1092px wide), with the markup and CSS of `pf2e-sheet` commit `7504d2b` (`systems/pf2e/sheets/`), is the goal for the wide layout. Narrower wide windows, starting with 1280 (sheet 992px), should look like it. The narrow layout applies below a 901px sheet width (a container query, not the window's width, since the app's sidebar takes some of the window).
 
 **Page**
 - Sheet max 1180px wide, centered; block gap `--d-gap + 10px` vertically (room for the folio-tab labels), `--d-gap` horizontally.
