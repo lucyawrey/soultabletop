@@ -595,15 +595,15 @@
             <Badge color="error" show="bulk() > 5 + attributes.str">Encumbered</Badge>
           </Stack>
           <Value label="Invested" formula="concat(count(inventory, invested), ' / 10')" />
-          <Number field="coins.pp" label="pp" min="0" live class="coin" />
-          <Number field="coins.gp" label="gp" min="0" live class="coin" />
-          <Number field="coins.sp" label="sp" min="0" live class="coin" />
-          <Number field="coins.cp" label="cp" min="0" live class="coin" />
+          <Number field="coins.pp" formula="0" label="pp" min="0" live class="coin" />
+          <Number field="coins.gp" formula="0" label="gp" min="0" live class="coin" />
+          <Number field="coins.sp" formula="0" label="sp" min="0" live class="coin" />
+          <Number field="coins.cp" formula="0" label="cp" min="0" live class="coin" />
           <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Armor</Note><Ref field="armor" hideLabel class="name" /></Stack>
           <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Shield</Note><Ref field="shield" hideLabel class="name" /></Stack>
         </Stack>
         <Stack direction="row" class="row th inv">
-          <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>{if(editing(), 'State', 'Move')}</Note><Note>Inv</Note>
+          <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>{if(editing(), 'State', 'Move')}</Note><Note class="invcol" show="any(inventory, hasTrait(item.traits, 'invested'))">Inv</Note>
         </Stack>
         <Stack class="rows" show="any(inventory, state == 'held')">
           <Note class="grp">Held</Note>
@@ -618,8 +618,8 @@
                 <Button label="◆ Wear" live><Set field="state" formula="'worn'" /></Button>
                 <Button label="◆ Stow" live><Set field="state" formula="'stowed'" /></Button>
               </Stack>
-              <Note show="not editing() and invested">✓</Note>
-              <Checkbox field="invested" hideLabel show="editing()" />
+              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
             </Stack>
           </List>
         </Stack>
@@ -636,8 +636,8 @@
                 <Button label="◆ Draw" live><Set field="state" formula="'held'" /></Button>
                 <Button label="◆ Stow" live><Set field="state" formula="'stowed'" /></Button>
               </Stack>
-              <Note show="not editing() and invested">✓</Note>
-              <Checkbox field="invested" hideLabel show="editing()" />
+              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
             </Stack>
           </List>
         </Stack>
@@ -653,8 +653,8 @@
               <Stack direction="row" wrap class="moves">
                 <Button label="◆ Retrieve" live><Set field="state" formula="'held'" /></Button>
               </Stack>
-              <Note show="not editing() and invested">✓</Note>
-              <Checkbox field="invested" hideLabel show="editing()" />
+              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
             </Stack>
           </List>
         </Stack>
