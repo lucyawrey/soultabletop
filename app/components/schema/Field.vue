@@ -48,6 +48,7 @@ const open = ref(field.value.type === "struct" || field.value.type === "array");
         />
       </UFormField>
       <USelect
+        :content="{ align: 'start' }"
         v-model="field.type"
         :items="typeOptions"
         aria-label="Type"

@@ -105,6 +105,7 @@ function select(id: unknown) {
   <div>
     <div class="flex gap-2">
       <USelect
+        :content="{ align: 'start' }"
         v-if="!props.kind"
         v-model="chosenKind"
         :items="kindOptions"
@@ -112,6 +113,7 @@ function select(id: unknown) {
         class="w-36 shrink-0"
       />
       <USelectMenu
+        :content="{ align: 'start' }"
         :key="kind"
         :model-value="modelValue"
         :items="items"
