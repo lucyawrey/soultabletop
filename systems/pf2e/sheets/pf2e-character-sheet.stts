@@ -371,7 +371,7 @@
         <Stack direction="row" wrap class="strip">
           <Value field="class.name" hideLabel class="strong" />
           <Stack direction="row" class="kvp">
-            <Value label="Class DC">
+            <Value label="Class DC" class="keystat">
               <Part label="Base" formula="10" />
               <Part label="Key {attrName(keyAttribute)}" formula="keyMod()" />
               <Part label="{rankName(classDc)}" formula="prof(classDc)" />
@@ -474,7 +474,7 @@
             <Select field="spellcasting.attribute" hideLabel class="small-sel" />
           </Stack>
           <Stack direction="row" class="kvp">
-            <Value label="Spell DC" formula="10 + spellMod()">
+            <Value label="Spell DC" formula="10 + spellMod()" class="keystat">
               <Part label="Base" formula="10" />
               <Part label="{attrName(coalesce(spellcasting.attribute, keyAttribute))}" formula="coalesce(get(attributes, coalesce(spellcasting.attribute, keyAttribute)), 0)" />
               <Part label="{rankName(spellcasting.rank)}" formula="prof(spellcasting.rank)" />
@@ -485,7 +485,7 @@
               <Select field="spellcasting.rank" hideLabel class="rank-sel" show="editing()" />
             </Stack>
           </Stack>
-          <Value label="Attack" format="signed" formula="spellMod()">
+          <Value label="Attack" format="signed" formula="spellMod()" class="keystat">
             <Part label="{attrName(coalesce(spellcasting.attribute, keyAttribute))}" formula="coalesce(get(attributes, coalesce(spellcasting.attribute, keyAttribute)), 0)" />
             <Part label="{rankName(spellcasting.rank)}" formula="prof(spellcasting.rank)" />
             <Roll label="Spell attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
