@@ -386,7 +386,7 @@
 .profrow { display: grid !important; grid-template-columns: 70px 1fr; gap: 4px 12px; align-items: baseline; padding: 2px 0; }
 .proflist > div { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
 .prof .sheet-field-value { font-size: calc(var(--d-fs) - 2px); }
-.prof { gap: 4px; align-items: center; }
+.prof { gap: 4px; align-items: baseline; }
 
 /* Tabs */
 .maintabs { min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
