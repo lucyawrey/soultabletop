@@ -238,6 +238,7 @@ async function remove() {
             </UFormField>
             <UFormField label="Role">
               <USelect
+                :content="{ align: 'start' }"
                 v-model="addForm.role"
                 :items="roleOptions"
                 class="w-32"
@@ -281,6 +282,7 @@ async function remove() {
 
             <template #role-cell="{ row }">
               <USelect
+                :content="{ align: 'start' }"
                 v-if="isAdmin"
                 :model-value="row.original.role"
                 :items="roleOptions"

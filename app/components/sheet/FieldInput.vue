@@ -253,6 +253,7 @@ const imageError = computed(() =>
   />
 
   <USelect
+    :content="{ align: 'start' }"
     :size="size"
     v-else-if="display === 'select'"
     v-model="choice"
@@ -262,6 +263,7 @@ const imageError = computed(() =>
     class="w-full"
   />
   <USelectMenu
+    :content="{ align: 'start' }"
     :size="size"
     v-else-if="display === 'choices'"
     v-model="choiceList"
@@ -412,6 +414,7 @@ const imageError = computed(() =>
 
   <div v-else-if="display === 'scalar'" class="flex gap-2">
     <USelect
+      :content="{ align: 'start' }"
       :size="size"
       v-model="scalarType"
       :disabled="disabled"

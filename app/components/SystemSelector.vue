@@ -34,6 +34,7 @@ const selected = computed({
 
 <template>
   <USelect
+    :content="{ align: 'start' }"
     v-model="selected"
     :items="items"
     size="md"
