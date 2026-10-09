@@ -652,6 +652,7 @@
               <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
               <Stack direction="row" wrap class="moves">
                 <Button label="◆ Retrieve" live><Set field="state" formula="'held'" /></Button>
+                <Button label="◆ Wear" live><Set field="state" formula="'worn'" /></Button>
               </Stack>
               <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
               <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
