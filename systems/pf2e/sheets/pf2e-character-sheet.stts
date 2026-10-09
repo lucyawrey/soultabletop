@@ -465,6 +465,85 @@
         </Stack>
       </Tab>
 
+      <Tab label="Inventory" icon="i-game-icons-swap-bag">
+        <Stack direction="row" wrap class="strip">
+          <Stack direction="row" wrap class="bulk">
+            <Value label="Bulk" formula="round(bulk(), 1)" />
+            <Tracker formula="round(bulk(), 1)" max="{10 + attributes.str}" mark="{5 + attributes.str}" hideLabel class="bmeter" />
+            <Value hideLabel class="dim" formula="concat('encumbered over ', 5 + attributes.str, ' · limit ', 10 + attributes.str)" show="bulk() <= 5 + attributes.str" />
+            <Badge color="error" show="bulk() > 5 + attributes.str">Encumbered</Badge>
+          </Stack>
+          <Value label="Invested" formula="concat(count(inventory, invested), ' / 10')" />
+          <Number field="coins.pp" formula="0" label="pp" min="0" live class="coin" />
+          <Number field="coins.gp" formula="0" label="gp" min="0" live class="coin" />
+          <Number field="coins.sp" formula="0" label="sp" min="0" live class="coin" />
+          <Number field="coins.cp" formula="0" label="cp" min="0" live class="coin" />
+          <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Armor</Note><Ref field="armor" hideLabel class="name" /></Stack>
+          <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Shield</Note><Ref field="shield" hideLabel class="name" /></Stack>
+        </Stack>
+        <Stack direction="row" class="row th inv">
+          <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>{if(editing(), 'State', 'Move')}</Note><Note class="invcol" show="any(inventory, hasTrait(item.traits, 'invested'))">Inv</Note>
+        </Stack>
+        <Stack class="rows" show="any(inventory, state == 'held')">
+          <Note class="grp">Held</Note>
+          <List field="inventory" class="rows noadd">
+            <Stack direction="row" class="row inv" show="state == 'held'">
+              <Value field="quantity" hideLabel show="not editing()" />
+              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
+              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
+              <Ref field="item" hideLabel class="name" show="editing()" />
+              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
+              <Stack direction="row" wrap class="moves">
+                <Button label="Wear" live><Set field="state" formula="'worn'" /></Button>
+                <Button label="Stow" live><Set field="state" formula="'stowed'" /></Button>
+              </Stack>
+              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
+            </Stack>
+          </List>
+        </Stack>
+        <Stack class="rows" show="any(inventory, state == 'worn')">
+          <Note class="grp">Worn</Note>
+          <List field="inventory" class="rows noadd">
+            <Stack direction="row" class="row inv" show="state == 'worn'">
+              <Value field="quantity" hideLabel show="not editing()" />
+              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
+              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
+              <Ref field="item" hideLabel class="name" show="editing()" />
+              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
+              <Stack direction="row" wrap class="moves">
+                <Button label="Hold" live><Set field="state" formula="'held'" /></Button>
+                <Button label="Stow" live><Set field="state" formula="'stowed'" /></Button>
+              </Stack>
+              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
+            </Stack>
+          </List>
+        </Stack>
+        <Stack class="rows" show="any(inventory, state == 'stowed')">
+          <Note class="grp">Stowed</Note>
+          <List field="inventory" class="rows noadd">
+            <Stack direction="row" class="row inv" show="state == 'stowed'">
+              <Value field="quantity" hideLabel show="not editing()" />
+              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
+              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
+              <Ref field="item" hideLabel class="name" show="editing()" />
+              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
+              <Stack direction="row" wrap class="moves">
+                <Button label="Hold" live><Set field="state" formula="'held'" /></Button>
+                <Button label="Wear" live><Set field="state" formula="'worn'" /></Button>
+              </Stack>
+              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
+              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
+            </Stack>
+          </List>
+        </Stack>
+        <!-- Only its Add button shows: new items are worn (the schema's default) and join that group. -->
+        <List field="inventory" addLabel="Add item" class="rows addonly" show="editing()">
+          <Note class="none" show="false"></Note>
+        </List>
+      </Tab>
+
       <Tab label="Spells" icon="i-game-icons-spell-book" show="length(coalesce(spellcasting.tradition, '')) > 0 or editing()">
         <Stack direction="row" wrap class="strip keyline">
           <Stack direction="row" class="trad" show="not editing()"><Value field="spellcasting.tradition" hideLabel class="strong" /><Value field="spellcasting.kind" hideLabel class="strong" /></Stack>
@@ -586,88 +665,12 @@
         </Stack>
       </Tab>
 
-      <Tab label="Inventory" icon="i-game-icons-swap-bag">
-        <Stack direction="row" wrap class="strip">
-          <Stack direction="row" wrap class="bulk">
-            <Value label="Bulk" formula="round(bulk(), 1)" />
-            <Tracker formula="round(bulk(), 1)" max="{10 + attributes.str}" mark="{5 + attributes.str}" hideLabel class="bmeter" />
-            <Value hideLabel class="dim" formula="concat('encumbered over ', 5 + attributes.str, ' · limit ', 10 + attributes.str)" show="bulk() <= 5 + attributes.str" />
-            <Badge color="error" show="bulk() > 5 + attributes.str">Encumbered</Badge>
-          </Stack>
-          <Value label="Invested" formula="concat(count(inventory, invested), ' / 10')" />
-          <Number field="coins.pp" formula="0" label="pp" min="0" live class="coin" />
-          <Number field="coins.gp" formula="0" label="gp" min="0" live class="coin" />
-          <Number field="coins.sp" formula="0" label="sp" min="0" live class="coin" />
-          <Number field="coins.cp" formula="0" label="cp" min="0" live class="coin" />
-          <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Armor</Note><Ref field="armor" hideLabel class="name" /></Stack>
-          <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Shield</Note><Ref field="shield" hideLabel class="name" /></Stack>
-        </Stack>
-        <Stack direction="row" class="row th inv">
-          <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>{if(editing(), 'State', 'Move')}</Note><Note class="invcol" show="any(inventory, hasTrait(item.traits, 'invested'))">Inv</Note>
-        </Stack>
-        <Stack class="rows" show="any(inventory, state == 'held')">
-          <Note class="grp">Held</Note>
-          <List field="inventory" class="rows noadd">
-            <Stack direction="row" class="row inv" show="state == 'held'">
-              <Value field="quantity" hideLabel show="not editing()" />
-              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
-              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
-              <Ref field="item" hideLabel class="name" show="editing()" />
-              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
-              <Stack direction="row" wrap class="moves">
-                <Button label="Wear" live><Set field="state" formula="'worn'" /></Button>
-                <Button label="Stow" live><Set field="state" formula="'stowed'" /></Button>
-              </Stack>
-              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
-              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
-            </Stack>
-          </List>
-        </Stack>
-        <Stack class="rows" show="any(inventory, state == 'worn')">
-          <Note class="grp">Worn</Note>
-          <List field="inventory" class="rows noadd">
-            <Stack direction="row" class="row inv" show="state == 'worn'">
-              <Value field="quantity" hideLabel show="not editing()" />
-              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
-              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
-              <Ref field="item" hideLabel class="name" show="editing()" />
-              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
-              <Stack direction="row" wrap class="moves">
-                <Button label="Hold" live><Set field="state" formula="'held'" /></Button>
-                <Button label="Stow" live><Set field="state" formula="'stowed'" /></Button>
-              </Stack>
-              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
-              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
-            </Stack>
-          </List>
-        </Stack>
-        <Stack class="rows" show="any(inventory, state == 'stowed')">
-          <Note class="grp">Stowed</Note>
-          <List field="inventory" class="rows noadd">
-            <Stack direction="row" class="row inv" show="state == 'stowed'">
-              <Value field="quantity" hideLabel show="not editing()" />
-              <Number field="quantity" hideLabel min="0" class="small-num" show="editing()" />
-              <Value field="item.name" hideLabel preview class="name" show="not editing()" />
-              <Ref field="item" hideLabel class="name" show="editing()" />
-              <Value hideLabel class="dim" formula="bulkText(item.bulk)" />
-              <Stack direction="row" wrap class="moves">
-                <Button label="Hold" live><Set field="state" formula="'held'" /></Button>
-                <Button label="Wear" live><Set field="state" formula="'worn'" /></Button>
-              </Stack>
-              <Note show="not editing() and invested and hasTrait(item.traits, 'invested')">✓</Note>
-              <Checkbox field="invested" hideLabel show="editing() and hasTrait(item.traits, 'invested')" />
-            </Stack>
-          </List>
-        </Stack>
-        <!-- Only its Add button shows: new items are worn (the schema's default) and join that group. -->
-        <List field="inventory" addLabel="Add item" class="rows addonly" show="editing()">
-          <Note class="none" show="false"></Note>
-        </List>
-      </Tab>
-
       <Tab label="Biography" icon="i-game-icons-quill-ink">
         <Stack direction="row" class="bio">
-          <Image field="portrait" label="Portrait" size="full" class="portrait" />
+          <Stack class="rows portraitcol">
+            <Note class="grp">Portrait</Note>
+            <Image field="portrait" label="Portrait" hideLabel size="full" class="portrait" />
+          </Stack>
           <Grid cols="2" class="biocols">
             <Stack class="rows kv">
               <Note class="grp">Details</Note>
