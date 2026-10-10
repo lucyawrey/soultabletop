@@ -2,6 +2,8 @@
 
 <!-- Copy: project description (written by the team) -->
 
+Live at [soultabletop.com](https://soultabletop.com), an early prototype.
+
 ## Tech stack
 
 [Nuxt 4](https://nuxt.com) with [Nuxt UI](https://ui.nuxt.com), Postgres on
