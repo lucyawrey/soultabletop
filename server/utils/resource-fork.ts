@@ -18,7 +18,7 @@ import {
 } from "./resource-management";
 import { remapContentTypeIds } from "../../shared/content-schema";
 
-// Forks ("make my own copy", `.claude/plans/fork-resources.md` on `docs`):
+// Forks ("make my own copy"):
 // copy a system, content type, or sheet the user can read into their own
 // account, with its parents (sheet → content type → system) and with chosen
 // resources below the topmost copy. Parents and extras come only from the

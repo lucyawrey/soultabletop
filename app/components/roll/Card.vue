@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// A roll in the toast (the Dice card look, frozen in
-// .claude/mockups/dice-rolls/): a header band with the action and the roll,
+// A roll in the toast (the Dice card look): a header band with the action and the roll,
 // the dice tumbling in with the total right after them, the expression as
 // rolled, and the follow-ups.
 // `from`: the entry whose follow-up made this one.

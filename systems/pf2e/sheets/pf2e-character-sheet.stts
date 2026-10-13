@@ -1,4 +1,4 @@
-<!-- Pathfinder 2e character sheet. Design: .claude/mockups/pf2e-sheet/ (frozen 2026-10-06). -->
+<!-- Pathfinder 2e character sheet. Design: the approved mockup (frozen 2026-10-06). -->
 <Define name="prof" params="r" formula="if(r > 0, level + 2 * r, 0)" />
 <Define name="rankLetter" params="r" formula="switch(r, 1, 'T', 2, 'E', 3, 'M', 4, 'L', 'U')" />
 <Define name="rankName" params="r" formula="switch(r, 1, 'Trained', 2, 'Expert', 3, 'Master', 4, 'Legendary', 'Untrained')" />

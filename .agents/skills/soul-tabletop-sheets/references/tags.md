@@ -1,0 +1,108 @@
+# Tag reference
+
+Compact summary of `shared/sheet/registry.ts` (the source of truth; if this file and the registry disagree, the
+registry wins). To print the live registry as JSON, run the dump script in `checking.md`.
+
+Enum values are written `a | b`; the first listed is not necessarily the default (defaults are in the notes).
+Attributes marked (req) are required. Tag and attribute names are case-insensitive.
+
+## Attributes every tag accepts
+
+`Tab` and `RowDetails` are rendered by their parents (`Tabs`, `Table`), so they accept only `class` and `show` from this list; `live`, `locked`, and `display` there are an unknown-attribute error. `Column` takes no `show` (put it on the `Table`, or use a formula in the column). `Button` takes only `class`, `show`, and `live`. `Define` and `Set` take none of these.
+
+| Attribute | Values | Meaning |
+|---|---|---|
+| `class` | space-separated names, each `[a-z][a-z0-9-]*` | Class names for the Sheet's CSS |
+| `live` | bare, `true`, `false` | Fields inside stay editable with Edit off |
+| `locked` | bare, `true`, `false` | Fields inside need their pencil button clicked before editing |
+| `display` | `text` \| `box` | How non-editable fields look: plain value, or their disabled input |
+| `show` | a bare formula, like `hp > 0` | Shows the tag only when true; false or empty hides it and everything inside |
+
+## Layout tags
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Sheet` | none | any | Required root: every sheet is one, with only `Define`s beside it |
+| `Section` | `title`, `description`, `icon`, `span` (1-12), `collapsible`, `collapsed` | any | A card. `span` is columns inside a `Grid`. `collapsed` implies `collapsible` |
+| `Grid` | `cols` (1-12, default 2), `gap` (`none` \| `sm` \| `md` \| `lg`, default `md`) | any | One column on phones |
+| `Stack` | `direction` (`row` \| `column`, default column), `gap`, `align` (`start` \| `center` \| `end` \| `stretch`), `wrap` | any | Flex container |
+| `Tabs` | none | only `Tab` | |
+| `Tab` | `label` (req), `icon` | any | Only directly inside `Tabs` |
+| `Divider` | `label` | none | |
+| `Heading` | `level` (1-4, default 1) | text | |
+| `Note` | none | text | Muted text |
+| `Callout` | `color`, `icon`, `title` | text | `color` default `info` |
+| `Badge` | `color` | text | `color` default `primary` |
+| `Collapsible` | `title` (req), `subtitle`, `icon`, `open` | any | Header shows or hides content |
+| `RowDetails` | none | any | Only directly inside `Table`; shown when a row is expanded |
+
+`color` values: `primary | secondary | success | info | warning | error | neutral`. `icon` is an Iconify name from Lucide or
+game-icons.net, for example `i-lucide-sword` or `i-game-icons-crossed-swords` (browse them at lucide.dev and
+game-icons.net); other icon sets are an error. "text" children means text with `{formula}`s and no tags.
+
+## Field tags
+
+All field tags take `field` (a path, see SKILL.md; required unless the tag has a `formula`), `label`, `hideLabel` (boolean: no visible label; `Column` leaves its header empty; `label=""` does not do this), and `hint`, plus:
+
+| Tag | Extra attributes | Binds | Notes |
+|---|---|---|---|
+| `Field` | `formula` (only on a string, number, or boolean field; needs `field`) | string, number, boolean, scalar, object, resourceLink, content, array of strings | Input chosen from the schema type; with `formula` it acts like `Text`/`Number`/`Checkbox` (an override) |
+| `Text` | `formula`, `multiline`, `placeholder` | string | `formula` overrides (see below) |
+| `Number` | `formula`, `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric); `formula` overrides |
+| `Checkbox` | `formula`, `style` (`check` \| `dot`, default check) | boolean | `formula` overrides; `style="dot"` is a filled or empty circle with no Yes/No text (proficiency marks) |
+| `Toggle` | none | boolean | On/off switch |
+| `Select` | `options` (comma-separated; only on a text field without schema options) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
+| `Tags` | `placeholder` | array of strings | |
+| `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `mark` (same), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value; `mark` ticks a bar that isn't editable at a threshold (`mark="{5 + str}"`) |
+| `Ref` | `preview` (`expand` \| `card`; bare = `expand`) | resourceLink, content | Link to the referenced resource or Content; with `preview` (content fields only), clicking shows it instead (see "Reference previews"); may hold one `Preview` |
+| `Value` | `formula`, `format` (`plain` \| `signed`), `preview` (`expand` \| `card`) | any value | Never editable; `formula` (read-only) instead of `field`; with `Part` children and no formula, shows their sum; `preview` (see "Reference previews") |
+| `Markdown` | none | string | Formatted long text |
+| `Image` | `alt`, `size` (`sm` \| `md` \| `lg` \| `full`, default md) | string | The string must be an https URL |
+| `Column` | `formula`, `format` (`plain` \| `signed`), `width` (`auto` \| `xs` \| `sm` \| `md` \| `lg`), `preview` (`expand` \| `card`) | string, number, boolean, scalar, resourceLink, content | Only directly inside `Table`; its cells get `sheet-column` and its `class`; `formula` (read-only) is computed per row; it may hold `Part` children (a breakdown; their sum without a formula) and `Button` children (each row gets them, after the value; a column of only Buttons is hidden from viewers who can't edit) |
+
+`formula`: read-only on `Value`, `Column`, `Tracker` (instead of `field`; never both). On `Number`, `Text`, and
+`Checkbox` it may stand alone (read-only) or go with `field` (an override: the field's value wins when it has one; the
+computed value is the input's placeholder; a reset button clears the field). Outside `List`/`Table` rows, other
+formulas reading an override's field with nothing stored get its computed value; `{path}` does too; a field tag shows the stored value. `live`/`locked` on a tag with a formula
+and no field do nothing (a warning). `Field` takes `formula` with `field` on a string, number, or boolean schema field and then acts as the matching tag; any other schema type is an error. Other field tags take no `formula`.
+
+Paths the schema does not know (a non-strict content type, or below a free-form `object`) are accepted by every
+field tag, with a warning.
+
+## Repeaters
+
+| Tag | Attributes | Children | Binds |
+|---|---|---|---|
+| `List` | `field` (req), `label`, `layout` (`stack` \| `grid`), `cols` (1-12, for grid), `addLabel` (default "Add") | any; paths inside are relative to each item | any array, or a struct whose entries are alike |
+| `Table` | `field` (req), `label` | only `Column` and `RowDetails`; paths inside are relative to each row | array of structs (also content or object items), or a struct of alike structs |
+
+In edit mode a `List` or `Table` of an array gets add, remove, and reorder controls; one of a struct's entries has a row per schema entry and no controls.
+
+## Breakdowns
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Part` | `label` (req, text with `{…}`), `formula` (req, a number), `show` (no other common attributes) | none | Only directly inside `Value`, `Column`, or `Number` (a `Number` needs a `formula`). Clicking the number lists the parts in a popover; a `Value`/`Column` without a formula shows their sum. Parts that give nothing are left out |
+
+## Reference previews
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Preview` | `class`, `show` only | any | What a preview shows instead of the generated view (chips, rows, long text). Two places, at most one each: beside `<Sheet>` at the top level, for every preview of this content type from other sheets (paths read this content's top level; `<Define>`s work; styled by this sheet's CSS; never shown on the content's own page); or directly inside a `Ref`, `Value`, or `Column` with `preview`, overriding it for that tag (paths relative to the referenced content, `/` still reaches the top level; styled by the referencing sheet's CSS). Always read-only, so no `Button`s and no `preview` inside. Class `sheet-preview` |
+
+`preview` shows the last content field on the way to the tag's field (`spell.name` shows `spell`; in a `Table` over an array of content, the row). Plain `preview` expands below the value (under the row for a `Column`; any number open): use it for spells, feats, and other content read in full. `preview="card"` floats a card under the value: use it for minor things with no inline place, like a background.
+
+## Buttons
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Button` | `label` (req), `icon`, `amount` (boolean), `toast` (boolean, off by default) | steps (`Set`, `Roll`, `FollowUp`), at least one | Steps run in order, each reading what the ones before wrote. With a `Set`: shown only to viewers who can edit, and with Edit off usable only if `live`; with only `Roll`s: every viewer. Adjacent Buttons with `amount` share one number box; `amount` in their step formulas is the number typed. With `toast` (Sets only), a toast offers Undo. Errors always show a toast |
+| `Set` | `field` (req; one text, number, true/false, or scalar field; one `*` segment for every item of an array or entry of a struct of alike entries), `formula` (req) | none | A step: directly inside `Button`, `Value`, `Number`, `Column`, or `FollowUp`. With `*` the formula runs per item, paths relative to the item; nothing (`null`) removes the value; a literal written to a choice field must be an option |
+| `Roll` | `formula` (req; dice like `d20`, `2d6`, `2d20kh1`, `4d6kh3`, and `dice(textField)`, added, subtracted, multiplied, divided, or in `if` branches), `name`, `label`, `crit`, `fumble` (conditions per kept die with `face` and `sides`, like `face == 20`), `show` | none | A step (same parents as `Set`). Rolls when its action runs; the result shows in a toast and Recent rolls, titled by the action ("Rapier · Attack"). In a value's steps `value()` is the value shown. With `name`, later steps read `name.total`, `name.dice`, `name.natural`, `name.crit`, `name.fumble`. Only Rolls: every viewer can click |
+| `FollowUp` | `label` (req, `{…}` read live), `show` | steps, at least one | A step after a `Roll`: a button on that roll's entry, run when clicked (damage after an attack, a reroll); reads the rolls before it and the sheet at the click. Nested at most 3 deep |
+
+## Definitions
+
+| Tag | Attributes | Children | Notes |
+|---|---|---|---|
+| `Define` | `name` (req, identifier, not a built-in or reserved name), `params` (comma-separated, at most 8), `formula` (req) | none | Top level or directly inside `Sheet`; renders nothing; called as `name(args)` from any formula; order doesn't matter |

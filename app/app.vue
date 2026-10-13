@@ -19,7 +19,10 @@ useSeoMeta({
   description,
   ogTitle: title,
   ogDescription: description,
-  twitterCard: "summary_large_image",
+  ogSiteName: "Soul Tabletop",
+  ogType: "website",
+  // "summary_large_image" needs an og:image, which the site doesn't have yet.
+  twitterCard: "summary",
 });
 
 // Play and Build need an account for Campaigns and Groups; the rest show
@@ -102,8 +105,8 @@ watch(
           // phones), then the system picker on a line of its own.
           header: 'h-auto flex-wrap items-center gap-x-1.5 gap-y-[18px] px-3.5 pt-[18px] pb-0',
           body: 'gap-[18px] px-3.5 pt-[18px]',
-          // The user menu (or Sign in) above the Credits link, which shows
-          // everywhere, the signed-out landing page included.
+          // The user menu (or Sign in) above the Credits and Source Code links,
+          // which show everywhere, the signed-out landing page included.
           footer: 'mx-3.5 flex-col items-stretch gap-1 border-t border-default px-0 py-2.5',
           // The phone drawer is a modal, whose content divides its children
           // with lines; the desktop sidebar has none under the system picker.
@@ -175,6 +178,18 @@ watch(
             :icon="isCollapsed ? 'i-lucide-info' : undefined"
             :aria-label="isCollapsed ? 'Credits' : undefined"
             :label="isCollapsed ? undefined : 'Credits'"
+            class="text-muted"
+            :class="isCollapsed ? 'self-center' : 'self-start'"
+          />
+          <UButton
+            to="https://github.com/lucyawrey/soultabletop"
+            target="_blank"
+            color="neutral"
+            variant="link"
+            size="xs"
+            :icon="isCollapsed ? 'i-lucide-code-xml' : undefined"
+            :aria-label="isCollapsed ? 'Source Code' : undefined"
+            :label="isCollapsed ? undefined : 'Source Code'"
             class="text-muted"
             :class="isCollapsed ? 'self-center' : 'self-start'"
           />

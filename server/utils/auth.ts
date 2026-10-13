@@ -95,7 +95,7 @@ function createAuth() {
         keyExpiration: { defaultExpiresIn: null, minExpiresIn: 1, maxExpiresIn: 365 },
         // Off: the plugin's window only resets after a full window with no
         // requests, so any steady script would end up locked out. Sessions
-        // have no per-user limit either; a real limiter is in TODO.md.
+        // have no per-user limit either; a real limiter is planned.
         rateLimit: { enabled: false },
       }),
     ],

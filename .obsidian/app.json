@@ -10,7 +10,6 @@
     ".data/",
     ".cache/",
     ".vercel/",
-    "dist/",
-    ".claude/worktrees/"
+    "dist/"
   ]
 }

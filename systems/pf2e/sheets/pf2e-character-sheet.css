@@ -1,4 +1,4 @@
-/* Pathfinder 2e character sheet. Layout and measurements from .claude/mockups/pf2e-sheet/spec.md. */
+/* Pathfinder 2e character sheet. Layout and measurements from the approved mockup. */
 :root {
   --d-gap: 6px;
   --d-pad: 8px;
@@ -637,7 +637,7 @@
   .strikes .row { grid-template-columns: 30px minmax(96px, 1fr) minmax(120px, auto) minmax(84px, .8fr) 1.4fr; }
 }
 /* Under 880px the header and the Attributes & Defenses row stop fitting side by side
-   (breakpoint list: .claude/mockups/pf2e-sheet/spec.md, "Breakpoints"). */
+   (breakpoints from the approved mockup). */
 @container (max-width: 880px) {
   .head > div:last-child { grid-template-columns: 1fr; }
   .meta, .facts { grid-column: 1; grid-row: auto; }
