@@ -135,11 +135,11 @@ push, which catches build errors.
 ## Sheets agent skill
 
 The repo includes an agent skill for writing Sheet markup and CSS
-(`.claude/skills/soul-tabletop-sheets/`). Install it into another project with
+(`.agents/skills/soul-tabletop-sheets/`). Install it into another project with
 the [`skills` CLI](https://skills.sh):
 
 ```bash
-npx skills add lucyawrey/soultabletop -s soul-tabletop-sheets -a claude-code
+npx skills add lucyawrey/soultabletop -s soul-tabletop-sheets
 ```
 
 Without `-s` the CLI lists the skills it finds and asks which to install. The
@@ -209,14 +209,13 @@ members route.
 ## Working on the docs in Obsidian
 
 The repo root is also an [Obsidian](https://obsidian.md) vault, for reading and
-editing the Markdown (`TODO.md`, `docs/`, `.claude/`): open it with "Open
+editing the Markdown (`docs/` and the READMEs): open it with "Open
 folder as vault". The shared vault config and two community plugins are
 committed, so they're ready after cloning (enable community plugins if Obsidian
 asks):
 
-- **Unhide**: shows dot-folders, so `.claude/` (the agent notes) is visible.
-  `.git`, `.env` files, `.claude/worktrees`, and build and dependency folders
-  stay hidden.
+- **Unhide**: shows dot-folders, such as `.agents/`. `.git`, `.env` files, and
+  build and dependency folders stay hidden.
 - **Git**: commit and pull from inside Obsidian.
 
 `node_modules/` and the build folders are under "Excluded files", so they stay
