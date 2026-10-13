@@ -1,6 +1,6 @@
 # Pathfinder Second Edition
 
-The official Pathfinder 2e system as files: its content types, its imported content, and its character sheet. This folder holds content only; the code that writes or loads it lives in `scripts/`. Everything is loaded into the app through the API, never by hand, so the system can be rebuilt after a database reset. The plan for the demo slice is in `.claude/plans/pf2e-demo.md` on the `docs` branch.
+The official Pathfinder 2e system as files: its content types, its imported content, and its character sheet. This folder holds content only; the code that writes or loads it lives in `scripts/`. Everything is loaded into the app through the API, never by hand, so the system can be rebuilt after a database reset.
 
 ## Content types
 
@@ -10,7 +10,7 @@ The official Pathfinder 2e system as files: its content types, its imported cont
 node scripts/pf2e/build-types.mjs
 ```
 
-Edit the script, not the JSON files. The script is temporary: system definitions are meant to end up as plain files loaded by shared CLI tools (the authoring CLI in `TODO.md`), and then the JSON files become the source and the script goes. In the files, a `content` field's `contentTypeId` is the target type's readable ID (for example `pf2e-feat`). The loader creates the types in dependency order and swaps those for the real IDs.
+Edit the script, not the JSON files. The script is temporary: system definitions are meant to end up as plain files loaded by shared CLI tools (a planned authoring CLI), and then the JSON files become the source and the script goes. In the files, a `content` field's `contentTypeId` is the target type's readable ID (for example `pf2e-feat`). The loader creates the types in dependency order and swaps those for the real IDs.
 
 | Type | Holds |
 |---|---|
@@ -35,7 +35,7 @@ Like the type builder, the converter is temporary: the files are the system, and
 
 ## Character sheet
 
-`sheets/pf2e-character-sheet.stts` (markup), `.css`, and `.json` (name, content type, default settings) are the character type's default Sheet, built from the approved mockup in `.claude/mockups/pf2e-sheet/` on the `docs` branch. Edit them here and reload; the Sheet editor's changes are overwritten by the next load. Derived numbers (AC, saves, skills, Strikes, Class DC, spell DC, Bulk) are formulas over the character and the content it references, so nothing computed is stored.
+`sheets/pf2e-character-sheet.stts` (markup), `.css`, and `.json` (name, content type, default settings) are the character type's default Sheet, built from the approved mockup. Edit them here and reload; the Sheet editor's changes are overwritten by the next load. Derived numbers (AC, saves, skills, Strikes, Class DC, spell DC, Bulk) are formulas over the character and the content it references, so nothing computed is stored.
 
 ## Loading
 

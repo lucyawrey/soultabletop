@@ -2,7 +2,7 @@
 // bad directive) that typecheck and lint don't:
 //   pnpm check:templates                 .vue files changed since origin/main, plus untracked ones
 //   pnpm check:templates <file>...       those files
-//   node scripts/check-templates.mjs --hook   Claude Code PostToolUse hook: reads the edited file
+//   node scripts/check-templates.mjs --hook   editor or agent hook: reads the edited file
 //                                         from stdin, exits 2 with the errors if it doesn't compile
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";

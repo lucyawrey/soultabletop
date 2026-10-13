@@ -1,6 +1,8 @@
 <script setup lang="ts">
-// Credits and licenses for assets bundled with the site, linked from the
-// sidebar's footer. Game content is credited on its system's page.
+// Credits and licenses for assets bundled with the site, and where its source
+// code is, linked from the sidebar's footer. Game content is credited on its
+// system's page.
+const sourceUrl = "https://github.com/lucyawrey/soultabletop";
 const iconSets = [
   {
     name: "game-icons.net",
@@ -24,6 +26,13 @@ const iconSets = [
 <template>
   <PageContainer>
     <PageHeader title="Credits" />
+    <DetailPanel title="Source Code">
+      <p class="px-[18px] py-3 text-sm text-default">
+        Soul Tabletop's source code is on
+        <ULink :to="sourceUrl" target="_blank" class="underline">GitHub</ULink>, licensed under
+        <ULink :to="`${sourceUrl}/blob/main/LICENSE`" target="_blank" class="underline">MIT</ULink>.
+      </p>
+    </DetailPanel>
     <DetailPanel title="Icons">
       <ul class="divide-y divide-default">
         <li v-for="set in iconSets" :key="set.name" class="space-y-0.5 px-[18px] py-3 text-sm">

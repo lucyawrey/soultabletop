@@ -153,7 +153,7 @@ async function remove() {
 
       <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
         <!-- Placeholder until campaigns hold characters and content (the
-             "Make Campaigns places to play" item in TODO.md). -->
+             planned "Make Campaigns places to play" work). -->
         <DetailPanel title="In Play">
           <p class="px-[18px] py-6 text-center text-sm text-muted">
             Characters and content can't be added to campaigns yet.

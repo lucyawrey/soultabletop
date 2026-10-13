@@ -1,5 +1,4 @@
-# Runs the same checks agents run locally (see "Running commands" in
-# .claude/CLAUDE.md). None of them need the database or any secrets, so this
+# Runs the same checks as `pnpm check` (see "Commands" in AGENTS.md). None of them need the database or any secrets, so this
 # workflow has none: the opt-in database tests skip without RUN_DB_TESTS.
 name: CI
 

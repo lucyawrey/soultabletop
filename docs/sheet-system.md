@@ -1,7 +1,7 @@
 # Sheet System — Design
 
 ## Context
-TODO.md's top item: sheets store `markup` + `cssStyles` (`server/database/schema.ts` `sheet` table) but they are only
+Sheets store `markup` + `cssStyles` (`server/database/schema.ts` `sheet` table) but they are only
 displayed as raw text, and content is edited as a raw JSON textarea (`app/components/ContentDetail.vue`). Goal: sheet
 markup renders content as Nuxt UI character/content sheets, in view and edit mode.
 
@@ -112,7 +112,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 | `Badge` | `color` | text | `UBadge` |
 | `Collapsible` | `title` (req), `subtitle`, `icon`, `open` | any | `UCollapsible`: clickable header, children shown on expand (e.g. one per `List` item) |
 
-`density` (decided 2026-10-06, from the [PF2e sheet mockup](../.claude/mockups/pf2e-sheet/spec.md); compact made the
+`density` (decided 2026-10-06, from the PF2e sheet mockup; compact made the
 default the same day, since it reliably looks like a character sheet): `roomy` is the site's form spacing, written
 `<Sheet density="roomy">`; `compact`, the default (writing it stays valid, so a sheet can name it if more densities come) (also for generated sheets), is
 dense, with no custom CSS: the smallest inputs (Nuxt UI size
@@ -320,8 +320,7 @@ elsewhere, or Escape closes it, and it floats, so nothing moves (from the frozen
 
 ### Reference previews (decided 2026-10-06)
 `preview` on a `Ref`, `Value`, or `Column` makes its value an underlined button that shows the referenced content, such as a
-spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.claude/plans/reference-previews.md` on
-`docs`). Two ways to show it (decided):
+spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup). Two ways to show it (decided):
 
 - **Expanded** (`preview`, or `preview="expand"`, the default): clicking shows it below the value, and clicking again
   hides it. On a `Column`, it opens as an expanded row under the table row, above the row's `RowDetails` if that is
@@ -459,8 +458,7 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup; plan in `.c
   `sheet-button-group` around a box and its buttons.
 
 ### Rolls (decided 2026-10-06)
-Design: `.claude/plans/sheet-actions.md`; look frozen in `.claude/mockups/dice-rolls/` (`frozen.html`, `spec.md`), both
-on the `docs` branch until its next merge. A roll is a step of an
+A roll is a step of an
 action, not a formula: formulas stay pure, and dice are allowed only in a `<Roll>`'s formula.
 
 ```
@@ -823,13 +821,13 @@ Each phase ends with `pnpm test && pnpm typecheck && pnpm lint`, template compil
 9. **Formulas and conditional display** — done (see "Formulas"); dice rolls done (see "Rolls"). **Later**: image
    uploads, schema-level computed fields.
 
-Also update `.claude/data-model.md` (Sheet system bullets, `shared/` code) and `CLAUDE.md` (`pnpm test`) and remove the TODO.md item once done.
+Also update the Data model section of `AGENTS.md` once done.
 
 ## Formulas
 
 Formulas compute values when a sheet is shown; they are **never stored** (decided): not in `content.data`, not in API
 responses. Values computed at the schema level, which the API could return, may come later. The language is our own
-(no JavaScript, no `eval`; see `.claude/plans/sheet-formulas-sandboxed-js.md` for why not sandboxed JS).
+(no JavaScript, no `eval`).
 
 Code (framework-free, in `shared/sheet/`): `formula.ts` (lexer, Pratt parser, AST, value and static types,
 `formulaLimits`), `formula-functions.ts` (the built-in functions as data), `formula-eval.ts` (evaluator),

@@ -10,7 +10,7 @@ export default defineAppConfig({
       neutral: "folio",
     },
     // Roll toasts stay until closed, so every toast's close button is a
-    // visible outlined button (.claude/mockups/dice-rolls/spec.md).
+    // visible outlined button (the dice rolls design).
     toast: {
       slots: {
         close: "p-0 size-7 justify-center rounded-md ring ring-accented bg-default text-highlighted hover:bg-elevated",
