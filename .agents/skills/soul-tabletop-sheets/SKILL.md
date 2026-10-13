@@ -98,7 +98,7 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 
 ## Checking your work
 
-`references/checking.md` has a script that compiles markup with `compileSheet` and CSS with `processSheetCss` against a schema file and prints the diagnostics; run it with vitest through `.claude/scripts/agent-run.sh`. The Sheet editor's Problems list shows the same diagnostics. Treat every error as blocking (a Sheet with errors cannot be saved) and read each warning.
+`references/checking.md` has a script that compiles markup with `compileSheet` and CSS with `processSheetCss` against a schema file and prints the diagnostics; run it with vitest, using the project's Node and pnpm. The Sheet editor's Problems list shows the same diagnostics. Treat every error as blocking (a Sheet with errors cannot be saved) and read each warning.
 
 ## Worked examples
 
@@ -108,7 +108,7 @@ A content type's `schema` is a JSON object mapping field keys to field definitio
 
 - Formulas can't roll dice or write data (only `Roll` steps roll and `Set` steps write, when clicked), and computed values aren't saved or returned by the API.
 - `{…}` is always a formula, never a bare lookup: a field named like a keyword (`and`, `true`) or dice (`d6`) is reached as `{/and}`, `{/d6}`.
-- Dice buttons are planned in TODO.md, not available.
+- Dice buttons are planned, not available.
 
 ## Known doc drift
 
