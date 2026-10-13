@@ -40,8 +40,8 @@ describe.skipIf(!runDbTests)(
   "SQL list rules against the database (skipped unless RUN_DB_TESTS=1)",
   () => {
     const tag = randomUUID().slice(0, 8);
-    const viewerId = `claude-smoke-viewer-${tag}`;
-    const otherId = `claude-smoke-other-${tag}`;
+    const viewerId = `smoke-viewer-${tag}`;
+    const otherId = `smoke-other-${tag}`;
     // The viewer's role in each group; SG is a system group.
     const groupRoles = { G1: "admin", G2: "editor", G3: "member", G4: null, SG: null } as const;
     const groupIds: Record<string, string> = {};
@@ -50,7 +50,7 @@ describe.skipIf(!runDbTests)(
     const campaignIds: string[] = [];
     let systemId: string | undefined;
     let counter = 0;
-    const readableId = () => `claude-smoke-${tag}-${counter++}`;
+    const readableId = () => `smoke-${tag}-${counter++}`;
     const hiddenFields = (hidden: boolean) =>
       hidden ? { moderationReason: "test", moderatedAt: new Date() } : {};
 
@@ -75,7 +75,7 @@ describe.skipIf(!runDbTests)(
           .insert(group)
           .values({
             name,
-            readableId: `claude-smoke-${tag}-${name.toLowerCase()}`,
+            readableId: `smoke-${tag}-${name.toLowerCase()}`,
             kind: name === "SG" ? "system" : "user",
           })
           .returning();
@@ -200,7 +200,7 @@ describe.skipIf(!runDbTests)(
       const [left] = await database
         .select({ total: count() })
         .from(resource)
-        .where(sql`${resource.readableId} like ${`claude-smoke-${tag}-%`}`);
+        .where(sql`${resource.readableId} like ${`smoke-${tag}-%`}`);
       expect(left!.total).toBe(0);
     }, 300_000);
 

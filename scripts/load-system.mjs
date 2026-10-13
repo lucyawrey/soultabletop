@@ -12,7 +12,7 @@
 // field's value names content; the loader swaps in the real IDs. Content is
 // created first without its references, then updated with them, so content
 // can reference content in any order. The start of the authoring CLI
-// (TODO.md, "Authoring CLI for uploading resources from files").
+// (the planned authoring CLI for uploading resources from files).
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 

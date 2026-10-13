@@ -35,11 +35,11 @@ describe.skipIf(!runDbTests)(
   () => {
     const tag = randomUUID().slice(0, 8);
     const ids = {
-      viewer: `claude-smoke-viewer-${tag}`,
-      other: `claude-smoke-other-${tag}`,
-      admin: `claude-smoke-admin-${tag}`,
+      viewer: `smoke-viewer-${tag}`,
+      other: `smoke-other-${tag}`,
+      admin: `smoke-admin-${tag}`,
     };
-    const groupReadableId = `claude-smoke-group-${tag}`;
+    const groupReadableId = `smoke-group-${tag}`;
     let groupId: string | undefined;
     const createdUserIds: string[] = [];
     const resourceIds: string[] = [];
@@ -219,9 +219,9 @@ describe.skipIf(!runDbTests)(
       const { session } = await import("../database/schema");
       const database = useDatabase();
       const tag = randomUUID().slice(0, 8);
-      const userId = `claude-smoke-reg-${tag}`;
+      const userId = `smoke-reg-${tag}`;
       const email = `${userId}@example.invalid`;
-      const name = `claude-smoke-taken-${tag}`;
+      const name = `smoke-taken-${tag}`;
       // The name is taken (by a group) after the registration checked it.
       const [taken] = await database
         .insert(group)

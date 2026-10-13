@@ -3,7 +3,7 @@
 // faces are filled, fumbles dashed in the error color, dropped dice muted and
 // struck through. The outlines were drawn for this component (an exception
 // to "agents don't make art" the user approved); team art can replace them
-// here. See .claude/mockups/dice-rolls/spec.md.
+// here.
 const props = defineProps<{
   sides: number;
   face: number;
