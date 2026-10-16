@@ -133,23 +133,28 @@ onMounted(() => {
         }"
       >
         <template #header="{ collapsed: isCollapsed }">
+          <!-- The rail keeps the brand row (the logo alone), with its toggle
+               on a row of its own below. -->
           <div
             class="flex min-w-0 flex-1 items-center gap-2"
-            :class="isCollapsed ? 'justify-center' : 'justify-between'"
+            :class="isCollapsed ? 'flex-col gap-y-[18px]' : 'justify-between'"
           >
             <NuxtLink
-              v-if="!isCollapsed"
               to="/"
+              :aria-label="isCollapsed ? 'Soul Tabletop' : undefined"
               class="-m-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
             >
               <UIcon name="i-lucide-dices" class="size-[22px] text-primary" />
-              <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
+              <span v-if="!isCollapsed" class="font-display text-xl leading-none font-bold">
+                Soul Tabletop
+              </span>
             </NuxtLink>
             <!-- One toggle for both states; phones use the drawer instead.
                  Negative margins keep the row the brand's 22px, as in the
                  mockup. -->
             <UButton
-              class="-my-1.5 hidden lg:inline-flex"
+              class="hidden lg:inline-flex"
+              :class="isCollapsed ? undefined : '-my-1.5'"
               color="neutral"
               variant="ghost"
               size="sm"
@@ -161,18 +166,22 @@ onMounted(() => {
           </div>
           <!-- In the header, not the scrolling body, which would clip it: on
                desktop it pokes past the sidebar's edge into the page, like a
-               bookmark (the mockup). The drawer on phones keeps it inside. -->
+               bookmark (the mockup). The drawer on phones keeps it inside. On
+               the rail it is an icon button. -->
           <SystemSelector
-            v-if="!isCollapsed"
-            class="relative z-10 shrink-0 basis-full lg:basis-[calc(100%+1.375rem)]"
+            :compact="isCollapsed"
+            class="relative z-10 shrink-0 basis-full"
+            :class="isCollapsed ? undefined : 'lg:basis-[calc(100%+1.375rem)]'"
           />
         </template>
 
         <template #default="{ collapsed: isCollapsed }">
+          <!-- The rail hides the group labels; its lists keep their space. -->
           <UNavigationMenu
             :items="menuItems"
             orientation="vertical"
             :collapsed="isCollapsed"
+            :ui="isCollapsed ? { list: 'pt-[23px]' } : undefined"
             tooltip
             aria-label="Main"
           />
