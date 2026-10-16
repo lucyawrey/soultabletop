@@ -182,7 +182,11 @@ onMounted(() => {
             :items="menuItems"
             orientation="vertical"
             :collapsed="isCollapsed"
-            :ui="isCollapsed ? { list: loggedIn ? 'not-first:pt-[20.5px]' : 'pt-[20.5px]' } : undefined"
+            :ui="
+              isCollapsed
+                ? { list: loggedIn ? 'not-first:pt-[20.5px]' : 'pt-[20.5px]', link: 'justify-center px-0' }
+                : undefined
+            "
             tooltip
             aria-label="Main"
           />
