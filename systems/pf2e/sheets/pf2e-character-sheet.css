@@ -642,18 +642,38 @@
   .head > div:last-child { grid-template-columns: 1fr; }
   .meta, .facts { grid-column: 1; grid-row: auto; }
   .meta > * { flex: 1 1 0; min-width: 0; }
-  .top { grid-template-columns: 1fr; grid-template-rows: none; }
+  /* The Level/XP strip and the Hit Points number get full width here, so they shrink to stay quiet. */
+  .meta > * { grid-template-rows: auto calc(var(--d-big) * 1.2); padding-top: 4px; padding-bottom: 4px; }
+  .meta .sheet-field-value { font-size: var(--d-big); }
+  .meta .sheet-number input { font-size: calc(var(--d-big) * .8); height: calc(var(--d-big) * 1.15); }
+  .now .sheet-number input { font-size: calc(var(--d-hero) * .75); height: calc(var(--d-hero) * .75 + 4px); }
+  .max .sheet-field-value { font-size: calc(var(--d-hero) * .55); }
+  .top { grid-template-columns: 1fr; grid-template-rows: none; row-gap: var(--d-gap); }
   .top > .attrs, .defs, .shieldrow, .iwrcond { grid-column: 1 !important; grid-row: auto !important; margin-left: 0; }
   .shieldrow { flex-wrap: wrap !important; margin-bottom: var(--d-gap); }
   .attrs { grid-template-columns: repeat(6, 1fr) !important; }
-  .defs { grid-template-columns: 1fr 1.3fr; grid-template-areas: "hp hp" "ac saves"; }
-  .ac { grid-area: ac; }
+  /* Hit Points on its own line, then a compact Armor Class beside the three saves, across. */
+  .defs { grid-template-columns: auto 1fr; grid-template-areas: "hp hp" "ac saves"; }
+  .ac { grid-area: ac; min-width: 120px; }
   .hp { grid-area: hp; }
-  .saves { grid-area: saves; }
+  .saves { grid-area: saves; justify-content: center; }
+  .saves .srows > div { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 14px; }
+  .saves .srows > div > * { margin-top: 0 !important; }
+  .saves .srow { grid-template-columns: auto auto auto; justify-content: start; gap: 8px; }
+  /* The shield, then conditions and IWR, on one line. */
+  .top { grid-template-columns: auto 1fr; column-gap: 14px; }
+  .top > .attrs, .defs { grid-column: 1 / -1 !important; }
+  .shieldrow { grid-column: 1 !important; margin-bottom: 0; }
+  .iwrcond { grid-column: 2 !important; }
+  .top:not(:has(.shieldrow)) .iwrcond { grid-column: 1 / -1 !important; }
 }
-/* Under 820px Strikes and Actions, then Skills and the tabs, stack; each keeps its wide rows. */
+/* Under 820px Strikes and Actions, then Skills and the tabs, stack; each keeps its wide rows.
+   Proficiencies moves after the tabs. Stacked sections are as far apart as the sheet's own areas,
+   whose gap also has the renderer's space-y margin (8px) under it. */
 @container (max-width: 820px) {
-  .mid, .pair { grid-template-columns: 1fr !important; }
+  .mid, .pair { grid-template-columns: 1fr !important; row-gap: calc(var(--d-gap) + 18px) !important; }
+  .leftcol { display: contents; }
+  .profs { order: 1; }
 }
 /* Phones: rows fold into two lines and columns drop. */
 @container (max-width: 620px) {
@@ -663,6 +683,11 @@
   .meta .sheet-tracker .sheet-field-value > div > div:first-child { flex-wrap: nowrap; gap: 2px; }
   .maintabs [data-slot="trigger"] { padding: 4px 8px; }
   .row.th { display: none !important; }
+  .top { grid-template-columns: 1fr; }
+  .iwrcond { grid-column: 1 !important; }
+  /* The saves go back to a list beside Armor Class. */
+  .saves .srows > div { display: grid; grid-template-columns: 1fr; row-gap: 2px; }
+  .saves .srow { grid-template-columns: 1fr auto auto; justify-content: stretch; gap: 6px; }
   .strikes .row { grid-template-columns: 22px 1fr auto; row-gap: 0; }
   .strikes .row > :nth-child(4), .strikes .row > :nth-child(5) { grid-column: 2 / -1; font-size: var(--d-lfs); }
   .spell { grid-template-columns: 22px 76px 1fr; row-gap: 0; }
