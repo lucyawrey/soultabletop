@@ -36,7 +36,7 @@ const selected = computed({
 const selectedLabel = computed(
   () => items.value.find((item) => item.value === selected.value)?.label ?? "All Systems",
 );
-// "Pathfinder Second Edition" is "PS"; all systems is "All".
+// Up to three: "Pathfinder Second Edition" is "PSE"; all systems is "All".
 const initials = computed(() =>
   selected.value === ALL
     ? "All"
@@ -44,7 +44,7 @@ const initials = computed(() =>
         .split(/\s+/)
         .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0] ?? "")
         .join("")
-        .slice(0, 2)
+        .slice(0, 3)
         .toUpperCase(),
 );
 </script>

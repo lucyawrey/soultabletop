@@ -153,7 +153,7 @@ onMounted(() => {
           <!-- The toggle is a handle on the sidebar's edge, beside the brand row,
                in the same place in both states; phones use the drawer instead. -->
           <UButton
-            class="absolute top-[17px] -right-3 z-20 hidden size-6 justify-center rounded-full bg-default p-0 ring-1 ring-default lg:inline-flex"
+            class="absolute top-[17px] -right-3 z-20 hidden size-6 justify-center rounded-full bg-default p-0 ring-1 ring-accented lg:inline-flex"
             color="neutral"
             variant="ghost"
             size="xs"
@@ -164,12 +164,12 @@ onMounted(() => {
           />
           <!-- In the header, not the scrolling body, which would clip it: on
                desktop it pokes past the sidebar's edge into the page, like a
-               bookmark (the mockup). The drawer on phones keeps it inside. On
-               the rail it is a button with the system's initials. -->
+               bookmark (the mockup), as far as the toggle handle reaches. The
+               drawer on phones keeps it inside. On the rail it is a button with
+               the system's initials. -->
           <SystemSelector
             :compact="isCollapsed"
-            class="relative z-10 shrink-0 basis-full"
-            :class="isCollapsed ? undefined : 'lg:basis-[calc(100%+1.375rem)]'"
+            class="relative z-10 shrink-0 basis-full lg:basis-[calc(100%+26px)]"
           />
         </template>
 
