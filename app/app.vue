@@ -39,7 +39,7 @@ const navGroups = computed(() => {
     label,
     icon,
     "aria-label": label,
-    active: route.path === to || route.path.startsWith(`${to}/`),
+    active: route.path === to || (to !== "/" && route.path.startsWith(`${to}/`)),
   });
   const characters = link("/characters", "Characters", "i-lucide-user");
   const content = link("/content", "Content", "i-lucide-message-square");
@@ -51,6 +51,7 @@ const navGroups = computed(() => {
       { label: "Browse", items: [content, characters, sheets, types, systems] },
     ];
   return [
+    { items: [link("/", "Dashboard", "i-lucide-house")] },
     {
       label: "Play",
       items: [
@@ -67,7 +68,7 @@ const navGroups = computed(() => {
 });
 const menuItems = computed(() =>
   navGroups.value.map((group) => [
-    { type: "label" as const, label: group.label },
+    ...(group.label ? [{ type: "label" as const, label: group.label }] : []),
     ...group.items,
   ]),
 );
@@ -119,7 +120,7 @@ onMounted(() => {
         role="navigation"
         aria-label="Sidebar"
         :ui="{
-          root: 'bg-default border-e border-default',
+          root: 'group/sidebar bg-default border-e border-default',
           // A wrapping row: the brand line (with the drawer's close button on
           // phones), then the system picker on a line of its own.
           header: 'h-auto flex-wrap items-center gap-x-1.5 gap-y-[18px] px-3.5 pt-[18px] pb-0',
@@ -133,34 +134,35 @@ onMounted(() => {
         }"
       >
         <template #header="{ collapsed: isCollapsed }">
-          <!-- Every row keeps its place on the rail, which has room for only
-               the toggle on the brand row. -->
+          <!-- Every row keeps its place on the rail, which shows the logo alone. -->
           <div
-            class="flex h-[22px] min-w-0 flex-1 items-center gap-2"
-            :class="isCollapsed ? 'justify-center' : 'justify-between'"
+            class="flex h-[22px] min-w-0 flex-1 items-center"
+            :class="isCollapsed ? 'justify-center' : 'justify-start'"
           >
             <NuxtLink
-              v-if="!isCollapsed"
               to="/"
+              :aria-label="isCollapsed ? 'Soul Tabletop' : undefined"
               class="-m-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
             >
               <UIcon name="i-lucide-dices" class="size-[22px] text-primary" />
-              <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
+              <span v-if="!isCollapsed" class="font-display text-xl leading-none font-bold">
+                Soul Tabletop
+              </span>
             </NuxtLink>
-            <!-- One toggle for both states; phones use the drawer instead.
-                 Negative margins keep the row the brand's 22px, as in the
-                 mockup. -->
-            <UButton
-              class="-my-1.5 hidden lg:inline-flex"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              :icon="isCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
-              :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-              :aria-expanded="!isCollapsed"
-              @click="collapsed = !collapsed"
-            />
           </div>
+          <!-- The toggle is a handle on the sidebar's edge, beside the brand row,
+               in the same place in both states. It shows on hover and focus
+               (always on touch screens); phones use the drawer instead. -->
+          <UButton
+            class="absolute top-[17px] -right-3 z-20 hidden size-6 justify-center rounded-full bg-default p-0 opacity-0 ring-1 ring-default transition-opacity group-hover/sidebar:opacity-100 focus-visible:opacity-100 lg:inline-flex [@media(hover:none)]:opacity-100"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            :icon="isCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-left'"
+            :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+            :aria-expanded="!isCollapsed"
+            @click="collapsed = !collapsed"
+          />
           <!-- In the header, not the scrolling body, which would clip it: on
                desktop it pokes past the sidebar's edge into the page, like a
                bookmark (the mockup). The drawer on phones keeps it inside. On
@@ -174,12 +176,13 @@ onMounted(() => {
 
         <template #default="{ collapsed: isCollapsed }">
           <!-- The rail hides the group labels (an empty item stays, before the row
-               gap); its lists keep the 20.5px label height as padding. -->
+               gap); its lists keep the 20.5px label height as padding. Signed
+               in, the first list is Dashboard, which has no label. -->
           <UNavigationMenu
             :items="menuItems"
             orientation="vertical"
             :collapsed="isCollapsed"
-            :ui="isCollapsed ? { list: 'pt-[20.5px]' } : undefined"
+            :ui="isCollapsed ? { list: loggedIn ? 'not-first:pt-[20.5px]' : 'pt-[20.5px]' } : undefined"
             tooltip
             aria-label="Main"
           />
