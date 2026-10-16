@@ -2,8 +2,8 @@
 import type { ResourceOptionItem } from "~/utils/resource-option";
 
 // Header dropdown for the current system (see `useCurrentSystem`). `compact`:
-// the sidebar is an icon rail, so show a globe button, naming the system in
-// its tooltip, that opens the same menu beside the rail.
+// the sidebar is an icon rail, so show a button with the system's initials,
+// naming it in its tooltip, that opens the same menu beside the rail.
 defineProps<{ compact?: boolean }>();
 const ALL = "all";
 
@@ -36,6 +36,17 @@ const selected = computed({
 const selectedLabel = computed(
   () => items.value.find((item) => item.value === selected.value)?.label ?? "All Systems",
 );
+// "Pathfinder Second Edition" is "PS"; all systems is "All".
+const initials = computed(() =>
+  selected.value === ALL
+    ? "All"
+    : selectedLabel.value
+        .split(/\s+/)
+        .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0] ?? "")
+        .join("")
+        .slice(0, 2)
+        .toUpperCase(),
+);
 </script>
 
 <template>
@@ -45,21 +56,18 @@ const selectedLabel = computed(
       :content="compact ? { side: 'right', align: 'start', sideOffset: 12 } : { align: 'start' }"
       :items="items"
       size="md"
-      :icon="compact ? 'i-lucide-globe' : undefined"
       :trailing-icon="compact ? '' : undefined"
       :aria-label="compact ? `Current system: ${selectedLabel}` : 'Current system'"
       :ui="
         compact
           ? {
-              base: 'flex h-[35px] items-center justify-center bg-(--st-page) p-0',
-              leading: 'static p-0',
-              leadingIcon: 'size-[17px] text-default',
+              base: 'flex h-[35px] items-center justify-center bg-(--st-page) p-0 text-xs font-bold text-highlighted',
             }
           : { base: 'h-[35px] bg-(--st-page) text-sm text-highlighted', trailingIcon: 'size-3.5 text-default' }
       "
     >
       <template v-if="compact" #default>
-        <span class="sr-only">{{ selectedLabel }}</span>
+        <span aria-hidden="true">{{ initials }}</span>
       </template>
       <template #item-label="{ item }">
         <ResourceOption :option="item as ResourceOptionItem" />
