@@ -78,28 +78,37 @@ const showSignIn = computed(() => !loggedIn.value && route.path !== "/");
 
 // The sheet editor needs the width, so the sidebar starts collapsed there.
 const isEditor = (path: string) => /^\/sheets\/[^/]+\/edit\/?$/.test(path);
-// A character or content page shows its sheet. In a 1024–1179px window the full
-// sidebar would push a sheet into its narrow layout, and the hamburger below
-// 1024px would bring the wide one back, so the sidebar starts collapsed there.
-const showsSheet = (path: string) => /^\/(characters|content)\/./.test(path);
-const midWindow = ref(false);
-onMounted(() => {
-  const query = window.matchMedia("(min-width: 1024px) and (max-width: 1179.98px)");
-  midWindow.value = query.matches;
-  query.addEventListener("change", (event) => (midWindow.value = event.matches));
+// On a detail page (a sheet, a system, …) in a window under 1180px, the sidebar
+// collapses to its rail: the full one would push sheets into their narrow layout,
+// and the hamburger below 1024px would bring the wide one back. List pages keep
+// the full sidebar. Below 1024px the rail state is kept but unseen (the menu
+// always opens expanded), so widening past 1024px doesn't flash the full sidebar.
+// A toggle by hand lasts until the rule's answer changes. The cookie holds the
+// window's class so the server draws the same sidebar.
+const isDetail = (path: string) =>
+  /^\/(campaigns|characters|content|groups|sheets|systems|types)\/[^/]/.test(path);
+const narrowWindow = useCookie<boolean>("sidebar-narrow", {
+  default: () => false,
+  maxAge: 60 * 60 * 24 * 365,
+  sameSite: "lax",
 });
 const wantsRail = computed(
-  () => isEditor(route.path) || (midWindow.value && showsSheet(route.path)),
+  () => isEditor(route.path) || (narrowWindow.value && isDetail(route.path)),
 );
 const collapsed = ref(wantsRail.value);
 watch(wantsRail, (rail) => (collapsed.value = rail));
+onMounted(() => {
+  const query = window.matchMedia("(max-width: 1179.98px)");
+  narrowWindow.value = query.matches;
+  query.addEventListener("change", (event) => (narrowWindow.value = event.matches));
+});
 </script>
 
 <template>
   <UApp>
-    <!-- A fixed 232px sidebar, as in the mockup. The storage key is new so a
-         size saved under the old percent widths isn't read as pixels. -->
-    <UDashboardGroup unit="px" storage-key="sidebar" class="print:block print:h-auto">
+    <!-- A fixed 232px sidebar, as in the mockup. Its collapsed state is kept by
+         the rule above, not Nuxt UI's own storage. -->
+    <UDashboardGroup unit="px" :persistent="false" class="print:block print:h-auto">
       <UDashboardSidebar
         v-model:collapsed="collapsed"
         collapsible
