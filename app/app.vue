@@ -78,11 +78,21 @@ const showSignIn = computed(() => !loggedIn.value && route.path !== "/");
 
 // The sheet editor needs the width, so the sidebar starts collapsed there.
 const isEditor = (path: string) => /^\/sheets\/[^/]+\/edit\/?$/.test(path);
-const collapsed = ref(isEditor(route.path));
-watch(
-  () => isEditor(route.path),
-  (editing) => (collapsed.value = editing),
+// A character or content page shows its sheet. In a 1024–1179px window the full
+// sidebar would push a sheet into its narrow layout, and the hamburger below
+// 1024px would bring the wide one back, so the sidebar starts collapsed there.
+const showsSheet = (path: string) => /^\/(characters|content)\/./.test(path);
+const midWindow = ref(false);
+onMounted(() => {
+  const query = window.matchMedia("(min-width: 1024px) and (max-width: 1179.98px)");
+  midWindow.value = query.matches;
+  query.addEventListener("change", (event) => (midWindow.value = event.matches));
+});
+const wantsRail = computed(
+  () => isEditor(route.path) || (midWindow.value && showsSheet(route.path)),
 );
+const collapsed = ref(wantsRail.value);
+watch(wantsRail, (rail) => (collapsed.value = rail));
 </script>
 
 <template>
