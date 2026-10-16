@@ -120,7 +120,7 @@ onMounted(() => {
         role="navigation"
         aria-label="Sidebar"
         :ui="{
-          root: 'group/sidebar bg-default border-e border-default',
+          root: 'bg-default border-e border-default',
           // A wrapping row: the brand line (with the drawer's close button on
           // phones), then the system picker on a line of its own.
           header: 'h-auto flex-wrap items-center gap-x-1.5 gap-y-[18px] px-3.5 pt-[18px] pb-0',
@@ -151,10 +151,9 @@ onMounted(() => {
             </NuxtLink>
           </div>
           <!-- The toggle is a handle on the sidebar's edge, beside the brand row,
-               in the same place in both states. It shows on hover and focus
-               (always on touch screens); phones use the drawer instead. -->
+               in the same place in both states; phones use the drawer instead. -->
           <UButton
-            class="absolute top-[17px] -right-3 z-20 hidden size-6 justify-center rounded-full bg-default p-0 opacity-0 ring-1 ring-default transition-opacity group-hover/sidebar:opacity-100 focus-visible:opacity-100 lg:inline-flex [@media(hover:none)]:opacity-100"
+            class="absolute top-[17px] -right-3 z-20 hidden size-6 justify-center rounded-full bg-default p-0 ring-1 ring-default lg:inline-flex"
             color="neutral"
             variant="ghost"
             size="xs"
