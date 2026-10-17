@@ -46,12 +46,12 @@ dependencies first if it has none.
 
 ## Environment variables
 
-| Variable             | Used for                                                                 |
-| -------------------- | ------------------------------------------------------------------------ |
-| `DATABASE_URL`       | Pooled Neon Postgres connection string (app and `drizzle-kit`)           |
-| `BETTER_AUTH_SECRET` | Signs sessions and tokens; generate with `openssl rand -base64 32`       |
-| `EMAIL_API_KEY`      | Resend API key (reserved for email features; not read by the code yet)   |
-| `SERVER_TIMING`      | Optional, read at runtime. `1`, `true`, `on`, or `yes` adds a `Server-Timing` response header (database time, query count, total time); `0` turns it off. On in `pnpm dev`, off in production unless set. Error responses and redirects never carry it |
+| Variable                | Used for                                                                                                                                                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`          | Pooled Neon Postgres connection string (app and `drizzle-kit`)                                                                                                                                                                                                                             |
+| `BETTER_AUTH_SECRET`    | Signs sessions and tokens; generate with `openssl rand -base64 32`                                                                                                                                                                                                                         |
+| `EMAIL_API_KEY`         | Resend API key (reserved for email features; not read by the code yet)                                                                                                                                                                                                                     |
+| `SERVER_TIMING`         | Optional, read at runtime. `1`, `true`, `on`, or `yes` adds a `Server-Timing` response header (database time, query count, total time); `0` turns it off. On in `pnpm dev`, off in production unless set. Error responses and redirects never carry it                                     |
 | `SOUL_TABLETOP_API_KEY` | Optional, local only, and not read by the app: your own API key (create one on `/profile`), for development scripts that call the API as you, sent in the `x-api-key` header. Not in Vercel, so add it to `.env.local` by hand, and again after `vercel env pull`, which rewrites the file |
 
 The app's variables are server-only and never sent to the browser. The first three are set in all
@@ -239,3 +239,9 @@ pnpm preview
 ## License
 
 [MIT](LICENSE)
+
+## AI usage
+
+This project uses AI tools to assist with development. This means primarily code and tooling. Code is reviewed by maintainers and individual maintainers are responsible for any agent generated code.
+
+Non-code creative work is made by people. This means writing, site design decisions, and art or icons.
