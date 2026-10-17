@@ -2,8 +2,8 @@
 import { optionLabel } from "#shared/content-schema";
 import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
-import { defaultSheetValue, findRef, ownProperty, refRecord } from "#shared/sheet/runtime";
-import type { ValidatedElement } from "#shared/sheet/validate";
+import { defaultSheetValue, filterDataKeys, findRef, ownProperty, refRecord } from "#shared/sheet/runtime";
+import { isCompiledFormula, type ValidatedElement } from "#shared/sheet/validate";
 
 // The editing control of a field tag (see Field.vue for viewing). Disabled, it
 // shows a non-editable field with `display="box"`.
@@ -19,7 +19,18 @@ const props = defineProps<{
   automatic?: string;
 }>();
 
-const { context, number } = useSheet();
+const { context, number, condition } = useSheet();
+
+// A Ref's `filter`: which content its picker offers, read against each
+// candidate (paths are the candidate's fields; `/` is this sheet's content).
+const filter = computed(() => {
+  const formula = props.node.attrs.filter;
+  return isCompiledFormula(formula) ? formula : undefined;
+});
+const filterKeys = computed(() => (filter.value ? filterDataKeys(filter.value.ast) : undefined));
+function accepts(data: Record<string, unknown>) {
+  return condition(filter.value, { value: data, path: null }).shown;
+}
 // Compact sheets (the default) use the smallest inputs.
 const size = computed(() => (context.density.value === "compact" ? "xs" : undefined));
 const attrText = useSheetAttrText();
@@ -384,6 +395,8 @@ const imageError = computed(() =>
       :model-value="typeof value === 'string' ? value : undefined"
       :current-name="referenced?.name ?? (typeof value === 'string' ? 'Unavailable' : undefined)"
       :placeholder="referenced?.name ?? (isLocal ? 'Use existing…' : 'Choose…')"
+      :data-keys="filterKeys"
+      :accepts="filter ? accepts : undefined"
       @pick="pick"
     />
     <div v-if="allow !== 'reference' && !isLocal" class="flex gap-2">

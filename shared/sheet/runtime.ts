@@ -16,6 +16,7 @@ import {
   FormulaError,
   formulaLimits,
   isFormulaError,
+  walkFormula,
   type FormulaNode,
   type FormulaValue,
 } from "./formula";
@@ -209,6 +210,17 @@ export function isBlankListItem(
     default:
       return false;
   }
+}
+
+// The top-level fields a Ref's `filter` reads from each candidate content
+// (its relative paths' first segments), so a picker can ask the list for just
+// those (`dataKeys`). Paths from `/` read the sheet's own content.
+export function filterDataKeys(ast: FormulaNode): string[] {
+  const keys = new Set<string>();
+  walkFormula(ast, (node) => {
+    if (node.type === "path" && !node.path.absolute && node.path.segments[0]) keys.add(node.path.segments[0]);
+  });
+  return [...keys];
 }
 
 // The sheet's `<Define>`s, for formulas that call them.

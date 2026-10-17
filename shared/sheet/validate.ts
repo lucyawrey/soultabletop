@@ -1211,6 +1211,26 @@ class Validator {
         card = { shape: found.shape };
       }
     }
+    // A Ref's filter: a true/false formula read against each candidate content.
+    if (spec.name === "Ref" && typeof attrs.filter === "string") {
+      const attr = attrNamed(node, "filter")!;
+      const target = trail.at(-1);
+      delete attrs.filter;
+      if (!target || target.kind !== "field" || target.field.type !== "content") {
+        this.error("invalid-attribute", "filter needs a content field: it picks which content the picker offers", attr.loc);
+      } else if (!attr.valueLoc || !(attr.raw ?? "").trim()) {
+        this.error("invalid-attribute", 'filter needs a formula, like filter="kind == \'weapon\'"', attr.loc);
+      } else {
+        const compiled = this.compileFormula(attr.raw!, attr.valueLoc.start, target, attr.valueLoc);
+        if (compiled && !couldBe(compiled.type, ["boolean"])) {
+          this.error(
+            "formula-result-type",
+            `filter must give true or false, but ${attr.raw!.trim()} gives ${describeType(compiled.type)}`,
+            attr.valueLoc,
+          );
+        } else if (compiled) attrs.filter = compiled;
+      }
+    }
     const cards = node.children.filter(
       (child) => child.type === "element" && child.tag.toLowerCase() === "preview",
     );
@@ -1683,6 +1703,8 @@ class Validator {
       // A definition's body is checked with the other definitions, and a
       // Set's in its own scope, and a Roll's with dice (see stepElement).
       if (spec.category === "definition" || spec.name === "Set" || spec.name === "Roll") return raw;
+      // A Ref's filter reads the candidate content, so it's checked once the field is known.
+      if (spec.name === "Ref" && name === "filter") return raw;
       if (!attr.valueLoc) return fail(`${name} on <${spec.name}> needs a value`);
       return this.compileFormula(raw, attr.valueLoc.start, scope, attr.valueLoc);
     }

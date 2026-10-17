@@ -13,6 +13,10 @@ const props = defineProps<{
   // fetched when the picker opens).
   currentName?: string;
   placeholder?: string;
+  // A Ref's filter: the top-level fields it reads, loaded with the list, and
+  // whether a candidate (those fields plus `name`) is offered.
+  dataKeys?: string[];
+  accepts?: (data: Record<string, unknown>) => boolean;
 }>();
 const emit = defineEmits<{ pick: [id: string, ref: SheetRef] }>();
 
@@ -21,6 +25,7 @@ interface ContentListItem {
   name: string;
   contentTypeId: string;
   source: ResourceSource;
+  data?: Record<string, unknown>;
 }
 
 const options = ref<ContentListItem[]>([]);
@@ -31,9 +36,16 @@ async function load(open: boolean) {
   if (!open || loading.value) return;
   loading.value = true;
   try {
-    options.value = await $fetch<ContentListItem[]>("/api/content", {
-      query: { contentTypeId: props.contentTypeId },
+    const list = await $fetch<ContentListItem[]>("/api/content", {
+      query: {
+        contentTypeId: props.contentTypeId,
+        ...(props.dataKeys?.length ? { dataKeys: props.dataKeys.join(",") } : {}),
+      },
     });
+    const accepts = props.accepts;
+    options.value = accepts
+      ? list.filter((item) => accepts({ ...item.data, name: item.name }))
+      : list;
   } finally {
     loading.value = false;
   }

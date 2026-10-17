@@ -495,7 +495,15 @@ const tagList: TagSpec[] = [
     name: "Ref",
     category: "field",
     description: "A link to another resource or content",
-    attrs: { ...fieldAttrs, preview: previewAttr },
+    attrs: {
+      ...fieldAttrs,
+      preview: previewAttr,
+      filter: {
+        type: { kind: "formula" },
+        description:
+          "Which content the picker offers: a formula read against each candidate (paths are the candidate's fields, / still reaches the top level), like filter=\"kind == 'weapon'\"",
+      },
+    },
     // The card its preview opens.
     children: { only: ["Preview"] },
     binds: ["resourceLink", "content"],
