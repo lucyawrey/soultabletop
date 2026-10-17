@@ -181,6 +181,36 @@ export function defaultSheetValue(
   }
 }
 
+// Whether a list item is still blank, so the list can drop it when focus
+// leaves it (an added entry left unfilled doesn't stay behind). Only items of
+// plain text, numbers, and switches count: choices and pickers open menus that
+// take focus away from the item while it's being filled in. Text is blank when
+// empty, a number or switch when unset or at its default.
+export function isBlankListItem(
+  value: unknown,
+  field: ContentFieldSchema | undefined,
+  schemas: SheetSchemas,
+): boolean {
+  if (!field || fieldOptions(field)?.length) return false;
+  switch (field.type) {
+    case "string":
+      return value == null || (typeof value === "string" && value.trim() === "");
+    case "number":
+    case "boolean":
+      return value == null || value === defaultSheetValue(field, schemas);
+    case "struct": {
+      const entries = Object.entries(field.entries);
+      const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+      return (
+        entries.length > 0 &&
+        entries.every(([key, entry]) => isBlankListItem(record[key], entry, schemas))
+      );
+    }
+    default:
+      return false;
+  }
+}
+
 // The sheet's `<Define>`s, for formulas that call them.
 export interface SheetFormulaDefinitions {
   definitions: ReadonlyMap<string, SheetDefinition>;

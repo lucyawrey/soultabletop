@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ContentFieldSchema } from "../content-schema";
 import {
   defaultSheetValue,
+  isBlankListItem,
   entryScopes,
   evaluateSheetDefinition,
   evaluateSheetFormula,
@@ -174,6 +175,28 @@ describe("setSheetValue", () => {
     const target = { a: 1 };
     setSheetValue(target, [], 2);
     expect(target).toEqual({ a: 1 });
+  });
+});
+
+describe("isBlankListItem", () => {
+  const schemas: SheetSchemas = { root: { hasStrictSchema: true, schema: {} }, types: {} };
+  const pair: ContentFieldSchema = {
+    type: "struct",
+    entries: { type: { type: "string" }, value: { type: "number" } },
+  };
+
+  it.each([
+    ["empty text", { type: "string" }, "", true],
+    ["spaces", { type: "string" }, "  ", true],
+    ["text", { type: "string" }, "darkvision", false],
+    ["an untouched pair", pair, {}, true],
+    ["a pair at its defaults", pair, { type: "", value: 0 }, true],
+    ["a pair with a value", pair, { type: "", value: 5 }, false],
+    ["a pair with text", pair, { type: "fire", value: 0 }, false],
+    ["a choice", { type: "string", options: ["a", "b"] }, "", false],
+    ["a struct with a picker", { type: "struct", entries: { item: { type: "content", contentTypeId: "x" } } }, {}, false],
+  ] as const)("%s", (_name, field, value, blank) => {
+    expect(isBlankListItem(value, field as ContentFieldSchema, schemas)).toBe(blank);
   });
 });
 
