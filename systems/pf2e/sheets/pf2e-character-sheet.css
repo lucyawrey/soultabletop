@@ -121,7 +121,21 @@
 /* The section's stack spacing would push the grid items apart and lift the level box. */
 .head > div:last-child > div > * { margin: 0 !important; }
 .head > div:last-child > div { display: contents; }
-.charname input { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); height: auto; }
+/* The name's input keeps the name's size and place; its box sits just outside the text. */
+.charname [data-slot="root"] { width: auto; max-width: 100%; }
+.sheet-sheet .charname input[data-slot="base"] {
+  font-family: var(--st-font-display);
+  font-size: calc(var(--d-big) * 1.35);
+  font-weight: 700;
+  line-height: 1;
+  width: auto;
+  min-width: 8ch;
+  max-width: calc(100% + 7px);
+  field-sizing: content;
+  height: calc(var(--d-big) * 1.35 + 6px);
+  margin: -3px 0 -3px -7px;
+  padding: 0 6px;
+}
 .charname .sheet-field-value { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); line-height: 1; }
 .refs { gap: 6px 8px; margin-top: 0; }
 .refgroup { gap: 6px 8px; flex-wrap: nowrap; }
@@ -157,7 +171,7 @@
 .meta .sheet-field-value { font-size: calc(var(--d-big) * 1.15); line-height: 1; }
 .meta .word .sheet-field-value { font-size: calc(var(--d-big) * .7); }
 .meta .cellv { display: grid; }
-.per { align-items: baseline; justify-content: center; gap: 3px; }
+.per { align-items: baseline; justify-content: center; gap: 3px; flex-wrap: nowrap !important; }
 .unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
 .facts { grid-column: 1; gap: 2px 14px; align-items: baseline; }
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
@@ -195,7 +209,8 @@
 .attr { padding: calc(var(--d-pad) * .6 + 4px) 4px calc(var(--d-pad) * .6); }
 .attr .sheet-number > div:first-child { justify-content: center; }
 .attr .sheet-field-value { font-size: calc(var(--d-big) * 1.2); line-height: 1.05; }
-.attr input { font-size: calc(var(--d-big) * 1.2); font-weight: 700; height: calc(var(--d-big) * 1.2 + 6px); }
+/* As tall as the value's line, so the label and box don't move. */
+.attr input { font-size: calc(var(--d-big) * 1.2); font-weight: 700; height: calc(var(--d-big) * 1.26); padding-block: 0; }
 .attr:has(.keytag) { border-color: var(--st-primary); box-shadow: inset 0 0 0 1px var(--st-primary); }
 .attr > div:has(.keytag) { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); }
 .keytag {
@@ -272,6 +287,8 @@
 .chip20 .sheet-field-value { white-space: nowrap; }
 .iwrcond > .resist > .rgroup { flex-wrap: wrap; max-width: 100%; margin-left: 6px; }
 .rgroup > .inline-list { min-width: 0; }
+/* In edit the kinds sit closer: each is a "+ Resist"-style pill. */
+.iwrcond > .resist > .rgroup:not(.iwrview) { margin-left: 0; }
 /* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
 .sheet-sheet .strip .sheet-tags [data-slot="root"], .sheet-sheet .facts .sheet-tags [data-slot="root"] {
   border: 0;
@@ -300,6 +317,10 @@
   font-size: var(--d-lfs);
   line-height: 1;
   border-radius: 4px;
+}
+/* Where it can, the "+ Add" input is as wide as its placeholder ("+ Immune"). */
+@supports (field-sizing: content) {
+  .strip .sheet-tags input, .facts .sheet-tags input { width: auto; field-sizing: content; }
 }
 .strip .sheet-tags input:focus, .facts .sheet-tags input:focus { width: 110px; background: transparent; }
 .strip .sheet-tags input::placeholder, .facts .sheet-tags input::placeholder { color: var(--st-primary); font-weight: 700; opacity: 1; }
@@ -355,6 +376,11 @@
 .strikes .row { grid-template-columns: 30px 1.1fr 130px 1fr 1.6fr; }
 .hit { align-items: baseline; gap: 6px; }
 .map .sheet-field-value { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
+/* In edit, the attribute and item bonus fit where the MAP steps were. */
+.sheet-sheet .hit .small-sel button[data-slot="base"] { padding: 0 14px 0 4px; }
+.sheet-sheet .hit .small-sel [data-slot="trailing"] { padding-right: 2px; }
+.hit .small-num .sheet-field-value { width: 30px; }
+.sheet-sheet .hit .small-num input { padding-inline: 2px; }
 /* MAP steps still roll, but stay quiet: muted, with a dotted underline like other clickable values. */
 .map .sheet-roll-trigger { color: var(--st-ink-muted); font-weight: 400; border-bottom: 1px dotted currentColor; }
 .dmg { align-items: baseline; gap: 0 6px; flex-wrap: wrap; }
@@ -423,12 +449,27 @@
 .kv { gap: 0 !important; }
 .kv > .sheet-text, .kv > .sheet-tags, .kv > .sheet-markdown { min-height: calc(var(--d-h) + 6px); padding: calc(var(--d-gap) * .3) 0; border-bottom: 1px solid var(--st-border); }
 .kv .sheet-field-value { font-weight: 400; }
+/* Biography inputs put their text where the play text sits; long text starts one line tall and grows. */
+.sheet-sheet .kv input[data-slot="base"], .sheet-sheet .kv textarea[data-slot="base"] { margin-left: -5px; width: calc(100% + 5px); padding: 0 4px; font-size: inherit; }
+.sheet-sheet .kv input[data-slot="base"] { height: 22px; }
+.sheet-sheet .kv textarea[data-slot="base"] { min-height: 22px; padding-block: 2px; line-height: 1.35; field-sizing: content; resize: none; }
+.sheet-sheet .kv .sheet-tags [data-slot="root"] { margin-left: -5px; min-height: 22px; padding-block: 0; padding-left: 4px; }
+/* Backstory and notes editors: a dashed box like the other inputs, its text where the play text sits. */
+.sheet-sheet .kv .sheet-markdown .sheet-field-value > div { margin-left: -5px; padding: 2px 4px; border: 1px dashed var(--st-border-strong); border-radius: 4px; }
+.sheet-sheet .kv .ProseMirror { padding-inline: 0; }
+.sheet-sheet .kv .ProseMirror p { line-height: 1.5; }
 /* An empty portrait's "No image" is a quiet placeholder, not a value. */
 .portrait .sheet-field-value { font-weight: 400; color: var(--st-ink-muted); }
 /* The portrait sits in a frame under its group bar, like the Details column beside it. */
 .portrait img { display: block; width: 100%; padding: 6px; border: 1px solid var(--st-border); border-radius: var(--st-radius); background: var(--st-panel); }
 .feat { grid-template-columns: 40px 18px 1fr 110px; }
-.feat .small-sel .sheet-field-value { width: 104px; }
+/* In edit, a feat's type is a select the size of the chip it replaces. */
+.feat .small-sel .sheet-field-value { width: auto; justify-self: start; }
+.sheet-sheet .feat .small-sel button[data-slot="base"] { height: 20px; padding: 0 14px 0 5px; font-size: var(--d-lfs); font-weight: 400; background: var(--st-panel-muted); }
+.sheet-sheet .feat .small-sel [data-slot="trailing"] { padding-right: 2px; }
+/* Level and quantity inputs keep their number where the play value sits, at the column's start. */
+.feat .small-num .sheet-field-value, .inv .small-num .sheet-field-value { width: 30px; margin-left: -5px; }
+.sheet-sheet .feat .small-num input, .sheet-sheet .inv .small-num input { text-align: left; padding-inline: 4px; }
 .spell { grid-template-columns: 22px 76px minmax(120px, 1fr) 110px 90px 1.4fr; }
 .slot { display: flex !important; gap: 12px; }
 .inv { grid-template-columns: 36px 1fr 44px 170px 30px; }
@@ -448,6 +489,9 @@
 .bmeter { width: 90px; }
 .bmeter [data-slot="base"] { height: 7px; }
 .trad { gap: 4px; }
+/* In edit, tradition, kind, and attribute are selects about the size of the words they replace. */
+.sheet-sheet .trad .small-sel button[data-slot="base"] { height: 20px; padding: 0 14px 0 4px; }
+.sheet-sheet .trad .small-sel [data-slot="trailing"] { padding-right: 2px; }
 .bio { display: grid !important; grid-template-columns: 180px 1fr; gap: calc(var(--d-gap) * 2); align-items: start; }
 .biocols { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; }
 .kv > .sheet-text, .kv > .sheet-tags { display: grid; grid-template-columns: 130px 1fr; gap: 6px; align-items: center; }
@@ -455,8 +499,22 @@
 /* Inputs keep the size of the values they replace: no steppers, narrow boxes. */
 [data-slot="increment"], [data-slot="decrement"] { display: none; }
 .sheet-number input { padding-inline: 4px; }
-.meta .sheet-number .sheet-field-value:has(input) { width: 48px; }
-.meta .sheet-number input { font-size: calc(var(--d-big) * .9); font-weight: 700; height: calc(var(--d-big) * 1.3); }
+/* Level and XP inputs are as wide as their number, so the strip keeps its play width. */
+.meta .sheet-number [data-slot="root"] { width: auto; }
+.meta .sheet-number input {
+  width: auto;
+  min-width: 1.4em;
+  field-sizing: content;
+  padding: 0 3px;
+  font-size: calc(var(--d-big) * 1.15);
+  font-weight: 700;
+  line-height: 1;
+  height: calc(var(--d-big) * 1.3);
+}
+@supports not (field-sizing: content) {
+  .meta .sheet-number .sheet-field-value:has(input) { width: 48px; }
+  .meta .sheet-number [data-slot="root"], .meta .sheet-number input { width: 100%; }
+}
 .now .sheet-number .sheet-field-value { width: 72px; }
 .temp .sheet-field-value, .coin .sheet-field-value { width: 52px; }
 .temp input { font-size: var(--d-big); font-weight: 700; height: calc(var(--d-big) + 6px); }
@@ -517,6 +575,20 @@
 .sheet-sheet [data-slot="trailing"] { padding-right: 4px; }
 .sheet-sheet [data-slot="trailingIcon"] { width: 12px; height: 12px; }
 .row input[data-slot="base"], .strip input[data-slot="base"], .grp input[data-slot="base"] { height: var(--d-h); padding: 0 6px; font-size: inherit; }
+/* Inputs in a group bar, and pickers on the tabs' first lines, fit in the line's play height. */
+.sheet-sheet .grp input[data-slot="base"] { height: 16px; }
+.sheet-sheet .gear button[data-slot="base"][aria-haspopup] { height: 20px; }
+/* A group's "+ Add" sits at the right end of its bar instead of on a line of its own. */
+.rows:has(> .grp) { position: relative; }
+.rows:has(> .grp) > .sheet-list > .flex-wrap {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  height: 22px;
+  margin: 0 !important;
+  align-items: center;
+}
+.rows:has(> .grp) > .sheet-list > :not(:last-child) { margin-bottom: 0 !important; }
 /* Initiative's "rolls with" is a real select in play and edit alike. */
 .init button[data-slot="base"][role="combobox"] { border-style: solid; font-weight: 400; }
 
@@ -532,7 +604,15 @@
   color: var(--st-ink);
 }
 .name .sheet-field-value, .kv .sheet-ref .sheet-field-value { width: auto; min-width: 0; }
+/* The deity and racket pickers keep their play look: a plain link in the primary color. */
+.sheet-sheet .kv .sheet-ref button[data-slot="base"][aria-haspopup] { color: var(--st-primary); font-weight: 400; }
+/* The Class tab's first line keeps its height when Key attribute becomes a select. */
+.sheet-sheet .keyline button[data-slot="base"][aria-haspopup] { height: 20px; }
 .sheet-sheet .card button[data-slot="base"][aria-haspopup] { height: auto; font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
+/* A card keeps its play width and color: its ▾ sits on its top edge, like the KEY badge. */
+.card { position: relative; }
+.sheet-sheet .card button[data-slot="base"][aria-haspopup] { position: static; padding-right: 0; color: var(--st-primary); }
+.sheet-sheet .card [data-slot="trailing"] { inset: -7px 6px auto auto; padding: 0 1px; background: var(--st-panel); border-radius: 3px; }
 .card:has(button[data-slot="base"]) { border-style: dashed; }
 .card:has(button[data-slot="base"]), .rankcell:has(.rank-sel) .rank.on .sheet-field-value {
   outline: 2px solid color-mix(in srgb, var(--st-primary) 22%, transparent);
@@ -565,6 +645,7 @@
 .sheet-list > .flex-wrap > button [data-slot="leadingIcon"] { display: none; }
 .sheet-list > .flex-wrap > button [data-slot="label"]::before { content: "+ "; }
 .noadd > .flex-wrap { display: none; }
+.noadd > :not(:last-child) { margin-bottom: 0 !important; }
 .sheet-list-item button[aria-label="Move up"], .sheet-list-item button[aria-label="Move down"] { display: none; }
 .rows .sheet-list-item { align-items: center; gap: 2px; }
 .sheet-list-item > div:last-child:not(:first-child) { flex-direction: row; gap: 0; }
@@ -572,18 +653,55 @@
 .sheet-list-item button[aria-label="Remove"]:hover { color: var(--ui-error); background: transparent; }
 .sheet-list-item button[aria-label="Remove"] [data-slot="leadingIcon"] { display: none; }
 .sheet-list-item button[aria-label="Remove"]::after { content: "×"; font-size: 16px; line-height: 1; }
+/* Rows keep their play width in edit: the × sits over the row's right end, and only the last cell
+   makes room for it, so the columns don't move. */
+.rows .sheet-list-item { position: relative; }
+.rows .sheet-list-item > div:last-child:not(:first-child) {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: calc(var(--d-h) + 6px);
+  align-items: center;
+}
+.rows .sheet-list-item > div:last-child:not(:first-child) button[aria-label="Remove"] { padding: 0 1px; }
+.rows .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :last-child { padding-right: 12px; }
+/* Strikes' and Actions' "+ Add" sits on the panel's bottom edge, like the folio tab on its top edge. */
+.strikes .rows > .flex-wrap, .acts .rows > .flex-wrap, .skills .lore > .flex-wrap {
+  position: absolute;
+  left: calc(var(--d-pad) + 2px);
+  bottom: 0;
+  transform: translateY(50%);
+  margin: 0 !important;
+  z-index: 1;
+}
+.strikes .rows > :first-child, .acts .rows > :first-child, .skills .lore > :first-child { margin-bottom: 0 !important; }
+/* A lore's × sits at the end of its name, so its modifier stays in line with the skills above. */
+.skills .lore .sheet-list-item > div:last-child:not(:first-child) { right: calc(32px + 30px + 58px + 18px + 2px); }
+.skills .lore .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :last-child { padding-right: 0; }
+.skills .lore .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :first-child { padding-right: 14px; }
+.sheet-sheet .lore .name input[data-slot="base"] { margin-left: -7px; width: calc(100% + 7px); }
 
-.note-in .sheet-field-value, .note-in { width: 100%; }
+/* Notes inputs are as wide as their text; empty, they're a small ✎ pill that fits beside a few chips. */
+.note-in .sheet-field-value, .note-in { width: auto; min-width: 0; }
+.sheet-sheet .note-in input[data-slot="base"] { height: 20px; padding: 0 4px; font-size: var(--d-lfs); font-weight: 400; color: var(--st-ink-muted); field-sizing: content; min-width: 20px; max-width: 100%; }
+.sheet-sheet .note-in input[data-slot="base"]:placeholder-shown { background: var(--st-panel-muted); }
+.note-in input::placeholder { color: var(--st-primary); font-weight: 700; font-size: 12px; opacity: 1; }
+@supports not (field-sizing: content) {
+  .note-in .sheet-field-value, .note-in { width: 40px; }
+}
 .traits { flex-wrap: nowrap !important; }
-.traits .note-in, .traits .note-in .sheet-field-value { width: 64px; }
 .or-feat { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-.gear { flex-basis: auto; }
-.inv .small-num .sheet-field-value { width: 32px; }
+/* "Feat" tells the two pickers of a new action apart; once a feat is chosen, its picker is alone and unlabeled. */
+.cell > .or-feat:only-child { margin-top: 0; }
+.cell > .or-feat:only-child > div:first-child { display: none; }
+.gear { flex-basis: auto; margin-left: auto; }
 .sheet-list > .flex-wrap > .w-56 button[data-slot="base"] { min-width: 130px; padding-right: 18px; }
 .spell .sheet-checkbox button, .spell .sheet-field-value > button { width: 13px; height: 13px; border-radius: 2px; }
 .spell > .sheet-value:not(.name) .sheet-field-value { font-weight: 400; }
 .small-num .sheet-field-value { width: 44px; }
 .small-num input { text-align: center; }
+/* A spell's rank input is about as tall as the range it replaces, so stacked phone rows keep their height. */
+.sheet-sheet .spell .small-num input { height: 20px; }
 .small-sel .sheet-field-value { width: auto; }
 .strikes .row { grid-template-columns: 30px minmax(130px, 1.1fr) minmax(130px, auto) minmax(110px, 1fr) 1.4fr; }
 .traits { gap: 2px 4px; align-items: center; }
@@ -645,7 +763,7 @@
   /* The Level/XP strip and the Hit Points number get full width here, so they shrink to stay quiet. */
   .meta > * { grid-template-rows: auto calc(var(--d-big) * 1.2); padding-top: 4px; padding-bottom: 4px; }
   .meta .sheet-field-value { font-size: var(--d-big); }
-  .meta .sheet-number input { font-size: calc(var(--d-big) * .8); height: calc(var(--d-big) * 1.15); }
+  .meta .sheet-number input { font-size: var(--d-big); height: calc(var(--d-big) * 1.15); }
   .now .sheet-number input { font-size: calc(var(--d-hero) * .75); height: calc(var(--d-hero) * .75 + 4px); }
   .max .sheet-field-value { font-size: calc(var(--d-hero) * .55); }
   .top { grid-template-columns: 1fr; grid-template-rows: none; row-gap: var(--d-gap); }

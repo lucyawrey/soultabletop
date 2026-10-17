@@ -170,7 +170,8 @@
           <Stack direction="row" class="iwrcond">
             <Tags field="conditions" label="Conditions" placeholder="+ Add" live />
             <Stack direction="row" wrap class="resist">
-              <Note class="label">IWR</Note>
+              <!-- In edit, the "+ Resist", "+ Weak", and "+ Immune" pills name themselves until there's an entry. -->
+              <Note class="label" show="not editing() or length(coalesce(defensesList(), '')) > 0">IWR</Note>
               <Value hideLabel class="dim" formula="'none'" show="not editing() and length(coalesce(defensesList(), '')) == 0" />
               <!-- In view, each kind's entries are chips, like Conditions. -->
               <Stack direction="row" class="rgroup iwrview" show="not editing() and length(coalesce(resistances, list())) > 0">
@@ -185,21 +186,22 @@
                 <Note>Immune</Note>
                 <Tags field="immunities" hideLabel />
               </Stack>
+              <!-- In edit, each kind is named by its "+ Resist" button, and by a label once it has entries. -->
               <Stack direction="row" class="rgroup" show="editing()">
-                <Note>Resist</Note>
-                <List field="resistances" addLabel="Add" class="inline-list">
+                <Note show="length(coalesce(resistances, list())) > 0">Resist</Note>
+                <List field="resistances" addLabel="Resist" class="inline-list">
                   <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="fire" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
                 </List>
               </Stack>
               <Stack direction="row" class="rgroup" show="editing()">
-                <Note>Weak</Note>
-                <List field="weaknesses" addLabel="Add" class="inline-list">
+                <Note show="length(coalesce(weaknesses, list())) > 0">Weak</Note>
+                <List field="weaknesses" addLabel="Weak" class="inline-list">
                   <Stack direction="row" class="pair-in"><Text field="type" hideLabel placeholder="cold iron" /><Number field="value" hideLabel min="0" class="small-num" /></Stack>
                 </List>
               </Stack>
               <Stack direction="row" class="rgroup" show="editing()">
-                <Note>Immune</Note>
-                <Tags field="immunities" hideLabel placeholder="+ Add" />
+                <Note show="length(coalesce(immunities, list())) > 0">Immune</Note>
+                <Tags field="immunities" hideLabel placeholder="+ Immune" />
               </Stack>
             </Stack>
           </Stack>
@@ -251,7 +253,7 @@
           <Stack direction="row" wrap class="traits">
             <Tags field="weapon.traits" hideLabel class="chips" />
             <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
-            <Text field="notes" hideLabel placeholder="Notes" class="note-in" show="editing()" />
+            <Text field="notes" hideLabel placeholder="✎" class="note-in" show="editing()" />
           </Stack>
         </Stack>
       </List>
@@ -267,7 +269,7 @@
             <Ref field="feat" label="Feat" class="name or-feat" show="editing() and action.name == null" />
           </Stack>
           <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
-          <Text field="notes" hideLabel placeholder="Notes" class="note-in" show="editing()" />
+          <Text field="notes" hideLabel placeholder="✎" class="note-in" show="editing()" />
         </Stack>
       </List>
     </Section>
@@ -472,17 +474,18 @@
             <Tracker formula="round(bulk(), 1)" max="{10 + attributes.str}" mark="{5 + attributes.str}" hideLabel class="bmeter" />
             <Value hideLabel class="dim" formula="concat('encumbered over ', 5 + attributes.str, ' · limit ', 10 + attributes.str)" show="bulk() <= 5 + attributes.str" />
             <Badge color="error" show="bulk() > 5 + attributes.str">Encumbered</Badge>
+            <!-- In edit, the armor and shield pickers end the first two lines, where there's room, so nothing moves. -->
+            <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Armor</Note><Ref field="armor" hideLabel class="name" /></Stack>
           </Stack>
           <Value label="Invested" formula="concat(count(inventory, invested), ' / 10')" />
           <Number field="coins.pp" formula="0" label="pp" min="0" live class="coin" />
           <Number field="coins.gp" formula="0" label="gp" min="0" live class="coin" />
           <Number field="coins.sp" formula="0" label="sp" min="0" live class="coin" />
           <Number field="coins.cp" formula="0" label="cp" min="0" live class="coin" />
-          <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Armor</Note><Ref field="armor" hideLabel class="name" /></Stack>
           <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Shield</Note><Ref field="shield" hideLabel class="name" /></Stack>
         </Stack>
         <Stack direction="row" class="row th inv">
-          <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>{if(editing(), 'State', 'Move')}</Note><Note class="invcol" show="any(inventory, hasTrait(item.traits, 'invested'))">Inv</Note>
+          <Note>Qty</Note><Note>Item</Note><Note>Bulk</Note><Note>Move</Note><Note class="invcol" show="any(inventory, hasTrait(item.traits, 'invested'))">Inv</Note>
         </Stack>
         <Stack class="rows" show="any(inventory, state == 'held')">
           <Note class="grp">Held</Note>
@@ -569,7 +572,8 @@
             <Part label="{rankName(spellcasting.rank)}" formula="prof(spellcasting.rank)" />
             <Roll label="Spell attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
           </Value>
-          <Button label="Daily preparations" icon="i-lucide-sunrise" live toast>
+          <!-- A play action; in edit its place goes to the selects above, which would push it onto a line of its own. -->
+          <Button label="Daily preparations" icon="i-lucide-sunrise" live toast show="not editing()">
             <Set field="spells.*.cast" formula="false" />
             <Set field="slots.*.left" formula="max" />
             <Set field="divineFont.left" formula="divineFont.max" />
