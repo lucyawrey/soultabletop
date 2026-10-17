@@ -147,14 +147,17 @@
 }
 .card .sheet-field-value { font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
 .meta {
-  /* Beside the name and build cards; the facts run under both. */
+  /* Beside the name and build cards, its bottom level with the cards'; set in from the panel's
+     top and right edges by the same amount. The facts run under both. */
   grid-column: 2;
   grid-row: 1;
-  align-self: center;
+  align-self: stretch;
   border: 1px solid var(--st-border);
   border-radius: var(--st-radius);
   background: var(--st-panel-muted);
 }
+/* The header's stack spacing reset would zero this margin, so it's more specific. */
+.head .meta.meta { margin: 6px 6px 0 0 !important; }
 .meta > * {
   display: grid;
   grid-template-rows: auto calc(var(--d-big) * 1.5);
@@ -166,6 +169,8 @@
 .meta > * + * { border-left: 1px solid var(--st-border); }
 .meta > * { text-align: center; align-content: center; }
 .meta .sheet-field-label { display: block; text-align: center; }
+/* XP's and Speed's labels are notes; they get a field label row's height so every number sits on one line. */
+.meta .cellv > .label { min-height: 16px; display: flex; align-items: center; justify-content: center; }
 .meta > * > div { justify-content: center; }
 .meta .sheet-field-value { display: flex; justify-content: center; align-items: center; }
 .meta .sheet-field-value { font-size: calc(var(--d-big) * 1.15); line-height: 1; }
@@ -689,12 +694,10 @@
 .skills .lore .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :first-child { padding-right: 14px; }
 .sheet-sheet .lore .name input[data-slot="base"] { margin-left: -7px; width: calc(100% + 7px); }
 
-/* Notes inputs are as wide as their text; empty, they're a "+ Note" pill like "+ Add". Beside a strike's
+/* Notes inputs look the same empty or filled: a small dashed box as wide as its text. Beside a strike's
    trait chips it moves to a second line when there isn't room. */
 .note-in .sheet-field-value, .note-in { width: auto; min-width: 0; }
-.sheet-sheet .note-in input[data-slot="base"] { height: 20px; padding: 0 4px; font-size: var(--d-lfs); font-weight: 400; color: var(--st-ink-muted); field-sizing: content; min-width: 40px; max-width: 100%; }
-.sheet-sheet .note-in input[data-slot="base"]:placeholder-shown { background: var(--st-panel-muted); }
-.note-in input::placeholder { color: var(--st-primary); font-weight: 700; opacity: 1; }
+.sheet-sheet .note-in input[data-slot="base"] { height: 20px; padding: 0 4px; font-size: var(--d-lfs); font-weight: 400; color: var(--st-ink-muted); field-sizing: content; min-width: 56px; max-width: 100%; }
 @supports not (field-sizing: content) {
   .note-in .sheet-field-value, .note-in { width: 56px; }
 }
@@ -801,6 +804,7 @@
 /* Under 880px the header and the Attributes & Defenses row stop fitting side by side
    (breakpoints from the approved mockup). */
 @container (max-width: 880px) {
+  .head .meta.meta { margin: 0 !important; }
   .head > div:last-child { grid-template-columns: 1fr; }
   .meta, .facts { grid-column: 1; grid-row: auto; }
   .meta > * { flex: 1 1 0; min-width: 0; }
@@ -876,5 +880,10 @@
 .card .sheet-edit-preview .iconify { width: 12px; height: 12px; }
 /* A row's picker steps aside like the play name does, so its expanded preview is a full line under the row. */
 .row > .sheet-ref.name, .row > .cell > .sheet-ref.name:not(.or-feat), .row > .cell > .or-feat:only-child { display: contents; }
+/* A new action's two pickers ("Choose… or Feat Choose…") share the name cell, so its notes keep their column. */
+.acts .row > .cell:has(> .or-feat:not(:only-child)) { display: flex !important; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+.acts .row > .cell:has(> .or-feat:not(:only-child)) > * { margin: 0 !important; }
+.or-feat:not(:only-child) > div:first-child .sheet-field-label { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: var(--d-fs); }
+.or-feat:not(:only-child) > div:first-child .sheet-field-label::before { content: "or "; }
 /* The portrait keeps its picture in edit, above the URL input. */
 .portrait .sheet-image-frame > span { font-weight: 400; color: var(--st-ink-muted); }

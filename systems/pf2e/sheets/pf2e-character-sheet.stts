@@ -259,9 +259,10 @@
             <Value hideLabel class="dim" formula="concat('+', sneakDice(), 'd6 sneak')" show="/class.name == 'Rogue'" />
           </Stack>
           <Stack direction="row" wrap class="traits">
-            <Tags field="weapon.traits" hideLabel class="chips" />
+            <!-- Traits come from the weapon; with none picked the path would be an input that writes to the reference. -->
+            <Tags field="weapon.traits" hideLabel class="chips" show="weapon.name != null" />
             <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
-            <Text field="notes" hideLabel placeholder="+ Note" class="note-in" show="editing()" />
+            <Text field="notes" hideLabel class="note-in" show="editing()" />
           </Stack>
         </Stack>
       </List>
@@ -277,7 +278,7 @@
             <Ref field="feat" label="Feat" preview class="name or-feat" show="editing() and action.name == null" />
           </Stack>
           <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
-          <Text field="notes" hideLabel placeholder="+ Note" class="note-in" show="editing()" />
+          <Text field="notes" hideLabel class="note-in" show="editing()" />
         </Stack>
       </List>
     </Section>
