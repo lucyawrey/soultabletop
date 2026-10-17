@@ -82,10 +82,11 @@ const { editable, lockedEditable, unlock, boxed } = useSheetEditable(
   () => (display.value === "value" ? null : resolved.value.path),
 );
 
-// `preview`: the content a click opens a card of (none while the field is
-// editable, or when it isn't loaded).
+// `preview`: the content a click opens a card of (none when it isn't loaded,
+// or while the field is editable, except a Ref, whose picker gets a button
+// beside it that opens the same preview).
 const previewTarget = computed(() =>
-  props.node.preview && !editable.value
+  props.node.preview && (!editable.value || display.value === "ref")
     ? sheetPreviewTarget(props.node, context.root.value, scope.value, context.refs.value)
     : undefined,
 );
@@ -314,6 +315,18 @@ const imageSize = computed(
 
     <div class="sheet-field-value">
     <template v-if="editable && resolved.path">
+      <!-- An image's input keeps the picture above it, following the URL as it's typed. -->
+      <div v-if="display === 'image'" class="sheet-image-frame mb-1">
+        <img
+          v-if="imageUrl"
+          :src="imageUrl"
+          :alt="attrText(node.attrs.alt) || label"
+          referrerpolicy="no-referrer"
+          class="rounded-md object-contain"
+          :class="imageSize"
+        >
+        <span v-else class="text-dimmed">No image</span>
+      </div>
       <SheetFieldInput
         :node="node"
         :value="overrideTag === 'Checkbox' ? value : stored"
@@ -321,6 +334,18 @@ const imageSize = computed(
         :label="label"
         :automatic="automatic ? computedText : undefined"
       />
+      <span v-if="display === 'ref' && previewTarget" class="sheet-edit-preview">
+        <SheetPreviewTrigger
+          :mode="previewMode"
+          :target="previewTarget"
+          :card="previewCard"
+          :open="previewOpen"
+          :label="`Preview ${previewTarget.name || label}`"
+          @toggle="togglePreview"
+        >
+          <UIcon name="i-lucide-eye" class="size-3.5 align-middle" />
+        </SheetPreviewTrigger>
+      </span>
     </template>
 
     <span v-else-if="showsError" class="tabular-nums">

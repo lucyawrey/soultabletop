@@ -168,7 +168,7 @@ View mode renders formatted values, edit mode renders the input.
 | `Value` | `format`, `formula`, `preview` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
-| `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
+| `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: the picture (or "No image") above a URL input, following the URL as it's typed (class `sheet-image-frame`) |
 
 Image URLs: https only. The schema has no image type, so this is enforced where the tag is used: `Image` renders only
 https URLs, and its edit input validates client-side. Uploads later, same field shape.
@@ -387,7 +387,8 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup). Two ways t
   `display="box"`), so a `Button` inside a `<Preview>` is an error (`button-in-preview`); and a preview can't open another
   (`preview` inside a `<Preview>` is `preview-in-preview`).
 - **While editing:** an editable value (a `Ref`'s picker, a custom copy's fields) shows its input, not a button;
-  values that can't be edited keep their preview. `display="box"` doesn't box a value with a preview (a `Ref` keeps
+  an editable `Ref` with `preview` gets a small eye button beside its picker that opens the same preview (class
+  `sheet-edit-preview` on its wrapper); values that can't be edited keep their preview. `display="box"` doesn't box a value with a preview (a `Ref` keeps
   its box with the button inside).
 - Hook classes: `sheet-preview-trigger` on the value's button, `sheet-preview-frame` on the expanded box or the card,
   `sheet-preview` on what's inside it (a `<Preview>` also gets its `class`).

@@ -32,6 +32,13 @@ function stableJson(value: unknown): string {
   );
 }
 
+// A plain copy of draft data. The draft can hold Vue proxies below its top
+// level (a list's add spreads its reactive items into the new array), which
+// structuredClone rejects; the data is JSON, so a JSON round trip copies it.
+function plainCopy<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 // An editable copy of a Content's data (with its built-in `name`), saved with
 // `expectedUpdatedAt` so concurrent edits are detected (409 -> "conflict").
 // With `liveEdits` on (Edit off: only `live` fields can change), each change
@@ -57,7 +64,7 @@ export function useContentDraft(
     const current = source.value;
     if (!current) return;
     draft.value = structuredClone({ ...toRaw(current.data), name: current.name });
-    saved = structuredClone(toRaw(draft.value));
+    saved = plainCopy(draft.value);
     baseline.value = stableJson(draft.value);
     expectedUpdatedAt.value = current.updatedAt;
     status.value = "idle";
@@ -85,7 +92,7 @@ export function useContentDraft(
     if (saving) await saving;
     const current = source.value;
     if (!current || (!dirty.value && !overwrite)) return;
-    const { name, ...data } = structuredClone(toRaw(draft.value));
+    const { name, ...data } = plainCopy(draft.value);
     const snapshot = stableJson(draft.value);
     status.value = "saving";
     error.value = "";

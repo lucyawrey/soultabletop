@@ -90,7 +90,7 @@ In edit mode a `List` or `Table` of an array gets add, remove, and reorder contr
 |---|---|---|---|
 | `Preview` | `class`, `show` only | any | What a preview shows instead of the generated view (chips, rows, long text). Two places, at most one each: beside `<Sheet>` at the top level, for every preview of this content type from other sheets (paths read this content's top level; `<Define>`s work; styled by this sheet's CSS; never shown on the content's own page); or directly inside a `Ref`, `Value`, or `Column` with `preview`, overriding it for that tag (paths relative to the referenced content, `/` still reaches the top level; styled by the referencing sheet's CSS). Always read-only, so no `Button`s and no `preview` inside. Class `sheet-preview` |
 
-`preview` shows the last content field on the way to the tag's field (`spell.name` shows `spell`; in a `Table` over an array of content, the row). Plain `preview` expands below the value (under the row for a `Column`; any number open): use it for spells, feats, and other content read in full. `preview="card"` floats a card under the value: use it for minor things with no inline place, like a background.
+`preview` shows the last content field on the way to the tag's field (`spell.name` shows `spell`; in a `Table` over an array of content, the row). Plain `preview` expands below the value (under the row for a `Column`; any number open): use it for spells, feats, and other content read in full. `preview="card"` floats a card under the value: use it for minor things with no inline place, like a background. In edit, a `Ref` with `preview` shows its picker with a small eye button beside it that opens the same preview, so give the edit-mode `Ref` `preview` too when its view-mode name has one.
 
 ## Buttons
 
