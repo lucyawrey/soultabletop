@@ -612,8 +612,6 @@
   color: var(--st-ink);
 }
 .name .sheet-field-value, .kv .sheet-ref .sheet-field-value { width: auto; min-width: 0; }
-/* The deity and racket pickers keep their play look: a plain link in the primary color. */
-.sheet-sheet .kv .sheet-ref button[data-slot="base"][aria-haspopup] { color: var(--st-primary); font-weight: 400; }
 /* The Class tab's first line keeps its height when Key attribute becomes a select. */
 .sheet-sheet .keyline button[data-slot="base"][aria-haspopup] { height: 20px; }
 .sheet-sheet .card button[data-slot="base"][aria-haspopup] { height: auto; font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
@@ -703,10 +701,6 @@
 }
 .traits { flex-wrap: nowrap !important; }
 .traits:has(.note-in) { flex-wrap: wrap !important; }
-.or-feat { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-/* "Feat" tells the two pickers of a new action apart; once a feat is chosen, its picker is alone and unlabeled. */
-.cell > .or-feat:only-child { margin-top: 0; }
-.cell > .or-feat:only-child > div:first-child { display: none; }
 .gear { flex-basis: auto; margin-left: auto; }
 .sheet-list > .flex-wrap > .w-56 button[data-slot="base"] { min-width: 130px; padding-right: 18px; }
 .spell .sheet-checkbox button, .spell .sheet-field-value > button { width: 13px; height: 13px; border-radius: 2px; }
@@ -879,11 +873,6 @@
 .sheet-sheet .card .sheet-edit-preview .sheet-preview-trigger { padding: 0 1px; }
 .card .sheet-edit-preview .iconify { width: 12px; height: 12px; }
 /* A row's picker steps aside like the play name does, so its expanded preview is a full line under the row. */
-.row > .sheet-ref.name, .row > .cell > .sheet-ref.name:not(.or-feat), .row > .cell > .or-feat:only-child { display: contents; }
-/* A new action's two pickers ("Choose… or Feat Choose…") share the name cell, so its notes keep their column. */
-.acts .row > .cell:has(> .or-feat:not(:only-child)) { display: flex !important; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
-.acts .row > .cell:has(> .or-feat:not(:only-child)) > * { margin: 0 !important; }
-.or-feat:not(:only-child) > div:first-child .sheet-field-label { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: var(--d-fs); }
-.or-feat:not(:only-child) > div:first-child .sheet-field-label::before { content: "or "; }
+.row > .sheet-ref.name, .row > .cell > .sheet-ref.name { display: contents; }
 /* The portrait keeps its picture in edit, above the URL input. */
 .portrait .sheet-image-frame > span { font-weight: 400; color: var(--st-ink-muted); }
