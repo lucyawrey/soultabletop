@@ -167,6 +167,8 @@ const types = {
     name: "Action",
     schema: {
       actions: { ...actions("Actions"), default: "1" },
+      // Set when the action comes from a feat (the import writes one for each feat with an action cost).
+      feat: ref("Feat", "pf2e-feat"),
       category: {
         ...choice("string", [["interaction", "Interaction"], ["offensive", "Offensive"], ["defensive", "Defensive"], ["familiar", "Familiar"]]),
         label: "Category",
@@ -281,7 +283,8 @@ const types = {
           notes: str("Notes"),
         },
       }),
-      actions: list("Actions and Reactions", { type: "struct", entries: { action: ref("Action", "pf2e-action"), feat: ref("Feat", "pf2e-feat"), notes: str("Notes") } }),
+      // Feats with an action cost are actions too (the import makes them), so a row needs only the action.
+      actions: list("Actions and Reactions", { type: "struct", entries: { action: ref("Action", "pf2e-action"), notes: str("Notes") } }),
       feats: list("Feats", {
         type: "struct",
         entries: {

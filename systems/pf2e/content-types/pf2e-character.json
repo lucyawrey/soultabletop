@@ -1283,12 +1283,6 @@
             "contentTypeId": "pf2e-action",
             "allow": "reference"
           },
-          "feat": {
-            "type": "content",
-            "label": "Feat",
-            "contentTypeId": "pf2e-feat",
-            "allow": "reference"
-          },
           "notes": {
             "type": "string",
             "label": "Notes"

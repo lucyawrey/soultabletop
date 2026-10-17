@@ -270,12 +270,11 @@
     <Section title="Actions &amp; Reactions" icon="i-game-icons-hand" class="folio acts">
       <List field="actions" addLabel="Add action" class="rows">
         <Stack direction="row" class="row">
-          <Value hideLabel class="act" formula="glyph(coalesce(action.actions, feat.actions))" />
+          <Value hideLabel class="act" formula="glyph(action.actions)" />
+          <!-- Feats with an action cost are actions too (the import makes them), so one picker offers both. -->
           <Stack class="cell">
-            <Value field="action.name" hideLabel preview class="name" show="not editing() and action.name != null" />
-            <Value field="feat.name" hideLabel preview class="name" show="not editing() and action.name == null" />
-            <Ref field="action" label="Action" hideLabel preview class="name" show="editing() and (action.name != null or feat.name == null)" />
-            <Ref field="feat" label="Feat" preview class="name or-feat" show="editing() and action.name == null" />
+            <Value field="action.name" hideLabel preview class="name" show="not editing()" />
+            <Ref field="action" hideLabel preview class="name" show="editing()" />
           </Stack>
           <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
           <Text field="notes" hideLabel class="note-in" show="editing()" />
