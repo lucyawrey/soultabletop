@@ -18,8 +18,9 @@ export default defineAppConfig({
     },
     navigationMenu: {
       slots: {
-        // Roomier rows, and small uppercase group labels like the mockup.
-        link: "px-2.5 py-1.5 text-[15px] gap-2",
+        // Roomier rows, and small uppercase group labels like the mockup. Rows
+        // keep their height on the collapsed rail, which hides the text.
+        link: "min-h-[35px] px-2.5 py-1.5 text-[15px] gap-2",
         separator: "hidden",
         // Groups (Play, Build) are separate lists; rows and groups are spaced
         // like the mockup.

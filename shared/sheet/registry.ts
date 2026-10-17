@@ -464,7 +464,7 @@ const tagList: TagSpec[] = [
     name: "Tags",
     category: "field",
     description: "A list of short texts",
-    attrs: { ...fieldAttrs },
+    attrs: { ...fieldAttrs, placeholder: text("Shown in the empty input while editing") },
     children: "none",
     binds: ["stringArray"],
   },
@@ -480,6 +480,11 @@ const tagList: TagSpec[] = [
         description:
           "Maximum: a number or a {formula}; without one (or at 0), only the value shows",
       },
+      mark: {
+        type: { kind: "number", min: 0, dynamic: true },
+        description:
+          "A mark on the bar at this value, like an encumbrance threshold: a number or a {formula} (bar style, not editable)",
+      },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
     },
     children: "none",
@@ -490,7 +495,15 @@ const tagList: TagSpec[] = [
     name: "Ref",
     category: "field",
     description: "A link to another resource or content",
-    attrs: { ...fieldAttrs, preview: previewAttr },
+    attrs: {
+      ...fieldAttrs,
+      preview: previewAttr,
+      filter: {
+        type: { kind: "formula" },
+        description:
+          "Which content the picker offers: a formula read against each candidate (paths are the candidate's fields, / still reaches the top level), like filter=\"kind == 'weapon'\"",
+      },
+    },
     // The card its preview opens.
     children: { only: ["Preview"] },
     binds: ["resourceLink", "content"],

@@ -90,7 +90,7 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list | formula | condition | name; required; default), allowed children, and which schema field types it may bind to.
-Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one
+Number attrs read when rendering (`Tracker` `max` and `mark`; `Number` `min`, `max`, `step`) accept one
 `{formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
 mixed with text.
 Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`), `show` (conditional display; not on `Column`), and
@@ -159,16 +159,16 @@ View mode renders formatted values, edit mode renders the input.
 | Tag | Extra attrs | Binds | Edit input |
 |---|---|---|---|
 | `Text` | `multiline`, `placeholder` | string | `UInput` / `UTextarea` |
-| `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "exceptZero"` so the input shows "+3" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
+| `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "always"` so the input shows "+3" and "+0" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
 | `Checkbox` / `Toggle` | Checkbox: `style` (check/dot) | boolean | `UCheckbox` / `USwitch`; `style="dot"` is a filled or empty circle in every mode, with no Yes/No text (e.g. proficiency marks) |
 | `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
-| `Tags` | — | array of string (not of choices) | `UInputTags` |
-| `Tracker` | `max` (optional, at least 0), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max" |
-| `Ref` | `preview` (see "Reference previews") | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
+| `Tags` | `placeholder` | array of string (not of choices) | `UInputTags` |
+| `Tracker` | `max` (optional, at least 0), `mark` (optional), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max". `mark` (a number or one `{formula}`) draws a tick across a bar that isn't editable at that value, for a threshold like encumbrance (hook class `sheet-tracker-mark`); none at or below 0 or at or above `max` |
+| `Ref` | `preview` (see "Reference previews"), `filter` | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind). `filter` (content fields only): a true/false formula read against each candidate, whose paths are the candidate's fields (`/` still reaches this content), like `filter="kind == 'weapon'"` or `filter="ancestry == /ancestry"`; the picker asks the content list for just the top-level fields it reads (`dataKeys`) and offers the candidates it's true for. The current value always stays offered |
 | `Value` | `format`, `formula`, `preview` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
-| `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
+| `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: the picture (or "No image") above a URL input, following the URL as it's typed (class `sheet-image-frame`) |
 
 Image URLs: https only. The schema has no image type, so this is enforced where the tag is used: `Image` renders only
 https URLs, and its edit input validates client-side. Uploads later, same field shape.
@@ -249,7 +249,7 @@ required `resourceLink` or `content` entry without a default would be left empty
 ### Repeaters
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
-| `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
+| `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); an item of plain text, numbers, and switches (no choices or pickers) that's still blank when focus leaves it is removed, so an added entry left unfilled doesn't stay (`isBlankListItem`); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
 | `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width`, `preview` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
 
 Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
@@ -387,7 +387,8 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup). Two ways t
   `display="box"`), so a `Button` inside a `<Preview>` is an error (`button-in-preview`); and a preview can't open another
   (`preview` inside a `<Preview>` is `preview-in-preview`).
 - **While editing:** an editable value (a `Ref`'s picker, a custom copy's fields) shows its input, not a button;
-  values that can't be edited keep their preview. `display="box"` doesn't box a value with a preview (a `Ref` keeps
+  an editable `Ref` with `preview` gets a small eye button beside its picker that opens the same preview (class
+  `sheet-edit-preview` on its wrapper); values that can't be edited keep their preview. `display="box"` doesn't box a value with a preview (a `Ref` keeps
   its box with the button inside).
 - Hook classes: `sheet-preview-trigger` on the value's button, `sheet-preview-frame` on the expanded box or the card,
   `sheet-preview` on what's inside it (a `<Preview>` also gets its `class`).
@@ -487,7 +488,7 @@ action, not a formula: formulas stay pure, and dice are allowed only in a `<Roll
   `formula`, or parts). Steps can't be in a `<Preview>` (`step-in-preview`); elsewhere they're `step-misplaced`.
 - **`Roll`:** `formula` (required), `name`, `label` (text with `{…}`; default "Roll"), `crit`, `fumble`, and `show`
   (skips the step); no other common attributes. One entry per Roll: its title is the action's name (a Button's
-  label; a value's label; in a `List` or `Table` row, the row's label or its `name` field, like "Rapier") and the
+  label; a value's label; in a `List` or `Table` row, the row's label, its `name` field, or else the name of the first loaded Content it references, like a Strike row's weapon, "Rapier") and the
   Roll's label ("Rapier · Attack").
 - **Dice:** `NdM` and `dM`, with `khK`/`klK` keeping the highest or lowest K (`2d20kh1`, `4d6kh3`). Only in a Roll's
   `formula` (elsewhere `dice-outside-roll`), and only added, subtracted, multiplied, divided, or picked with `if()`
@@ -877,7 +878,7 @@ use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`,
 | Min/max | `min(…)`, `max(…)`: numbers, or one list of numbers; empty values skipped; nothing if none |
 | Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)`, `list(a, b, …)` (builds a list from separate values: `join(list(speed, flySpeed), ", ")`, `max(list(a, b))`; empty values stay in it and `join`, `sum`, `min`, and `max` skip them; single values only) |
 | Nulls | `coalesce(a, b, …)`: the first value that isn't empty (errors aren't skipped) |
-| Text | `concat(…)`, `join(list, separator)` (skips nothing and empty text `""`), `signed(n)` ("+3", "0", "-1") |
+| Text | `concat(…)`, `join(list, separator)` (skips nothing and empty text `""`), `signed(n)` ("+3", "+0", "-1") |
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |

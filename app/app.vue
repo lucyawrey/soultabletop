@@ -39,7 +39,7 @@ const navGroups = computed(() => {
     label,
     icon,
     "aria-label": label,
-    active: route.path === to || route.path.startsWith(`${to}/`),
+    active: route.path === to || (to !== "/" && route.path.startsWith(`${to}/`)),
   });
   const characters = link("/characters", "Characters", "i-lucide-user");
   const content = link("/content", "Content", "i-lucide-message-square");
@@ -51,6 +51,7 @@ const navGroups = computed(() => {
       { label: "Browse", items: [content, characters, sheets, types, systems] },
     ];
   return [
+    { items: [link("/", "Dashboard", "i-lucide-house")] },
     {
       label: "Play",
       items: [
@@ -67,7 +68,7 @@ const navGroups = computed(() => {
 });
 const menuItems = computed(() =>
   navGroups.value.map((group) => [
-    { type: "label" as const, label: group.label },
+    ...(group.label ? [{ type: "label" as const, label: group.label }] : []),
     ...group.items,
   ]),
 );
@@ -78,18 +79,37 @@ const showSignIn = computed(() => !loggedIn.value && route.path !== "/");
 
 // The sheet editor needs the width, so the sidebar starts collapsed there.
 const isEditor = (path: string) => /^\/sheets\/[^/]+\/edit\/?$/.test(path);
-const collapsed = ref(isEditor(route.path));
-watch(
-  () => isEditor(route.path),
-  (editing) => (collapsed.value = editing),
+// On a detail page (a sheet, a system, …) in a window under 1180px, the sidebar
+// collapses to its rail: the full one would push sheets into their narrow layout,
+// and the hamburger below 1024px would bring the wide one back. List pages keep
+// the full sidebar. Below 1024px the rail state is kept but unseen (the menu
+// always opens expanded), so widening past 1024px doesn't flash the full sidebar.
+// A toggle by hand lasts until the rule's answer changes. The cookie holds the
+// window's class so the server draws the same sidebar.
+const isDetail = (path: string) =>
+  /^\/(campaigns|characters|content|groups|sheets|systems|types)\/[^/]/.test(path);
+const narrowWindow = useCookie<boolean>("sidebar-narrow", {
+  default: () => false,
+  maxAge: 60 * 60 * 24 * 365,
+  sameSite: "lax",
+});
+const wantsRail = computed(
+  () => isEditor(route.path) || (narrowWindow.value && isDetail(route.path)),
 );
+const collapsed = ref(wantsRail.value);
+watch(wantsRail, (rail) => (collapsed.value = rail));
+onMounted(() => {
+  const query = window.matchMedia("(max-width: 1179.98px)");
+  narrowWindow.value = query.matches;
+  query.addEventListener("change", (event) => (narrowWindow.value = event.matches));
+});
 </script>
 
 <template>
   <UApp>
-    <!-- A fixed 232px sidebar, as in the mockup. The storage key is new so a
-         size saved under the old percent widths isn't read as pixels. -->
-    <UDashboardGroup unit="px" storage-key="sidebar" class="print:block print:h-auto">
+    <!-- A fixed 232px sidebar, as in the mockup. Its collapsed state is kept by
+         the rule above, not Nuxt UI's own storage. -->
+    <UDashboardGroup unit="px" :persistent="false" class="print:block print:h-auto">
       <UDashboardSidebar
         v-model:collapsed="collapsed"
         collapsible
@@ -114,46 +134,58 @@ watch(
         }"
       >
         <template #header="{ collapsed: isCollapsed }">
+          <!-- Every row keeps its place on the rail, which shows the logo alone. -->
           <div
-            class="flex min-w-0 flex-1 items-center gap-2"
-            :class="isCollapsed ? 'justify-center' : 'justify-between'"
+            class="flex h-[22px] min-w-0 flex-1 items-center"
+            :class="isCollapsed ? 'justify-center' : 'justify-start'"
           >
             <NuxtLink
-              v-if="!isCollapsed"
               to="/"
+              :aria-label="isCollapsed ? 'Soul Tabletop' : undefined"
               class="-m-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
             >
               <UIcon name="i-lucide-dices" class="size-[22px] text-primary" />
-              <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
+              <span v-if="!isCollapsed" class="font-display text-xl leading-none font-bold">
+                Soul Tabletop
+              </span>
             </NuxtLink>
-            <!-- One toggle for both states; phones use the drawer instead.
-                 Negative margins keep the row the brand's 22px, as in the
-                 mockup. -->
-            <UButton
-              class="-my-1.5 hidden lg:inline-flex"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              :icon="isCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
-              :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-              :aria-expanded="!isCollapsed"
-              @click="collapsed = !collapsed"
-            />
           </div>
+          <!-- The toggle is a handle on the sidebar's edge, beside the brand row,
+               in the same place in both states; phones use the drawer instead. -->
+          <UButton
+            class="absolute top-[17px] -right-3 z-20 hidden size-6 justify-center rounded-full bg-default p-0 ring-1 ring-accented lg:inline-flex"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            :icon="isCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-left'"
+            :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+            :aria-expanded="!isCollapsed"
+            @click="collapsed = !collapsed"
+          />
           <!-- In the header, not the scrolling body, which would clip it: on
                desktop it pokes past the sidebar's edge into the page, like a
-               bookmark (the mockup). The drawer on phones keeps it inside. -->
+               bookmark (the mockup), as far as the toggle handle reaches. The
+               drawer on phones keeps it inside. On the rail it is a button with
+               the system's initials. -->
           <SystemSelector
-            v-if="!isCollapsed"
-            class="relative z-10 shrink-0 basis-full lg:basis-[calc(100%+1.375rem)]"
+            :compact="isCollapsed"
+            class="relative z-10 shrink-0 basis-full lg:basis-[calc(100%+26px)]"
           />
         </template>
 
         <template #default="{ collapsed: isCollapsed }">
+          <!-- The rail hides the group labels (an empty item stays, before the row
+               gap); its lists keep the 20.5px label height as padding. Signed
+               in, the first list is Dashboard, which has no label. -->
           <UNavigationMenu
             :items="menuItems"
             orientation="vertical"
             :collapsed="isCollapsed"
+            :ui="
+              isCollapsed
+                ? { list: loggedIn ? 'not-first:pt-[20.5px]' : 'pt-[20.5px]', link: 'justify-center px-0' }
+                : undefined
+            "
             tooltip
             aria-label="Main"
           />
@@ -165,6 +197,7 @@ watch(
             to="/"
             color="primary"
             :block="!isCollapsed"
+            class="h-9 justify-center"
             icon="i-lucide-log-in"
             :aria-label="isCollapsed ? 'Sign in' : undefined"
             :label="isCollapsed ? undefined : 'Sign in'"
