@@ -15,6 +15,8 @@ defineProps<{
   open?: boolean;
   // What a `card` lines up with, when not the value itself (a boxed Ref's box).
   anchor?: HTMLElement | null;
+  // The button's accessible name, when its slot is only an icon.
+  label?: string;
 }>();
 defineEmits<{ toggle: [] }>();
 
@@ -28,7 +30,7 @@ const triggerClass =
     :reference="anchor ?? undefined"
     :content="{ side: 'bottom', align: 'start' }"
   >
-    <button type="button" :class="triggerClass">
+    <button type="button" :class="triggerClass" :aria-label="label">
       <slot />
     </button>
     <template #content>
@@ -58,6 +60,7 @@ const triggerClass =
     v-else
     type="button"
     :class="triggerClass"
+    :aria-label="label"
     :aria-expanded="open"
     @click="$emit('toggle')"
   >

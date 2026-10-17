@@ -172,7 +172,7 @@
 .meta .word .sheet-field-value { font-size: calc(var(--d-big) * .7); }
 .meta .cellv { display: grid; }
 .per { align-items: baseline; justify-content: center; gap: 3px; flex-wrap: nowrap !important; }
-.unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; }
+.unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; white-space: nowrap; }
 .facts { grid-column: 1; gap: 2px 14px; align-items: baseline; }
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
 .facts .sheet-value .sheet-field-value { font-weight: 400; }
@@ -286,7 +286,6 @@
 .iwrview .sheet-list-item > div { flex: none !important; margin: 0 !important; }
 .chip20 .sheet-field-value { white-space: nowrap; }
 .iwrcond > .resist > .rgroup { flex-wrap: wrap; max-width: 100%; margin-left: 6px; }
-.rgroup > .inline-list { min-width: 0; }
 /* In edit the kinds sit closer: each is a "+ Resist"-style pill. */
 .iwrcond > .resist > .rgroup:not(.iwrview) { margin-left: 0; }
 /* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
@@ -367,6 +366,10 @@
 /* Each group (a bar and its rows) has the same space above its bar and below it. */
 .rows:has(> .grp) { gap: 0 !important; padding-top: 4px; }
 .rows > .grp { margin-top: 0 !important; margin-bottom: 4px !important; }
+/* In the tabs, group bars reach the panel's edges; their text lines up with the rows under them.
+   The Biography's side-by-side columns keep theirs inside the column. */
+.sheet-tab .grp { margin-inline: calc(var(--d-pad) * -1.5); padding-inline: calc(var(--d-pad) * 1.5); border-radius: 0; }
+.sheet-tab .bio .grp { margin-inline: 0; padding-inline: 6px; border-radius: 4px; }
 .row.th.spell, .row.th.inv { margin-bottom: 8px !important; }
 /* Divine Font's pips sit beside its count, on the right. */
 .grp > .sq { margin-left: auto; }
@@ -583,7 +586,7 @@
 .rows:has(> .grp) > .sheet-list > .flex-wrap {
   position: absolute;
   top: 4px;
-  right: 6px;
+  right: 0;
   height: 22px;
   margin: 0 !important;
   align-items: center;
@@ -664,32 +667,39 @@
   align-items: center;
 }
 .rows .sheet-list-item > div:last-child:not(:first-child) button[aria-label="Remove"] { padding: 0 1px; }
-.rows .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :last-child { padding-right: 12px; }
-/* Strikes' and Actions' "+ Add" sits on the panel's bottom edge, like the folio tab on its top edge. */
-.strikes .rows > .flex-wrap, .acts .rows > .flex-wrap, .skills .lore > .flex-wrap {
-  position: absolute;
-  left: calc(var(--d-pad) + 2px);
-  bottom: 0;
-  transform: translateY(50%);
-  margin: 0 !important;
-  z-index: 1;
+.rows .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :last-child { padding-right: 14px; }
+/* A list of rows adds with a real button on a line of its own under the rows
+   (the dashed "+ Add" pills are for chips). */
+.sheet-list.rows > :first-child:not(:last-child) { margin-bottom: 0 !important; }
+.sheet-list.rows > .flex-wrap { margin-top: 6px !important; }
+.sheet-sheet .sheet-list.rows > .flex-wrap > button[data-slot="base"], .sheet-sheet .sheet-list.rows > .flex-wrap button[data-slot="base"][aria-haspopup="listbox"] {
+  height: 24px;
+  padding: 0 10px;
+  font-size: calc(var(--d-lfs) + 1px);
+  border: 1px solid var(--st-border-strong);
+  background: var(--st-panel);
+  border-radius: 5px;
 }
-.strikes .rows > :first-child, .acts .rows > :first-child, .skills .lore > :first-child { margin-bottom: 0 !important; }
+.sheet-sheet .sheet-list.rows > .flex-wrap button[data-slot="base"]:hover { background: var(--st-panel-muted); }
+/* In a group bar, the button fits the bar. */
+.sheet-sheet .rows:has(> .grp) > .sheet-list > .flex-wrap > button[data-slot="base"] { height: 18px; padding: 0 7px; font-size: var(--d-lfs); border: 1px solid var(--st-border-strong); background: var(--st-panel); border-radius: 5px; }
 /* A lore's × sits at the end of its name, so its modifier stays in line with the skills above. */
 .skills .lore .sheet-list-item > div:last-child:not(:first-child) { right: calc(32px + 30px + 58px + 18px + 2px); }
 .skills .lore .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :last-child { padding-right: 0; }
 .skills .lore .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :first-child { padding-right: 14px; }
 .sheet-sheet .lore .name input[data-slot="base"] { margin-left: -7px; width: calc(100% + 7px); }
 
-/* Notes inputs are as wide as their text; empty, they're a small ✎ pill that fits beside a few chips. */
+/* Notes inputs are as wide as their text; empty, they're a "+ Note" pill like "+ Add". Beside a strike's
+   trait chips it moves to a second line when there isn't room. */
 .note-in .sheet-field-value, .note-in { width: auto; min-width: 0; }
-.sheet-sheet .note-in input[data-slot="base"] { height: 20px; padding: 0 4px; font-size: var(--d-lfs); font-weight: 400; color: var(--st-ink-muted); field-sizing: content; min-width: 20px; max-width: 100%; }
+.sheet-sheet .note-in input[data-slot="base"] { height: 20px; padding: 0 4px; font-size: var(--d-lfs); font-weight: 400; color: var(--st-ink-muted); field-sizing: content; min-width: 40px; max-width: 100%; }
 .sheet-sheet .note-in input[data-slot="base"]:placeholder-shown { background: var(--st-panel-muted); }
-.note-in input::placeholder { color: var(--st-primary); font-weight: 700; font-size: 12px; opacity: 1; }
+.note-in input::placeholder { color: var(--st-primary); font-weight: 700; opacity: 1; }
 @supports not (field-sizing: content) {
-  .note-in .sheet-field-value, .note-in { width: 40px; }
+  .note-in .sheet-field-value, .note-in { width: 56px; }
 }
 .traits { flex-wrap: nowrap !important; }
+.traits:has(.note-in) { flex-wrap: wrap !important; }
 .or-feat { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
 /* "Feat" tells the two pickers of a new action apart; once a feat is chosen, its picker is alone and unlabeled. */
 .cell > .or-feat:only-child { margin-top: 0; }
@@ -708,17 +718,51 @@
 .inline { display: flex; align-items: center; gap: 4px; }
 .inline .sheet-field-label { color: inherit; }
 .resist { gap: 4px 8px; align-items: center; }
-.inline-list > div { display: flex; flex-wrap: wrap; gap: 4px 8px; }
-.pair-in { gap: 4px; align-items: center; }
-.pair-in .sheet-text .sheet-field-value { width: 72px; }
-.inline-list .sheet-list-item { gap: 0; }
-.inline-list .small-num .sheet-field-value { width: 30px; }
-.inline-list input[data-slot="base"] { height: 20px; font-size: var(--d-lfs); padding: 0 4px; }
-/* Its "+ Add" is as tall as the entries it adds. */
-.inline-list > .flex-wrap > button[data-slot="base"] { height: 20px; padding: 0 5px; line-height: 1; }
-.inline-list > .flex-wrap { margin-top: 0; }
-.inline-list { display: flex; align-items: center; gap: 4px; }
-.inline-list > * + * { margin-top: 0 !important; }
+/* Editable pills (Languages, Senses, Other speeds, IWR in edit): each entry is one chip, the size of
+   the tag chips, whose inputs are borderless and split by a hairline, with its × inside. You click
+   into it to change it; "+ Add" is the dashed pill after the entries. */
+.pills { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.facts > .pills { align-items: center; }
+.pills > * { margin-block: 0 !important; }
+.pills > div:first-child:not(.flex-wrap):not(:has(.sheet-list-item)) { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
+.pills > div:has(> .sheet-list-item) { display: flex; flex-wrap: wrap; gap: 4px; }
+.pills .sheet-list-item {
+  margin: 0 !important;
+  gap: 0;
+  height: 20px;
+  align-items: center;
+  border-radius: 4px;
+  background: var(--st-panel-muted);
+  box-shadow: inset 0 0 0 1px var(--st-border-strong);
+}
+.pills .sheet-list-item:focus-within { outline: 2px solid var(--st-primary); outline-offset: 1px; }
+.pills .sheet-list-item > div:first-child { display: flex; flex: none; }
+.pills .pill { gap: 0; flex-wrap: nowrap; }
+.pills .pill > * { margin: 0 !important; }
+.pills .pill > * + * { border-left: 1px solid var(--st-border-strong); }
+.pills .sheet-field-value, .pills [data-slot="root"] { width: auto; }
+.sheet-sheet .pills input[data-slot="base"] {
+  width: auto;
+  min-width: 3ch;
+  height: 20px;
+  padding: 0 5px;
+  font-size: var(--d-lfs);
+  font-weight: 400;
+  field-sizing: content;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sheet-sheet .pills input[data-slot="base"]:focus-visible { outline: none; }
+.sheet-sheet .pills .sheet-number input[data-slot="base"] { min-width: 2.4em; text-align: center; }
+.pills .sheet-list-item button[aria-label="Remove"] { padding: 0 4px 0 1px; }
+.pills .sheet-list-item button[aria-label="Remove"]::after { font-size: 13px; }
+.pills > .flex-wrap { margin: 0 !important; align-self: center; }
+.pills > .flex-wrap > button[data-slot="base"] { height: 20px; padding: 0 6px; line-height: 1; }
+@supports not (field-sizing: content) {
+  .pills .sheet-text .sheet-field-value { width: 72px; }
+  .pills .sheet-number .sheet-field-value { width: 32px; }
+}
 .sheet-note.chip { justify-self: start; }
 .choose {
   justify-self: start;
@@ -820,3 +864,17 @@
   .feat { grid-template-columns: 40px 24px 1fr auto; }
   .sheet-tab { min-height: 0; }
 }
+
+/* In edit, a picked name's preview opens from a small eye beside its picker. */
+.sheet-field-value:has(> .sheet-edit-preview) { display: flex; align-items: center; gap: 2px; }
+.sheet-edit-preview { display: inline-flex; flex: none; }
+.sheet-sheet .sheet-edit-preview .sheet-preview-trigger { display: inline-flex; flex: none; align-items: center; margin: 0; padding: 2px; border-radius: 4px; color: var(--st-ink-muted); text-decoration: none; }
+.sheet-sheet .sheet-edit-preview .sheet-preview-trigger:hover { color: var(--st-primary); background: color-mix(in srgb, var(--st-primary) 7%, transparent); }
+/* A build card's eye sits on its top edge, beside its ▾. */
+.card .sheet-edit-preview { position: absolute; top: -7px; right: 22px; background: var(--st-panel); border-radius: 3px; }
+.sheet-sheet .card .sheet-edit-preview .sheet-preview-trigger { padding: 0 1px; }
+.card .sheet-edit-preview .iconify { width: 12px; height: 12px; }
+/* A row's picker steps aside like the play name does, so its expanded preview is a full line under the row. */
+.row > .sheet-ref.name, .row > .cell > .sheet-ref.name:not(.or-feat), .row > .cell > .or-feat:only-child { display: contents; }
+/* The portrait keeps its picture in edit, above the URL input. */
+.portrait .sheet-image-frame > span { font-weight: 400; color: var(--st-ink-muted); }
