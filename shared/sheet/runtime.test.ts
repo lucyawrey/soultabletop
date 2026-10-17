@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ContentFieldSchema } from "../content-schema";
 import {
   defaultSheetValue,
+  filterDataKeys,
   isBlankListItem,
   entryScopes,
   evaluateSheetDefinition,
@@ -175,6 +176,14 @@ describe("setSheetValue", () => {
     const target = { a: 1 };
     setSheetValue(target, [], 2);
     expect(target).toEqual({ a: 1 });
+  });
+});
+
+describe("filterDataKeys", () => {
+  it("lists the candidate's top-level fields a filter reads, not the sheet's own", () => {
+    const source = "kind == 'weapon' and weapon.range > 0 and ancestry == /ancestry and any(traits, . == 'Agile')";
+    const ast = parseFormula(source, { line: 1, column: 1, offset: 0 }).ast!;
+    expect(filterDataKeys(ast).sort()).toEqual(["ancestry", "kind", "traits", "weapon"]);
   });
 });
 

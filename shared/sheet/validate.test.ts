@@ -11,6 +11,7 @@ import {
   validateSheet,
   type SheetSchemas,
   type ValidatedElement,
+  isCompiledFormula,
   type ValidatedNode,
 } from "./validate";
 import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
@@ -1087,5 +1088,30 @@ describe("repeating over a struct's entries", () => {
     expect(structMessages(`<Define name="itemKey" formula="1" /><Value formula="itemKey()" />`)).toEqual([
       expect.stringMatching(/^warning formula-shadows-builtin/),
     ]);
+  });
+});
+
+describe("Ref filter", () => {
+  it("reads the candidate content, with / for the sheet's own", () => {
+    const result = compile('<Ref field="class" filter="hitDie >= 8 and hitDie <= /hp" />');
+    expect(result.diagnostics).toEqual([]);
+    const ref = first(result.nodes);
+    expect(isCompiledFormula(ref.attrs.filter)).toBe(true);
+  });
+
+  it("works on a content field in a list row", () => {
+    expect(errorCodes('<List field="inventory"><Ref field="item" filter="weight < 5" /></List>')).toEqual([]);
+  });
+
+  it("must give true or false", () => {
+    expect(errorCodes('<Ref field="class" filter="hitDie" />')).toEqual(["formula-result-type"]);
+  });
+
+  it("checks paths against the referenced content type", () => {
+    expect(errorCodes('<Ref field="class" filter="weight > 1" />').length).toBeGreaterThan(0);
+  });
+
+  it("needs a content field", () => {
+    expect(errorCodes('<Ref field="link" filter="true" />')).toEqual(["invalid-attribute"]);
   });
 });
