@@ -147,9 +147,9 @@
 }
 .card .sheet-field-value { font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
 .meta {
-  /* Centered against the whole header, name to facts. */
+  /* Beside the name and build cards; the facts run under both. */
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1;
   align-self: center;
   border: 1px solid var(--st-border);
   border-radius: var(--st-radius);
@@ -173,7 +173,7 @@
 .meta .cellv { display: grid; }
 .per { align-items: baseline; justify-content: center; gap: 3px; flex-wrap: nowrap !important; }
 .unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; white-space: nowrap; }
-.facts { grid-column: 1; gap: 2px 14px; align-items: baseline; }
+.facts { grid-column: 1 / -1; gap: 2px 14px; align-items: baseline; }
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
 .facts .sheet-value .sheet-field-value { font-weight: 400; }
 .speeds > div:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
