@@ -39,7 +39,8 @@ const navGroups = computed(() => {
     label,
     icon,
     "aria-label": label,
-    active: route.path === to || (to !== "/" && route.path.startsWith(`${to}/`)),
+    active:
+      route.path === to || (to !== "/" && route.path.startsWith(`${to}/`)),
   });
   const characters = link("/characters", "Characters", "i-lucide-user");
   const content = link("/content", "Content", "i-lucide-message-square");
@@ -62,7 +63,12 @@ const navGroups = computed(() => {
     },
     {
       label: "Build",
-      items: [sheets, types, systems, link("/groups", "Groups", "i-lucide-users")],
+      items: [
+        sheets,
+        types,
+        systems,
+        link("/groups", "Groups", "i-lucide-users"),
+      ],
     },
   ];
 });
@@ -87,7 +93,9 @@ const isEditor = (path: string) => /^\/sheets\/[^/]+\/edit\/?$/.test(path);
 // A toggle by hand lasts until the rule's answer changes. The cookie holds the
 // window's class so the server draws the same sidebar.
 const isDetail = (path: string) =>
-  /^\/(campaigns|characters|content|groups|sheets|systems|types)\/[^/]/.test(path);
+  /^\/(campaigns|characters|content|groups|sheets|systems|types)\/[^/]/.test(
+    path,
+  );
 const narrowWindow = useCookie<boolean>("sidebar-narrow", {
   default: () => false,
   maxAge: 60 * 60 * 24 * 365,
@@ -101,7 +109,10 @@ watch(wantsRail, (rail) => (collapsed.value = rail));
 onMounted(() => {
   const query = window.matchMedia("(max-width: 1179.98px)");
   narrowWindow.value = query.matches;
-  query.addEventListener("change", (event) => (narrowWindow.value = event.matches));
+  query.addEventListener(
+    "change",
+    (event) => (narrowWindow.value = event.matches),
+  );
 });
 </script>
 
@@ -109,7 +120,11 @@ onMounted(() => {
   <UApp>
     <!-- A fixed 232px sidebar, as in the mockup. Its collapsed state is kept by
          the rule above, not Nuxt UI's own storage. -->
-    <UDashboardGroup unit="px" :persistent="false" class="print:block print:h-auto">
+    <UDashboardGroup
+      unit="px"
+      :persistent="false"
+      class="print:block print:h-auto"
+    >
       <UDashboardSidebar
         v-model:collapsed="collapsed"
         collapsible
@@ -123,11 +138,13 @@ onMounted(() => {
           root: 'bg-default border-e border-default',
           // A wrapping row: the brand line (with the drawer's close button on
           // phones), then the system picker on a line of its own.
-          header: 'h-auto flex-wrap items-center gap-x-1.5 gap-y-[18px] px-3.5 pt-[18px] pb-0',
-          body: 'gap-[18px] px-3.5 pt-[18px]',
+          header:
+            'h-auto flex-wrap items-center gap-x-1.5 gap-y-3.5 px-3.5 pt-3.5 pb-0',
+          body: 'gap-3.5 px-3.5 pt-3.5',
           // The user menu (or Sign in) above the Credits and Source Code links,
           // which show everywhere, the signed-out landing page included.
-          footer: 'mx-3.5 flex-col items-stretch gap-1 border-t border-default px-0 py-2.5',
+          footer:
+            'mx-3.5 flex-col items-stretch gap-1 border-t border-default px-0 py-2.5',
           // The phone drawer is a modal, whose content divides its children
           // with lines; the desktop sidebar has none under the system picker.
           content: 'divide-y-0',
@@ -145,7 +162,10 @@ onMounted(() => {
               class="-m-1 flex items-center gap-2 rounded-md p-1 font-semibold whitespace-nowrap text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
             >
               <UIcon name="i-lucide-dices" class="size-[22px] text-primary" />
-              <span v-if="!isCollapsed" class="font-display text-xl leading-none font-bold">
+              <span
+                v-if="!isCollapsed"
+                class="font-display text-xl leading-none font-bold"
+              >
                 Soul Tabletop
               </span>
             </NuxtLink>
@@ -153,11 +173,13 @@ onMounted(() => {
           <!-- The toggle is a handle on the sidebar's edge, beside the brand row,
                in the same place in both states; phones use the drawer instead. -->
           <UButton
-            class="absolute top-[17px] -right-3 z-20 hidden size-6 justify-center rounded-full bg-default p-0 ring-1 ring-accented lg:inline-flex"
+            class="absolute top-[13px] -right-3 z-20 hidden size-6 justify-center rounded-full bg-default p-0 ring-1 ring-accented lg:inline-flex"
             color="neutral"
             variant="ghost"
             size="xs"
-            :icon="isCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-left'"
+            :icon="
+              isCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-left'
+            "
             :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
             :aria-expanded="!isCollapsed"
             @click="collapsed = !collapsed"
@@ -169,13 +191,13 @@ onMounted(() => {
                the system's initials. -->
           <SystemSelector
             :compact="isCollapsed"
-            class="relative z-10 shrink-0 basis-full lg:basis-[calc(100%+26px)]"
+            class="relative z-10 shrink-0 basis-full"
           />
         </template>
 
         <template #default="{ collapsed: isCollapsed }">
           <!-- The rail hides the group labels (an empty item stays, before the row
-               gap); its lists keep the 20.5px label height as padding. Signed
+               gap); its lists keep the 16px label height as padding. Signed
                in, the first list is Dashboard, which has no label. -->
           <UNavigationMenu
             :items="menuItems"
@@ -183,7 +205,10 @@ onMounted(() => {
             :collapsed="isCollapsed"
             :ui="
               isCollapsed
-                ? { list: loggedIn ? 'not-first:pt-[20.5px]' : 'pt-[20.5px]', link: 'justify-center px-0' }
+                ? {
+                    list: loggedIn ? 'not-first:pt-4' : 'pt-4',
+                    link: 'justify-center px-0',
+                  }
                 : undefined
             "
             tooltip
@@ -229,7 +254,9 @@ onMounted(() => {
         </template>
       </UDashboardSidebar>
 
-      <main class="relative min-w-0 flex-1 overflow-y-auto print:overflow-visible">
+      <main
+        class="relative min-w-0 flex-1 overflow-y-auto print:overflow-visible"
+      >
         <!-- Phones: the sidebar is a drawer behind this bar's button. -->
         <div
           class="sticky top-0 z-10 flex items-center gap-2 border-b border-default bg-default p-2 lg:hidden print:hidden"
@@ -240,7 +267,9 @@ onMounted(() => {
             class="flex items-center gap-2 rounded-md p-1 font-semibold text-highlighted focus-visible:outline-3 focus-visible:outline-primary/25"
           >
             <UIcon name="i-lucide-dices" class="size-5 text-primary" />
-            <span class="font-display text-xl leading-none font-bold">Soul Tabletop</span>
+            <span class="font-display text-xl leading-none font-bold"
+              >Soul Tabletop</span
+            >
           </NuxtLink>
         </div>
         <NuxtPage />
