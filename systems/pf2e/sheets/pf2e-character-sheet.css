@@ -521,6 +521,8 @@
   line-height: 1;
   height: calc(var(--d-big) * 1.3);
 }
+/* In play, Level and XP take their input's room, so the box is the same size in both modes. */
+.meta .sheet-number .sheet-field-value:not(:has(input)) { min-width: 1.4em; padding: 0 3px; }
 @supports not (field-sizing: content) {
   .meta .sheet-number .sheet-field-value:has(input) { width: 48px; }
   .meta .sheet-number [data-slot="root"], .meta .sheet-number input { width: 100%; }
