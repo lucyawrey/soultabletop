@@ -104,7 +104,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
-| `Tabs` / `Tab` | Tab: `label` (req), `icon` | Tabs: only `Tab` | `UTabs` |
+| `Tabs` / `Tab` | Tab: `label` (req), `icon` | Tabs: only `Tab` | `UTabs` (only the open tab is mounted) |
 | `Divider` | `label` | none | `USeparator` |
 | `Heading` | `level` (1–4) | text | h2–h5 |
 | `Note` | — | text | muted paragraph |
