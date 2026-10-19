@@ -181,6 +181,8 @@
 .facts { grid-column: 1 / -1; gap: 2px 14px; align-items: baseline; }
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
 .facts .sheet-value .sheet-field-value { font-weight: 400; }
+/* An empty field's dash gets a chip's box with its text centered, so it doesn't sit low and stretch the row. */
+.facts .sheet-tags .sheet-field-value > .flex-wrap > span.text-dimmed { display: inline-flex; align-items: center; }
 .speeds > div:first-child { font-size: var(--d-lfs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--st-ink-muted); }
 /* Chips built from list entries (other speeds, IWR in view), the size of the tag chips. */
 .chiplist { display: flex; align-items: baseline; gap: 6px; }
@@ -690,8 +692,9 @@
 .skills .lore .sheet-list-item > div:last-child:not(:first-child) { right: calc(32px + 30px + 58px + 18px + 2px); }
 .skills .lore .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :last-child { padding-right: 0; }
 .skills .lore .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :first-child { padding-right: 14px; }
-/* A custom lore's name is about as wide as the skill names above it. */
-.sheet-sheet .lore .name input[data-slot="base"] { margin-left: -7px; width: auto; min-width: 12ch; max-width: calc(100% + 7px); field-sizing: content; }
+/* A custom lore's name is about as wide as the skill names above it; its text lines up with
+   theirs and its box sits just outside it, like the character name's. */
+.sheet-sheet .lore .name input[data-slot="base"] { margin-left: -7px; padding-left: 6px; width: auto; min-width: 12ch; max-width: calc(100% + 7px); field-sizing: content; }
 .lore .name [data-slot="root"], .lore .name .sheet-field-value { width: auto; }
 
 /* Notes inputs look the same empty or filled: a small dashed box as wide as its text. Beside a strike's
