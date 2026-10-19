@@ -506,8 +506,7 @@
 .biocols { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; }
 .kv > .sheet-text, .kv > .sheet-tags { display: grid; grid-template-columns: 130px 1fr; gap: 6px; align-items: center; }
 
-/* Inputs keep the size of the values they replace: no steppers, narrow boxes. */
-[data-slot="increment"], [data-slot="decrement"] { display: none; }
+/* Inputs keep the size of the values they replace: narrow boxes. */
 .sheet-number input { padding-inline: 4px; }
 /* Level and XP inputs are as wide as their number, so the strip keeps its play width. */
 .meta .sheet-number [data-slot="root"] { width: auto; }

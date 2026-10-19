@@ -50,13 +50,10 @@ function dropIfBlank(event: FocusEvent, index: number, scope: SheetScopeValue) {
       class="flex items-center gap-1 text-xs font-medium text-muted"
     >
       <span>{{ label }}</span>
-      <UButton
+      <SheetIconButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
-        color="neutral"
-        variant="ghost"
-        size="xs"
-        :aria-label="`Edit ${label || 'list'}`"
+        :label="`Edit ${label || 'list'}`"
         @click="unlock"
       />
     </div>
@@ -72,30 +69,22 @@ function dropIfBlank(event: FocusEvent, index: number, scope: SheetScopeValue) {
             <SheetNodes :nodes="node.children" />
           </div>
           <div v-if="editable" class="flex shrink-0 flex-col gap-1">
-            <UButton
+            <SheetIconButton
               icon="i-lucide-arrow-up"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              aria-label="Move up"
+              label="Move up"
               :disabled="index === 0"
               @click="move(index, -1)"
             />
-            <UButton
+            <SheetIconButton
               icon="i-lucide-arrow-down"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              aria-label="Move down"
+              label="Move down"
               :disabled="index === scopes.length - 1"
               @click="move(index, 1)"
             />
-            <UButton
+            <SheetIconButton
               icon="i-lucide-trash"
               color="error"
-              variant="ghost"
-              size="xs"
-              aria-label="Remove"
+              label="Remove"
               @click="remove(index)"
             />
           </div>
