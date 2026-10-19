@@ -42,6 +42,20 @@ const narrow = computed(
     (props.node.attrs.width === "xs" || props.node.attrs.width === "sm"),
 );
 
+// Number inputs get − and + buttons only with `steppers`, and never in narrow
+// columns. Without them Nuxt UI starts the number at the left; outside narrow
+// columns it stays centered, as it is with the buttons.
+const noSteppers = computed(
+  () => narrow.value || props.node.attrs.steppers !== true,
+);
+const numberUi = computed(() =>
+  narrow.value
+    ? { base: "px-1.5" }
+    : noSteppers.value
+      ? { base: "text-center" }
+      : undefined,
+);
+
 const display = computed(() => sheetFieldDisplay(props.node));
 const field = computed(() => props.node.binding?.field);
 
@@ -298,9 +312,9 @@ const imageError = computed(() =>
     :format-options="numberFormat"
     :placeholder="automatic"
     :aria-label="label"
-    :increment="narrow ? false : undefined"
-    :decrement="narrow ? false : undefined"
-    :ui="narrow ? { base: 'px-1.5' } : undefined"
+    :increment="noSteppers ? false : undefined"
+    :decrement="noSteppers ? false : undefined"
+    :ui="numberUi"
     class="w-full"
   />
 
@@ -360,9 +374,9 @@ const imageError = computed(() =>
       v-model="numberValue"
       :disabled="disabled"
       :min="0"
-      :increment="narrow ? false : undefined"
-      :decrement="narrow ? false : undefined"
-      :ui="narrow ? { base: 'px-1.5' } : undefined"
+      :increment="noSteppers ? false : undefined"
+      :decrement="noSteppers ? false : undefined"
+      :ui="numberUi"
       :max="trackerMax || undefined"
       :aria-label="label"
       class="w-full"
@@ -449,9 +463,9 @@ const imageError = computed(() =>
       v-else-if="scalarType === 'number'"
       v-model="scalarNumber"
       :disabled="disabled"
-      :increment="narrow ? false : undefined"
-      :decrement="narrow ? false : undefined"
-      :ui="narrow ? { base: 'px-1.5' } : undefined"
+      :increment="noSteppers ? false : undefined"
+      :decrement="noSteppers ? false : undefined"
+      :ui="numberUi"
       :aria-label="label"
       class="min-w-0 flex-1"
     />

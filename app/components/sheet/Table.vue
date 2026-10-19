@@ -158,13 +158,10 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
       class="flex items-center gap-1 text-xs font-medium text-muted"
     >
       <span>{{ label }}</span>
-      <UButton
+      <SheetIconButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
-        color="neutral"
-        variant="ghost"
-        size="xs"
-        :aria-label="`Edit ${label || 'table'}`"
+        :label="`Edit ${label || 'table'}`"
         @click="unlock"
       />
     </div>
@@ -180,42 +177,31 @@ const columns = computed<TableColumn<SheetScope>[]>(() => [
     >
       <template #actions-cell="{ row }">
         <div class="flex justify-end gap-1">
-          <UButton
+          <SheetIconButton
             icon="i-lucide-arrow-up"
-            color="neutral"
-            variant="ghost"
-            size="xs"
-            aria-label="Move up"
+            label="Move up"
             :disabled="row.index === 0"
             @click="move(row.index, -1)"
           />
-          <UButton
+          <SheetIconButton
             icon="i-lucide-arrow-down"
-            color="neutral"
-            variant="ghost"
-            size="xs"
-            aria-label="Move down"
+            label="Move down"
             :disabled="row.index === rows.length - 1"
             @click="move(row.index, 1)"
           />
-          <UButton
+          <SheetIconButton
             icon="i-lucide-trash"
             color="error"
-            variant="ghost"
-            size="xs"
-            aria-label="Remove"
+            label="Remove"
             @click="remove(row.index)"
           />
         </div>
       </template>
       <template #expand-cell="{ row }">
-        <UButton
+        <SheetIconButton
           v-if="rowDetails(row.original).shown"
-          color="neutral"
-          variant="ghost"
-          size="xs"
           :icon="detailsOpen.has(rowKey(row.original, row.index)) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
-          :aria-label="detailsOpen.has(rowKey(row.original, row.index)) ? 'Collapse row' : 'Expand row'"
+          :label="detailsOpen.has(rowKey(row.original, row.index)) ? 'Collapse row' : 'Expand row'"
           :aria-expanded="detailsOpen.has(rowKey(row.original, row.index))"
           @click="toggleDetails(row.original, row.index)"
         />

@@ -196,6 +196,11 @@ const fieldAttrs: Record<string, AttrSpec> = {
   hint: text("Help text; defaults to the schema description"),
 };
 
+// Number inputs (Number, Tracker, Column) have no − and + buttons unless asked.
+const steppers = bool(
+  "Edit inputs show − and + buttons beside the number",
+);
+
 // `formula` on field tags; see TagSpec.formula.
 const readOnlyFormula: AttrSpec = {
   type: { kind: "formula" },
@@ -416,6 +421,7 @@ const tagList: TagSpec[] = [
         ["input", "stat"],
         "stat shows a large number with a small label",
       ),
+      steppers,
     },
     // Parts that explain its formula (needs one), and steps a click runs.
     children: { only: ["Part", ...STEP_TAGS] },
@@ -486,6 +492,7 @@ const tagList: TagSpec[] = [
           "A mark on the bar at this value, like an encumbrance threshold: a number or a {formula} (bar style, not editable)",
       },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
+      steppers,
     },
     children: "none",
     binds: ["number"],
@@ -581,6 +588,7 @@ const tagList: TagSpec[] = [
       formula: readOnlyFormula,
       format: formatAttr,
       width: oneOf(["auto", "xs", "sm", "md", "lg"], "Column width"),
+      steppers,
       preview: previewAttr,
     },
     // Parts explaining its number, Buttons (each row gets its own), and the

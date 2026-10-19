@@ -284,25 +284,19 @@ const imageSize = computed(
       <span v-if="shownLabel && !compact" class="sheet-field-label">{{
         shownLabel
       }}</span>
-      <UButton
+      <SheetIconButton
         v-if="canReset"
         icon="i-lucide-rotate-ccw"
-        color="neutral"
-        variant="ghost"
-        size="xs"
         class="-my-1"
-        aria-label="Use automatic value"
+        label="Use automatic value"
         title="Use automatic value"
         @click="useAutomatic"
       />
-      <UButton
+      <SheetIconButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
-        color="neutral"
-        variant="ghost"
-        size="xs"
         class="-my-1"
-        :aria-label="`Edit ${label}`"
+        :label="`Edit ${label}`"
         @click="unlock"
       />
       <!-- An input's parts open from a small button beside its label. -->
