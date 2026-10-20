@@ -223,8 +223,9 @@ required `resourceLink` or `content` entry without a default would be left empty
 - Paths continue through it into that content type's schema: `class.hitDie`, `class.name`, `item.weight`. Works in
   arrays: `inventory: [{ item: content(Item), qty: number }]` → `item.weight` next to `qty`.
 - Referenced values are **live and read-only** through the sheet; local values are editable. Edit mode shows a
-  searchable picker of readable content of that type (for `reference`/`both`), a "Custom" option creating a local object
-  (for `local`/`both`), and "Make custom copy" turning a reference into local data.
+  searchable picker of readable content of that type (for `reference`/`both`). For `both`, its first option is
+  "Custom <field label>": it creates a local object, or turns the current reference into local data (a copy). A List of
+  content's "Add" picker leads with the same option; a `local`-only field or list gets a button instead.
 - Depth: paths may cross up to **3** content fields (`class.subclass.feature.name`); deeper is a validation error.
 - Loading: `GET /api/content/[id]` walks the data, batch-loads referenced content one level at a time (≤ 3 queries),
   skips cycles, caps at 300 refs, drops any the viewer can't read, and returns
