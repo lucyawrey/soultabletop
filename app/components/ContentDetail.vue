@@ -408,7 +408,7 @@ function printPage() {
 
       <div class="flex flex-wrap items-center justify-between gap-4 text-sm print:hidden">
         <div v-if="item.canEdit" class="flex flex-wrap items-center gap-4">
-          <USwitch v-model="editSwitch" label="Edit Fields" />
+          <USwitch v-model="editSwitch" label="Edit" />
           <USwitch v-model="autosave" label="Autosave" />
           <span class="text-muted" aria-live="polite">{{ statusText }}</span>
         </div>
