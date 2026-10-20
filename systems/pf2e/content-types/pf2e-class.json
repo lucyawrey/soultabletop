@@ -551,7 +551,7 @@
             "type": "content",
             "label": "Feature",
             "contentTypeId": "pf2e-class-feature",
-            "allow": "reference"
+            "allow": "both"
           }
         }
       }

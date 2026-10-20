@@ -11,7 +11,7 @@ const choice = (type, values) => ({
 const str = (label, extra = {}) => ({ type: "string", label, ...extra });
 const num = (label, extra = {}) => ({ type: "number", label, ...extra });
 const list = (label, itemType) => ({ type: "array", label, itemType });
-const ref = (label, contentTypeId) => ({ type: "content", label, contentTypeId, allow: "reference" });
+const ref = (label, contentTypeId) => ({ type: "content", label, contentTypeId, allow: "both" });
 
 const attributes = [["str", "Strength"], ["dex", "Dexterity"], ["con", "Constitution"], ["int", "Intelligence"], ["wis", "Wisdom"], ["cha", "Charisma"]];
 const attribute = (label) => ({ ...choice("string", attributes), label });

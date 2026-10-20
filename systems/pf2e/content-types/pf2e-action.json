@@ -39,7 +39,7 @@
       "type": "content",
       "label": "Feat",
       "contentTypeId": "pf2e-feat",
-      "allow": "reference"
+      "allow": "both"
     },
     "category": {
       "type": "string",
