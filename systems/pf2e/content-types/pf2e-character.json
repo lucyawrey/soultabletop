@@ -24,38 +24,38 @@
       "type": "content",
       "label": "Ancestry",
       "contentTypeId": "pf2e-ancestry",
-      "allow": "reference"
+      "allow": "both"
     },
     "heritage": {
       "type": "content",
       "label": "Heritage",
       "contentTypeId": "pf2e-heritage",
-      "allow": "reference"
+      "allow": "both"
     },
     "background": {
       "type": "content",
       "label": "Background",
       "contentTypeId": "pf2e-background",
-      "allow": "reference"
+      "allow": "both"
     },
     "class": {
       "type": "content",
       "label": "Class",
       "contentTypeId": "pf2e-class",
-      "allow": "reference"
+      "allow": "both"
     },
     "subclass": {
       "type": "content",
       "label": "Subclass",
       "contentTypeId": "pf2e-class-feature",
-      "allow": "reference",
+      "allow": "both",
       "description": "The doctrine, racket, or other choice the class makes at 1st level."
     },
     "deity": {
       "type": "content",
       "label": "Deity",
       "contentTypeId": "pf2e-deity",
-      "allow": "reference"
+      "allow": "both"
     },
     "keyAttribute": {
       "type": "string",
@@ -1197,14 +1197,14 @@
       "type": "content",
       "label": "Armor",
       "contentTypeId": "pf2e-item",
-      "allow": "reference",
+      "allow": "both",
       "description": "The armor worn."
     },
     "shield": {
       "type": "content",
       "label": "Shield",
       "contentTypeId": "pf2e-item",
-      "allow": "reference",
+      "allow": "both",
       "description": "The shield held."
     },
     "shieldRaised": {
@@ -1226,7 +1226,7 @@
             "type": "content",
             "label": "Weapon",
             "contentTypeId": "pf2e-item",
-            "allow": "reference"
+            "allow": "both"
           },
           "attribute": {
             "type": "string",
@@ -1281,7 +1281,7 @@
             "type": "content",
             "label": "Action",
             "contentTypeId": "pf2e-action",
-            "allow": "reference"
+            "allow": "both"
           },
           "notes": {
             "type": "string",
@@ -1300,7 +1300,7 @@
             "type": "content",
             "label": "Feat",
             "contentTypeId": "pf2e-feat",
-            "allow": "reference"
+            "allow": "both"
           },
           "category": {
             "type": "string",
@@ -1470,7 +1470,7 @@
             "type": "content",
             "label": "Spell",
             "contentTypeId": "pf2e-spell",
-            "allow": "reference"
+            "allow": "both"
           },
           "rank": {
             "type": "number",
@@ -1493,7 +1493,7 @@
           "type": "content",
           "label": "Spell",
           "contentTypeId": "pf2e-spell",
-          "allow": "reference"
+          "allow": "both"
         },
         "max": {
           "type": "number",
@@ -1528,7 +1528,7 @@
             "type": "content",
             "label": "Spell",
             "contentTypeId": "pf2e-spell",
-            "allow": "reference"
+            "allow": "both"
           }
         }
       }
@@ -1543,7 +1543,7 @@
             "type": "content",
             "label": "Item",
             "contentTypeId": "pf2e-item",
-            "allow": "reference"
+            "allow": "both"
           },
           "quantity": {
             "type": "number",

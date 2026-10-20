@@ -412,14 +412,14 @@
         <Stack class="rows kv" show="deity.name != null or editing()">
           <Note class="grp">Deity</Note>
           <Stack direction="row" class="row"><Note class="label">Deity</Note><Ref field="deity" hideLabel preview="card" /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Divine font</Note><Value formula="join(map(deity.font, switch(., 'heal', 'Heal', 'harm', 'Harm', .)), ' or ')" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Sanctification</Note><Value field="deity.sanctification" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Divine skill</Note><Value field="deity.skill" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Favored weapon</Note><Value field="deity.favoredWeapon" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Domains</Note><Value formula="join(deity.domains, ', ')" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Divine attributes</Note><Value formula="join(map(deity.attributes, attrName(.)), ' or ')" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Edicts</Note><Value field="deity.edicts" hideLabel /></Stack>
-          <Stack direction="row" class="row"><Note class="label">Anathema</Note><Value field="deity.anathema" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Divine font</Note><Field field="deity.font" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Sanctification</Note><Field field="deity.sanctification" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Divine skill</Note><Field field="deity.skill" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Favored weapon</Note><Field field="deity.favoredWeapon" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Domains</Note><Field field="deity.domains" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Divine attributes</Note><Field field="deity.attributes" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Edicts</Note><Field field="deity.edicts" hideLabel /></Stack>
+          <Stack direction="row" class="row"><Note class="label">Anathema</Note><Field field="deity.anathema" hideLabel /></Stack>
         </Stack>
       </Tab>
 
