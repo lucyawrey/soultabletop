@@ -3,7 +3,7 @@ import { defaultSheetValue, type SheetRef, type SheetScope } from "#shared/sheet
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // "Add" controls under an editable List or Table. Lists of Content get a
-// picker for existing Content and, if allowed, a button for custom items.
+// picker for existing Content, led by a "Custom …" option if allowed.
 const props = defineProps<{
   node: ValidatedElement;
   label: string;
@@ -34,6 +34,10 @@ function pick(id: string, ref: SheetRef) {
   append(id);
   picks.value += 1;
 }
+function addCustom() {
+  append(defaultSheetValue(itemField.value, context.schemas.value));
+  picks.value += 1;
+}
 </script>
 
 <template>
@@ -43,17 +47,19 @@ function pick(id: string, ref: SheetRef) {
         :key="picks"
         :content-type-id="contentField.contentTypeId"
         :placeholder="`${label}…`"
+        :custom-label="contentField.allow === 'both' ? `Custom ${contentField.label ?? label}` : undefined"
         @pick="pick"
+        @custom="addCustom"
       />
     </div>
     <UButton
-      v-if="!contentField || contentField.allow !== 'reference'"
+      v-if="!contentField || contentField.allow === 'local'"
       icon="i-lucide-plus"
       color="neutral"
       variant="outline"
       size="sm"
-      :label="contentField ? `${label} custom` : label"
-      @click="append(defaultSheetValue(itemField, context.schemas.value))"
+      :label="label"
+      @click="addCustom"
     />
   </div>
 </template>

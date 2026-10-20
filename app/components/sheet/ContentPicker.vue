@@ -17,8 +17,13 @@ const props = defineProps<{
   // whether a candidate (those fields plus `name`) is offered.
   dataKeys?: string[];
   accepts?: (data: Record<string, unknown>) => boolean;
+  // When set, the first option, which emits `custom` instead of a pick.
+  customLabel?: string;
 }>();
-const emit = defineEmits<{ pick: [id: string, ref: SheetRef] }>();
+const emit = defineEmits<{ pick: [id: string, ref: SheetRef]; custom: [] }>();
+
+// Not a UUID, so it can't collide with a content ID.
+const customValue = "custom";
 
 interface ContentListItem {
   id: string;
@@ -65,6 +70,8 @@ const items = computed(() => {
     !list.some((item) => item.value === props.modelValue)
   )
     list.unshift(resourceOption(props.modelValue, { name: props.currentName }));
+  if (props.customLabel)
+    list.unshift({ label: props.customLabel, value: customValue, name: props.customLabel });
   return list;
 });
 
@@ -74,6 +81,10 @@ const toast = useToast();
 // arrive out of order.
 const picking = ref(false);
 async function select(id: unknown) {
+  if (id === customValue) {
+    emit("custom");
+    return;
+  }
   const item = options.value.find((option) => option.id === id);
   if (!item || picking.value) return;
   picking.value = true;
