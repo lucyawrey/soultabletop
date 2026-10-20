@@ -411,18 +411,10 @@ const imageError = computed(() =>
       :placeholder="referenced?.name ?? (isLocal ? 'Use existing…' : 'Choose…')"
       :data-keys="filterKeys"
       :accepts="filter ? accepts : undefined"
+      :custom-label="allow !== 'reference' && !isLocal ? `Custom ${contentField?.label ?? label}` : undefined"
       @pick="pick"
+      @custom="makeCustom"
     />
-    <div v-if="allow !== 'reference' && !isLocal" class="flex gap-2">
-      <UButton
-        size="xs"
-        color="neutral"
-        variant="outline"
-        :icon="referenced ? 'i-lucide-copy' : 'i-lucide-plus'"
-        :label="referenced ? 'Make custom copy' : 'Custom'"
-        @click="makeCustom"
-      />
-    </div>
   </div>
 
   <div
