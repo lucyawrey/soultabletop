@@ -648,7 +648,7 @@ Components (`app/components/sheet/`):
 
 `ContentDetail.vue`:
 - Replaces the Data card with `<SheetRenderer>`. The header's former Edit button is now **Settings** (so it isn't
-  confused with the Edit Fields switch); its modal keeps Name, ID, Visibility, the saved sheet, and the raw JSON editor.
+  confused with the Edit switch); its modal keeps Name, ID, Visibility, the saved sheet, and the raw JSON editor.
 - The draft lives in `app/composables/useContentDraft.ts` (compares with sorted keys, since `content.data` is jsonb).
   Editing controls are `sheet/FieldInput.vue`; List/Table add/remove/reorder use `useSheetListEditing` and
   `sheet/ListAdd.vue`; `sheet/ContentPicker.vue` picks referenced content.
