@@ -237,11 +237,12 @@
               <Part label="{rankName(get(/attacks, coalesce(weapon.weapon.category, 'simple')))}" formula="prof(get(/attacks, coalesce(weapon.weapon.category, 'simple')))" />
               <Part label="Item" formula="itemBonus" />
               <Roll name="hit" label="Attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
+              <!-- A weapon without a damage die deals its damage dice as a fixed amount. -->
               <FollowUp label="Damage">
-                <Roll label="Damage" formula="dice(concat(weapon.weapon.damageDice, weapon.weapon.damageDie)) + damageMod(weapon.weapon.range, weapon.traits)" />
+                <Roll label="Damage" formula="if(coalesce(weapon.weapon.damageDie, '') == '', coalesce(weapon.weapon.damageDice, 0), dice(concat(coalesce(weapon.weapon.damageDice, 1), weapon.weapon.damageDie))) + damageMod(weapon.weapon.range, weapon.traits)" />
               </FollowUp>
               <FollowUp label="Critical">
-                <Roll label="Critical damage" formula="2 * (dice(concat(weapon.weapon.damageDice, weapon.weapon.damageDie)) + damageMod(weapon.weapon.range, weapon.traits))" />
+                <Roll label="Critical damage" formula="2 * (if(coalesce(weapon.weapon.damageDie, '') == '', coalesce(weapon.weapon.damageDice, 0), dice(concat(coalesce(weapon.weapon.damageDice, 1), weapon.weapon.damageDie))) + damageMod(weapon.weapon.range, weapon.traits))" />
               </FollowUp>
             </Value>
             <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, attribute, itemBonus) - mapStep(weapon.traits)" show="not editing()">
