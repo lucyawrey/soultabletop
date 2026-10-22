@@ -245,7 +245,7 @@ const refInfo = computed(() => {
     return { name: "Unavailable", to: undefined, muted: true };
   }
   if (current && typeof current === "object" && "name" in current)
-    return { name: String(current.name), to: undefined, custom: true };
+    return { name: String(current.name), to: undefined };
   return undefined;
 });
 
@@ -462,7 +462,6 @@ const imageSize = computed(
         @toggle="togglePreview"
       >
         {{ refInfo.name }}
-        <span v-if="refInfo.custom" class="text-xs text-muted">(custom)</span>
       </SheetPreviewTrigger>
       <NuxtLink
         v-else-if="refInfo?.to"
@@ -473,7 +472,6 @@ const imageSize = computed(
       </NuxtLink>
       <span v-else-if="refInfo" :class="refInfo.muted ? 'text-dimmed' : ''">
         {{ refInfo.name }}
-        <span v-if="refInfo.custom" class="text-xs text-muted">(custom)</span>
       </span>
       <span v-else class="text-dimmed">—</span>
     </div>
