@@ -137,7 +137,7 @@ View mode renders formatted values, edit mode renders the input.
 - **Read-only formula tags**: `Value`, `Column`, `Tracker` take `field` or `formula`, not both. With `formula` the
   tag shows the computed value and is never editable (a `Tracker` formula is its current value; its `max` can be a
   `{formula}` too). Its label is the `label` attribute, else empty.
-- **Override tags**: `Number`, `Text`, `Checkbox` (and `Field`, see below) take `field`, `formula`, or both. With both, the field holds an
+- **Override tags**: `Number`, `Text`, `Checkbox`, `Select` (and `Field`, see below) take `field`, `formula`, or both. With both, the field holds an
   optional manual value that wins over the computed one; absent, `null`, or (for `Text`) `""` means automatic. While
   automatic, the input shows the computed value as its placeholder (a `Checkbox` shows the computed state), typing
   stores a manual value, and a small "Use automatic value" button (`i-lucide-rotate-ccw`) beside the label removes it
@@ -153,7 +153,8 @@ View mode renders formatted values, edit mode renders the input.
   schema field only, and then acts exactly like `Text`, `Number`, or `Checkbox` (override, reset button, cascading);
   any other schema type is an error (`invalid-attribute`), and `Field` with
   `formula` alone is a `missing-attribute` error (use `Value`).
-- Every other field tag (`Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
+- Every other field tag (`Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`. A `Select`'s automatic
+  value shows as its option's label, and as the select's placeholder while editing.
   `Image` never will: a formula could build a URL that sends data the viewer can read to another site.
 
 | Tag | Extra attrs | Binds | Edit input |

@@ -389,6 +389,10 @@
 /* In edit, the attribute and item bonus fit where the MAP steps were. */
 .sheet-sheet .hit .small-sel button[data-slot="base"] { padding: 0 14px 0 4px; }
 .sheet-sheet .hit .small-sel [data-slot="trailing"] { padding-right: 2px; }
+/* The attack attribute follows the weapon until picked; its "use automatic" button sits after the select, in the row. */
+.hit .small-sel { display: flex; align-items: center; }
+.hit .small-sel > :first-child:not(.sheet-field-value) { order: 1; min-height: 0; }
+.hit .small-sel > :first-child:not(.sheet-field-value):not(:has(button)) { display: none; }
 .hit .small-num .sheet-field-value { width: 30px; }
 .sheet-sheet .hit .small-num input { padding-inline: 2px; }
 /* MAP steps still roll, but stay quiet: muted, with a dotted underline like other clickable values. */

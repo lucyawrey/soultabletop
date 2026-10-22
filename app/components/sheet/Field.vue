@@ -53,9 +53,11 @@ const override = computed(() =>
 );
 const automatic = computed(() => override.value.automatic);
 const value = computed(() => override.value.value);
-// The computed value as text, for the input's placeholder.
+// The computed value as text (a choice's label), for the input's placeholder.
 const computedText = computed(() =>
-  computedValue.value === undefined ? "" : formatFormula(computedValue.value),
+  computedValue.value === undefined
+    ? ""
+    : (computedChoiceText.value ?? formatFormula(computedValue.value)),
 );
 // `field="."` in a struct entry row is labeled by its row ("Str", "Dex", …).
 const rowLabel = computed(() => {
@@ -161,9 +163,18 @@ const showStatLabel = computed(
 
 // A choice field shows its option's label; formulas still see the value.
 const choiceOptions = computed(() => sheetChoiceOptions(props.node));
+const computedChoiceText = computed(() =>
+  computedValue.value === undefined || isFormulaError(computedValue.value)
+    ? undefined
+    : sheetChoiceText(choiceOptions.value, computedValue.value),
+);
 const text = computed(() => {
   const signed = props.node.attrs.format === "signed";
-  if (automatic.value) return formatFormula(computedValue.value ?? null, signed ? "signed" : "plain");
+  if (automatic.value)
+    return (
+      computedChoiceText.value ??
+      formatFormula(computedValue.value ?? null, signed ? "signed" : "plain")
+    );
   return (
     sheetChoiceText(choiceOptions.value, value.value) ??
     format(value.value, signed ? "signed" : "plain")

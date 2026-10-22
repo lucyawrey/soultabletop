@@ -21,6 +21,9 @@
 <Define name="hasTrait" params="traits, t" formula="any(traits, . == t)" />
 <!-- Strikes: the hit modifier, the multiple attack penalty steps, and damage. Thieves add Dex to finesse melee damage. -->
 <Define name="strikeHit" params="category, attr, bonus" formula="get(attributes, attr) + prof(get(attacks, coalesce(category, 'simple'))) + coalesce(bonus, 0)" />
+<!-- A Strike's attribute unless the player picks one: Dex for ranged weapons, the higher of Str and Dex for finesse ones, else Str. -->
+<Define name="strikeAttr" params="range, traits"
+        formula="if(coalesce(range, 0) > 0, 'dex', if(hasTrait(traits, 'Finesse') and attributes.dex > attributes.str, 'dex', 'str'))" />
 <Define name="mapStep" params="traits" formula="if(hasTrait(traits, 'Agile'), 4, 5)" />
 <Define name="damageMod" params="range, traits"
         formula="if(coalesce(range, 0) > 0, if(hasTrait(traits, 'Propulsive'), floor(max(0, attributes.str) / 2), 0), if(subclass.name == 'Thief' and hasTrait(traits, 'Finesse'), max(attributes.str, attributes.dex), attributes.str))" />
@@ -232,8 +235,8 @@
             <Ref field="weapon" hideLabel preview filter="kind == 'weapon'" class="name" show="editing()" />
           </Stack>
           <Stack direction="row" class="hit">
-            <Value hideLabel format="signed" formula="strikeHit(weapon.weapon.category, attribute, itemBonus)">
-              <Part label="{attrName(attribute)}" formula="get(/attributes, attribute)" />
+            <Value hideLabel format="signed" formula="strikeHit(weapon.weapon.category, coalesce(attribute, strikeAttr(weapon.weapon.range, weapon.traits)), itemBonus)">
+              <Part label="{attrName(coalesce(attribute, strikeAttr(weapon.weapon.range, weapon.traits)))}" formula="get(/attributes, coalesce(attribute, strikeAttr(weapon.weapon.range, weapon.traits)))" />
               <Part label="{rankName(get(/attacks, coalesce(weapon.weapon.category, 'simple')))}" formula="prof(get(/attacks, coalesce(weapon.weapon.category, 'simple')))" />
               <Part label="Item" formula="itemBonus" />
               <Roll name="hit" label="Attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
@@ -245,13 +248,13 @@
                 <Roll label="Critical damage" formula="2 * (if(coalesce(weapon.weapon.damageDie, '') == '', coalesce(weapon.weapon.damageDice, 0), dice(concat(coalesce(weapon.weapon.damageDice, 1), weapon.weapon.damageDie))) + damageMod(weapon.weapon.range, weapon.traits))" />
               </FollowUp>
             </Value>
-            <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, attribute, itemBonus) - mapStep(weapon.traits)" show="not editing()">
+            <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, coalesce(attribute, strikeAttr(weapon.weapon.range, weapon.traits)), itemBonus) - mapStep(weapon.traits)" show="not editing()">
               <Roll label="Attack (MAP)" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
             </Value>
-            <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, attribute, itemBonus) - 2 * mapStep(weapon.traits)" show="not editing()">
+            <Value hideLabel format="signed" class="map" formula="strikeHit(weapon.weapon.category, coalesce(attribute, strikeAttr(weapon.weapon.range, weapon.traits)), itemBonus) - 2 * mapStep(weapon.traits)" show="not editing()">
               <Roll label="Attack (MAP)" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
             </Value>
-            <Select field="attribute" hideLabel class="small-sel" show="editing()" />
+            <Select field="attribute" formula="strikeAttr(weapon.weapon.range, weapon.traits)" hideLabel class="small-sel" show="editing()" />
             <Number field="itemBonus" hideLabel format="signed" class="small-num" show="editing()" />
           </Stack>
           <Stack direction="row" class="dmg">

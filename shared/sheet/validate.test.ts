@@ -533,7 +533,7 @@ describe("formulas", () => {
   });
 
   it("takes formula only on the tags that support it", () => {
-    for (const tag of ["Image", "Ref", "Markdown", "Select", "Tags", "Toggle"]) {
+    for (const tag of ["Image", "Ref", "Markdown", "Tags", "Toggle"]) {
       expect(errorCodes(`<${tag} field="notes" formula="1" />`), tag).toContain("unknown-attribute");
     }
     expect(errorCodes('<List field="tags" formula="1"><Value field="." /></List>')).toContain(
@@ -933,6 +933,15 @@ describe("choice fields", () => {
         <Number formula="rank + level" />
       `),
     ).toEqual([]);
+  });
+
+  it("lets a Select take a formula (an override)", () => {
+    expect(choiceMessages(`<Select field="size" formula="if(level > 1, 's', 'm')" />`)).toEqual([]);
+    expect(choiceMessages(`<Select field="rank" formula="level" />`)).toEqual([]);
+    expect(choiceErrors(`<Select field="size" formula="level" />`)).toEqual(["formula-result-type"]);
+    expect(compile(`<Select field="size" formula="'m'" />`, choiceSchemas).computedFields.get("size")).toMatchObject({
+      tag: "Select",
+    });
   });
 
   it("ignores a Select's own list on a field with options, with a warning", () => {
