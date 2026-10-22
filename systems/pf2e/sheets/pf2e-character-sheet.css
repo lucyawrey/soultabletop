@@ -404,11 +404,11 @@
 .strikes .row > .cell, .strikes .row > .cell > .sheet-value, .acts .row > .cell, .acts .row > .cell > .sheet-value,
 .row > .sheet-value.name { display: contents; }
 .row .sheet-preview-frame { grid-column: 1 / -1; order: 99; margin: 2px 0 6px; }
-/* The whole name cell opens the preview, not just the text: the button fills its cell, and the
-   hover tint shows how far it reaches. Rolls and breakdowns in other cells keep their own clicks. */
+/* A name opens its preview, with a hover tint; its expand button sits right after it. Rolls and
+   breakdowns in other cells keep their own clicks. */
 .row .sheet-field-value:has(> span > .sheet-preview-trigger) { align-self: stretch; display: flex; margin: -2px 0; }
-.row .sheet-field-value > span:has(> .sheet-preview-trigger) { display: flex; flex: 1; }
-.row .sheet-preview-trigger { flex: 1; padding: 0 4px; margin-left: -4px; border-radius: 4px; }
+.row .sheet-field-value > span:has(> .sheet-preview-trigger) { display: flex; flex: 1; align-items: center; gap: 2px; min-width: 0; }
+.row .sheet-preview-trigger { padding: 0 4px; margin-left: -4px; border-radius: 4px; }
 .row .sheet-preview-trigger:hover { background: color-mix(in srgb, var(--st-primary) 7%, transparent); }
 
 /* Skills and proficiencies on the left, the tabs on the right. */
@@ -862,15 +862,15 @@
   .sheet-tab { min-height: 0; }
 }
 
-/* In edit, a picked name's preview opens from a small eye beside its picker. */
-.sheet-field-value:has(> .sheet-edit-preview) { display: flex; align-items: center; gap: 2px; }
-.sheet-edit-preview { display: inline-flex; flex: none; }
-.sheet-sheet .sheet-edit-preview .sheet-preview-trigger { display: inline-flex; flex: none; align-items: center; margin: 0; padding: 2px; border-radius: 4px; color: var(--st-ink-muted); text-decoration: none; }
-.sheet-sheet .sheet-edit-preview .sheet-preview-trigger:hover { color: var(--st-primary); background: color-mix(in srgb, var(--st-primary) 7%, transparent); }
-/* A build card's eye sits on its top edge, beside its ▾. */
-.card .sheet-edit-preview { position: absolute; top: -7px; right: 22px; background: var(--st-panel); border-radius: 3px; }
-.sheet-sheet .card .sheet-edit-preview .sheet-preview-trigger { padding: 0 1px; }
-.card .sheet-edit-preview .iconify { width: 12px; height: 12px; }
+/* A name's preview also opens from a small expand button beside it (beside its picker in edit). */
+.sheet-field-value:has(> .sheet-preview-button) { display: flex; align-items: center; gap: 2px; }
+.sheet-preview-button { display: inline-flex; flex: none; }
+.sheet-sheet .sheet-preview-button .sheet-preview-trigger { display: inline-flex; flex: none; align-items: center; margin: 0; padding: 2px; border-radius: 4px; color: var(--st-ink-muted); text-decoration: none; }
+.sheet-sheet .sheet-preview-button .sheet-preview-trigger:hover { color: var(--st-primary); background: color-mix(in srgb, var(--st-primary) 7%, transparent); }
+/* A build card's button sits on its top edge (beside its ▾ in edit), so it doesn't move between modes. */
+.card .sheet-preview-button { position: absolute; top: -7px; right: 22px; background: var(--st-panel); border-radius: 3px; }
+.sheet-sheet .card .sheet-preview-button .sheet-preview-trigger { padding: 0 1px; }
+.card .sheet-preview-button .iconify { width: 12px; height: 12px; }
 /* A row's picker steps aside like the play name does, so its expanded preview is a full line under the row. */
 .row > .sheet-ref.name, .row > .cell > .sheet-ref.name { display: contents; }
 /* The portrait keeps its picture in edit, above the URL input. */

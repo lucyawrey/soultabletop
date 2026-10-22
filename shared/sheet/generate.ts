@@ -74,7 +74,12 @@ function join(prefix: string, key: string) {
   return prefix ? `${prefix}.${key}` : key;
 }
 
-export function generateSheetMarkup(schemas: SheetSchemas): string {
+// `name: false` leaves out the built-in name field (shown elsewhere, as by a
+// custom entry's editable card).
+export function generateSheetMarkup(
+  schemas: SheetSchemas,
+  options: { name?: boolean } = {},
+): string {
   const lines: string[] = [];
   // Everything sits inside the `<Sheet>` root, one level in.
   const add = (depth: number, text: string) =>
@@ -168,13 +173,16 @@ export function generateSheetMarkup(schemas: SheetSchemas): string {
     add(depth, "</Section>");
   }
 
-  add(0, "<Section title=\"Details\">");
   const root = schemas.root.schema;
   const simpleRoot = Object.fromEntries(
     Object.entries(root).filter(([, field]) => isSimple(field)),
   );
-  fields(simpleRoot, "", 1, true);
-  add(0, "</Section>");
+  const withName = options.name ?? true;
+  if (withName || Object.keys(simpleRoot).length) {
+    add(0, "<Section title=\"Details\">");
+    fields(simpleRoot, "", 1, withName);
+    add(0, "</Section>");
+  }
   for (const [key, field] of Object.entries(root)) {
     if (!isSimple(field)) complex(key, field, key, 0);
   }

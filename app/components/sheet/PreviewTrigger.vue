@@ -19,6 +19,8 @@ defineProps<{
   anchor?: HTMLElement | null;
   // The button's accessible name, when its slot is only an icon.
   label?: string;
+  // A custom entry being edited: the card shows its fields as inputs.
+  editable?: boolean;
 }>();
 defineEmits<{ toggle: [] }>();
 
@@ -54,7 +56,8 @@ const triggerClass =
             size="xs"
           />
         </div>
-        <SheetPreviewBody :target="target" :card="card" />
+        <SheetPreviewEditor v-if="editable" :target="target" />
+        <SheetPreviewBody v-else :target="target" :card="card" />
       </div>
     </template>
   </UPopover>
