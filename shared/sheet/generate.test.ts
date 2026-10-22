@@ -193,6 +193,15 @@ describe("generateSheetMarkup", () => {
     );
     expect(compileSheet(markup, empty).diagnostics).toEqual([]);
   });
+
+  it("leaves out the name with name: false", () => {
+    const markup = generateSheetMarkup(schemas, { name: false });
+    expect(markup).not.toContain('<Text field="name" />');
+    expect(markup).toContain('<Field field="hp" />');
+    expect(compileSheet(markup, schemas).diagnostics).toEqual([]);
+    const empty: SheetSchemas = { root: { hasStrictSchema: true, schema: {} }, types: {} };
+    expect(generateSheetMarkup(empty, { name: false })).toBe("<Sheet>\n\n</Sheet>\n");
+  });
 });
 
 describe("escapeSheetAttribute", () => {

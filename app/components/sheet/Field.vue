@@ -96,6 +96,11 @@ const previewCard = computed(() =>
     (child): child is ValidatedElement => child.type === "element" && child.tag === "Preview",
   ),
 );
+// A custom entry (local data, no ID) being edited: its card shows its fields
+// as inputs.
+const previewEditable = computed(
+  () => editable.value && !!previewTarget.value && !previewTarget.value.id,
+);
 // An expanded preview opens under this tag, or for a Column under its row.
 const rowPreviews = props.node.tag === "Column" ? useSheetRowPreviews() : undefined;
 const previewKey = `${props.node.loc.start.offset}`;
@@ -107,7 +112,7 @@ const previewOpen = computed(() => {
 // What is expanded under this tag (not under a row).
 const expandedPreview = computed<SheetPreview | undefined>(() =>
   previewTarget.value && previewOpen.value && !rowPreviews && previewMode.value === "expand"
-    ? { key: previewKey, target: previewTarget.value, card: previewCard.value }
+    ? { key: previewKey, target: previewTarget.value, card: previewCard.value, editable: previewEditable.value }
     : undefined,
 );
 // A boxed Ref's card lines up with the box rather than the name in it.
@@ -117,7 +122,7 @@ function togglePreview() {
   if (!target) return;
   const row = scope.value.item?.key;
   if (rowPreviews && row !== undefined)
-    rowPreviews.toggle(row, { key: previewKey, target, card: previewCard.value });
+    rowPreviews.toggle(row, { key: previewKey, target, card: previewCard.value, editable: previewEditable.value });
   else expandedHere.value = !expandedHere.value;
 }
 
@@ -328,16 +333,17 @@ const imageSize = computed(
         :label="label"
         :automatic="automatic ? computedText : undefined"
       />
-      <span v-if="display === 'ref' && previewTarget" class="sheet-edit-preview">
+      <span v-if="display === 'ref' && previewTarget" class="sheet-preview-button sheet-edit-preview">
         <SheetPreviewTrigger
           :mode="previewMode"
           :target="previewTarget"
           :card="previewCard"
           :open="previewOpen"
+          :editable="previewEditable"
           :label="`Preview ${previewTarget.name || label}`"
           @toggle="togglePreview"
         >
-          <UIcon name="i-lucide-eye" class="size-3.5 align-middle" />
+          <UIcon name="i-lucide-maximize-2" class="size-3.5 align-middle" />
         </SheetPreviewTrigger>
       </span>
     </template>
@@ -378,7 +384,7 @@ const imageSize = computed(
     <span v-else-if="display === 'number'" class="tabular-nums">
       <SheetRollTrigger :node="node" :shown="value" :title="rollTitle" :button="rollButton">
         <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-        <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
+        <template v-else-if="previewTarget && text"><SheetPreviewTrigger :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger> <span class="sheet-preview-button"><SheetPreviewTrigger :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" :label="`Preview ${previewTarget.name || label}`" @toggle="togglePreview"><UIcon name="i-lucide-maximize-2" class="size-3.5 align-middle" /></SheetPreviewTrigger></span></template>
         <template v-else>{{ text || "—" }}</template>
       </SheetRollTrigger>
     </span>
@@ -463,6 +469,19 @@ const imageSize = computed(
       >
         {{ refInfo.name }}
       </SheetPreviewTrigger>
+      <span v-if="refInfo && previewTarget" class="sheet-preview-button">
+        <SheetPreviewTrigger
+          :mode="previewMode"
+          :target="previewTarget"
+          :card="previewCard"
+          :open="previewOpen"
+          :anchor="boxedView ? refBox : undefined"
+          :label="`Preview ${previewTarget.name || label}`"
+          @toggle="togglePreview"
+        >
+          <UIcon name="i-lucide-maximize-2" class="size-3.5 align-middle" />
+        </SheetPreviewTrigger>
+      </span>
       <NuxtLink
         v-else-if="refInfo?.to"
         :to="refInfo.to"
@@ -510,7 +529,7 @@ const imageSize = computed(
     <span v-else :class="text ? '' : 'text-dimmed'">
       <SheetRollTrigger :node="node" :shown="value" :title="rollTitle" :button="rollButton">
         <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-        <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
+        <template v-else-if="previewTarget && text"><SheetPreviewTrigger :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger> <span class="sheet-preview-button"><SheetPreviewTrigger :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" :label="`Preview ${previewTarget.name || label}`" @toggle="togglePreview"><UIcon name="i-lucide-maximize-2" class="size-3.5 align-middle" /></SheetPreviewTrigger></span></template>
         <template v-else>{{ text || "—" }}</template>
       </SheetRollTrigger>
     </span>

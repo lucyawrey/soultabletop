@@ -49,6 +49,8 @@ export interface SheetPreview {
   key: string;
   target: SheetPreviewTarget;
   card?: ValidatedElement;
+  // A custom entry being edited: its fields show as inputs.
+  editable?: boolean;
 }
 
 // A content type's own `<Preview>` (beside `<Sheet>` in its default sheet),

@@ -386,12 +386,17 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup). Two ways t
   `class` and `show` (a hidden one gives way to the type's own `<Preview>` or the generated view). It is styled by the referencing sheet's
   CSS: its element carries the sheet's `data-sheet` and `data-density`, also in a floating card.
   Errors: `preview-tag-without-preview` (no `preview` on its tag), `duplicate-preview` (two in one tag).
-- **Limits:** previews are always read-only (no inputs, whatever `live`; fields inside show as text unless they say
-  `display="box"`), so a `Button` inside a `<Preview>` is an error (`button-in-preview`); and a preview can't open another
+- **Limits:** previews are read-only (no inputs, whatever `live`; fields inside show as text unless they say
+  `display="box"`), except a custom entry's card while it's being edited (below), so a `Button` inside a `<Preview>` is an error (`button-in-preview`); and a preview can't open another
   (`preview` inside a `<Preview>` is `preview-in-preview`).
+- **Expand button** (decided 2026-10-20): every value with a preview also gets a small `i-lucide-maximize-2` button
+  beside it that opens the same preview (class `sheet-preview-button` on its wrapper); clicking the value still opens
+  it too.
 - **While editing:** an editable value (a `Ref`'s picker, a custom copy's fields) shows its input, not a button;
-  an editable `Ref` with `preview` gets a small eye button beside its picker that opens the same preview (class
-  `sheet-edit-preview` on its wrapper); values that can't be edited keep their preview. `display="box"` doesn't box a value with a preview (a `Ref` keeps
+  an editable `Ref` with `preview` keeps the expand button beside its picker (its wrapper also has
+  `sheet-edit-preview`); values that can't be edited keep their preview. A custom entry's preview (local data) being
+  edited shows its content type's fields as inputs instead, a generated sheet without the name (typed in place of
+  the picked name) that writes straight into the entry (`sheet/PreviewEditor.vue`). `display="box"` doesn't box a value with a preview (a `Ref` keeps
   its box with the button inside).
 - Hook classes: `sheet-preview-trigger` on the value's button, `sheet-preview-frame` on the expanded box or the card,
   `sheet-preview` on what's inside it (a `<Preview>` also gets its `class`).
