@@ -621,23 +621,24 @@
           </List>
         </Stack>
 
-        <Stack class="rows" show="focus.max > 0 or editing()">
-          <Stack direction="row" class="grp">
+        <Stack class="rows" show="focus.max > 0 or length(coalesce(focus.spells, list())) > 0 or editing()">
+          <Stack direction="row" class="grp focusbar">
             <Note>Focus spells</Note>
             <Tracker field="focus.left" hideLabel max="{focus.max}" style="pips" live class="sq" />
             <Value hideLabel formula="concat(focus.left, ' of ', focus.max, ' focus points')" show="not editing()" />
             <Stack direction="row" class="inline" show="editing()"><Number field="focus.max" hideLabel min="0" max="3" class="small-num" /><Note>focus points</Note></Stack>
           </Stack>
+          <!-- Rows without a .row are hidden (the cantrip split), so the picker is in the row too. -->
           <List field="focus.spells" addLabel="Add focus spell" class="rows spells">
-            <Stack direction="row" class="row spell" show="not editing()">
+            <Stack direction="row" class="row spell">
               <Note></Note>
               <Value hideLabel class="act" formula="glyph(cast)" />
-              <Value field="name" hideLabel preview class="name" />
+              <Value field="name" hideLabel preview class="name" show="not editing()" />
+              <Ref field="." hideLabel preview class="name" show="editing()" />
               <Value field="range" hideLabel />
               <Value field="defense" hideLabel />
               <Value field="damage" hideLabel class="dim" />
             </Stack>
-            <Ref field="." hideLabel show="editing()" />
           </List>
         </Stack>
       </Tab>
