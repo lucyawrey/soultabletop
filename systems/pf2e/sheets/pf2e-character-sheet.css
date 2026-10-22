@@ -689,6 +689,10 @@
 .sheet-sheet .sheet-list.rows > .flex-wrap button[data-slot="base"]:hover { background: var(--st-panel-muted); }
 /* In a group bar, the button fits the bar. */
 .sheet-sheet .rows:has(> .grp) > .sheet-list > .flex-wrap > button[data-slot="base"] { height: 18px; padding: 0 7px; font-size: var(--d-lfs); border: 1px solid var(--st-border-strong); background: var(--st-panel); border-radius: 5px; }
+/* A picker that adds to a group's list fits the bar too, and the bar's own inputs end before it. */
+.sheet-sheet .rows:has(> .grp) > .sheet-list > .flex-wrap button[data-slot="base"][aria-haspopup="listbox"] { height: 18px; padding: 0 18px 0 7px; font-size: var(--d-lfs); }
+.sheet-sheet .rows:has(> .grp) > .sheet-list > .flex-wrap [data-slot="placeholder"] { color: var(--st-primary); }
+.focusbar:has(.inline) { padding-right: 150px; }
 /* A lore's × sits at the end of its name, so its modifier stays in line with the skills above. */
 .skills .lore .sheet-list-item > div:last-child:not(:first-child) { right: calc(32px + 30px + 58px + 18px + 2px); }
 .skills .lore .sheet-list-item:has(> div:last-child:not(:first-child)) > div:first-child .row > :last-child { padding-right: 0; }
