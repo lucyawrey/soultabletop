@@ -284,6 +284,7 @@ const imageError = computed(() =>
     v-model="choice"
     :disabled="disabled"
     :items="selectItems"
+    :placeholder="placeholder"
     :aria-label="label"
     class="w-full"
   />

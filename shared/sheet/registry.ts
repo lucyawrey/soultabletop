@@ -458,6 +458,7 @@ const tagList: TagSpec[] = [
     description: "A choice from a list: the field's options, or its own list",
     attrs: {
       ...fieldAttrs,
+      formula: overrideFormula,
       options: {
         type: { kind: "list" },
         description: "Comma-separated choices, for a text field without options in the schema",
@@ -465,6 +466,7 @@ const tagList: TagSpec[] = [
     },
     children: "none",
     binds: ["string", "number"],
+    formula: "override",
   },
   {
     name: "Tags",
