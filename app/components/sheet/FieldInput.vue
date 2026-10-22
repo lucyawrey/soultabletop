@@ -396,7 +396,7 @@ const imageError = computed(() =>
   <div v-else-if="display === 'ref'" class="space-y-2">
     <UInput
       :size="size"
-      v-if="isLocal"
+      v-if="isLocal && allow === 'local'"
       v-model="localName"
       :disabled="disabled"
       placeholder="Name"
@@ -408,12 +408,15 @@ const imageError = computed(() =>
       :content-type-id="contentField!.contentTypeId"
       :model-value="typeof value === 'string' ? value : undefined"
       :current-name="referenced?.name ?? (typeof value === 'string' ? 'Unavailable' : undefined)"
-      :placeholder="referenced?.name ?? (isLocal ? 'Use existing…' : 'Choose…')"
+      :placeholder="referenced?.name ?? 'Choose…'"
       :data-keys="filterKeys"
       :accepts="filter ? accepts : undefined"
-      :custom-label="allow !== 'reference' && !isLocal ? `Custom ${contentField?.label ?? label}` : undefined"
+      :custom-label="allow !== 'reference' ? `Custom ${contentField?.label ?? label}` : undefined"
+      :custom-name="isLocal ? localName : undefined"
+      :label="label"
       @pick="pick"
       @custom="makeCustom"
+      @update:custom-name="localName = $event"
     />
   </div>
 
