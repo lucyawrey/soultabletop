@@ -55,9 +55,17 @@ dependencies first if it has none.
 | `SOUL_TABLETOP_API_KEY` | Optional, local only, and not read by the app: your own API key (create one on `/profile`), for development scripts that call the API as you, sent in the `x-api-key` header. Not in Vercel, so add it to `.env.local` by hand, and again after `vercel env pull`, which rewrites the file |
 
 The app's variables are server-only and never sent to the browser. The first three are set in all
-three Vercel environments (Production, Preview, Development). While the app is
-a prototype, every environment, including local development, uses the same
-Neon database.
+three Vercel environments (Production, Preview, Development). Each environment
+has its own Neon branch, so `DATABASE_URL` differs between them:
+
+| Neon branch  | Used by                                                             |
+| ------------ | ------------------------------------------------------------------- |
+| `production` | soultabletop.com (Vercel Production) and the migrate workflow       |
+| `preview`    | Vercel preview deployments                                          |
+| `dev`        | `pnpm dev` and scripts on your machines, agents, and cloud sessions |
+
+`preview` and `dev` were branched from `production` and can be reset from it in
+the Neon console when they drift.
 
 ### Local setup
 
@@ -106,6 +114,12 @@ pnpm db:migrate    # apply pending migrations to DATABASE_URL
 
 Read a generated migration before applying it: renames and enum value changes
 need hand-written migrations.
+
+`pnpm db:migrate` applies migrations to the `dev` branch (the `DATABASE_URL` in
+`.env.local`). To apply them to the `preview` branch, run it with that branch's
+URL. Production is migrated only by the **Migrate production** GitHub Action:
+after merging a PR with a migration, start it from the Actions tab (Run
+workflow, on `main`). It reads the `PRODUCTION_DATABASE_URL` repository secret.
 
 ## Site admins
 
