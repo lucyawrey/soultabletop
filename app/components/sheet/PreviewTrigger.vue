@@ -6,7 +6,9 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 // A value with `preview` (Ref, Value, or Column): the value (the slot) as an
 // underlined button. `expand` asks its tag (or Table row) to show the preview
 // below it; `card` opens it in a card floating under the value, closed by
-// clicking again, clicking elsewhere, or Escape.
+// clicking again, clicking elsewhere, or Escape. The card flips above the
+// value when there's more room there, and scrolls when it's taller than the
+// room on either side.
 defineProps<{
   mode: SheetPreviewMode;
   target: SheetPreviewTarget;
@@ -15,6 +17,10 @@ defineProps<{
   open?: boolean;
   // What a `card` lines up with, when not the value itself (a boxed Ref's box).
   anchor?: HTMLElement | null;
+  // The button's accessible name, when its slot is only an icon.
+  label?: string;
+  // A custom entry being edited: the card shows its fields as inputs.
+  editable?: boolean;
 }>();
 defineEmits<{ toggle: [] }>();
 
@@ -26,14 +32,14 @@ const triggerClass =
   <UPopover
     v-if="mode === 'card'"
     :reference="anchor ?? undefined"
-    :content="{ side: 'bottom', align: 'start' }"
+    :content="{ side: 'bottom', align: 'start', collisionPadding: 8 }"
   >
-    <button type="button" :class="triggerClass">
+    <button type="button" :class="triggerClass" :aria-label="label">
       <slot />
     </button>
     <template #content>
       <div
-        class="sheet-preview-frame max-h-[min(30rem,70vh)] w-[min(340px,calc(100vw-2rem))] overflow-y-auto p-3"
+        class="sheet-preview-frame max-h-[min(30rem,var(--reka-popover-content-available-height,70vh))] w-[min(340px,calc(100vw-2rem))] overflow-y-auto p-3"
         role="group"
         :aria-label="target.name || 'Preview'"
       >
@@ -50,7 +56,8 @@ const triggerClass =
             size="xs"
           />
         </div>
-        <SheetPreviewBody :target="target" :card="card" />
+        <SheetPreviewEditor v-if="editable" :target="target" />
+        <SheetPreviewBody v-else :target="target" :card="card" />
       </div>
     </template>
   </UPopover>
@@ -58,6 +65,7 @@ const triggerClass =
     v-else
     type="button"
     :class="triggerClass"
+    :aria-label="label"
     :aria-expanded="open"
     @click="$emit('toggle')"
   >

@@ -18,14 +18,15 @@ export default defineAppConfig({
     },
     navigationMenu: {
       slots: {
-        // Roomier rows, and small uppercase group labels like the mockup.
-        link: "px-2.5 py-1.5 text-[15px] gap-2",
+        // Roomier rows, and small uppercase group labels like the mockup. Rows
+        // keep their height on the collapsed rail, which hides the text.
+        link: "min-h-[35px] px-2.5 py-1.5 text-[15px] gap-2",
         separator: "hidden",
         // Groups (Play, Build) are separate lists; rows and groups are spaced
         // like the mockup.
-        list: "flex flex-col gap-0.5 not-first:mt-[18px]",
+        list: "flex flex-col gap-0.5 not-first:mt-[10px]",
         linkLeadingIcon: "size-[17px]",
-        label: "px-2.5 pt-0 pb-1 text-[11px]/[16.5px] font-bold tracking-widest text-muted uppercase",
+        label: "px-2.5 pt-0 pb-0.5 text-[11px]/[14px] font-bold tracking-widest text-muted uppercase",
       },
       // The current page is a solid primary pill, not Nuxt UI's tinted one.
       compoundVariants: [

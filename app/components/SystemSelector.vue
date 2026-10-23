@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { ResourceOptionItem } from "~/utils/resource-option";
 
-// Header dropdown for the current system (see `useCurrentSystem`).
+// Header dropdown for the current system (see `useCurrentSystem`). `compact`:
+// the sidebar is an icon rail, so show a button with the system's initials,
+// naming it in its tooltip, that opens the same menu beside the rail.
+defineProps<{ compact?: boolean }>();
 const ALL = "all";
 
 const { systemId, setSystem } = useCurrentSystem();
@@ -30,19 +33,45 @@ const selected = computed({
   get: () => systemId.value ?? ALL,
   set: (value: string) => setSystem(value === ALL ? null : value),
 });
+const selectedLabel = computed(
+  () => items.value.find((item) => item.value === selected.value)?.label ?? "All Systems",
+);
+// Up to three: "Pathfinder Second Edition" is "PSE"; all systems is "All".
+const initials = computed(() =>
+  selected.value === ALL
+    ? "All"
+    : selectedLabel.value
+        .split(/\s+/)
+        .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0] ?? "")
+        .join("")
+        .slice(0, 3)
+        .toUpperCase(),
+);
 </script>
 
 <template>
-  <USelect
-    :content="{ align: 'start' }"
-    v-model="selected"
-    :items="items"
-    size="md"
-    aria-label="Current system"
-    :ui="{ base: 'h-[35px] bg-(--st-page) text-sm text-highlighted', trailingIcon: 'size-3.5 text-default' }"
-  >
-    <template #item-label="{ item }">
-      <ResourceOption :option="item as ResourceOptionItem" />
-    </template>
-  </USelect>
+  <UTooltip :text="selectedLabel" :disabled="!compact" :content="{ side: 'right' }">
+    <USelect
+      v-model="selected"
+      :content="compact ? { side: 'right', align: 'start', sideOffset: 12 } : { align: 'start' }"
+      :items="items"
+      size="md"
+      :trailing-icon="compact ? '' : undefined"
+      :aria-label="compact ? `Current system: ${selectedLabel}` : 'Current system'"
+      :ui="
+        compact
+          ? {
+              base: 'flex h-[35px] items-center justify-center bg-(--st-page) p-0 text-xs font-bold text-highlighted',
+            }
+          : { base: 'h-[35px] bg-(--st-page) text-sm text-highlighted', trailingIcon: 'size-3.5 text-default' }
+      "
+    >
+      <template v-if="compact" #default>
+        <span aria-hidden="true">{{ initials }}</span>
+      </template>
+      <template #item-label="{ item }">
+        <ResourceOption :option="item as ResourceOptionItem" />
+      </template>
+    </USelect>
+  </UTooltip>
 </template>

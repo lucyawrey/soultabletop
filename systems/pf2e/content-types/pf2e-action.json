@@ -35,6 +35,12 @@
       "label": "Actions",
       "default": "1"
     },
+    "feat": {
+      "type": "content",
+      "label": "Feat",
+      "contentTypeId": "pf2e-feat",
+      "allow": "both"
+    },
     "category": {
       "type": "string",
       "options": [

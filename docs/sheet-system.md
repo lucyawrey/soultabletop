@@ -90,7 +90,7 @@ interface SheetDiagnostic { severity: "error" | "warning"; message: string; loc:
 
 Registry: `shared/sheet/registry.ts`. Each entry declares attrs (type: text | number | boolean | enum | fieldPath |
 list | formula | condition | name; required; default), allowed children, and which schema field types it may bind to.
-Number attrs read when rendering (`Tracker` `max`; `Number` `min`, `max`, `step`) accept one
+Number attrs read when rendering (`Tracker` `max` and `mark`; `Number` `min`, `max`, `step`) accept one
 `{formula}` (e.g. `max="{hpMax}"`); the others (`cols`, `span`, `level`) take plain numbers. Text attrs accept both
 mixed with text.
 Every tag also accepts `class` (names matching `[a-z][a-z0-9-]*`), `show` (conditional display; not on `Column`), and
@@ -104,7 +104,7 @@ none), and renders a fixed hook class `sheet-<tag>`. Field tags also render fixe
 | `Section` | `title`, `description`, `icon`, `span` | any | `UCard` with header (the title is an h2, like `Heading level="1"`) |
 | `Grid` | `cols` (1–12, default 2), `gap` (none/sm/md/lg) | any | CSS grid, 1 column on mobile |
 | `Stack` | `direction` (row/column), `gap`, `align`, `wrap` | any | flex container |
-| `Tabs` / `Tab` | Tab: `label` (req), `icon` | Tabs: only `Tab` | `UTabs` |
+| `Tabs` / `Tab` | Tab: `label` (req), `icon` | Tabs: only `Tab` | `UTabs` (only the open tab is mounted) |
 | `Divider` | `label` | none | `USeparator` |
 | `Heading` | `level` (1–4) | text | h2–h5 |
 | `Note` | — | text | muted paragraph |
@@ -137,7 +137,7 @@ View mode renders formatted values, edit mode renders the input.
 - **Read-only formula tags**: `Value`, `Column`, `Tracker` take `field` or `formula`, not both. With `formula` the
   tag shows the computed value and is never editable (a `Tracker` formula is its current value; its `max` can be a
   `{formula}` too). Its label is the `label` attribute, else empty.
-- **Override tags**: `Number`, `Text`, `Checkbox` (and `Field`, see below) take `field`, `formula`, or both. With both, the field holds an
+- **Override tags**: `Number`, `Text`, `Checkbox`, `Select` (and `Field`, see below) take `field`, `formula`, or both. With both, the field holds an
   optional manual value that wins over the computed one; absent, `null`, or (for `Text`) `""` means automatic. While
   automatic, the input shows the computed value as its placeholder (a `Checkbox` shows the computed state), typing
   stores a manual value, and a small "Use automatic value" button (`i-lucide-rotate-ccw`) beside the label removes it
@@ -153,22 +153,23 @@ View mode renders formatted values, edit mode renders the input.
   schema field only, and then acts exactly like `Text`, `Number`, or `Checkbox` (override, reset button, cascading);
   any other schema type is an error (`invalid-attribute`), and `Field` with
   `formula` alone is a `missing-attribute` error (use `Value`).
-- Every other field tag (`Select`, `Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`.
+- Every other field tag (`Tags`, `Toggle`, `Ref`, `Markdown`, `Image`) takes no `formula`. A `Select`'s automatic
+  value shows as its option's label, and as the select's placeholder while editing.
   `Image` never will: a formula could build a URL that sends data the viewer can read to another site.
 
 | Tag | Extra attrs | Binds | Edit input |
 |---|---|---|---|
 | `Text` | `multiline`, `placeholder` | string | `UInput` / `UTextarea` |
-| `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat) | number | `UInputNumber` (`signed` uses `signDisplay: "exceptZero"` so the input shows "+3" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
+| `Number` | `min`, `max`, `step`, `format` (plain/signed), `variant` (input/stat), `steppers` (− and + buttons on the input; off by default) | number | `UInputNumber` (`signed` uses `signDisplay: "always"` so the input shows "+3" and "+0" and still stores a number); `stat` = big centered number + small label (no separate `Stat` tag — decided) |
 | `Checkbox` / `Toggle` | Checkbox: `style` (check/dot) | boolean | `UCheckbox` / `USwitch`; `style="dot"` is a filled or empty circle in every mode, with no Yes/No text (e.g. proficiency marks) |
 | `Select` | `options` (comma list; only for a text field without schema options) | string, or number with schema options | `USelect` of the field's options (labels shown, values stored) |
-| `Tags` | — | array of string (not of choices) | `UInputTags` |
-| `Tracker` | `max` (optional, at least 0), `style` (bar/pips) | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max" |
-| `Ref` | `preview` (see "Reference previews") | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind) |
+| `Tags` | `placeholder` | array of string (not of choices) | `UInputTags` |
+| `Tracker` | `max` (optional, at least 0), `mark` (optional), `style` (bar/pips), `steppers` | number | `UProgress` or pip boxes; without a `max`, or when it is 0, just the value (a number input when editing), with no "/ max". `mark` (a number or one `{formula}`) draws a tick across a bar that isn't editable at that value, for a threshold like encumbrance (hook class `sheet-tracker-mark`); none at or below 0 or at or above `max` |
+| `Ref` | `preview` (see "Reference previews"), `filter` | resourceLink / `content` | link to the resource; edit: picker (see "Content fields"; for `resourceLink`, a picker of readable resources of the field's `kind`, or of a chosen kind). `filter` (content fields only): a true/false formula read against each candidate, whose paths are the candidate's fields (`/` still reaches this content), like `filter="kind == 'weapon'"` or `filter="ancestry == /ancestry"`; the picker asks the content list for just the top-level fields it reads (`dataKeys`) and offers the candidates it's true for. The current value always stays offered |
 | `Value` | `format`, `formula`, `preview` | any | read-only in both modes; with `Part` children and no formula, their sum (see "Breakdowns") |
 | `Field` | — | string, number, boolean, scalar, object, resourceLink, content, array of string or of choices (not a struct or an array of objects) | picks input from schema type (decided): a field with options gets a `USelect`, an array of choices a multiple `USelectMenu`; generated sheets mostly use this. `scalar`: input with a type switch (string / number / boolean / null); free-form `object`: inline JSON editor (CodeMirror) |
 | `Markdown` | — | string | view: safe Markdown subset (no raw HTML); edit: `UEditor` in Markdown mode (decided) |
-| `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: URL input (decided) |
+| `Image` | `alt`, `size` | string (image URL) | view: `<img referrerpolicy="no-referrer">`; edit: the picture (or "No image") above a URL input, following the URL as it's typed (class `sheet-image-frame`) |
 
 Image URLs: https only. The schema has no image type, so this is enforced where the tag is used: `Image` renders only
 https URLs, and its edit input validates client-side. Uploads later, same field shape.
@@ -223,8 +224,11 @@ required `resourceLink` or `content` entry without a default would be left empty
 - Paths continue through it into that content type's schema: `class.hitDie`, `class.name`, `item.weight`. Works in
   arrays: `inventory: [{ item: content(Item), qty: number }]` → `item.weight` next to `qty`.
 - Referenced values are **live and read-only** through the sheet; local values are editable. Edit mode shows a
-  searchable picker of readable content of that type (for `reference`/`both`), a "Custom" option creating a local object
-  (for `local`/`both`), and "Make custom copy" turning a reference into local data.
+  searchable picker of readable content of that type (for `reference`/`both`). For `both`, its first option is
+  "Custom <field label>": it creates a local object, or turns the current reference into local data (a copy). A custom
+  entry looks like a picked one: its name is typed in place of the picked name, and the same picker switches it back
+  to a reference (`sheet-custom-name` on the name input). A List of
+  content's "Add" picker leads with the same option; a `local`-only field or list gets a button instead.
 - Depth: paths may cross up to **3** content fields (`class.subclass.feature.name`); deeper is a validation error.
 - Loading: `GET /api/content/[id]` walks the data, batch-loads referenced content one level at a time (≤ 3 queries),
   skips cycles, caps at 300 refs, drops any the viewer can't read, and returns
@@ -249,8 +253,8 @@ required `resourceLink` or `content` entry without a default would be left empty
 ### Repeaters
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
-| `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
-| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width`, `preview` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
+| `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); an item of plain text, numbers, and switches (no choices or pickers) that's still blank when focus leaves it is removed, so an added entry left unfilled doesn't stay (`isBlankListItem`); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
+| `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width`, `steppers` (never in `xs` and `sm` cells), `preview` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
 
 Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
 skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even
@@ -383,11 +387,17 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup). Two ways t
   `class` and `show` (a hidden one gives way to the type's own `<Preview>` or the generated view). It is styled by the referencing sheet's
   CSS: its element carries the sheet's `data-sheet` and `data-density`, also in a floating card.
   Errors: `preview-tag-without-preview` (no `preview` on its tag), `duplicate-preview` (two in one tag).
-- **Limits:** previews are always read-only (no inputs, whatever `live`; fields inside show as text unless they say
-  `display="box"`), so a `Button` inside a `<Preview>` is an error (`button-in-preview`); and a preview can't open another
+- **Limits:** previews are read-only (no inputs, whatever `live`; fields inside show as text unless they say
+  `display="box"`), except a custom entry's card while it's being edited (below), so a `Button` inside a `<Preview>` is an error (`button-in-preview`); and a preview can't open another
   (`preview` inside a `<Preview>` is `preview-in-preview`).
+- **Expand button** (decided 2026-10-20): every value with a preview also gets a small `i-lucide-maximize-2` button
+  beside it that opens the same preview (class `sheet-preview-button` on its wrapper); clicking the value still opens
+  it too.
 - **While editing:** an editable value (a `Ref`'s picker, a custom copy's fields) shows its input, not a button;
-  values that can't be edited keep their preview. `display="box"` doesn't box a value with a preview (a `Ref` keeps
+  an editable `Ref` with `preview` keeps the expand button beside its picker (its wrapper also has
+  `sheet-edit-preview`); values that can't be edited keep their preview. A custom entry's preview (local data) being
+  edited shows its content type's fields as inputs instead, a generated sheet without the name (typed in place of
+  the picked name) that writes straight into the entry (`sheet/PreviewEditor.vue`). `display="box"` doesn't box a value with a preview (a `Ref` keeps
   its box with the button inside).
 - Hook classes: `sheet-preview-trigger` on the value's button, `sheet-preview-frame` on the expanded box or the card,
   `sheet-preview` on what's inside it (a `<Preview>` also gets its `class`).
@@ -487,7 +497,7 @@ action, not a formula: formulas stay pure, and dice are allowed only in a `<Roll
   `formula`, or parts). Steps can't be in a `<Preview>` (`step-in-preview`); elsewhere they're `step-misplaced`.
 - **`Roll`:** `formula` (required), `name`, `label` (text with `{…}`; default "Roll"), `crit`, `fumble`, and `show`
   (skips the step); no other common attributes. One entry per Roll: its title is the action's name (a Button's
-  label; a value's label; in a `List` or `Table` row, the row's label or its `name` field, like "Rapier") and the
+  label; a value's label; in a `List` or `Table` row, the row's label, its `name` field, or else the name of the first loaded Content it references, like a Strike row's weapon, "Rapier") and the
   Roll's label ("Rapier · Attack").
 - **Dice:** `NdM` and `dM`, with `khK`/`klK` keeping the highest or lowest K (`2d20kh1`, `4d6kh3`). Only in a Roll's
   `formula` (elsewhere `dice-outside-roll`), and only added, subtracted, multiplied, divided, or picked with `if()`
@@ -647,7 +657,7 @@ Components (`app/components/sheet/`):
 
 `ContentDetail.vue`:
 - Replaces the Data card with `<SheetRenderer>`. The header's former Edit button is now **Settings** (so it isn't
-  confused with the Edit Fields switch); its modal keeps Name, ID, Visibility, the saved sheet, and the raw JSON editor.
+  confused with the Edit switch); its modal keeps Name, ID, Visibility, the saved sheet, and the raw JSON editor.
 - The draft lives in `app/composables/useContentDraft.ts` (compares with sorted keys, since `content.data` is jsonb).
   Editing controls are `sheet/FieldInput.vue`; List/Table add/remove/reorder use `useSheetListEditing` and
   `sheet/ListAdd.vue`; `sheet/ContentPicker.vue` picks referenced content.
@@ -877,7 +887,7 @@ use one. Built-ins added after v1 (so far `list`, `itemKey`, `itemLabel`, `map`,
 | Min/max | `min(…)`, `max(…)`: numbers, or one list of numbers; empty values skipped; nothing if none |
 | Lists | `sum(list)`, `sum(list, expr)`, `count(list)`, `count(list, cond)`, `any(list, cond)`, `all(list, cond)`, `length(x)`, `list(a, b, …)` (builds a list from separate values: `join(list(speed, flySpeed), ", ")`, `max(list(a, b))`; empty values stay in it and `join`, `sum`, `min`, and `max` skip them; single values only) |
 | Nulls | `coalesce(a, b, …)`: the first value that isn't empty (errors aren't skipped) |
-| Text | `concat(…)`, `join(list, separator)` (skips nothing and empty text `""`), `signed(n)` ("+3", "0", "-1") |
+| Text | `concat(…)`, `join(list, separator)` (skips nothing and empty text `""`), `signed(n)` ("+3", "+0", "-1") |
 | Conversion | `number(x)` (parses text; nothing if it isn't a number), `text(x)` |
 | Logic | `if(cond, then, else)`, `switch(value, case1, result1, …, default?)`; only the chosen branch is computed |
 | Lookup | `get(record, key)`: own keys only (reserved keys give nothing); text is followed as a reference, like a path |

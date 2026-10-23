@@ -51,10 +51,10 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Number` | `formula`, `min`, `max`, `step`, `format` (`plain` \| `signed`), `variant` (`input` \| `stat`) | number | `stat`: large number, small label; `signed`: `+3` (also in the editable input; data stays numeric); `formula` overrides |
 | `Checkbox` | `formula`, `style` (`check` \| `dot`, default check) | boolean | `formula` overrides; `style="dot"` is a filled or empty circle with no Yes/No text (proficiency marks) |
 | `Toggle` | none | boolean | On/off switch |
-| `Select` | `options` (comma-separated; only on a text field without schema options) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
-| `Tags` | none | array of strings | |
-| `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value |
-| `Ref` | `preview` (`expand` \| `card`; bare = `expand`) | resourceLink, content | Link to the referenced resource or Content; with `preview` (content fields only), clicking shows it instead (see "Reference previews"); may hold one `Preview` |
+| `Select` | `options` (comma-separated; only on a text field without schema options), `formula` (override) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
+| `Tags` | `placeholder` | array of strings | |
+| `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `mark` (same), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value; `mark` ticks a bar that isn't editable at a threshold (`mark="{5 + str}"`) |
+| `Ref` | `preview` (`expand` \| `card`; bare = `expand`), `filter` (content fields: a true/false formula read against each candidate, e.g. `filter="kind == 'weapon'"`; `/` reaches this content, e.g. `filter="ancestry == /ancestry"`) | resourceLink, content | Link to the referenced resource or Content; with `preview` (content fields only), clicking shows it instead (see "Reference previews"); may hold one `Preview` |
 | `Value` | `formula`, `format` (`plain` \| `signed`), `preview` (`expand` \| `card`) | any value | Never editable; `formula` (read-only) instead of `field`; with `Part` children and no formula, shows their sum; `preview` (see "Reference previews") |
 | `Markdown` | none | string | Formatted long text |
 | `Image` | `alt`, `size` (`sm` \| `md` \| `lg` \| `full`, default md) | string | The string must be an https URL |
@@ -76,7 +76,7 @@ field tag, with a warning.
 | `List` | `field` (req), `label`, `layout` (`stack` \| `grid`), `cols` (1-12, for grid), `addLabel` (default "Add") | any; paths inside are relative to each item | any array, or a struct whose entries are alike |
 | `Table` | `field` (req), `label` | only `Column` and `RowDetails`; paths inside are relative to each row | array of structs (also content or object items), or a struct of alike structs |
 
-In edit mode a `List` or `Table` of an array gets add, remove, and reorder controls; one of a struct's entries has a row per schema entry and no controls.
+In edit mode a `List` or `Table` of an array gets add, remove, and reorder controls (a `List` item of plain text, numbers, and switches that's still blank when focus leaves it is removed); one of a struct's entries has a row per schema entry and no controls.
 
 ## Breakdowns
 
@@ -90,7 +90,7 @@ In edit mode a `List` or `Table` of an array gets add, remove, and reorder contr
 |---|---|---|---|
 | `Preview` | `class`, `show` only | any | What a preview shows instead of the generated view (chips, rows, long text). Two places, at most one each: beside `<Sheet>` at the top level, for every preview of this content type from other sheets (paths read this content's top level; `<Define>`s work; styled by this sheet's CSS; never shown on the content's own page); or directly inside a `Ref`, `Value`, or `Column` with `preview`, overriding it for that tag (paths relative to the referenced content, `/` still reaches the top level; styled by the referencing sheet's CSS). Always read-only, so no `Button`s and no `preview` inside. Class `sheet-preview` |
 
-`preview` shows the last content field on the way to the tag's field (`spell.name` shows `spell`; in a `Table` over an array of content, the row). Plain `preview` expands below the value (under the row for a `Column`; any number open): use it for spells, feats, and other content read in full. `preview="card"` floats a card under the value: use it for minor things with no inline place, like a background.
+`preview` shows the last content field on the way to the tag's field (`spell.name` shows `spell`; in a `Table` over an array of content, the row). Plain `preview` expands below the value (under the row for a `Column`; any number open): use it for spells, feats, and other content read in full. `preview="card"` floats a card under the value: use it for minor things with no inline place, like a background. In edit, a `Ref` with `preview` shows its picker with a small eye button beside it that opens the same preview, so give the edit-mode `Ref` `preview` too when its view-mode name has one.
 
 ## Buttons
 

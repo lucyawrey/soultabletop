@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isBlankListItem, type SheetScope as SheetScopeValue } from "#shared/sheet/runtime";
 import type { ValidatedElement } from "#shared/sheet/validate";
 
 // <List>: its children once per item of the bound array, with add, remove,
@@ -6,7 +7,7 @@ import type { ValidatedElement } from "#shared/sheet/validate";
 // (rows from the schema, so no controls).
 const props = defineProps<{ node: ValidatedElement }>();
 
-const { rows, resolve } = useSheet();
+const { rows, resolve, context } = useSheet();
 const attrText = useSheetAttrText();
 
 const list = computed(() => resolve(props.node.binding!.path));
@@ -29,6 +30,17 @@ const editing = useSheetListEditing(() => props.node, list);
 const { unlock, remove, move } = editing;
 const editable = computed(() => editing.editable.value && !props.node.entries);
 const lockedEditable = computed(() => editing.lockedEditable.value && !props.node.entries);
+
+// An item still blank when focus leaves it is dropped (see isBlankListItem).
+const itemField = computed(() => {
+  const field = props.node.binding?.field;
+  return field?.type === "array" ? field.itemType : undefined;
+});
+function dropIfBlank(event: FocusEvent, index: number, scope: SheetScopeValue) {
+  const item = event.currentTarget as HTMLElement;
+  if (!editable.value || item.contains(event.relatedTarget as Node | null)) return;
+  if (isBlankListItem(scope.value, itemField.value, context.schemas.value)) remove(index);
+}
 </script>
 
 <template>
@@ -38,13 +50,10 @@ const lockedEditable = computed(() => editing.lockedEditable.value && !props.nod
       class="flex items-center gap-1 text-xs font-medium text-muted"
     >
       <span>{{ label }}</span>
-      <UButton
+      <SheetIconButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
-        color="neutral"
-        variant="ghost"
-        size="xs"
-        :aria-label="`Edit ${label || 'list'}`"
+        :label="`Edit ${label || 'list'}`"
         @click="unlock"
       />
     </div>
@@ -55,35 +64,27 @@ const lockedEditable = computed(() => editing.lockedEditable.value && !props.nod
         :scope="scope"
         :repeat="scopes.length"
       >
-        <div class="sheet-list-item flex gap-2">
+        <div class="sheet-list-item flex gap-2" @focusout="dropIfBlank($event, index, scope)">
           <div class="min-w-0 flex-1" :class="compact ? 'space-y-2' : 'space-y-3'">
             <SheetNodes :nodes="node.children" />
           </div>
           <div v-if="editable" class="flex shrink-0 flex-col gap-1">
-            <UButton
+            <SheetIconButton
               icon="i-lucide-arrow-up"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              aria-label="Move up"
+              label="Move up"
               :disabled="index === 0"
               @click="move(index, -1)"
             />
-            <UButton
+            <SheetIconButton
               icon="i-lucide-arrow-down"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              aria-label="Move down"
+              label="Move down"
               :disabled="index === scopes.length - 1"
               @click="move(index, 1)"
             />
-            <UButton
+            <SheetIconButton
               icon="i-lucide-trash"
               color="error"
-              variant="ghost"
-              size="xs"
-              aria-label="Remove"
+              label="Remove"
               @click="remove(index)"
             />
           </div>

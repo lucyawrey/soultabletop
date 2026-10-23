@@ -278,5 +278,22 @@ for (const item of items) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(new URL(`${item.readableId}.json`, dir), JSON.stringify({ name: item.source.name, readableId: item.readableId, data }, null, 2) + "\n");
 }
-console.log(`${items.length} files written to systems/pf2e/content/`);
+// A feat with an action cost is also an action, so the character's action
+// picker offers it; the action links back to its feat.
+let featActions = 0;
+const actionDir = new URL("pf2e-action/", outDir);
+for (const item of items.filter((entry) => entry.type === "pf2e-feat")) {
+  const actions = actionsOf(item.source.system);
+  if (actions === "passive") continue;
+  const readableId = item.readableId.replace(/^feat-/, "action-");
+  if (items.some((entry) => entry.readableId === readableId)) {
+    warnings.push(`${item.source.name}: an action ${readableId} already exists, so the feat's action is skipped`);
+    continue;
+  }
+  if (!existsSync(actionDir)) mkdirSync(actionDir, { recursive: true });
+  const data = nonEmpty({ actions, feat: item.readableId, ...common(item.source) });
+  writeFileSync(new URL(`${readableId}.json`, actionDir), JSON.stringify({ name: item.source.name, readableId, data }, null, 2) + "\n");
+  featActions += 1;
+}
+console.log(`${items.length + featActions} files written to systems/pf2e/content/ (${featActions} actions from feats)`);
 for (const message of warnings) console.warn(`warning: ${message}`);

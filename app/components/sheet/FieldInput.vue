@@ -2,8 +2,8 @@
 import { optionLabel } from "#shared/content-schema";
 import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
-import { defaultSheetValue, findRef, ownProperty, refRecord } from "#shared/sheet/runtime";
-import type { ValidatedElement } from "#shared/sheet/validate";
+import { defaultSheetValue, filterDataKeys, findRef, ownProperty, refRecord } from "#shared/sheet/runtime";
+import { isCompiledFormula, type ValidatedElement } from "#shared/sheet/validate";
 
 // The editing control of a field tag (see Field.vue for viewing). Disabled, it
 // shows a non-editable field with `display="box"`.
@@ -19,7 +19,18 @@ const props = defineProps<{
   automatic?: string;
 }>();
 
-const { context, number } = useSheet();
+const { context, number, condition } = useSheet();
+
+// A Ref's `filter`: which content its picker offers, read against each
+// candidate (paths are the candidate's fields; `/` is this sheet's content).
+const filter = computed(() => {
+  const formula = props.node.attrs.filter;
+  return isCompiledFormula(formula) ? formula : undefined;
+});
+const filterKeys = computed(() => (filter.value ? filterDataKeys(filter.value.ast) : undefined));
+function accepts(data: Record<string, unknown>) {
+  return condition(filter.value, { value: data, path: null }).shown;
+}
 // Compact sheets (the default) use the smallest inputs.
 const size = computed(() => (context.density.value === "compact" ? "xs" : undefined));
 const attrText = useSheetAttrText();
@@ -29,6 +40,20 @@ const narrow = computed(
   () =>
     props.node.tag === "Column" &&
     (props.node.attrs.width === "xs" || props.node.attrs.width === "sm"),
+);
+
+// Number inputs get − and + buttons only with `steppers`, and never in narrow
+// columns. Without them Nuxt UI starts the number at the left; outside narrow
+// columns it stays centered, as it is with the buttons.
+const noSteppers = computed(
+  () => narrow.value || props.node.attrs.steppers !== true,
+);
+const numberUi = computed(() =>
+  narrow.value
+    ? { base: "px-1.5" }
+    : noSteppers.value
+      ? { base: "text-center" }
+      : undefined,
 );
 
 const display = computed(() => sheetFieldDisplay(props.node));
@@ -166,7 +191,7 @@ const step = computed(() => number(props.node.attrs.step));
 // still the plain number.
 const numberFormat = computed(() =>
   props.node.attrs.format === "signed"
-    ? ({ signDisplay: "exceptZero" } as const)
+    ? ({ signDisplay: "always" } as const)
     : undefined,
 );
 
@@ -259,6 +284,7 @@ const imageError = computed(() =>
     v-model="choice"
     :disabled="disabled"
     :items="selectItems"
+    :placeholder="placeholder"
     :aria-label="label"
     class="w-full"
   />
@@ -287,9 +313,9 @@ const imageError = computed(() =>
     :format-options="numberFormat"
     :placeholder="automatic"
     :aria-label="label"
-    :increment="narrow ? false : undefined"
-    :decrement="narrow ? false : undefined"
-    :ui="narrow ? { base: 'px-1.5' } : undefined"
+    :increment="noSteppers ? false : undefined"
+    :decrement="noSteppers ? false : undefined"
+    :ui="numberUi"
     class="w-full"
   />
 
@@ -325,6 +351,7 @@ const imageError = computed(() =>
     v-else-if="display === 'tags'"
     v-model="tags"
     :disabled="disabled"
+    :placeholder="placeholder"
     :aria-label="label"
     class="w-full"
   />
@@ -348,9 +375,9 @@ const imageError = computed(() =>
       v-model="numberValue"
       :disabled="disabled"
       :min="0"
-      :increment="narrow ? false : undefined"
-      :decrement="narrow ? false : undefined"
-      :ui="narrow ? { base: 'px-1.5' } : undefined"
+      :increment="noSteppers ? false : undefined"
+      :decrement="noSteppers ? false : undefined"
+      :ui="numberUi"
       :max="trackerMax || undefined"
       :aria-label="label"
       class="w-full"
@@ -370,7 +397,7 @@ const imageError = computed(() =>
   <div v-else-if="display === 'ref'" class="space-y-2">
     <UInput
       :size="size"
-      v-if="isLocal"
+      v-if="isLocal && allow === 'local'"
       v-model="localName"
       :disabled="disabled"
       placeholder="Name"
@@ -382,19 +409,16 @@ const imageError = computed(() =>
       :content-type-id="contentField!.contentTypeId"
       :model-value="typeof value === 'string' ? value : undefined"
       :current-name="referenced?.name ?? (typeof value === 'string' ? 'Unavailable' : undefined)"
-      :placeholder="referenced?.name ?? (isLocal ? 'Use existing…' : 'Choose…')"
+      :placeholder="referenced?.name ?? 'Choose…'"
+      :data-keys="filterKeys"
+      :accepts="filter ? accepts : undefined"
+      :custom-label="allow !== 'reference' ? `Custom ${contentField?.label ?? label}` : undefined"
+      :custom-name="isLocal ? localName : undefined"
+      :label="label"
       @pick="pick"
+      @custom="makeCustom"
+      @update:custom-name="localName = $event"
     />
-    <div v-if="allow !== 'reference' && !isLocal" class="flex gap-2">
-      <UButton
-        size="xs"
-        color="neutral"
-        variant="outline"
-        :icon="referenced ? 'i-lucide-copy' : 'i-lucide-plus'"
-        :label="referenced ? 'Make custom copy' : 'Custom'"
-        @click="makeCustom"
-      />
-    </div>
   </div>
 
   <div
@@ -435,9 +459,9 @@ const imageError = computed(() =>
       v-else-if="scalarType === 'number'"
       v-model="scalarNumber"
       :disabled="disabled"
-      :increment="narrow ? false : undefined"
-      :decrement="narrow ? false : undefined"
-      :ui="narrow ? { base: 'px-1.5' } : undefined"
+      :increment="noSteppers ? false : undefined"
+      :decrement="noSteppers ? false : undefined"
+      :ui="numberUi"
       :aria-label="label"
       class="min-w-0 flex-1"
     />
