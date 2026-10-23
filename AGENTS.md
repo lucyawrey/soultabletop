@@ -29,6 +29,7 @@ Soul Tabletop is a Nuxt 4 app for managing tabletop RPG Systems, Campaigns, Cont
 - Code shared by client and server lives in `shared/`. Server code imports it with relative paths, since drizzle-kit loads the schema without Nuxt aliases.
 - Sheet formulas live in `shared/sheet/` (`formula.ts`, `formula-functions.ts`, `formula-eval.ts`, `formula-check.ts`) and are computed at render time, never stored. Update `docs/sheet-system.md` when a Sheet decision changes.
 - Always read generated migrations before applying them. Column renames and enum value changes need hand-written steps.
+- `DATABASE_URL` points at the `dev` Neon branch; `PREVIEW_DATABASE_URL`, when set, at `preview`. Never connect to the `production` branch or ask for its URL. Production is migrated only by the manually started **Migrate production** workflow (`.github/workflows/migrate-production.yml`), so a PR that adds a migration should say it needs that run after merging.
 - The app's URL comes from each request; there is no base-URL setting. Don't reintroduce `BASE_URL` or `BETTER_AUTH_URL`.
 
 ## Conventions

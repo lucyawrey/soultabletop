@@ -1,0 +1,35 @@
+# Applies pending Drizzle migrations to the production Neon branch. Start it by
+# hand from the Actions tab (or the GitHub app) after merging a PR that adds a
+# migration. It only runs on `main`, and reads the production connection string
+# from the PRODUCTION_DATABASE_URL repository secret, the only copy outside Vercel.
+name: Migrate production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never run two migrations at once, and never cancel one halfway.
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      # pnpm comes from corepack, which reads `packageManager` in package.json.
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # drizzle-kit doesn't need `nuxt prepare`, so skip the postinstall.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
