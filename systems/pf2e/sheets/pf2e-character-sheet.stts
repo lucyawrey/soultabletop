@@ -293,7 +293,7 @@
       </List>
     </Section>
     <Section title="Actions &amp; Reactions" icon="i-game-icons-hand" class="folio acts">
-      <List field="actions" addLabel="Add action" class="rows">
+      <List field="actions" addLabel="Add action" addPick="action" class="rows">
         <Stack direction="row" class="row">
           <Value hideLabel class="act" formula="glyph(action.actions)" />
           <!-- Feats with an action cost are actions too (the import makes them), so one picker offers both. -->
@@ -453,7 +453,7 @@
         <Stack direction="row" class="row th feat">
           <Note>Level</Note><Note></Note><Note>Feat</Note><Note>Type</Note>
         </Stack>
-        <List field="feats" addLabel="Add feat" class="rows feats">
+        <List field="feats" addLabel="Add feat" addPick="feat" class="rows feats">
           <Stack direction="row" class="row feat">
             <Value field="level" hideLabel class="dim" show="not editing()" />
             <Number field="level" hideLabel min="1" max="20" class="small-num" show="editing()" />
@@ -541,7 +541,7 @@
           </List>
         </Stack>
         <!-- Only its Add button shows: new items are worn (the schema's default) and join that group. -->
-        <List field="inventory" addLabel="Add item" class="rows addonly" show="editing()">
+        <List field="inventory" addLabel="Add item" addPick="item" class="rows addonly" show="editing()">
           <Note class="none" show="false"></Note>
         </List>
       </Tab>
@@ -616,7 +616,7 @@
 
         <Stack class="rows">
           <Note class="grp">Spells</Note>
-          <List field="spells" addLabel="Add spell" class="rows spells">
+          <List field="spells" addLabel="Add spell" addPick="spell" class="rows spells">
             <Stack direction="row" class="row spell" show="spell.kind != 'cantrip'">
               <Checkbox field="cast" hideLabel style="dot" live />
               <Value hideLabel class="act" formula="glyph(spell.cast)" />
