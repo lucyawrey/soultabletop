@@ -400,15 +400,18 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup). Two ways t
 - **Limits:** previews are read-only (no inputs, whatever `live`; fields inside show as text unless they say
   `display="box"`), except a custom entry's card while it's being edited (below), so a `Button` inside a `<Preview>` is an error (`button-in-preview`); and a preview can't open another
   (`preview` inside a `<Preview>` is `preview-in-preview`).
-- **Expand button** (decided 2026-10-20): every value with a preview also gets a small `i-lucide-maximize-2` button
-  beside it that opens the same preview (class `sheet-preview-button` on its wrapper); clicking the value still opens
-  it too.
-- **While editing:** an editable value (a `Ref`'s picker, a custom copy's fields) shows its input, not a button;
-  an editable `Ref` with `preview` keeps the expand button beside its picker (its wrapper also has
-  `sheet-edit-preview`); values that can't be edited keep their preview. A custom entry's preview (local data) being
-  edited shows its content type's fields as inputs instead, a generated sheet without the name (typed in place of
-  the picked name) that writes straight into the entry (`sheet/PreviewEditor.vue`). `display="box"` doesn't box a value with a preview (a `Ref` keeps
-  its box with the button inside).
+- **Select, Edit, and View** (decided 2026-10-27, replacing 2026-10-20's expand button; design in the agents repo's
+  `mockups/sheet-pickers/`): three icons of one size. **View** (`i-lucide-info`) opens the preview, **Select**
+  (`i-lucide-chevrons-up-down`) opens a content picker, **Edit** (`i-lucide-pencil`) opens a custom entry's card with
+  its fields as inputs. For a picked entry the first icon is part of the name: in view mode the name and View are one
+  button that opens the preview (class `sheet-name-link`); in edit mode the picker's trigger is the name and Select,
+  followed by View (the `sheet-preview-button sheet-edit-preview` wrapper). A custom entry in edit mode shows its name
+  input, then Select alone (`sheet-select-button`), Edit (`sheet-edit-button`), and View (its read-only card); Edit
+  and View open the same spot, and switching between them keeps it open. Edit never shows on a picked entry or in
+  view mode. Icon buttons have a click area a little larger than the icon. Values that can't be edited keep their
+  preview. A custom entry's card while editing is a generated sheet without the name (typed in the row) that writes
+  straight into the entry (`sheet/PreviewEditor.vue`). `display="box"` doesn't box a value with a preview (a `Ref`
+  keeps its box with the name link inside).
 - Hook classes: `sheet-preview-trigger` on the value's button, `sheet-preview-frame` on the expanded box or the card,
   `sheet-preview` on what's inside it (a `<Preview>` also gets its `class`).
 - Rendering: `sheet/PreviewTrigger.vue` (the button; the card's `UPopover`), `sheet/PreviewExpanded.vue` (the

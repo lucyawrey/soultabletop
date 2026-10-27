@@ -412,8 +412,7 @@
    breakdowns in other cells keep their own clicks. */
 .row .sheet-field-value:has(> span > .sheet-preview-trigger) { align-self: stretch; display: flex; margin: -2px 0; }
 .row .sheet-field-value > span:has(> .sheet-preview-trigger) { display: flex; flex: 1; align-items: center; gap: 2px; min-width: 0; }
-.row .sheet-preview-trigger { padding: 0 4px; margin-left: -4px; border-radius: 4px; }
-.row .sheet-preview-trigger:hover { background: color-mix(in srgb, var(--st-primary) 7%, transparent); }
+.row .sheet-name-link { padding: 0 3px; margin-left: -3px; }
 
 /* Skills and proficiencies on the left, the tabs on the right. */
 .mid { display: grid !important; grid-template-columns: minmax(300px, 1fr) 1.75fr; gap: calc(var(--d-gap) + 10px) var(--d-gap); align-items: stretch; }
@@ -607,25 +606,31 @@
 /* Initiative's "rolls with" is a real select in play and edit alike. */
 .init button[data-slot="base"][role="combobox"] { border-style: solid; font-weight: 400; }
 
-/* Pickers of a referenced name look like the underlined name, with a small ▾. */
+/* Pickers of a referenced name are the name and its Select icon (⇕) as one link. */
 .sheet-sheet .name button[data-slot="base"][aria-haspopup], .sheet-sheet .card button[data-slot="base"][aria-haspopup],
 .sheet-sheet .kv .sheet-ref button[data-slot="base"][aria-haspopup] {
   width: auto;
   max-width: 100%;
   border: 0;
-  padding: 0 16px 0 0;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  padding: 0 17px 0 0;
+  border-radius: 4px;
   color: var(--st-ink);
+  background: none;
 }
+.sheet-sheet .name button[data-slot="base"][aria-haspopup]:hover, .sheet-sheet .card button[data-slot="base"][aria-haspopup]:hover,
+.sheet-sheet .kv .sheet-ref button[data-slot="base"][aria-haspopup]:hover {
+  color: var(--st-primary);
+  background: color-mix(in srgb, var(--st-primary) 7%, transparent);
+}
+.sheet-sheet :is(.name, .card, .kv .sheet-ref) button[data-slot="base"][aria-haspopup] [data-slot="trailing"] { padding-right: 2px; }
+/* A custom entry's Select icon alone. */
+.sheet-sheet .sheet-select-button button[data-slot="base"], .sheet-sheet button.sheet-select-button { padding: 0 16px 0 0 !important; margin: 0 !important; min-width: 16px; }
 .name .sheet-field-value, .kv .sheet-ref .sheet-field-value { width: auto; min-width: 0; }
 /* The Class tab's first line keeps its height when Key attribute becomes a select. */
 .sheet-sheet .keyline button[data-slot="base"][aria-haspopup] { height: 20px; }
 .sheet-sheet .card button[data-slot="base"][aria-haspopup] { height: auto; font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
-/* A card keeps its play width and color: its ▾ sits on its top edge, like the KEY badge. */
+/* A card's controls follow its name on the value line. */
 .card { position: relative; }
-.sheet-sheet .card button[data-slot="base"][aria-haspopup] { position: static; padding-right: 0; color: var(--st-primary); }
-.sheet-sheet .card [data-slot="trailing"] { inset: -7px 6px auto auto; padding: 0 1px; background: var(--st-panel); border-radius: 3px; }
 .card:has(button[data-slot="base"]) { border-style: dashed; }
 .card:has(button[data-slot="base"]), .rankcell:has(.rank-sel) .rank.on .sheet-field-value {
   outline: 2px solid color-mix(in srgb, var(--st-primary) 22%, transparent);
@@ -866,15 +871,13 @@
   .sheet-tab { min-height: 0; }
 }
 
-/* A name's preview also opens from a small expand button beside it (beside its picker in edit). */
-.sheet-field-value:has(> .sheet-preview-button) { display: flex; align-items: center; gap: 2px; }
-.sheet-preview-button { display: inline-flex; flex: none; }
-.sheet-sheet .sheet-preview-button .sheet-preview-trigger { display: inline-flex; flex: none; align-items: center; margin: 0; padding: 2px; border-radius: 4px; color: var(--st-ink-muted); text-decoration: none; }
-.sheet-sheet .sheet-preview-button .sheet-preview-trigger:hover { color: var(--st-primary); background: color-mix(in srgb, var(--st-primary) 7%, transparent); }
-/* A build card's button sits on its top edge (beside its ▾ in edit), so it doesn't move between modes. */
-.card .sheet-preview-button { position: absolute; top: -7px; right: 22px; background: var(--st-panel); border-radius: 3px; }
-.sheet-sheet .card .sheet-preview-button .sheet-preview-trigger { padding: 0 1px; }
-.card .sheet-preview-button .iconify { width: 12px; height: 12px; }
+/* In edit, the Edit and View icons follow the picker; in view, the name and its View icon are one link. */
+.sheet-field-value:has(> .sheet-preview-button) { display: flex; align-items: center; gap: 4px; }
+.sheet-preview-button { display: inline-flex; flex: none; align-items: center; gap: 4px; }
+.sheet-sheet .sheet-preview-button .sheet-preview-trigger { flex: none; margin: 0; padding: 2px; }
+.sheet-sheet .sheet-preview-button .sheet-preview-trigger::after { inset: -6px -3px; }
+.sheet-sheet .sheet-name-link { padding: 0 2px; margin-left: -2px; color: var(--st-ink); }
+.sheet-sheet .sheet-name-link:hover { color: var(--st-primary); }
 /* A row's picker steps aside like the play name does, so its expanded preview is a full line under the row. */
 .row > .sheet-ref.name, .row > .cell > .sheet-ref.name { display: contents; }
 /* The portrait keeps its picture in edit, above the URL input. */
