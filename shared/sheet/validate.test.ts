@@ -1051,6 +1051,13 @@ describe("repeating over a struct's entries", () => {
     ]);
   });
 
+  it("accepts addPick naming a content field of the item, and rejects anything else", () => {
+    expect(errorCodes(`<List field="inventory" addPick="item"><Ref field="item" /></List>`)).toEqual([]);
+    expect(messages(`<List field="inventory" addPick="qty"><Number field="qty" /></List>`)).toEqual([
+      'error invalid-attribute: addPick names a content field of each item, but "qty" isn\'t one in "inventory"',
+    ]);
+  });
+
   it("warns that addLabel does nothing on a struct List", () => {
     expect(structMessages(`<List field="attributes" addLabel="Add"><Value field="." /></List>`)).toEqual([
       "warning flag-no-effect: addLabel has no effect on a <List> of a struct's entries: its rows come from the schema",

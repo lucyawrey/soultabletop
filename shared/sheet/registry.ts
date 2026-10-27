@@ -513,8 +513,9 @@ const tagList: TagSpec[] = [
           "Which content the picker offers: a formula read against each candidate (paths are the candidate's fields, / still reaches the top level), like filter=\"kind == 'weapon'\"",
       },
     },
-    // The card its preview opens.
-    children: { only: ["Preview"] },
+    // The card its preview opens, and <Set> steps run after a new pick
+    // (filling in what the pick determines).
+    children: { only: ["Preview", "Set"] },
     binds: ["resourceLink", "content"],
   },
   {
@@ -567,6 +568,9 @@ const tagList: TagSpec[] = [
         description: "Columns for layout=\"grid\"",
       },
       addLabel: text("Text of the add button (default \"Add\")"),
+      addPick: text(
+        "A content field of the item: the add control is a picker for it, and each pick adds a row with it set",
+      ),
     },
     children: "any",
     binds: ["array", "entries"],
@@ -680,7 +684,7 @@ const tagList: TagSpec[] = [
       },
     },
     children: "none",
-    parents: [...ACTION_TAGS],
+    parents: [...ACTION_TAGS, "Ref"],
     noCommonAttrs: true,
   },
   {

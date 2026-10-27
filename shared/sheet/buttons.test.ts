@@ -159,12 +159,19 @@ describe("Button and Set validation", () => {
     ).toEqual([]);
   });
 
+  it("takes Sets on a Ref of content, which run after a pick, but not Rolls", () => {
+    expect(messages(`<Ref field="class"><Set field="focus" formula="coalesce(class.hp, 0)" /></Ref>`)).toEqual([]);
+    expect(messages(`<Ref field="class"><Roll formula="d6" /></Ref>`)).toEqual([
+      "error child-not-allowed: <Ref> can only contain <Preview> and <Set>",
+    ]);
+  });
+
   it("places Buttons and Sets (a Column may show a field beside its Buttons)", () => {
     expect(messages(`<Button label="X" />`)).toEqual([
       "error missing-child: <Button> needs a step: a <Set> for each field it changes, or a <Roll>",
     ]);
     expect(messages(`<Set field="focus" formula="1" />`)).toEqual([
-      "error step-misplaced: <Set> must be directly inside <Button> or <Value> or <Number> or <Column> or <FollowUp>",
+      "error step-misplaced: <Set> must be directly inside <Button> or <Value> or <Number> or <Column> or <FollowUp> or <Ref>",
     ]);
     expect(messages(`<Button label="X"><Number field="focus" /></Button>`)).toEqual([
       "error child-not-allowed: <Button> can only contain <Set> and <Roll> and <FollowUp>",

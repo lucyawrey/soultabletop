@@ -225,11 +225,14 @@ required `resourceLink` or `content` entry without a default would be left empty
   arrays: `inventory: [{ item: content(Item), qty: number }]` → `item.weight` next to `qty`.
 - Referenced values are **live and read-only** through the sheet; local values are editable. Edit mode shows a
   searchable picker of readable content of that type (for `reference`/`both`). For `both`, its first option is
-  "Custom <field label>": it creates a local object, or turns the current reference into local data (a copy). A custom
+  "Custom <field label>": it creates an empty local object, replacing the current reference if any (decided 2026-10-27:
+it used to copy the reference, which left a picked weapon in place when the player wanted their own). A custom
   entry looks like a picked one: its name is typed in place of the picked name, and the same picker switches it back
   to a reference (`sheet-custom-name` on the name input). A List of
   content's "Add" picker leads with the same option; a `local`-only field or list gets a button instead.
 - Depth: paths may cross up to **3** content fields (`class.subclass.feature.name`); deeper is a validation error.
+- Picking content in edit mode also loads what the picked content references (a class's features), from the same
+  `GET /api/content/[id]` the picker makes, so paths through it work before the next save reloads refs.
 - Loading: `GET /api/content/[id]` walks the data, batch-loads referenced content one level at a time (≤ 3 queries),
   skips cycles, caps at 300 refs, drops any the viewer can't read, and returns
   `refs: { [id]: { name, contentTypeId, data } }`. Unreadable or missing refs render as "Restricted"/"Missing".
@@ -253,8 +256,15 @@ required `resourceLink` or `content` entry without a default would be left empty
 ### Repeaters
 | Tag | Attrs | Children | Notes |
 |---|---|---|---|
-| `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel` | template for one item | edit mode: add/remove/reorder (arrays only); an item of plain text, numbers, and switches (no choices or pickers) that's still blank when focus leaves it is removed, so an added entry left unfilled doesn't stay (`isBlankListItem`); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
+| `List` | `field` (array, or struct of alike entries), `layout` (stack/grid), `cols`, `addLabel`, `addPick` | template for one item | edit mode: add/remove/reorder (arrays only); an item of plain text, numbers, and switches (no choices or pickers) that's still blank when focus leaves it is removed, so an added entry left unfilled doesn't stay (`isBlankListItem`); `field="."` = the item itself (arrays of primitives, or a struct's single-value entries) |
 | `Table` / `Column` | Table: `field` (array of objects, or struct of alike structs); Column: `field` or `formula` (or `Button` children, see "Buttons"), `label`, `format` (plain/signed), `width`, `steppers` (never in `xs` and `sm` cells), `preview` | Table: only `Column` and `RowDetails` | `UTable`; cell input picked from schema type; a formula column is computed per row. On phones (below the `sm` breakpoint) each row stacks its cells, with the column labels above them |
+
+`addPick` (decided 2026-10-27): on a `List` of structs, the name of one content field of the item
+(`<List field="strikes" addPick="weapon">`). The add control becomes that field's picker (with its "Custom …"
+option), and a pick adds a row with the field set and the rest at their defaults, so adding a Strike is one pick
+rather than an empty row and a second click. The picker offers what the row's own picker for that field does: the
+`filter` of the first tag in the template bound to it. Naming anything but a content field of the item is an
+`invalid-attribute` error.
 
 Repeating over a struct's entries (decided 2026-10-04): `List` and `Table` also take a `struct`, for fixed sets like
 skills and saves. Its rows are the schema's entries in schema order, not the data's keys, so every entry shows even
@@ -467,6 +477,14 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup). Two ways t
   `runtime.ts` (`sheetButtonWrites` for a Button that only writes). Hook classes: `sheet-button` on each button,
   `sheet-button-group` around a box and its buttons.
 
+Pick steps (decided 2026-10-27): a `Ref` of a content field may hold `<Set>` steps, which run right after a new pick
+(not on a click), reading the data with the pick and what the picked content references. They fill in what a pick
+determines, such as a class's starting ranks; the sheet decides how, for example `max(coalesce(perception, 0),
+coalesce(class.perception, 0))` so a rank already higher stays. Only `Set` (no `Roll` or `FollowUp`), and only on a
+content field (`invalid-attribute` otherwise). Writes go into the draft like any edit; a step that fails writes
+nothing and says why in a toast. Run by `runPickSteps` in `sheet/FieldInput.vue` with `runSheetAction`. Arrays
+can't be set, so a pick can't add list items (languages, lore, feats).
+
 ### Rolls (decided 2026-10-06)
 A roll is a step of an
 action, not a formula: formulas stay pure, and dice are allowed only in a `<Roll>`'s formula.
@@ -671,7 +689,10 @@ Edit + Autosave switches (decided):
   `nonPlayerCharacter` → edit off, autosave on; `general`/`page` → both off. (Also `defaultDisplay`, below.)
 - Edit on, Autosave off: draft copy, Save/Cancel buttons, unsaved-changes guard on navigation.
 - Edit on, Autosave on: each change saves after ~800 ms of inactivity; status indicator (Saving… / Saved / Error).
-  A validation error keeps the draft and shows the message; the next change retries.
+  A validation error keeps the draft and shows the message; the next change retries. An automatic save (autosave or
+  a `live` edit) the server refuses as invalid shows quietly, as "Not saved: <message>" beside the switches, not as
+  the error bar, since it's usually an entry still being filled in (a custom item with no name yet; decided
+  2026-10-27). A Save click that fails still shows the bar.
 - Edit off: read-only view (the Autosave switch only presets how editing behaves once turned on), except `live` fields,
   which save after the autosave pause whatever the Autosave setting (decided 2026-10-06: things changed in play, like
   HP, shouldn't need a Save click). Turning Edit off doesn't save unsaved edits; a live change saves the whole draft.

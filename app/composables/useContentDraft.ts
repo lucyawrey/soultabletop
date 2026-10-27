@@ -14,7 +14,10 @@ interface SavedContent {
   updatedAt: string;
 }
 
-export type DraftStatus = "idle" | "saving" | "saved" | "error" | "conflict";
+// "invalid": an automatic save (autosave or a live edit) the server refused as
+// invalid, often an entry still being filled in (a custom item with no name
+// yet). Shown quietly; the next change tries again.
+export type DraftStatus = "idle" | "saving" | "saved" | "error" | "invalid" | "conflict";
 
 const AUTOSAVE_DELAY_MS = 800;
 
@@ -88,7 +91,7 @@ export function useContentDraft(
   let saving: Promise<void> | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  async function save(overwrite = false) {
+  async function save(overwrite = false, automatic = false) {
     if (saving) await saving;
     const current = source.value;
     if (!current || (!dirty.value && !overwrite)) return;
@@ -115,7 +118,8 @@ export function useContentDraft(
         status.value = "saved";
       } catch (caught) {
         const statusCode = (caught as { statusCode?: number }).statusCode;
-        status.value = statusCode === 409 ? "conflict" : "error";
+        status.value =
+          statusCode === 409 ? "conflict" : automatic && statusCode === 400 ? "invalid" : "error";
         error.value = extractApiErrorMessage(caught, "Could not save.");
       }
     })();
@@ -145,7 +149,7 @@ export function useContentDraft(
       }
       liveSaving.value = live;
       const mine = setTimeout(async () => {
-        await save();
+        await save(false, true);
         // A newer change may have started its own wait meanwhile.
         if (timer === mine) liveSaving.value = false;
       }, AUTOSAVE_DELAY_MS);

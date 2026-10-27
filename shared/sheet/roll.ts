@@ -107,6 +107,10 @@ function print(term: RollTerm, parent: number, right: boolean): string {
     case "neg":
       return `−${print(term.operand, 3, false)}`;
     case "op": {
+      // A 0 added or subtracted (a modifier of zero) isn't shown: "4", not "4 + 0".
+      const isZero = (side: RollTerm) => side.kind === "number" && side.value === 0;
+      if ((term.op === "+" || term.op === "-") && isZero(term.right)) return print(term.left, parent, right);
+      if (term.op === "+" && isZero(term.left)) return print(term.right, parent, right);
       const own = precedence[term.op];
       const symbol = term.op === "*" ? "×" : term.op === "/" ? "÷" : term.op === "-" ? "−" : "+";
       const text = `${print(term.left, own, false)} ${symbol} ${print(term.right, own, true)}`;

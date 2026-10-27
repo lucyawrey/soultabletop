@@ -54,7 +54,7 @@ All field tags take `field` (a path, see SKILL.md; required unless the tag has a
 | `Select` | `options` (comma-separated; only on a text field without schema options), `formula` (override) | string, or number with schema options | `<Select field="size" />` (schema options) or `options="Small, Medium, Large"` |
 | `Tags` | `placeholder` | array of strings | |
 | `Tracker` | `formula`, `max` (optional, number >= 0, or one `{formula}`), `mark` (same), `style` (`bar` \| `pips`, default bar) | number | `max="{hp.max}"`; without `max` (or at 0) only the value shows; `formula` (read-only) computes the current value; `mark` ticks a bar that isn't editable at a threshold (`mark="{5 + str}"`) |
-| `Ref` | `preview` (`expand` \| `card`; bare = `expand`), `filter` (content fields: a true/false formula read against each candidate, e.g. `filter="kind == 'weapon'"`; `/` reaches this content, e.g. `filter="ancestry == /ancestry"`) | resourceLink, content | Link to the referenced resource or Content; with `preview` (content fields only), clicking shows it instead (see "Reference previews"); may hold one `Preview` |
+| `Ref` | `preview` (`expand` \| `card`; bare = `expand`), `filter` (content fields: a true/false formula read against each candidate, e.g. `filter="kind == 'weapon'"`; `/` reaches this content, e.g. `filter="ancestry == /ancestry"`) | resourceLink, content | Link to the referenced resource or Content; with `preview` (content fields only), clicking shows it instead (see "Reference previews"); may hold one `Preview` and `Set` steps run after a new pick (content fields only; see "Pick steps") |
 | `Value` | `formula`, `format` (`plain` \| `signed`), `preview` (`expand` \| `card`) | any value | Never editable; `formula` (read-only) instead of `field`; with `Part` children and no formula, shows their sum; `preview` (see "Reference previews") |
 | `Markdown` | none | string | Formatted long text |
 | `Image` | `alt`, `size` (`sm` \| `md` \| `lg` \| `full`, default md) | string | The string must be an https URL |
@@ -73,7 +73,7 @@ field tag, with a warning.
 
 | Tag | Attributes | Children | Binds |
 |---|---|---|---|
-| `List` | `field` (req), `label`, `layout` (`stack` \| `grid`), `cols` (1-12, for grid), `addLabel` (default "Add") | any; paths inside are relative to each item | any array, or a struct whose entries are alike |
+| `List` | `field` (req), `label`, `layout` (`stack` \| `grid`), `cols` (1-12, for grid), `addLabel` (default "Add"), `addPick` (a content field of each item: adding is a pick that sets it) | any; paths inside are relative to each item | any array, or a struct whose entries are alike |
 | `Table` | `field` (req), `label` | only `Column` and `RowDetails`; paths inside are relative to each row | array of structs (also content or object items), or a struct of alike structs |
 
 In edit mode a `List` or `Table` of an array gets add, remove, and reorder controls (a `List` item of plain text, numbers, and switches that's still blank when focus leaves it is removed); one of a struct's entries has a row per schema entry and no controls.

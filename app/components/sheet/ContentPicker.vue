@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ResourceSource } from "#shared/resource-list";
-import type { SheetRef } from "#shared/sheet/runtime";
+import type { SheetLinks, SheetRef, SheetRefs } from "#shared/sheet/runtime";
 import { extractApiErrorMessage } from "~/utils/api-error";
 import type { ResourceOptionItem } from "~/utils/resource-option";
 
@@ -89,6 +89,7 @@ const items = computed(() => {
 
 // The list leaves out each content's data, so the picked one's is loaded here.
 const toast = useToast();
+const { context } = useSheet();
 
 // The name input sits over the trigger's value, which holds the same text
 // (hidden) so the trigger keeps the size and spot of a picked name. It copies
@@ -147,9 +148,15 @@ async function select(id: unknown) {
   if (!item || picking.value) return;
   picking.value = true;
   try {
-    const { data } = await $fetch<{ data: Record<string, unknown> }>(
-      `/api/content/${item.id}`,
-    );
+    const { data, refs, links } = await $fetch<{
+      data: Record<string, unknown>;
+      refs?: SheetRefs;
+      links?: SheetLinks;
+    }>(`/api/content/${item.id}`);
+    // What the picked content references (a class's features) loads with it,
+    // so the sheet can show it before the next save reloads refs.
+    for (const [refId, ref] of Object.entries(refs ?? {})) context.addRef(refId, ref);
+    for (const [linkId, link] of Object.entries(links ?? {})) context.addLink(linkId, link);
     emit("pick", item.id, {
       name: item.name,
       contentTypeId: item.contentTypeId,
