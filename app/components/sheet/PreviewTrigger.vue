@@ -23,9 +23,13 @@ defineProps<{
   editable?: boolean;
 }>();
 defineEmits<{ toggle: [] }>();
+// Classes (like `sheet-name-link`) go on the button, in both modes.
+defineOptions({ inheritAttrs: false });
 
+// A name with its icon, or an icon alone: no underline; the icon is muted
+// until hovered or open. Its click area reaches a little past it.
 const triggerClass =
-  "sheet-preview-trigger cursor-pointer text-left underline decoration-1 underline-offset-2 hover:decoration-2";
+  "sheet-preview-trigger relative inline-flex cursor-pointer items-center gap-[3px] rounded text-left after:absolute after:-inset-x-[3px] after:-inset-y-1 hover:text-primary hover:bg-primary/7 aria-expanded:bg-primary/10 [&_.iconify]:text-muted hover:[&_.iconify]:text-primary";
 </script>
 
 <template>
@@ -34,7 +38,7 @@ const triggerClass =
     :reference="anchor ?? undefined"
     :content="{ side: 'bottom', align: 'start', collisionPadding: 8 }"
   >
-    <button type="button" :class="triggerClass" :aria-label="label">
+    <button type="button" v-bind="$attrs" :class="triggerClass" :aria-label="label">
       <slot />
     </button>
     <template #content>
@@ -63,6 +67,7 @@ const triggerClass =
   </UPopover>
   <button
     v-else
+    v-bind="$attrs"
     type="button"
     :class="triggerClass"
     :aria-label="label"

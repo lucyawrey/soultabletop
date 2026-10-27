@@ -91,50 +91,6 @@ const items = computed(() => {
 const toast = useToast();
 const { context } = useSheet();
 
-// The name input sits over the trigger's value, which holds the same text
-// (hidden) so the trigger keeps the size and spot of a picked name. It copies
-// the value's font and the trigger's color and underline, which the sheet's
-// CSS may have changed.
-const wrapper = ref<HTMLElement>();
-const nameStyle = ref<Record<string, string>>({});
-function placeName() {
-  const value = wrapper.value?.querySelector<HTMLElement>("[data-slot=value]");
-  const trigger = value?.closest<HTMLElement>("[data-slot=base]");
-  if (!value || !trigger || !wrapper.value) return;
-  const box = wrapper.value.getBoundingClientRect();
-  const spot = value.getBoundingClientRect();
-  const font = getComputedStyle(value);
-  const look = getComputedStyle(trigger);
-  nameStyle.value = {
-    marginLeft: `${spot.left - box.left}px`,
-    marginTop: `${spot.top - box.top}px`,
-    width: `${spot.width}px`,
-    height: `${spot.height}px`,
-    font: font.font,
-    letterSpacing: font.letterSpacing,
-    color: look.color,
-    textDecorationLine: look.textDecorationLine,
-    textDecorationColor: look.textDecorationColor,
-    textUnderlineOffset: look.textUnderlineOffset,
-  };
-}
-let resizeObserver: ResizeObserver | undefined;
-watch(
-  [isCustom, wrapper],
-  async ([custom]) => {
-    resizeObserver?.disconnect();
-    resizeObserver = undefined;
-    if (!custom || !wrapper.value) return;
-    await nextTick();
-    const value = wrapper.value?.querySelector("[data-slot=value]");
-    if (!value) return;
-    resizeObserver = new ResizeObserver(placeName);
-    resizeObserver.observe(value);
-    placeName();
-  },
-  { flush: "post" },
-);
-onBeforeUnmount(() => resizeObserver?.disconnect());
 
 // The picker is disabled while that request runs, so picks can't overlap or
 // arrive out of order.
@@ -174,36 +130,38 @@ async function select(id: unknown) {
 </script>
 
 <template>
-  <!-- A grid, not positioned, so a sheet can still place the trigger's parts
-    against its own boxes. -->
-  <div ref="wrapper" class="sheet-content-picker grid justify-items-start">
-  <USelectMenu
-    :content="{ align: 'start' }"
-    :model-value="isCustom ? customValue : modelValue"
-    :items="items"
-    value-key="value"
-    :loading="loading || picking"
-    :disabled="picking"
-    :placeholder="placeholder ?? 'Choose…'"
-    class="col-start-1 row-start-1 w-full"
-    @update:open="load"
-    @update:model-value="select"
+  <!-- The trigger is the picked name and the Select icon (⇕) as one control.
+    A custom entry shows its name input, then the Select icon alone. -->
+  <div
+    class="sheet-content-picker"
+    :class="isCustom ? 'flex w-full min-w-0 items-center gap-1' : 'grid justify-items-start'"
   >
-    <template v-if="isCustom" #default="{ ui }">
-      <span data-slot="value" :class="ui.value()" class="invisible whitespace-pre">{{ customName || "Name" }}</span>
-    </template>
-    <template #item-label="{ item }">
-      <ResourceOption :option="item as ResourceOptionItem" />
-    </template>
-  </USelectMenu>
-  <input
-    v-if="isCustom"
-    :value="customName"
-    placeholder="Name"
-    :aria-label="`${label ?? 'Custom'} name`"
-    class="sheet-custom-name relative z-10 col-start-1 row-start-1 min-w-0 self-start border-0 bg-transparent p-0 outline-none placeholder:text-dimmed focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
-    :style="nameStyle"
-    @input="emit('update:customName', ($event.target as HTMLInputElement).value)"
-  >
+    <input
+      v-if="isCustom"
+      :value="customName"
+      :placeholder="`${label ?? 'Custom'} name`"
+      :aria-label="`${label ?? 'Custom'} name`"
+      class="sheet-custom-name w-0 min-w-24 flex-1 rounded border border-dashed border-accented bg-default px-1.5 placeholder:text-dimmed placeholder:italic focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+      @input="emit('update:customName', ($event.target as HTMLInputElement).value)"
+    >
+    <USelectMenu
+      :content="{ align: 'start' }"
+      :model-value="isCustom ? customValue : modelValue"
+      :items="items"
+      value-key="value"
+      :loading="loading || picking"
+      :disabled="picking"
+      :placeholder="placeholder ?? 'Choose…'"
+      trailing-icon="i-lucide-chevrons-up-down"
+      :aria-label="isCustom ? `Select ${label ?? 'content'}` : undefined"
+      :class="isCustom ? 'sheet-select-button w-auto flex-none' : 'w-full'"
+      @update:open="load"
+      @update:model-value="select"
+    >
+      <template v-if="isCustom" #default><span class="sr-only">Select {{ label ?? "content" }}</span></template>
+      <template #item-label="{ item }">
+        <ResourceOption :option="item as ResourceOptionItem" />
+      </template>
+    </USelectMenu>
   </div>
 </template>
