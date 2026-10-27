@@ -1,0 +1,10 @@
+{
+  "name": "Antitoxin",
+  "readableId": "cairn-item-antitoxin",
+  "data": {
+    "kind": "gear",
+    "cost": 20,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

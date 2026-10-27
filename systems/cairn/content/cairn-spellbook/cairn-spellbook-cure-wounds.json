@@ -1,0 +1,9 @@
+{
+  "name": "Cure Wounds",
+  "readableId": "cairn-spellbook-cure-wounds",
+  "data": {
+    "effect": "Restore 1d4 STR per day to a creature you can touch.",
+    "book": "Smells of vinegar and thyme. Turns red after use.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Chalk",
+  "readableId": "cairn-item-chalk",
+  "data": {
+    "kind": "gear",
+    "slots": 0,
+    "cost": 1,
+    "source": "Cairn Second Edition, Player's Guide"
+  }
+}

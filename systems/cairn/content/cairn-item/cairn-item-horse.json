@@ -1,0 +1,11 @@
+{
+  "name": "Horse",
+  "readableId": "cairn-item-horse",
+  "data": {
+    "kind": "transport",
+    "capacity": 4,
+    "cost": 75,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 0
+  }
+}

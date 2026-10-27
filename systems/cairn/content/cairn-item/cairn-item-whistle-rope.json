@@ -1,0 +1,10 @@
+{
+  "name": "Whistle-Rope",
+  "readableId": "cairn-item-whistle-rope",
+  "data": {
+    "kind": "relic",
+    "description": "15ft of highly flexible leather. Swirl in the air to generate a powerful subsonic effect that drives away wildlife. Also works underwater.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

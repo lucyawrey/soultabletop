@@ -1,0 +1,21 @@
+{
+  "name": "Swine Thing",
+  "readableId": "cairn-monster-swine-thing",
+  "data": {
+    "hp": 9,
+    "armor": 0,
+    "str": 16,
+    "dex": 8,
+    "wil": 13,
+    "attacks": [
+      {
+        "name": "Gore",
+        "damage": "d6+d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Obese humanoids that transform into massive porcine monstrosities to feast on human flesh.\n- Prefer to hunt in isolated settlements close to forests and wetlands. Can only shapeshift at night.\n- **Charm**: Target obeys the swine's every command until it is killed. WIL save once per round to break free.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

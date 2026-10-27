@@ -1,0 +1,21 @@
+{
+  "name": "Shambling Mound",
+  "readableId": "cairn-monster-shambling-mound",
+  "data": {
+    "hp": 9,
+    "armor": 0,
+    "str": 15,
+    "dex": 6,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Tendrils",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": true,
+    "description": "- Tall humanoids made of slimy vegetation. Dwell in dark swamps and damp undergrounds.\n- **Critical Damage**: Target is swallowed whole and dragged away.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

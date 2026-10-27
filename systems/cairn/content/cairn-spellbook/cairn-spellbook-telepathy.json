@@ -1,0 +1,9 @@
+{
+  "name": "Telepathy",
+  "readableId": "cairn-spellbook-telepathy",
+  "data": {
+    "effect": "Two creatures can hear each other’s thoughts, no matter how far apart.",
+    "book": "The holder can hear (but not respond) to the thoughts of whoever last possessed it, and vice versa.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

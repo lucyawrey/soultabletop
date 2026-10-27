@@ -1,0 +1,21 @@
+{
+  "name": "Harpy",
+  "readableId": "cairn-monster-harpy",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 7,
+    "dex": 12,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Claws",
+        "damage": "d6+d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Hideous monstrosities with the body of a giant eagle and a humanoid head.\n- Their movements and flight are clumsy due to their disproportionate size. Rely on charmed victims to do anything of note.\n- **Song**: Anyone nearby must save WIL or be charmed by its voice, following the harpy and defending it from any threat.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

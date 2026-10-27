@@ -1,0 +1,11 @@
+{
+  "name": "Trap",
+  "readableId": "cairn-item-trap",
+  "data": {
+    "kind": "gear",
+    "cost": 35,
+    "description": "d6 STR damage.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Repellent",
+  "readableId": "cairn-item-repellent",
+  "data": {
+    "kind": "gear",
+    "cost": 10,
+    "description": "Wolfsbane, Mugwort, etc.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

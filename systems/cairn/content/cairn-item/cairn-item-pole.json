@@ -1,0 +1,11 @@
+{
+  "name": "Pole",
+  "readableId": "cairn-item-pole",
+  "data": {
+    "kind": "gear",
+    "cost": 5,
+    "description": "10ft.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

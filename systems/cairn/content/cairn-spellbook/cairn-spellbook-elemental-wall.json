@@ -1,0 +1,9 @@
+{
+  "name": "Elemental Wall",
+  "readableId": "cairn-spellbook-elemental-wall",
+  "data": {
+    "effect": "A straight wall of ice or fire 50ft long and 10ft high rises from the ground.",
+    "book": "Skin and warmer substances stick to it after use.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

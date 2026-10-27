@@ -1,0 +1,21 @@
+{
+  "name": "Mummy",
+  "readableId": "cairn-monster-mummy",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 12,
+    "dex": 8,
+    "wil": 6,
+    "attacks": [
+      {
+        "name": "Necrotic touch",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Undead humanoids wrapped in funerary cloth. Found in pyramids, ruins, temples, and tombs.\n- **Critical Damage**: Target is infected with mummy rot, and is unable to recover STR until they are cured by a specialist healer. The target is also _deprived_.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

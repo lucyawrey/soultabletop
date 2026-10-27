@@ -1,0 +1,12 @@
+{
+  "name": "Mule",
+  "readableId": "cairn-item-mule",
+  "data": {
+    "kind": "transport",
+    "capacity": 6,
+    "cost": 30,
+    "description": "Slow.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 0
+  }
+}

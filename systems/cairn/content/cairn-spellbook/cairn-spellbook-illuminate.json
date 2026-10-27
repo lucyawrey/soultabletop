@@ -1,0 +1,9 @@
+{
+  "name": "Illuminate",
+  "readableId": "cairn-spellbook-illuminate",
+  "data": {
+    "effect": "A floating light moves as you command.",
+    "book": "When held in light, the pages become a prism of vibrant rainbows.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

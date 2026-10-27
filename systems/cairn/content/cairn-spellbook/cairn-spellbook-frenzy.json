@@ -1,0 +1,9 @@
+{
+  "name": "Frenzy",
+  "readableId": "cairn-spellbook-frenzy",
+  "data": {
+    "effect": "A nearby creature erupts in a frenzy of violence.",
+    "book": "Rough, sandpaper cover that destroys any book it touches.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

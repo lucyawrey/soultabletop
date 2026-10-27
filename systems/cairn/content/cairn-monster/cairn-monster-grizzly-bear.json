@@ -1,0 +1,21 @@
+{
+  "name": "Grizzly Bear",
+  "readableId": "cairn-monster-grizzly-bear",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 15,
+    "dex": 13,
+    "wil": 5,
+    "attacks": [
+      {
+        "name": "Claws",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Reddish-brown bears commonly found in mountains, woodlands, and prairies.\n- Prefer to eat fish and meat, and will attack the rare unfortunate who crosses their path.\n- **Critical Damage**: Bites the victim for an additional d6 STR damage. They bleed out very quickly.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

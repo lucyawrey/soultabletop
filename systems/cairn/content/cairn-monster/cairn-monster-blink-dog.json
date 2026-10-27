@@ -1,0 +1,21 @@
+{
+  "name": "Blink Dog",
+  "readableId": "cairn-monster-blink-dog",
+  "data": {
+    "hp": 5,
+    "armor": 0,
+    "str": 11,
+    "dex": 14,
+    "wil": 5,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Teleporting canines in service of a powerful master.\n- Can phase out of reality at will. Melee attacks against them are _impaired_.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

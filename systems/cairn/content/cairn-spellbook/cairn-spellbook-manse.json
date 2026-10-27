@@ -1,0 +1,9 @@
+{
+  "name": "Manse",
+  "readableId": "cairn-spellbook-manse",
+  "data": {
+    "effect": "A sturdy, furnished cottage appears for hours. You can permit and forbid entry to it at will.",
+    "book": "If left inside, both the book and the cottage vanish forever.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

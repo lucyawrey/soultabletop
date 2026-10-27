@@ -1,0 +1,11 @@
+{
+  "name": "Stonewax Gum",
+  "readableId": "cairn-item-stonewax-gum",
+  "data": {
+    "kind": "relic",
+    "uses": 3,
+    "slots": 0,
+    "description": "Chew, then spit. The gum will harden and stretch, making a perfect, unbreakable seal.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

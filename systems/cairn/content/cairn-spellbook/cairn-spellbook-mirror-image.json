@@ -1,0 +1,9 @@
+{
+  "name": "Mirror Image",
+  "readableId": "cairn-spellbook-mirror-image",
+  "data": {
+    "effect": "An illusory duplicate of yourself appears and is under your control.",
+    "book": "Over time, the owner begins to question who is the original, and who is the duplicate.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

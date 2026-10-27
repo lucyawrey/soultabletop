@@ -1,0 +1,9 @@
+{
+  "name": "Bait Flower",
+  "readableId": "cairn-spellbook-bait-flower",
+  "data": {
+    "effect": "A plant sprouts from the ground that emanates the smell of decaying flesh.",
+    "book": "Attracts flies.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

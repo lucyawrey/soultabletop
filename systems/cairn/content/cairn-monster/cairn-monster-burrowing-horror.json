@@ -1,0 +1,26 @@
+{
+  "name": "Burrowing Horror",
+  "readableId": "cairn-monster-burrowing-horror",
+  "data": {
+    "hp": 6,
+    "armor": 1,
+    "str": 16,
+    "dex": 11,
+    "wil": 4,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d10",
+        "blast": false
+      },
+      {
+        "name": "Acid squirt",
+        "damage": "d8",
+        "blast": true
+      }
+    ],
+    "detachment": false,
+    "description": "- Huge insectoids with multiple legs and shiny black eyes. Subsist from dirt, roots, and flesh.\n- Burrow just beneath surfaces to ambush unsuspecting creatures.\n- **Critical Damage**: Target loses a body part. Roll 1d6. 1: Head, 2-4: Leg, 5-6: Arm.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

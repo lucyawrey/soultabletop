@@ -1,0 +1,9 @@
+{
+  "name": "X-Ray Vision",
+  "readableId": "cairn-spellbook-x-ray-vision",
+  "data": {
+    "effect": "You can see through walls, dirt, clothing, etc.",
+    "book": "Long-term exposure can cause hair loss, blurry vision, and fatigue.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

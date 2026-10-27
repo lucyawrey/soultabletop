@@ -1,0 +1,21 @@
+{
+  "name": "Triton",
+  "readableId": "cairn-monster-triton",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 12,
+    "dex": 15,
+    "wil": 12,
+    "attacks": [
+      {
+        "name": "Trident",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Aquatic humanoids with silvery skin, blue-green hair, and scaled legs ending in fins. Dwell in warmer waters close to land.\n- Lair in beautiful castles sculpted from sea rock and coral. Command vast schools of fish for both protection and food.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Reptilian",
+  "readableId": "cairn-monster-reptilian",
+  "data": {
+    "hp": 5,
+    "armor": 1,
+    "str": 14,
+    "dex": 12,
+    "wil": 5,
+    "attacks": [
+      {
+        "name": "Bone spear",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Amphibian humanoids that live in large tribes near swamps and jungles.\n- Craft their armor and weapons from the bones of their prey. They will eat anything, including humanoids.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

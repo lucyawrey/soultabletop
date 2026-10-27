@@ -1,0 +1,21 @@
+{
+  "name": "Zombie",
+  "readableId": "cairn-monster-zombie",
+  "data": {
+    "hp": 2,
+    "armor": 0,
+    "str": 12,
+    "dex": 6,
+    "wil": 3,
+    "attacks": [
+      {
+        "name": "Jagged nails",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Re-animated corpse brought back through necromantic ritual or fell influence. Immune to all mind-influencing effects.\n- If not utterly destroyed (by fire, complete dismemberment, etc.), the Zombie will rise again within a few minutes.\n- **Critical Damage**: Target is infected and becomes _deprived_. Without the services of a specialist or healer, they will become a zombie in 1d4 days.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

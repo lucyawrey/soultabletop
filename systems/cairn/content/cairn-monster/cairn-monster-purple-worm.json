@@ -1,0 +1,21 @@
+{
+  "name": "Purple Worm",
+  "readableId": "cairn-monster-purple-worm",
+  "data": {
+    "hp": 18,
+    "armor": 1,
+    "str": 18,
+    "dex": 8,
+    "wil": 6,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d12",
+        "blast": false
+      }
+    ],
+    "detachment": true,
+    "description": "- Gargantuan worms that lair in enormous burrows deep underground, only coming to the surface to eat. Found in high deserts and hot tundra.\n- **Critical Damage**: The target is devoured, taking d8 STR damage from the acid in the worm's stomach.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

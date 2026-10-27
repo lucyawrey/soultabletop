@@ -1,0 +1,21 @@
+{
+  "name": "Crypt Guardian",
+  "readableId": "cairn-monster-crypt-guardian",
+  "data": {
+    "hp": 12,
+    "armor": 0,
+    "str": 12,
+    "dex": 11,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Ethereal claws",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Animated skeletons clothed in billowing robes. Their eye sockets are hypnotically red. Defend crypts and tombs, but will not attack if left undisturbed.\n- Non-magical attacks against them are _impaired_.\n- Can teleport any target in eyesight to a random room nearby.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

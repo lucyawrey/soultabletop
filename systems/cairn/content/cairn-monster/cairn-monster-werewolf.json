@@ -1,0 +1,26 @@
+{
+  "name": "Werewolf",
+  "readableId": "cairn-monster-werewolf",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 15,
+    "dex": 14,
+    "wil": 6,
+    "attacks": [
+      {
+        "name": "Claws",
+        "damage": "d6+d6",
+        "blast": false
+      },
+      {
+        "name": "Bite",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Ferocious lycanthropes that can transform into a wolf-shape at will.\n- Mundane attacks are _impaired_ against werewolves, but attacks with weapons made of silver are _enhanced_.\n- **Critical Damage**: Target becomes infected with lycanthropy, transforming into a werewolf by the next full moon.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

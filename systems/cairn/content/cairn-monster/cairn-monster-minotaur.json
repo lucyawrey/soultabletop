@@ -1,0 +1,26 @@
+{
+  "name": "Minotaur",
+  "readableId": "cairn-monster-minotaur",
+  "data": {
+    "hp": 12,
+    "armor": 1,
+    "str": 16,
+    "dex": 12,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Two-handed axe",
+        "damage": "d10",
+        "blast": false
+      },
+      {
+        "name": "Charge",
+        "damage": "d12",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Large humanoids (typically male) with the head of a bull. Dwell in mazes or dungeons.\n- Extraordinary trackers with an excellent sense of smell and navigation skills.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

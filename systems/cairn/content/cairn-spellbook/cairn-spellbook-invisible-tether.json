@@ -1,0 +1,9 @@
+{
+  "name": "Invisible Tether",
+  "readableId": "cairn-spellbook-invisible-tether",
+  "data": {
+    "effect": "Two objects within 10ft of each other cannot be moved more than 10ft apart.",
+    "book": "Its pages are not attached by glue or thread, yet stay together nonetheless.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

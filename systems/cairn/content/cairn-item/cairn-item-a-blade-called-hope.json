@@ -1,0 +1,11 @@
+{
+  "name": "A Blade Called Hope",
+  "readableId": "cairn-item-a-blade-called-hope",
+  "data": {
+    "kind": "relic",
+    "damage": "d6",
+    "description": "A thin, curved sword that glows with faint light, visible only in total darkness. When bathed in heavy sunlight, its first attack is _Enhanced_.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

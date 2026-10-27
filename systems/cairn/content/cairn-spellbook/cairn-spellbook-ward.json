@@ -1,0 +1,9 @@
+{
+  "name": "Ward",
+  "readableId": "cairn-spellbook-ward",
+  "data": {
+    "effect": "A silver circle 50ft across appears on the ground. Choose one species that cannot cross it.",
+    "book": "The covers are decorated with bizarre, otherworldly creatures with thousands of eyes.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Cart",
+  "readableId": "cairn-item-cart",
+  "data": {
+    "kind": "transport",
+    "capacity": 4,
+    "slots": 2,
+    "cost": 30,
+    "source": "Cairn Second Edition, Player's Guide"
+  }
+}

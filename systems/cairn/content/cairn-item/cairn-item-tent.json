@@ -1,0 +1,11 @@
+{
+  "name": "Tent",
+  "readableId": "cairn-item-tent",
+  "data": {
+    "kind": "gear",
+    "slots": 2,
+    "cost": 20,
+    "description": "Fits 2.",
+    "source": "Cairn Second Edition, Player's Guide"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Blood Elk",
+  "readableId": "cairn-monster-blood-elk",
+  "data": {
+    "hp": 4,
+    "armor": 0,
+    "str": 12,
+    "dex": 13,
+    "wil": 5,
+    "attacks": [
+      {
+        "name": "Horns",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Born from violence resulting from a greedy or selfish act.\n- Kill their victims for sustenance, but gains no succor. They are always hungry.\n- **Critical Damage**: Gores its victims by ripping out their entrails.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Thieving Tools",
+  "readableId": "cairn-item-thieving-tools",
+  "data": {
+    "kind": "gear",
+    "cost": 25,
+    "description": "Lockpick, Metal File, etc.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

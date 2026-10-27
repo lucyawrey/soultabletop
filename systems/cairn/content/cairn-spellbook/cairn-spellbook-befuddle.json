@@ -1,0 +1,9 @@
+{
+  "name": "Befuddle",
+  "readableId": "cairn-spellbook-befuddle",
+  "data": {
+    "effect": "A creature of your choice is unable to form new short-term memories for the duration of the spell.",
+    "book": "Its contents shift and change each time it is opened.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

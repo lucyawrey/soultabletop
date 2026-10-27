@@ -1,0 +1,12 @@
+{
+  "name": "Harbinger's Bell",
+  "readableId": "cairn-item-harbingers-bell",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "recharge": "Melt and reforge. Each time, roll a d6. On a 1-2, it breaks forever.",
+    "description": "Hang at chest height to ring when danger is imminent.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Sniff",
+  "readableId": "cairn-spellbook-sniff",
+  "data": {
+    "effect": "You can smell even the faintest traces of scents.",
+    "book": "Expresses a strong odor detectable only by its owner.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

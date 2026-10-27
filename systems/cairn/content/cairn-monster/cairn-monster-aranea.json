@@ -1,0 +1,21 @@
+{
+  "name": "Aranea",
+  "readableId": "cairn-monster-aranea",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 13,
+    "dex": 12,
+    "wil": 15,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Enormous spiders with greenish-black skin and large brains. Can shape shift into human form at will.\n- Conduct their magical research in dark, web-filled caverns. Carry the _Charm_ and _Command_ spellbooks at all times.\n- Fire damage against Aranea is _enhanced_.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

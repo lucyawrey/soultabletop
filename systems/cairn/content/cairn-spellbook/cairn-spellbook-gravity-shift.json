@@ -1,0 +1,9 @@
+{
+  "name": "Gravity Shift",
+  "readableId": "cairn-spellbook-gravity-shift",
+  "data": {
+    "effect": "You can change the direction of gravity, but only for yourself.",
+    "book": "Attaches itself to the largest object nearby.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

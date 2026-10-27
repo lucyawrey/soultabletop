@@ -1,0 +1,21 @@
+{
+  "name": "Storm Giant",
+  "readableId": "cairn-monster-storm-giant",
+  "data": {
+    "hp": 18,
+    "armor": 2,
+    "str": 18,
+    "dex": 16,
+    "wil": 18,
+    "attacks": [
+      {
+        "name": "Great sword",
+        "damage": "d12",
+        "blast": false
+      }
+    ],
+    "detachment": true,
+    "description": "- Building-sized humanoids with bronze-hued skin and light-colored hair. Live on the highest mountain peaks and rockiest coastlines.\n- Unharmed by lightning, can summon storm clouds at their will. Can fly with the wind as a their chariot.\n- **Thunderclap**: Deals 4 STR damage against a single target. Targets wearing metal armor take double damage.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Knock",
+  "readableId": "cairn-spellbook-knock",
+  "data": {
+    "effect": "A nearby mundane or magical lock unlocks loudly.",
+    "book": "Locked. A new owner \"produces\" the key after their next meal.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

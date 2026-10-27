@@ -1,0 +1,11 @@
+{
+  "name": "Chain",
+  "readableId": "cairn-item-chain",
+  "data": {
+    "kind": "gear",
+    "cost": 10,
+    "description": "10ft.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

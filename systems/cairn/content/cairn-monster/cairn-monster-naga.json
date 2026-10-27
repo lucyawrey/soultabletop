@@ -1,0 +1,26 @@
+{
+  "name": "Naga",
+  "readableId": "cairn-monster-naga",
+  "data": {
+    "hp": 6,
+    "armor": 1,
+    "str": 14,
+    "dex": 12,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Sword",
+        "damage": "d6",
+        "blast": false
+      },
+      {
+        "name": "Bite",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Humanoids with the lower body, tail, and neck of snakes. Dwell in hot jungles and temples lost to time.\n- Use cunning and hypnosis to capture other creatures to be enslaved.\n- **Gaze**: A target facing the Naga is hypnotized, falling under its will. Its victims cannot be compelled to violence.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

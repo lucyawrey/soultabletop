@@ -1,0 +1,9 @@
+{
+  "name": "Elasticity",
+  "readableId": "cairn-spellbook-elasticity",
+  "data": {
+    "effect": "Your body can stretch up to 10ft.",
+    "book": "Smells of taffy, and is very flexible.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

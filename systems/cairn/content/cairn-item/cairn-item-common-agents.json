@@ -1,0 +1,11 @@
+{
+  "name": "Common Agents",
+  "readableId": "cairn-item-common-agents",
+  "data": {
+    "kind": "gear",
+    "cost": 10,
+    "description": "Glue, Grease, etc.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

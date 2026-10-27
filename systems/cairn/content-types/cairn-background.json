@@ -1,0 +1,69 @@
+{
+  "readableId": "cairn-background",
+  "name": "Background",
+  "contentCategory": "general",
+  "hasStrictSchema": true,
+  "schema": {
+    "intro": {
+      "type": "string",
+      "label": "Intro"
+    },
+    "names": {
+      "type": "array",
+      "label": "Names",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "startingGear": {
+      "type": "array",
+      "label": "Starting Gear",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "tables": {
+      "type": "array",
+      "label": "Tables",
+      "itemType": {
+        "type": "struct",
+        "label": "Table",
+        "entries": {
+          "question": {
+            "type": "string",
+            "label": "Question",
+            "required": true
+          },
+          "rows": {
+            "type": "array",
+            "label": "Rows",
+            "itemType": {
+              "type": "struct",
+              "entries": {
+                "item": {
+                  "type": "string",
+                  "label": "Item"
+                },
+                "result": {
+                  "type": "string",
+                  "label": "Result",
+                  "description": "In Markdown."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "description": "Rules text, in Markdown."
+    },
+    "source": {
+      "type": "string",
+      "label": "Source",
+      "description": "The book it was published in."
+    }
+  }
+}

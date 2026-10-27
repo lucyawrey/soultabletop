@@ -1,0 +1,12 @@
+{
+  "name": "Spystone",
+  "readableId": "cairn-item-spystone",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "recharge": "To record a new sound, skip the rock at least three times on a body of water and recover it.",
+    "description": "A smooth, flat stone that is slightly warm to the touch. Squeeze to record audio in a 40ft radius. Squeeze again to play it back, as many times as you like.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

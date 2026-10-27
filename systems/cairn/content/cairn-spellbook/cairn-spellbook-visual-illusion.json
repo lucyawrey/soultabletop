@@ -1,0 +1,9 @@
+{
+  "name": "Visual Illusion",
+  "readableId": "cairn-spellbook-visual-illusion",
+  "data": {
+    "effect": "A silent, immobile, room-sized illusion of your choice appears.",
+    "book": "Filled with rich, colorful pages very much like a children's bedtime story.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

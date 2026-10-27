@@ -1,0 +1,9 @@
+{
+  "name": "Control Plants",
+  "readableId": "cairn-spellbook-control-plants",
+  "data": {
+    "effect": "Nearby plants and trees obey you and gain the ability to move at a slow pace.",
+    "book": "Leaves grow along the spine, and it smells faintly of decay.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

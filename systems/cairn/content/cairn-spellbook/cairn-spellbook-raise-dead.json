@@ -1,0 +1,9 @@
+{
+  "name": "Raise Dead",
+  "readableId": "cairn-spellbook-raise-dead",
+  "data": {
+    "effect": "A skeleton rises from the ground to serve you. They are incredibly stupid and can only obey simple orders.",
+    "book": "The owner becomes more and more fascinated with bones after each use.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

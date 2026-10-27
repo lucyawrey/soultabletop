@@ -1,0 +1,21 @@
+{
+  "name": "Water Elemental",
+  "readableId": "cairn-monster-water-elemental",
+  "data": {
+    "hp": 14,
+    "armor": 0,
+    "str": 15,
+    "dex": 16,
+    "wil": 4,
+    "attacks": [
+      {
+        "name": "Spray",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Rare spirits of lakes, rivers, and seas.\n- Mundane attacks against the Water Elemental are _impaired_.\n- **Critical Damage**: Target is enveloped by the water and drowns in three rounds.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

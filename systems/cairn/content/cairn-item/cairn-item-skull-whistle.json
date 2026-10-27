@@ -1,0 +1,12 @@
+{
+  "name": "Skull Whistle",
+  "readableId": "cairn-item-skull-whistle",
+  "data": {
+    "kind": "relic",
+    "charges": 3,
+    "recharge": "Feed the instrument a clump of human hair pulled from a living skull.",
+    "description": "Produces a chilling scream that forces any who hear it (including the blower) to make a WIL save or become temporarily incapacitated.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Dryad's Tear",
+  "readableId": "cairn-item-dryads-tear",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "Shatter this crystal to merge with a tree you can touch. You can perceive the goings-on within whatever forest that tree belongs to.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

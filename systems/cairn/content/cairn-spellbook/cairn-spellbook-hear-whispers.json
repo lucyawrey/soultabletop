@@ -1,0 +1,9 @@
+{
+  "name": "Hear Whispers",
+  "readableId": "cairn-spellbook-hear-whispers",
+  "data": {
+    "effect": "You can hear faint sounds clearly.",
+    "book": "The reader's voice is amplified for a short period of time afterwards.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

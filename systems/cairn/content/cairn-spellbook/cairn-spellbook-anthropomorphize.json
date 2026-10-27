@@ -1,0 +1,9 @@
+{
+  "name": "Anthropomorphize",
+  "readableId": "cairn-spellbook-anthropomorphize",
+  "data": {
+    "effect": "An animal either gains human intelligence or human appearance for one day.",
+    "book": "Whimpers, purrs and growls depending on its treatment.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

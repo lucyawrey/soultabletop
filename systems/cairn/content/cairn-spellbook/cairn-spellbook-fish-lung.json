@@ -1,0 +1,9 @@
+{
+  "name": "Fish Lung",
+  "readableId": "cairn-spellbook-fish-lung",
+  "data": {
+    "effect": "A target can breathe underwater until they surface again.",
+    "book": "Smells strongly of the sea. Attracts wild animals.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

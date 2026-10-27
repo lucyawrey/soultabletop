@@ -1,0 +1,21 @@
+{
+  "name": "Rust Monster",
+  "readableId": "cairn-monster-rust-monster",
+  "data": {
+    "hp": 5,
+    "armor": 0,
+    "str": 16,
+    "dex": 13,
+    "wil": 5,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Armadillo-like creatures with club-like tails and long antennae. Feed on iron and rusted metal.\n- Any mundane metals their antennae touch instantly become rust. Can smell metal from a long distance away.\n- **Critical Damage**: Metal armor rusts into useless weight.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

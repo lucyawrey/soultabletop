@@ -1,0 +1,9 @@
+{
+  "name": "Earthquake",
+  "readableId": "cairn-spellbook-earthquake",
+  "data": {
+    "effect": "The ground begins shaking violently. Structures may be damaged or collapse.",
+    "book": "Sand dribbles from the corners, seemingly without stop.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

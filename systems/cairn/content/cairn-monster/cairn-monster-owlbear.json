@@ -1,0 +1,26 @@
+{
+  "name": "Owlbear",
+  "readableId": "cairn-monster-owlbear",
+  "data": {
+    "hp": 9,
+    "armor": 0,
+    "str": 16,
+    "dex": 12,
+    "wil": 5,
+    "attacks": [
+      {
+        "name": "Beak",
+        "damage": "d10",
+        "blast": false
+      },
+      {
+        "name": "Claws",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Bear-like carnivores with the face of an owl. Found in dense forests. Rumored spawn of a magical mishap.\n- **Critical Damage**: A piece of armor is rent and destroyed.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

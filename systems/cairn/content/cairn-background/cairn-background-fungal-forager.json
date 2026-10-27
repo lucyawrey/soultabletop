@@ -1,0 +1,82 @@
+{
+  "name": "Fungal Forager",
+  "readableId": "cairn-background-fungal-forager",
+  "data": {
+    "intro": "You follow the whisperings of the deep earth, the rhythmic pulse of the mycelium forest that grows beneath the surface. The dark holds no terror for you. Also, you really love mushrooms.",
+    "names": [
+      "Unther",
+      "Woozy",
+      "Hilda",
+      "Current",
+      "Leif",
+      "Ratan",
+      "Mourella",
+      "Lal",
+      "Per",
+      "Madrigal"
+    ],
+    "startingGear": [
+      "3d6 Gold Pieces",
+      "Rations (3 uses)",
+      "Sharpened Trowel (d6)",
+      "Candle Helmet (+1 Armor, dim, 6 uses)",
+      "Rope (25ft)",
+      "Metal Pail"
+    ],
+    "tables": [
+      {
+        "question": "What strange fungus did you discover?",
+        "rows": [
+          {
+            "result": "**Shrieking Trumpet**. When exposed to light, it screams so loudly that all nearby attacks (including your own) are _impaired_. 2 uses."
+          },
+          {
+            "result": "**Torch Fungus**. When crushed, it creates a cold blue light for a short while. 2 uses."
+          },
+          {
+            "result": "**Murderous Truffle**. Pungent, highly toxic, and very rare (worth 50gp to assassins).  Illegal pretty much everywhere. 1 use."
+          },
+          {
+            "result": "**Hellcap**. Exposure to its aroma causes intense nausea and vomiting. Either way, it clears the room. Bottled (1 use)."
+          },
+          {
+            "result": "**Sproutcup**. Ingest to shrink down to the size of a mouse. (Your belongings stay the same size.) You return to normal size within the hour, often in fits and starts. 1 use."
+          },
+          {
+            "result": "**Rootflower**. A white fungus found only on corpses deep underground. Ingest to restore d6 WIL. You will dream of the dead and their stories. 1 use."
+          }
+        ]
+      },
+      {
+        "question": "What keeps you sane, even in utter darkness?",
+        "rows": [
+          {
+            "item": "Glowsnail",
+            "result": "Casts a soft, bioluminescent light. Feeds on one ration every two days."
+          },
+          {
+            "item": "Silk Moth Shawl",
+            "result": "A weatherproof blanket, it can also douse a fire without being damaged."
+          },
+          {
+            "item": "Milkflower",
+            "result": "A gentle stimulant. Chewing it makes you immune to _panic_ for the next hour. 3 uses."
+          },
+          {
+            "item": "Luxcompass",
+            "result": "Hums softly as it moves closer to the Sun. Eventually the noise becomes unbearably loud."
+          },
+          {
+            "item": "Sloth-Tarp",
+            "result": "A tough and weatherproof fabric, useful for hanging off trees. When inside, you have +1 Armor."
+          },
+          {
+            "item": "Miner's Grease",
+            "result": "Great for dislodging a gem, tool, or limb from a tight crack. Highly explosive. 3 uses."
+          }
+        ]
+      }
+    ],
+    "source": "Cairn Second Edition, Player's Guide"
+  }
+}

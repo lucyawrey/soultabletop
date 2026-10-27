@@ -1,0 +1,26 @@
+{
+  "name": "Warp Panther",
+  "readableId": "cairn-monster-warp-panther",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 13,
+    "dex": 16,
+    "wil": 12,
+    "attacks": [
+      {
+        "name": "Tentacles",
+        "damage": "d8+d8",
+        "blast": true
+      },
+      {
+        "name": "Bite",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Grotesque panther-like predators with long razored tentacles growing out of their backs.\n- Resistant to magical attacks. Caster must make a WIL save for the intended effect to succeed.\n- Can teleport a short distance away at will. Hate Blink Dogs.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

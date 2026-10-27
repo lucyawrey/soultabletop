@@ -1,0 +1,12 @@
+{
+  "name": "Wonder Bar",
+  "readableId": "cairn-item-wonder-bar",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "recharge": "Hold the bar with both hands without letting go for one continuous hour (WIL save to succeed). You can make only one attempt each day.",
+    "description": "Pressing the switch on the side of this iron bar freezes it in place, even in midair. Once frozen, it cannot be moved by any force until the switch is depressed.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

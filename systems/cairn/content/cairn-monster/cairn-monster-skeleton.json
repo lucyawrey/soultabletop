@@ -1,0 +1,26 @@
+{
+  "name": "Skeleton",
+  "readableId": "cairn-monster-skeleton",
+  "data": {
+    "hp": 5,
+    "armor": 1,
+    "str": 8,
+    "dex": 13,
+    "wil": 0,
+    "attacks": [
+      {
+        "name": "Rusty sword",
+        "damage": "d6",
+        "blast": false
+      },
+      {
+        "name": "Bow",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Frequently found serving a master or necromancer, often in groups of 3 or more.\n- Found wearing whatever was on them at the time of their death.\n- If a skeleton is killed and its bones are not scattered, it reforms.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

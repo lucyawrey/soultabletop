@@ -1,0 +1,9 @@
+{
+  "name": "Pacify",
+  "readableId": "cairn-spellbook-pacify",
+  "data": {
+    "effect": "A creature near you has an aversion to violence.",
+    "book": "Smells of jasmine and incense. Attracts children.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

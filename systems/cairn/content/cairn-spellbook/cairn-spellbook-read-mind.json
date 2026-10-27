@@ -1,0 +1,9 @@
+{
+  "name": "Read Mind",
+  "readableId": "cairn-spellbook-read-mind",
+  "data": {
+    "effect": "You can hear the surface thoughts of nearby creatures.",
+    "book": "Long-term possession can cause the reader to mistake the thoughts of others as their own.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

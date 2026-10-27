@@ -1,0 +1,21 @@
+{
+  "name": "Gnoll",
+  "readableId": "cairn-monster-gnoll",
+  "data": {
+    "hp": 6,
+    "armor": 1,
+    "str": 12,
+    "dex": 14,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Spear",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Ferocious humanoid hyenas spawned from arcane experiments long ago.\n- Deadly warriors, they attack as a pack (as _detachment_) or on their own.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

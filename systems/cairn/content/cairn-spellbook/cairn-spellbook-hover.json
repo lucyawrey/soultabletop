@@ -1,0 +1,9 @@
+{
+  "name": "Hover",
+  "readableId": "cairn-spellbook-hover",
+  "data": {
+    "effect": "An object hovers, frictionless, 2ft above the ground. It can hold up to one humanoid.",
+    "book": "Floats if dropped.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

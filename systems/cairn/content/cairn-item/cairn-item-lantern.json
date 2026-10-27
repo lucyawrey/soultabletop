@@ -1,0 +1,10 @@
+{
+  "name": "Lantern",
+  "readableId": "cairn-item-lantern",
+  "data": {
+    "kind": "gear",
+    "cost": 10,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

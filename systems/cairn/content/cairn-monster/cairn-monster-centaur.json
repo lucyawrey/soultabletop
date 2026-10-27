@@ -1,0 +1,26 @@
+{
+  "name": "Centaur",
+  "readableId": "cairn-monster-centaur",
+  "data": {
+    "hp": 6,
+    "armor": 1,
+    "str": 14,
+    "dex": 12,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Spear",
+        "damage": "d8",
+        "blast": false
+      },
+      {
+        "name": "Short bow",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Creatures with the lower body and legs of a horse, but a humanoid upper body.\n- Rarely found alone, preferring the company of their own.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

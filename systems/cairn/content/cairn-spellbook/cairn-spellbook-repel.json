@@ -1,0 +1,9 @@
+{
+  "name": "Repel",
+  "readableId": "cairn-spellbook-repel",
+  "data": {
+    "effect": "Two objects are strongly magnetically repelled from each other within 10 feet.",
+    "book": "Closed by two powerful straps that spring open at inopportune times.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

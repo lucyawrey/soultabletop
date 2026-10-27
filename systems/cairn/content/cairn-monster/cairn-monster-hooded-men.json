@@ -1,0 +1,21 @@
+{
+  "name": "Hooded Men",
+  "readableId": "cairn-monster-hooded-men",
+  "data": {
+    "hp": 12,
+    "armor": 0,
+    "str": 9,
+    "dex": 12,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Leystaff",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- The Watchers of the Wood; a cult that derive their power from leylines, rune stones, and the like.\n- **Critical Damage**: Leech a part of the victim's soul (1d4 WIL damage).\n- Carries two of the following spellbooks: _Charm, Hypnotize, Push/Pull, Shield_.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

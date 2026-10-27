@@ -1,0 +1,10 @@
+{
+  "name": "Footpad's Friend",
+  "readableId": "cairn-item-footpads-friend",
+  "data": {
+    "kind": "relic",
+    "description": "Soft leather shoes that adapt to fit any foot size. Leave behind footprints that scatter and turn in a confusing manner, making tracking nigh-impossible.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

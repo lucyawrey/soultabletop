@@ -1,0 +1,9 @@
+{
+  "name": "Anchor",
+  "readableId": "cairn-spellbook-anchor",
+  "data": {
+    "effect": "A strong wire sprouts from your arms, affixing itself to two points within 50ft on each side.",
+    "book": "If a rope is pulled through the iron loop on its spine, it becomes as heavy as an elephant.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

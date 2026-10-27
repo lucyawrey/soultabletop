@@ -1,0 +1,21 @@
+{
+  "name": "Cave Locust",
+  "readableId": "cairn-monster-cave-locust",
+  "data": {
+    "hp": 2,
+    "armor": 0,
+    "str": 6,
+    "dex": 12,
+    "wil": 3,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Giant plant-eating crickets that dwell in caves. Immune to most types of poison.\n- Their natural coloration allows them to blend in with the stone. They emit loud shrieks when threatened.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

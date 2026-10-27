@@ -1,0 +1,11 @@
+{
+  "name": "Tupshead Crown",
+  "readableId": "cairn-item-tupshead-crown",
+  "data": {
+    "kind": "relic",
+    "armor": 1,
+    "slots": 2,
+    "description": "A beautifully rendered ram's head helm wrought from tough alpine oak. The horns can be used as weapons (d6+d6).",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Leap",
+  "readableId": "cairn-spellbook-leap",
+  "data": {
+    "effect": "You jump up to 10ft high, once.",
+    "book": "When thrown, it just keeps going.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

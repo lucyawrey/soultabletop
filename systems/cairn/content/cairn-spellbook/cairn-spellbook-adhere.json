@@ -1,0 +1,9 @@
+{
+  "name": "Adhere",
+  "readableId": "cairn-spellbook-adhere",
+  "data": {
+    "effect": "An object is covered in extremely sticky slime.",
+    "book": "Adjacent objects stick to the book with great force.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Invisible Stalker",
+  "readableId": "cairn-monster-invisible-stalker",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 12,
+    "dex": 12,
+    "wil": 15,
+    "attacks": [
+      {
+        "name": "Fists",
+        "damage": "d4+d4",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Intelligent beings shaped into reality by a powerful wizard. Completely invisible and silent.\n- Attacks deal direct STR damage (subtracting Armor).",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

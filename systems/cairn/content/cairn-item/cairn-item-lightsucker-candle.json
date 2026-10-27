@@ -1,0 +1,11 @@
+{
+  "name": "Lightsucker Candle",
+  "readableId": "cairn-item-lightsucker-candle",
+  "data": {
+    "kind": "relic",
+    "uses": 3,
+    "description": "Once lit, this black tallow wax sheds darkness rather than light, even in the brightest of days.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

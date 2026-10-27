@@ -1,0 +1,11 @@
+{
+  "name": "Common Tools",
+  "readableId": "cairn-item-common-tools",
+  "data": {
+    "kind": "gear",
+    "cost": 10,
+    "description": "Hammer, Shovel, etc.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

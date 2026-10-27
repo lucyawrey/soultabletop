@@ -1,0 +1,21 @@
+{
+  "name": "Hydra",
+  "readableId": "cairn-monster-hydra",
+  "data": {
+    "hp": 12,
+    "armor": 2,
+    "str": 13,
+    "dex": 7,
+    "wil": 12,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d12",
+        "blast": true
+      }
+    ],
+    "detachment": true,
+    "description": "- Large reptilians with nine serpentine heads. Very difficult to throw off once their quarry is detected.\n- On taking **Critical Damage**, the hydra loses one head. It then continues fighting until no heads remains.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

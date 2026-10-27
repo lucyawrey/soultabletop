@@ -1,0 +1,9 @@
+{
+  "name": "Wizard Mark",
+  "readableId": "cairn-spellbook-wizard-mark",
+  "data": {
+    "effect": "Your finger can shoot a stream of ulfire-colored paint. This paint is only visible to you and can be seen at any distance, even through solid objects.",
+    "book": "Inside the front cover is a small pocket containing a thin pad of paper, listing the name and date of death of all previous owners.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

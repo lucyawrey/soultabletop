@@ -1,0 +1,9 @@
+{
+  "name": "Shield",
+  "readableId": "cairn-spellbook-shield",
+  "data": {
+    "effect": "A creature you touch is protected from mundane attacks for one minute.",
+    "book": "Bound in rusty ring-mail and is quite heavy. If held, provides +1 Armor.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

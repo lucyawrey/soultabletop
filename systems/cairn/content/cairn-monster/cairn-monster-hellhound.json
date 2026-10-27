@@ -1,0 +1,26 @@
+{
+  "name": "Hellhound",
+  "readableId": "cairn-monster-hellhound",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 12,
+    "dex": 15,
+    "wil": 9,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d8",
+        "blast": false
+      },
+      {
+        "name": "Fire breath",
+        "damage": "d6",
+        "blast": true
+      }
+    ],
+    "detachment": false,
+    "description": "- Monstrous, intelligent dogs that dwell near volcanoes.\n- Immune to fire and heat damage. Hot enough to melt iron simply by biting it.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Disassemble",
+  "readableId": "cairn-spellbook-disassemble",
+  "data": {
+    "effect": "Any of your body parts may be detached and reattached at will, without causing pain or damage. You can still control them.",
+    "book": "Regenerates any torn or defaced pages.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

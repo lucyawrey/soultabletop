@@ -1,0 +1,9 @@
+{
+  "name": "Hypnotize",
+  "readableId": "cairn-spellbook-hypnotize",
+  "data": {
+    "effect": "A creature enters a trance and will truthfully answer one yes or no question you ask it.",
+    "book": "Eye-catching, swirling spirals don its covers.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

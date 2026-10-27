@@ -1,0 +1,21 @@
+{
+  "name": "Root Goblin",
+  "readableId": "cairn-monster-root-goblin",
+  "data": {
+    "hp": 4,
+    "armor": 0,
+    "str": 8,
+    "dex": 14,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Spear",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Avoid combat unless they have the advantage (such as greater numbers).\n- Guard their stolen goods to the death.\n- Root Goblins prize spellbooks and are always willing to trade.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

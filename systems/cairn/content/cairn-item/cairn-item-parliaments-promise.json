@@ -1,0 +1,11 @@
+{
+  "name": "Parliament's Promise",
+  "readableId": "cairn-item-parliaments-promise",
+  "data": {
+    "kind": "relic",
+    "armor": 1,
+    "description": "A helmet in the form of an owl's head. Its wearer can twist their head around like an owl and can see in darkness with perfect clarity. While wearing the helm, the wearer loses the ability to speak, uttering only the simplest of cooing noises.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

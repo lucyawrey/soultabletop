@@ -1,0 +1,9 @@
+{
+  "name": "Smoke Form",
+  "readableId": "cairn-spellbook-smoke-form",
+  "data": {
+    "effect": "Your body becomes a living smoke that you can control.",
+    "book": "Smells of campfire. The pages cannot be burnt, but are very sensitive to moisture.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

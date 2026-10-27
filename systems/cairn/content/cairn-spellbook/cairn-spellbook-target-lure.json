@@ -1,0 +1,9 @@
+{
+  "name": "Target Lure",
+  "readableId": "cairn-spellbook-target-lure",
+  "data": {
+    "effect": "An object you touch becomes the target of any nearby spell.",
+    "book": "Attracts all manner of magical creatures, spell leaks, and scrying.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

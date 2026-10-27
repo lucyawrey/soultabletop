@@ -1,0 +1,9 @@
+{
+  "name": "Teleport",
+  "readableId": "cairn-spellbook-teleport",
+  "data": {
+    "effect": "An object or person you can see is transported from one place to another in a 50ft radius.",
+    "book": "Can be destroyed to create a portal to another dimension.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

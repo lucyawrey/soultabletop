@@ -1,0 +1,97 @@
+{
+  "readableId": "cairn-item",
+  "name": "Item",
+  "contentCategory": "general",
+  "hasStrictSchema": true,
+  "schema": {
+    "kind": {
+      "type": "string",
+      "options": [
+        {
+          "value": "weapon",
+          "label": "Weapon"
+        },
+        {
+          "value": "armor",
+          "label": "Armor"
+        },
+        {
+          "value": "gear",
+          "label": "Gear"
+        },
+        {
+          "value": "transport",
+          "label": "Transport"
+        },
+        {
+          "value": "relic",
+          "label": "Relic"
+        }
+      ],
+      "label": "Kind",
+      "default": "gear"
+    },
+    "damage": {
+      "type": "string",
+      "label": "Damage",
+      "description": "Dice, such as d8 or d6+d6."
+    },
+    "armor": {
+      "type": "number",
+      "label": "Armor",
+      "description": "Armor it gives."
+    },
+    "slots": {
+      "type": "number",
+      "options": [
+        {
+          "value": 0,
+          "label": "Petty"
+        },
+        {
+          "value": 1,
+          "label": "1 slot"
+        },
+        {
+          "value": 2,
+          "label": "Bulky"
+        }
+      ],
+      "label": "Slots",
+      "default": 1
+    },
+    "uses": {
+      "type": "number",
+      "label": "Uses"
+    },
+    "charges": {
+      "type": "number",
+      "label": "Charges"
+    },
+    "recharge": {
+      "type": "string",
+      "label": "Recharge",
+      "description": "What restores a relic's charges."
+    },
+    "capacity": {
+      "type": "number",
+      "label": "Capacity",
+      "description": "Extra slots a transport carries."
+    },
+    "cost": {
+      "type": "number",
+      "label": "Cost",
+      "description": "In gold pieces."
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "description": "Rules text, in Markdown."
+    },
+    "source": {
+      "type": "string",
+      "label": "Source",
+      "description": "The book it was published in."
+    }
+  }
+}

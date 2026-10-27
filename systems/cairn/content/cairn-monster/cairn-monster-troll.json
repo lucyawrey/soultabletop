@@ -1,0 +1,26 @@
+{
+  "name": "Troll",
+  "readableId": "cairn-monster-troll",
+  "data": {
+    "hp": 14,
+    "armor": 1,
+    "str": 14,
+    "dex": 12,
+    "wil": 4,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d10",
+        "blast": false
+      },
+      {
+        "name": "Claws",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Giant, warty humanoids of flesh and bark. Dwell underground or in deep forests, as well as the ruined homes of their former victims. Carnivorous.\n- When taking **Critical Damage**, a Troll will continue fighting, despite loss of flesh and limb. Only when their STR is 0 are they truly killed. Unless their heads are bathed in acid, fire, or powerful magic, they will fully regenerate within 1d4 days.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

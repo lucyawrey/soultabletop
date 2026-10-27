@@ -1,0 +1,21 @@
+{
+  "name": "Wyvern",
+  "readableId": "cairn-monster-wyvern",
+  "data": {
+    "hp": 11,
+    "armor": 0,
+    "str": 15,
+    "dex": 14,
+    "wil": 13,
+    "attacks": [
+      {
+        "name": "Stinger",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Large, intelligent, winged reptiles. Dwell in any terrain, but favor dry cliffs.\n- Shy away from other creatures, preferring to silently stalk their targets from afar.\n- **Critical Damage**: The victim is impaled and held in place. The wyvern then bites their head off.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Beast Form",
+  "readableId": "cairn-spellbook-beast-form",
+  "data": {
+    "effect": "You and your possessions transform into a mundane animal.",
+    "book": "Covered in thick fur, its edges lined with small teeth.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Multiarm",
+  "readableId": "cairn-spellbook-multiarm",
+  "data": {
+    "effect": "You temporarily gain an extra arm.",
+    "book": "After use, the caster is wracked with phantom limb syndrome for a day.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

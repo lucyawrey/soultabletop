@@ -1,0 +1,21 @@
+{
+  "name": "Gelatinous Ooze",
+  "readableId": "cairn-monster-gelatinous-ooze",
+  "data": {
+    "hp": 8,
+    "armor": 1,
+    "str": 15,
+    "dex": 6,
+    "wil": 3,
+    "attacks": [
+      {
+        "name": "Devouring touch",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Large shapeless masses of transparent jelly. Mindlessly hunt for food in dungeons and underground caverns.\n- **Critical Damage**: The target is engulfed, losing d6 STR damage per round until they are consumed.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

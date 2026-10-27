@@ -1,0 +1,9 @@
+{
+  "name": "Attract",
+  "readableId": "cairn-spellbook-attract",
+  "data": {
+    "effect": "Two objects are strongly magnetically attracted to each other if they come within 10 feet.",
+    "book": "Nearby compasses spin uselessly.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

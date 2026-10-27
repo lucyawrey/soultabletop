@@ -1,0 +1,9 @@
+{
+  "name": "Comprehend",
+  "readableId": "cairn-spellbook-comprehend",
+  "data": {
+    "effect": "You become fluent in all languages for a short while.",
+    "book": "Drips letters, staining whatever it touches.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

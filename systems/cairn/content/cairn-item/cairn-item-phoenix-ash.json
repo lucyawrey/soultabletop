@@ -1,0 +1,11 @@
+{
+  "name": "Phoenix Ash",
+  "readableId": "cairn-item-phoenix-ash",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "Sprinkle over a corpse to resurrect the deceased. They return with full health but no memory of their past life.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

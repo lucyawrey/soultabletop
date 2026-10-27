@@ -1,0 +1,11 @@
+{
+  "name": "Honest Earworm",
+  "readableId": "cairn-item-honest-earworm",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "A foul-smelling, pinky-sized worm that feeds on earwax by crawling into the ear canal of a sleeping person. The victim then loses the ability to lie for 1d4 hours.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

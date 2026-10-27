@@ -1,0 +1,9 @@
+{
+  "name": "Swarm",
+  "readableId": "cairn-spellbook-swarm",
+  "data": {
+    "effect": "You become a swarm of crows, rats, or piranhas. You can only be harmed by _blast_ attacks.",
+    "book": "Easily broken into a dozen distinct parts that slowly move towards one another over time.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

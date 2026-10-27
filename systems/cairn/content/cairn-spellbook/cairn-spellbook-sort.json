@@ -1,0 +1,9 @@
+{
+  "name": "Sort",
+  "readableId": "cairn-spellbook-sort",
+  "data": {
+    "effect": "Inanimate items sort themselves according to categories you set.",
+    "book": "Rights itself when dropped or thrown.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

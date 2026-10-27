@@ -1,0 +1,10 @@
+{
+  "name": "Chisel",
+  "readableId": "cairn-item-chisel",
+  "data": {
+    "kind": "gear",
+    "cost": 5,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

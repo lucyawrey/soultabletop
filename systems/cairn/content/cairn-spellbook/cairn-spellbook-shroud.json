@@ -1,0 +1,9 @@
+{
+  "name": "Shroud",
+  "readableId": "cairn-spellbook-shroud",
+  "data": {
+    "effect": "A creature you touch is invisible until they move.",
+    "book": "Invisible to any but the book's current owner.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

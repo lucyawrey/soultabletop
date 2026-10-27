@@ -1,0 +1,21 @@
+{
+  "name": "Eye of Terror",
+  "readableId": "cairn-monster-eye-of-terror",
+  "data": {
+    "hp": 15,
+    "armor": 0,
+    "str": 9,
+    "dex": 8,
+    "wil": 16,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Floating spheres with large mouths, enormous eyes, and several small eyes set atop long stalks.\n- They are highly intelligent, intensely greedy, and completely insane.\n- Can cast the following spells at will: _Charm, Phobia, Telekinesis, Sleep, Shuffle, Vision_. Magic used against them requires a WIL save or it fizzles out.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

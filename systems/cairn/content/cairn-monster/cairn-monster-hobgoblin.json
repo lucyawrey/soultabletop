@@ -1,0 +1,21 @@
+{
+  "name": "Hobgoblin",
+  "readableId": "cairn-monster-hobgoblin",
+  "data": {
+    "hp": 6,
+    "armor": 2,
+    "str": 14,
+    "dex": 8,
+    "wil": 11,
+    "attacks": [
+      {
+        "name": "Mace",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Large and burly relatives of goblins. Dwell in underground fortresses until called for war.\n- Automatically succeed in Morale Saves if a commander is present.\n- Trained to fight together. Damage dealt is _enhanced_ if an ally is also engaged with the same enemy.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

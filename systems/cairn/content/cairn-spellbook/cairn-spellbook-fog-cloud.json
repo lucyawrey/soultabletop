@@ -1,0 +1,9 @@
+{
+  "name": "Fog Cloud",
+  "readableId": "cairn-spellbook-fog-cloud",
+  "data": {
+    "effect": "A dense fog spreads out from you.",
+    "book": "When submersed in water, the book eventually turns all the liquid to vapor.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

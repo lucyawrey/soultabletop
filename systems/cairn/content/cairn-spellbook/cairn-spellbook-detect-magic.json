@@ -1,0 +1,9 @@
+{
+  "name": "Detect Magic",
+  "readableId": "cairn-spellbook-detect-magic",
+  "data": {
+    "effect": "You can see or hear nearby magical auras.",
+    "book": "Becomes warm to the touch if magic is used nearby.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

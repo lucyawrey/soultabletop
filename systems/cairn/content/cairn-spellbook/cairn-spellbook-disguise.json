@@ -1,0 +1,9 @@
+{
+  "name": "Disguise",
+  "readableId": "cairn-spellbook-disguise",
+  "data": {
+    "effect": "You may alter the appearance of one character at will as long as they remain humanoid. Attempts to duplicate other characters will seem uncanny.",
+    "book": "The surface makes a perfect mirror.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

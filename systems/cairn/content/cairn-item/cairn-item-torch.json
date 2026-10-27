@@ -1,0 +1,11 @@
+{
+  "name": "Torch",
+  "readableId": "cairn-item-torch",
+  "data": {
+    "kind": "gear",
+    "uses": 3,
+    "cost": 5,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

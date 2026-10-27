@@ -1,0 +1,11 @@
+{
+  "name": "Voice of the Mountain",
+  "readableId": "cairn-item-voice-of-the-mountain",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "A rough pebble imbued with the essence of a mountain spirit. Crush to call forth an earthquake or similar natural disaster. Do not expect to be spared.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

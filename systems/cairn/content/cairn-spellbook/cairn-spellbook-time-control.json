@@ -1,0 +1,9 @@
+{
+  "name": "Time Control",
+  "readableId": "cairn-spellbook-time-control",
+  "data": {
+    "effect": "Time in a 50ft bubble slows down or increases by 10% for 30 seconds.",
+    "book": "Alternates its appearance as either impossibly old or freshly written.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "readableId": "cairn-spellbook",
+  "name": "Spellbook",
+  "contentCategory": "general",
+  "hasStrictSchema": true,
+  "schema": {
+    "effect": {
+      "type": "string",
+      "label": "Effect",
+      "required": true
+    },
+    "book": {
+      "type": "string",
+      "label": "Book",
+      "description": "What the book itself is like."
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "description": "Rules text, in Markdown."
+    },
+    "source": {
+      "type": "string",
+      "label": "Source",
+      "description": "The book it was published in."
+    }
+  }
+}

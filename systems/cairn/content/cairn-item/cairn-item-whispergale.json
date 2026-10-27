@@ -1,0 +1,11 @@
+{
+  "name": "Whispergale",
+  "readableId": "cairn-item-whispergale",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "A balloon-shaped plant that captures a spoken message and delivers it to a location within a day's walk.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

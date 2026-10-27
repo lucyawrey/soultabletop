@@ -1,0 +1,12 @@
+{
+  "name": "Animal Feed",
+  "readableId": "cairn-item-animal-feed",
+  "data": {
+    "kind": "gear",
+    "uses": 3,
+    "cost": 5,
+    "description": "Bulky.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

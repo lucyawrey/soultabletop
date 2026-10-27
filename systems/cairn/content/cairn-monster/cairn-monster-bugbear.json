@@ -1,0 +1,21 @@
+{
+  "name": "Bugbear",
+  "readableId": "cairn-monster-bugbear",
+  "data": {
+    "hp": 8,
+    "armor": 1,
+    "str": 14,
+    "dex": 12,
+    "wil": 11,
+    "attacks": [
+      {
+        "name": "Club",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Large, goblin-like creatures covered in fur.\n- Prefer stealth and trickery to gain an advantage.\n- Often command parties of like creatures (typically goblins).",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

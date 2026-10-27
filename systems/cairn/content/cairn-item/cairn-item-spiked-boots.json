@@ -1,0 +1,10 @@
+{
+  "name": "Spiked Boots",
+  "readableId": "cairn-item-spiked-boots",
+  "data": {
+    "kind": "gear",
+    "cost": 15,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

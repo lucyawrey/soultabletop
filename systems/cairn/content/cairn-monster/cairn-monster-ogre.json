@@ -1,0 +1,21 @@
+{
+  "name": "Ogre",
+  "readableId": "cairn-monster-ogre",
+  "data": {
+    "hp": 6,
+    "armor": 1,
+    "str": 16,
+    "dex": 8,
+    "wil": 6,
+    "attacks": [
+      {
+        "name": "Club",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Massive, gluttonous brutes of ill-spirit and low intelligence.\n- Easily impressed by shiny materials, keeping sacks of gold and treasure in their lairs.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

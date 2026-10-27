@@ -1,0 +1,13 @@
+{
+  "name": "Mace of the Kingslayer",
+  "readableId": "cairn-item-mace-of-the-kingslayer",
+  "data": {
+    "kind": "relic",
+    "charges": 2,
+    "damage": "d8",
+    "recharge": "Deliver a fatal blow to the leader of a group or faction.",
+    "description": "Hold the weapon aloft and shout an order or declaration. Any who fail a WIL save must obey, against their better judgment.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

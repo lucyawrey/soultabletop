@@ -1,0 +1,11 @@
+{
+  "name": "Cooking Gear",
+  "readableId": "cairn-item-cooking-gear",
+  "data": {
+    "kind": "gear",
+    "cost": 10,
+    "description": "Pots, Utensils, etc.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

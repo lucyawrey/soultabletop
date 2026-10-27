@@ -1,0 +1,11 @@
+{
+  "name": "Helmet",
+  "readableId": "cairn-item-helmet",
+  "data": {
+    "kind": "armor",
+    "armor": 1,
+    "cost": 10,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

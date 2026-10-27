@@ -1,0 +1,21 @@
+{
+  "name": "Frost Elf",
+  "readableId": "cairn-monster-frost-elf",
+  "data": {
+    "hp": 14,
+    "armor": 1,
+    "str": 8,
+    "dex": 13,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Icicle dagger",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Beautiful, amoral, and long-lived.\n- Resistant to most forms of magic.\n- Can cast the following spells at will: _Sleep_, _Teleport_, _Detect Magic_.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

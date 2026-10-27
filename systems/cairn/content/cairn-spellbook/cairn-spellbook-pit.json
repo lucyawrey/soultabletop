@@ -1,0 +1,9 @@
+{
+  "name": "Pit",
+  "readableId": "cairn-spellbook-pit",
+  "data": {
+    "effect": "A pit 10ft wide and 10ft deep opens in the ground.",
+    "book": "A standard piton can be safely stored in its spine.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

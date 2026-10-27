@@ -1,0 +1,9 @@
+{
+  "name": "Spellsaw",
+  "readableId": "cairn-spellbook-spellsaw",
+  "data": {
+    "effect": "A whirling blade flies from your chest, clearing any plant material in its way. It is otherwise harmless.",
+    "book": "Wrapped in stained leather, it should be oiled at least once a month.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

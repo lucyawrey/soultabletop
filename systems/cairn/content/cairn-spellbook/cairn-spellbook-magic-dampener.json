@@ -1,0 +1,9 @@
+{
+  "name": "Magic Dampener",
+  "readableId": "cairn-spellbook-magic-dampener",
+  "data": {
+    "effect": "All nearby magical effects have their effectiveness halved.",
+    "book": "Relics within 100ft of the spellbook cannot be recharged.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

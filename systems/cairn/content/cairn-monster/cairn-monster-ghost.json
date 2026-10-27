@@ -1,0 +1,21 @@
+{
+  "name": "Ghost",
+  "readableId": "cairn-monster-ghost",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 14,
+    "dex": 12,
+    "wil": 15,
+    "attacks": [
+      {
+        "name": "Life drain",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Incorporeal spirits of the restless dead, vulnerable only to magic and specific anointed rites.\n- **Critical Damage**: Target must save WIL or is possessed, acting only on behalf of the ghost's whims.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

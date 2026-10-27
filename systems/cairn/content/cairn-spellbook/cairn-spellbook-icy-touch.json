@@ -1,0 +1,9 @@
+{
+  "name": "Icy Touch",
+  "readableId": "cairn-spellbook-icy-touch",
+  "data": {
+    "effect": "A thick ice layer spreads across a touched surface, up to 10ft in radius.",
+    "book": "Gloves required. Nonflammable.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Banshee",
+  "readableId": "cairn-monster-banshee",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 6,
+    "dex": 12,
+    "wil": 15,
+    "attacks": [
+      {
+        "name": "Ghostly touch",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Incorporeal spirits that linger long after death to haunt the living.\n- Unharmed by cold, heat, or the elements. Iron weapon damage is _enhanced_.\n- **Wail**: Anyone in earshot must make a WIL save or fall unconscious.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

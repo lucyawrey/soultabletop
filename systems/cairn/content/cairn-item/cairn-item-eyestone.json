@@ -1,0 +1,12 @@
+{
+  "name": "Eyestone",
+  "readableId": "cairn-item-eyestone",
+  "data": {
+    "kind": "relic",
+    "charges": 3,
+    "recharge": "Place in a bucket of rainwater overnight.",
+    "description": "Choose an object created by living creatures. You can sense the nearest example.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

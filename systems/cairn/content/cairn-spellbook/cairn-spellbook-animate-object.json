@@ -1,0 +1,9 @@
+{
+  "name": "Animate Object",
+  "readableId": "cairn-spellbook-animate-object",
+  "data": {
+    "effect": "An object obeys your commands as best it can.",
+    "book": "Moldable like clay. Childish laughter sprouts from its pages.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

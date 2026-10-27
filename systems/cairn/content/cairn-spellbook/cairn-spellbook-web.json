@@ -1,0 +1,9 @@
+{
+  "name": "Web",
+  "readableId": "cairn-spellbook-web",
+  "data": {
+    "effect": "Your wrists shoot thick webbing.",
+    "book": "The text is alien, yet somehow intelligible, for it is the language of dreams.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

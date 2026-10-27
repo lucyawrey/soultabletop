@@ -1,0 +1,15 @@
+{
+  "name": "Boggart",
+  "readableId": "cairn-monster-boggart",
+  "data": {
+    "hp": 3,
+    "armor": 0,
+    "str": 4,
+    "dex": 17,
+    "wil": 13,
+    "attacks": [],
+    "detachment": false,
+    "description": "- Wild, hairy tricksters that prize shiny trinkets above coin.\n- Boggarts have true names that describe their true nature. Knowing these names gives a person control over them.\n- **Magic**: The Boggart can _bring objects to life_,  _sow confusion_, _create magical disguises_, use _telekinesis_, and _teleport_.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

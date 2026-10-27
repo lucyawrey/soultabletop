@@ -1,0 +1,11 @@
+{
+  "name": "Gate Chalk",
+  "readableId": "cairn-item-gate-chalk",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "slots": 0,
+    "description": "Draw a doorway on any flat surface to open a one-way passage to the Roots. Good luck.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

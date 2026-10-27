@@ -1,0 +1,9 @@
+{
+  "name": "Upwell",
+  "readableId": "cairn-spellbook-upwell",
+  "data": {
+    "effect": "A spring of seawater appears.",
+    "book": "Hardened leather bindings caked in salt and living barnacles.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

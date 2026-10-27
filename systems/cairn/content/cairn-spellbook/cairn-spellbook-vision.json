@@ -1,0 +1,9 @@
+{
+  "name": "Vision",
+  "readableId": "cairn-spellbook-vision",
+  "data": {
+    "effect": "You completely control what a creature sees.",
+    "book": "An unnerving, lidless eye graces the front cover.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Gate",
+  "readableId": "cairn-spellbook-gate",
+  "data": {
+    "effect": "A portal to a random plane opens.",
+    "book": "A large hole is carved into the center, ending in a void. Items dropped within are never seen again.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

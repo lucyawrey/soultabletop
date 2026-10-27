@@ -1,0 +1,9 @@
+{
+  "name": "Spider Climb",
+  "readableId": "cairn-spellbook-spider-climb",
+  "data": {
+    "effect": "You can climb surfaces like a spider.",
+    "book": "New cobwebs must be pushed aside prior to each use. They are hard to remove.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

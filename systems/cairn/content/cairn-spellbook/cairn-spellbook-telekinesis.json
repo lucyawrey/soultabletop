@@ -1,0 +1,9 @@
+{
+  "name": "Telekinesis",
+  "readableId": "cairn-spellbook-telekinesis",
+  "data": {
+    "effect": "You may mentally 1 move item under 60lbs.",
+    "book": "The owner can summon the book through mental command alone (WIL save or become deprived afterwards).",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

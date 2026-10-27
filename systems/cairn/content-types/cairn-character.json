@@ -1,0 +1,169 @@
+{
+  "readableId": "cairn-character",
+  "name": "Character",
+  "contentCategory": "playerCharacter",
+  "hasStrictSchema": true,
+  "schema": {
+    "background": {
+      "type": "content",
+      "label": "Background",
+      "contentTypeId": "cairn-background",
+      "allow": "both"
+    },
+    "age": {
+      "type": "number",
+      "label": "Age"
+    },
+    "str": {
+      "type": "number",
+      "label": "Strength",
+      "default": 10
+    },
+    "strMax": {
+      "type": "number",
+      "label": "Max Strength",
+      "default": 10
+    },
+    "dex": {
+      "type": "number",
+      "label": "Dexterity",
+      "default": 10
+    },
+    "dexMax": {
+      "type": "number",
+      "label": "Max Dexterity",
+      "default": 10
+    },
+    "wil": {
+      "type": "number",
+      "label": "Willpower",
+      "default": 10
+    },
+    "wilMax": {
+      "type": "number",
+      "label": "Max Willpower",
+      "default": 10
+    },
+    "hp": {
+      "type": "number",
+      "label": "Hit Protection",
+      "default": 1
+    },
+    "hpMax": {
+      "type": "number",
+      "label": "Max Hit Protection",
+      "default": 1
+    },
+    "deprived": {
+      "type": "boolean",
+      "label": "Deprived",
+      "default": false
+    },
+    "fatigue": {
+      "type": "number",
+      "label": "Fatigue",
+      "description": "Each Fatigue fills an inventory slot.",
+      "default": 0
+    },
+    "gold": {
+      "type": "number",
+      "label": "Gold",
+      "default": 0
+    },
+    "inventory": {
+      "type": "array",
+      "label": "Inventory",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "item": {
+            "type": "content",
+            "label": "Item",
+            "contentTypeId": "cairn-item",
+            "allow": "both"
+          },
+          "uses": {
+            "type": "number",
+            "label": "Uses Left"
+          },
+          "equipped": {
+            "type": "boolean",
+            "label": "Equipped",
+            "default": false
+          },
+          "notes": {
+            "type": "string",
+            "label": "Notes"
+          }
+        }
+      }
+    },
+    "spellbooks": {
+      "type": "array",
+      "label": "Spellbooks",
+      "itemType": {
+        "type": "content",
+        "label": "Spellbook",
+        "contentTypeId": "cairn-spellbook",
+        "allow": "both"
+      }
+    },
+    "traits": {
+      "type": "struct",
+      "label": "Traits",
+      "entries": {
+        "physique": {
+          "type": "string",
+          "label": "Physique"
+        },
+        "skin": {
+          "type": "string",
+          "label": "Skin"
+        },
+        "hair": {
+          "type": "string",
+          "label": "Hair"
+        },
+        "face": {
+          "type": "string",
+          "label": "Face"
+        },
+        "speech": {
+          "type": "string",
+          "label": "Speech"
+        },
+        "clothing": {
+          "type": "string",
+          "label": "Clothing"
+        },
+        "virtue": {
+          "type": "string",
+          "label": "Virtue"
+        },
+        "vice": {
+          "type": "string",
+          "label": "Vice"
+        }
+      }
+    },
+    "bond": {
+      "type": "string",
+      "label": "Bond"
+    },
+    "omen": {
+      "type": "string",
+      "label": "Omen"
+    },
+    "scars": {
+      "type": "array",
+      "label": "Scars",
+      "itemType": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string",
+      "label": "Notes"
+    }
+  }
+}

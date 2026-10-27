@@ -1,0 +1,21 @@
+{
+  "name": "Mimic",
+  "readableId": "cairn-monster-mimic",
+  "data": {
+    "hp": 9,
+    "armor": 2,
+    "str": 13,
+    "dex": 6,
+    "wil": 12,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Malicious shape shifters that take on the form of inanimate objects commonly found in dungeons.\n- Remain motionless while in disguise, surprising anyone that comes near.\n- The mimic's saliva is extremely sticky and difficult to remove. Alchemists will pay up to 150gp for even the smallest vial.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

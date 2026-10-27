@@ -1,0 +1,12 @@
+{
+  "name": "Coin of the Father",
+  "readableId": "cairn-item-coin-of-the-father",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "slots": 0,
+    "recharge": "Carry the coin for three days without spending or earning any money.",
+    "description": "Flip this worthless-looking hunk of flat metal in the air, and it will transform into d100 gold coins. The illusory coins disappear after one hour.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

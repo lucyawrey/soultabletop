@@ -1,0 +1,11 @@
+{
+  "name": "Oil Can",
+  "readableId": "cairn-item-oil-can",
+  "data": {
+    "kind": "gear",
+    "uses": 6,
+    "cost": 10,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Masquerade",
+  "readableId": "cairn-spellbook-masquerade",
+  "data": {
+    "effect": "A character's appearance and voice becomes identical to those of a character you touch.",
+    "book": "Extended use causes the owner to develop unconscious yet noticeable tics.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

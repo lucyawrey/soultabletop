@@ -1,0 +1,21 @@
+{
+  "name": "Mind Lasher",
+  "readableId": "cairn-monster-mind-lasher",
+  "data": {
+    "hp": 12,
+    "armor": 0,
+    "str": 8,
+    "dex": 12,
+    "wil": 18,
+    "attacks": [
+      {
+        "name": "Tentacles",
+        "damage": "d6",
+        "blast": true
+      }
+    ],
+    "detachment": false,
+    "description": "- Humanoid creatures with purple skin and squid-like heads. Dwell deep underground or in spacefaring vessels. Feed on the brains of other humanoids, absorbing their memories and life essence. Highly intelligent, but evil beyond belief.\n- **Mind Blast**: Nearby targets must save WIL or lose 1d4 WIL and become paralyzed.\n- **Critical Damage**: A tentacle rips the victim's brain out of their skull.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Kobold",
+  "readableId": "cairn-monster-kobold",
+  "data": {
+    "hp": 3,
+    "armor": 0,
+    "str": 8,
+    "dex": 13,
+    "wil": 4,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d6",
+        "blast": false
+      },
+      {
+        "name": "Spear",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Hairless humanoids with canine-like features and scaly skin. Can see perfectly in the dark, but are harmed by direct sunlight.\n- Use traps and ambush to defeat opponents. Often act in service of a more powerful creatures.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

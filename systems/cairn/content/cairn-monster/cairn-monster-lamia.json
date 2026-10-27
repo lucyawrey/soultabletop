@@ -1,0 +1,21 @@
+{
+  "name": "Lamia",
+  "readableId": "cairn-monster-lamia",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 11,
+    "dex": 12,
+    "wil": 16,
+    "attacks": [
+      {
+        "name": "Toothy bite",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Centaur-like creatures that prey on the life force of others, seducing their victims through heightened charm and intelligence. Their upper bodies are typically humanoid, the lower half any number of animal hybrids.\n- Inherently magical. Can create illusions, charm creatures, and disguise themselves at will.\n- **Critical Damage**: The target takes d6 WIL damage as their spirit is slowly sapped away. They then become enthralled to the Lamia, obeying its every command while in its presence.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

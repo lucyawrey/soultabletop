@@ -1,0 +1,83 @@
+{
+  "name": "Cutpurse",
+  "readableId": "cairn-background-cutpurse",
+  "data": {
+    "intro": "You live in the grey space between those who have power and those who don’t. You find opportunity where others see only chaos. With nimble fingers, you unburden both the richest merchant and the lowliest guard.",
+    "names": [
+      "Arlo",
+      "Lyra",
+      "Eamon",
+      "Salina",
+      "Elara",
+      "Freya",
+      "Bull",
+      "Sparrow",
+      "Ivy",
+      "Silas"
+    ],
+    "startingGear": [
+      "3d6 Gold Pieces",
+      "Rations (3 uses)",
+      "Torch (3 uses)",
+      "Twin Daggers (d6+d6, _bulky_)",
+      "Padded Leather (1 Armor)",
+      "Lockpicks",
+      "Black Outfit (_petty_)"
+    ],
+    "tables": [
+      {
+        "question": "What was your last big job?",
+        "rows": [
+          {
+            "result": "A noble's summer home. The place was full of fancy wine (+20gp) but not much else. Take **Fence Cutters**."
+          },
+          {
+            "result": "A bank. (You were caught.) You bear a brand only visible by firelight, and anyone who sees the mark can ask you for a beer. Take **Retractable Wires**."
+          },
+          {
+            "result": "A guild warehouse. Take a **Ladder** (_bulky_, 10ft) and **Blinding Powder** (1 use)."
+          },
+          {
+            "result": "Moneylender. Someone beat you to the job but left behind a **Scroll** of _Arcane Eye_ (_petty_). _Arcane Eye_: You can see through a magical floating eyeball that flies around at your command."
+          },
+          {
+            "result": "Constable's quarters. You escaped but left some friends behind. Take **Strong Silk Rope** (30ft) and a queasy feeling."
+          },
+          {
+            "result": "A university. You were seen but not pursued. You still don't know why. Take **Smoke Pellets** (3 uses)."
+          }
+        ]
+      },
+      {
+        "question": "What helps you steal?",
+        "rows": [
+          {
+            "item": "Catring",
+            "result": "2 charges. Climb up walls and fall safely. **Recharge**: Place the ring on a stray cat's tail."
+          },
+          {
+            "item": "Gildfinger",
+            "result": "1 charge. A finger glove that mimics any mundane key. **Recharge**: Bundle it with at least 100gp for a night."
+          },
+          {
+            "item": "Glimpse Glass",
+            "result": "3 uses. A monocle that lets you see through walls or other obstructions. It shatters after the last use."
+          },
+          {
+            "item": "Sweetwhistle",
+            "result": "1 charge. Listeners hear a soft, familiar voice in the distance that they cannot resist following. **Recharge**: Lose a dear memory. (Describe it.)"
+          },
+          {
+            "item": "Vagrant's Veil",
+            "result": "1 charge. Wear it to blend seamlessly into crowds, appearing as a simple pauper. **Recharge**: Donate the day's winnings to the poor. _Petty_"
+          },
+          {
+            "item": "Reverse Teetotum",
+            "result": "1 use. When spun, time skips backwards 30 seconds. Everyone remembers what happened."
+          }
+        ]
+      }
+    ],
+    "source": "Cairn Second Edition, Player's Guide"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Book",
+  "readableId": "cairn-item-book",
+  "data": {
+    "kind": "gear",
+    "cost": 50,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

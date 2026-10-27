@@ -1,0 +1,9 @@
+{
+  "name": "Raise Spirit",
+  "readableId": "cairn-spellbook-raise-spirit",
+  "data": {
+    "effect": "The spirit of a nearby corpse manifests and will answer 1 question.",
+    "book": "The answers (but not their questions) are forever inscribed in its pages.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

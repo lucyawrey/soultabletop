@@ -1,0 +1,21 @@
+{
+  "name": "Nightmare",
+  "readableId": "cairn-monster-nightmare",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 15,
+    "dex": 12,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Flaming hooves",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Intelligent, demonic horses with eyes like burning coals, smoldering nostrils, and flaming hooves.\n- Melee attacks against the Nightmare are _impaired_ due to the thick clouds of smoke it produces.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

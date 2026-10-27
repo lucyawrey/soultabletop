@@ -1,0 +1,21 @@
+{
+  "name": "Sky Giant",
+  "readableId": "cairn-monster-sky-giant",
+  "data": {
+    "hp": 12,
+    "armor": 1,
+    "str": 16,
+    "dex": 12,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Mace",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": true,
+    "description": "- Towering, white-skinned giants that live in castles high in the mountains.\n- Missile attacks against them are _impaired_ due to the powerful winds surrounding them.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

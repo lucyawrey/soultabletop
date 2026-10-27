@@ -1,0 +1,21 @@
+{
+  "name": "Creeping Vines",
+  "readableId": "cairn-monster-creeping-vines",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 10,
+    "dex": 12,
+    "wil": 2,
+    "attacks": [
+      {
+        "name": "Vines",
+        "damage": "d4",
+        "blast": true
+      }
+    ],
+    "detachment": false,
+    "description": "- Appear as an inert, typical vine. Attacks passing creatures to use their corpses as fertilizer.\n- **Critical Damage**: Target is pulled into the air where they asphyxiate within a few minutes.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

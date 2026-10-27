@@ -1,0 +1,9 @@
+{
+  "name": "Astral Prison",
+  "readableId": "cairn-spellbook-astral-prison",
+  "data": {
+    "effect": "An object is frozen in time and space within an invulnerable crystal shell.",
+    "book": "Silent, abstract, faces scream in anguish within.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

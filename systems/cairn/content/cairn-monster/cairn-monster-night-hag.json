@@ -1,0 +1,21 @@
+{
+  "name": "Night Hag",
+  "readableId": "cairn-monster-night-hag",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 9,
+    "dex": 11,
+    "wil": 16,
+    "attacks": [
+      {
+        "name": "Talons",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Hideous old women that dwell in dead forests, swamps, and bogs.\n- Carry three of the following spellbooks: _Arcane Eye_, _Disguise_, _Fog Cloud_, _Identify Owner_, _Smoke Form_.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

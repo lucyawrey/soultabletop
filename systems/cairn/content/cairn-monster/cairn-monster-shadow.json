@@ -1,0 +1,22 @@
+{
+  "name": "Shadow",
+  "readableId": "cairn-monster-shadow",
+  "data": {
+    "hp": 14,
+    "armor": 0,
+    "str": 1,
+    "dex": 18,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Draining touch",
+        "damage": "d6",
+        "blast": false,
+        "notes": "Ignores armor."
+      }
+    ],
+    "detachment": false,
+    "description": "- Incorporeal monsters that look like animated shadows. Unharmed by mundane attacks, sleep or mind control.\n- **Critical Damage**: Target loses d4 STR. If reduced to 0 STR, they become a shadow as well.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

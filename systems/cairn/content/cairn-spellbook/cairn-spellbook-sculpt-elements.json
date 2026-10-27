@@ -1,0 +1,9 @@
+{
+  "name": "Sculpt Elements",
+  "readableId": "cairn-spellbook-sculpt-elements",
+  "data": {
+    "effect": "Inanimate material behaves like clay in your hands.",
+    "book": "Slowly decays on contact with wood or cloth. Bury in dirt or submerge in water to refresh.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

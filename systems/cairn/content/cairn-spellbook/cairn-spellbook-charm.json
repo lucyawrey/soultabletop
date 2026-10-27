@@ -1,0 +1,9 @@
+{
+  "name": "Charm",
+  "readableId": "cairn-spellbook-charm",
+  "data": {
+    "effect": "A creature you can see treats you as a friend.",
+    "book": "Warm to the touch, and smells of roses.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

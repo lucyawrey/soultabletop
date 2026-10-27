@@ -1,0 +1,83 @@
+{
+  "name": "Barber-Surgeon",
+  "readableId": "cairn-background-barber-surgeon",
+  "data": {
+    "intro": "You walk the line between healer and harrower, knowing the frailty of the flesh but also the secrets that lie within. With the right tools, life and death are merely words.",
+    "names": [
+      "Wilmot",
+      "Patch",
+      "Lancet",
+      "Sawbones",
+      "Theo",
+      "Cutwell",
+      "Humor",
+      "Landsford",
+      "Goodeye",
+      "Johanna"
+    ],
+    "startingGear": [
+      "3d6 Gold Pieces",
+      "Rations (3 uses)",
+      "Torch (3 uses)",
+      "Bonesaw (d6)",
+      "Bandages (3 uses)",
+      "Leech (restores 1 STR, 3 uses)",
+      "Stained Medical Finery (_petty_)"
+    ],
+    "tables": [
+      {
+        "question": "How have you \"improved\" yourself?",
+        "rows": [
+          {
+            "result": "You have a replacement **eye** that can magnify objects, act as a telescope, and provide minimal night vision. You cannot wear anything metal on your head, and the presence of strong magnets make you _deprived_."
+          },
+          {
+            "result": "One **foot** is mostly metal (kick, d6), and you treat some Tough terrain as **Easy**. Carry a **Oil Can** (6 uses). Without a daily application, you are _deprived_ and noisy."
+          },
+          {
+            "result": "One of your fingers has been swapped, the bone replaced by gold and iron. Take a **Hook** and a **Screwdriver** that can attach to the fingertip."
+          },
+          {
+            "result": "Both **ears** have been surgically enhanced, tripling your hearing. You can focus on a specific sound, such as a conversation, at a great distance. You wear an ear flap to protect against sudden loud noises (WIL save to avoid temporary paralysis)."
+          },
+          {
+            "result": "Your **chest** is lined with alchemical sigils, _toughening the skin_ (1 Armor). Wearing other metallic armor nullifies the effect."
+          },
+          {
+            "result": "One **arm** is fully metal and comes off at the shoulder. It can be used as a weapon (d8, _bulky_ when not attached) and can move independently if you are within sight of it."
+          }
+        ]
+      },
+      {
+        "question": "What rare tool is essential to your work?",
+        "rows": [
+          {
+            "item": "Regrowth Salve",
+            "result": "Regrows a body part over the course of a day. 1 use."
+          },
+          {
+            "item": "Graftgrub",
+            "result": "A small worm that can fuse inanimate objects with parts of the body.  1 use."
+          },
+          {
+            "item": "Woundwax",
+            "result": "Heals wounds from fire or chemicals (restoring full STR) but nothing else. 2 uses."
+          },
+          {
+            "item": "Quicksilver",
+            "result": "A stimulant. Go first in combat, and automatically pass any WIL saves for one hour. _Addictive_: Save STR or become _deprived_ after 24 hours without it. 4 uses."
+          },
+          {
+            "item": "Pneuma Pump",
+            "result": "Portable iron lungs (_bulky_). Enables life-saving surgery or underwater breathing."
+          },
+          {
+            "item": "Lodestone",
+            "result": "Draws out dangerous elements from the body and acts as a powerful magnetic force."
+          }
+        ]
+      }
+    ],
+    "source": "Cairn Second Edition, Player's Guide"
+  }
+}

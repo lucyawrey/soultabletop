@@ -1,0 +1,11 @@
+{
+  "name": "Ward Stone",
+  "readableId": "cairn-item-ward-stone",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "A flat, unassuming river stone notched with faded symbols. Smash to release a silvery powder in a 20ft radius that pacifies anyone who breathes it.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

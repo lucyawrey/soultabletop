@@ -1,0 +1,9 @@
+{
+  "name": "Hatred",
+  "readableId": "cairn-spellbook-hatred",
+  "data": {
+    "effect": "A creature develops a deep hatred of another creature or group and wishes to destroy them.",
+    "book": "Long term exposure to the book can cause suspicion, paranoia and distrust of others.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Warrior Snail",
+  "readableId": "cairn-monster-warrior-snail",
+  "data": {
+    "hp": 4,
+    "armor": 2,
+    "str": 14,
+    "dex": 6,
+    "wil": 3,
+    "attacks": [
+      {
+        "name": "Tentacles",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Giant armored snails with heavy, club-like tentacles.\n- Some species have colorful shells that can reflect magical attacks.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

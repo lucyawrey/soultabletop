@@ -1,0 +1,21 @@
+{
+  "name": "Night Cat",
+  "readableId": "cairn-monster-night-cat",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 9,
+    "dex": 14,
+    "wil": 5,
+    "attacks": [
+      {
+        "name": "Claws",
+        "damage": "d6+d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Intelligent, nocturnal marsupials that make their homes in forests and swamps. Hunt in\npacks.\n- Critical Damage: The Night Cat begins to eat the target (d4 STR damage) while they are\nstill alive.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

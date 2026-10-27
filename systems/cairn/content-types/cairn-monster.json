@@ -1,0 +1,75 @@
+{
+  "readableId": "cairn-monster",
+  "name": "Monster",
+  "contentCategory": "nonPlayerCharacter",
+  "hasStrictSchema": true,
+  "schema": {
+    "hp": {
+      "type": "number",
+      "label": "Hit Protection",
+      "required": true
+    },
+    "armor": {
+      "type": "number",
+      "label": "Armor",
+      "default": 0
+    },
+    "str": {
+      "type": "number",
+      "label": "Strength",
+      "required": true
+    },
+    "dex": {
+      "type": "number",
+      "label": "Dexterity",
+      "required": true
+    },
+    "wil": {
+      "type": "number",
+      "label": "Willpower",
+      "required": true
+    },
+    "attacks": {
+      "type": "array",
+      "label": "Attacks",
+      "itemType": {
+        "type": "struct",
+        "entries": {
+          "name": {
+            "type": "string",
+            "label": "Name",
+            "required": true
+          },
+          "damage": {
+            "type": "string",
+            "label": "Damage"
+          },
+          "blast": {
+            "type": "boolean",
+            "label": "Blast",
+            "default": false
+          },
+          "notes": {
+            "type": "string",
+            "label": "Notes"
+          }
+        }
+      }
+    },
+    "detachment": {
+      "type": "boolean",
+      "label": "Detachment",
+      "default": false
+    },
+    "description": {
+      "type": "string",
+      "label": "Description",
+      "description": "Rules text, in Markdown."
+    },
+    "source": {
+      "type": "string",
+      "label": "Source",
+      "description": "The book it was published in."
+    }
+  }
+}

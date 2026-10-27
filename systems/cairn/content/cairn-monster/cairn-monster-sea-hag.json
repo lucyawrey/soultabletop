@@ -1,0 +1,21 @@
+{
+  "name": "Sea Hag",
+  "readableId": "cairn-monster-sea-hag",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 11,
+    "dex": 15,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Long claws",
+        "damage": "d6+d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Ghostly, green-skinned hags that dwell in seaweed forests and warm shallow waters.\n- Immune to magic from spellbooks.\n- **Hideous Gaze**: A target is overcome with fear (HP drops to 0). WIL save each round to break the spell.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

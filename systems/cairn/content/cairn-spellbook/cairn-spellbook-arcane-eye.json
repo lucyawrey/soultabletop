@@ -1,0 +1,9 @@
+{
+  "name": "Arcane Eye",
+  "readableId": "cairn-spellbook-arcane-eye",
+  "data": {
+    "effect": "You can see through a magical floating eyeball that flies around at your command.",
+    "book": "Needs a spritz of water to open.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

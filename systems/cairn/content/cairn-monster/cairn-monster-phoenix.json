@@ -1,0 +1,21 @@
+{
+  "name": "Phoenix",
+  "readableId": "cairn-monster-phoenix",
+  "data": {
+    "hp": 4,
+    "armor": 0,
+    "str": 15,
+    "dex": 13,
+    "wil": 12,
+    "attacks": [
+      {
+        "name": "Talons",
+        "damage": "d10+d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Intelligent, hawk-like spirits of pure flame, found in isolated deserts and high mountains.\n- If killed, they explode in a burst of flames. They are reborn 1d3 days later from the ashes.\n- Their feathers are highly-sought after for their healing properties.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

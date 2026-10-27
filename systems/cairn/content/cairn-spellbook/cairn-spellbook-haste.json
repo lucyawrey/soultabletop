@@ -1,0 +1,9 @@
+{
+  "name": "Haste",
+  "readableId": "cairn-spellbook-haste",
+  "data": {
+    "effect": "Your movement speed is tripled.",
+    "book": "Pages flip wildly while open. Can cause paper cuts.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

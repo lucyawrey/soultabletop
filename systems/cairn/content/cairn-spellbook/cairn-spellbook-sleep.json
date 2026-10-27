@@ -1,0 +1,9 @@
+{
+  "name": "Sleep",
+  "readableId": "cairn-spellbook-sleep",
+  "data": {
+    "effect": "A creature you can see falls into a light sleep.",
+    "book": "Soft as a pillow, but yields only fitful sleep.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

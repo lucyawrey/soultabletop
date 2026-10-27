@@ -1,0 +1,21 @@
+{
+  "name": "Viper",
+  "readableId": "cairn-monster-viper",
+  "data": {
+    "hp": 3,
+    "armor": 0,
+    "str": 5,
+    "dex": 12,
+    "wil": 3,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Poisonous snakes often found in caves, pits, and other dark places. An antitoxin can be made from their poison sacs.\n- Use heat and smell to track their victims.\n- **Critical Damage**: Target is poisoned, dying in 1d12 hours without a cure.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

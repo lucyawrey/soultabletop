@@ -1,0 +1,9 @@
+{
+  "name": "Filch",
+  "readableId": "cairn-spellbook-filch",
+  "data": {
+    "effect": "A visible item teleports to your hands.",
+    "book": "An ally's prized possession may occasionally be found tucked between its covers.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

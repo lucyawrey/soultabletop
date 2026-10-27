@@ -1,0 +1,9 @@
+{
+  "name": "Night Sphere",
+  "readableId": "cairn-spellbook-night-sphere",
+  "data": {
+    "effect": "A 50ft-wide sphere of darkness displaying the night sky appears before you.",
+    "book": "Displays a prominent constellation on its cover.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

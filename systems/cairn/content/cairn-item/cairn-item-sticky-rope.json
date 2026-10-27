@@ -1,0 +1,12 @@
+{
+  "name": "Sticky Rope",
+  "readableId": "cairn-item-sticky-rope",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "recharge": "Cut off 10ft of rope, which then withers away.",
+    "description": "A 100ft rope that can stick to any surface.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

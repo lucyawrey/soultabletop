@@ -1,0 +1,11 @@
+{
+  "name": "Bathing Goods",
+  "readableId": "cairn-item-bathing-goods",
+  "data": {
+    "kind": "gear",
+    "cost": 5,
+    "description": "Soap, Perfume, etc.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

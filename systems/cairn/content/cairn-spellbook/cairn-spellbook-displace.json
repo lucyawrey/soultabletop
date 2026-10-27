@@ -1,0 +1,9 @@
+{
+  "name": "Displace",
+  "readableId": "cairn-spellbook-displace",
+  "data": {
+    "effect": "An object appears to be up to 15ft from its actual position.",
+    "book": "Bits of string, clothing, and leaves are sometimes stuffed inside.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

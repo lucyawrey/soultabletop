@@ -1,0 +1,26 @@
+{
+  "name": "Sphinx",
+  "readableId": "cairn-monster-sphinx",
+  "data": {
+    "hp": 18,
+    "armor": 0,
+    "str": 12,
+    "dex": 13,
+    "wil": 18,
+    "attacks": [
+      {
+        "name": "Claws",
+        "damage": "d8+d8",
+        "blast": true
+      },
+      {
+        "name": "Beak",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Mythical beasts with the upper body and head of a human, the wings of an eagle, and the body of a lion. Immune to magic of any kind.\n- Poses riddles to anyone they meet. Failure to answer correctly is usually met with death. They know almost everything worth knowing.\n- **Roar**: Anyone in earshot must save WIL or flee in fear.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

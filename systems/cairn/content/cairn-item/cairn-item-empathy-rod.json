@@ -1,0 +1,12 @@
+{
+  "name": "Empathy Rod",
+  "readableId": "cairn-item-empathy-rod",
+  "data": {
+    "kind": "relic",
+    "charges": 3,
+    "recharge": "Give the rod to a former enemy as a gift. This is a one-way transaction.",
+    "description": "When two creatures touch this wooden pole at the same time, their physical and emotional states become fully intertwined until they let go.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

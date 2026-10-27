@@ -1,0 +1,21 @@
+{
+  "name": "Ghoul",
+  "readableId": "cairn-monster-ghoul",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 14,
+    "dex": 8,
+    "wil": 3,
+    "attacks": [
+      {
+        "name": "Elongated claws",
+        "damage": "d6+d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Grey-skinned man-things wearing shredded clothes that crave only the flesh of the living.\n- **Critical Damage**: Target is _deprived_ from their necrotic wound, dying in d4 days unless treated by a priest or skilled healer. If the body is not burned it later rises as a Ghoul as well.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

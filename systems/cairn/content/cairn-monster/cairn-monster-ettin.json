@@ -1,0 +1,21 @@
+{
+  "name": "Ettin",
+  "readableId": "cairn-monster-ettin",
+  "data": {
+    "hp": 10,
+    "armor": 0,
+    "str": 16,
+    "dex": 8,
+    "wil": 6,
+    "attacks": [
+      {
+        "name": "Club",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- The two-headed kin of giants. Prefer caves and underground hovels.\n- Cannot be surprised.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

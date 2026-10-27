@@ -1,0 +1,9 @@
+{
+  "name": "Push/Pull",
+  "readableId": "cairn-spellbook-push-pull",
+  "data": {
+    "effect": "An object of any size is pulled directly towards you or pushed directly away from you with the strength of one man.",
+    "book": "Any force against the book is comically amplified.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

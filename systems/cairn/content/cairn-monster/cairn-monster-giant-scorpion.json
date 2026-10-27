@@ -1,0 +1,21 @@
+{
+  "name": "Giant Scorpion",
+  "readableId": "cairn-monster-giant-scorpion",
+  "data": {
+    "hp": 8,
+    "armor": 1,
+    "str": 11,
+    "dex": 12,
+    "wil": 4,
+    "attacks": [
+      {
+        "name": "Claws",
+        "damage": "d10+d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Horse-sized arachnids commonly found in dry terrain or caverns.\n- **Critical Damage**: The stinger's poison liquefies the target's insides for an additional d8 STR damage. The STR loss is permanent.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Ring of the Snake",
+  "readableId": "cairn-item-ring-of-the-snake",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "slots": 0,
+    "recharge": "Bury the ring with a corpse. A month later, exhume the corpse and retrieve it.",
+    "description": "A wrought-iron serpent ring. Place it on your finger and fall into a sleep so deep that most will think you are dead. If the ring is removed, you will awaken feeling refreshed. Otherwise, the effect will wear off after one month.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

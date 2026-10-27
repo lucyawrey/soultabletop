@@ -1,0 +1,21 @@
+{
+  "name": "Bone Construct",
+  "readableId": "cairn-monster-bone-construct",
+  "data": {
+    "hp": 8,
+    "armor": 3,
+    "str": 15,
+    "dex": 5,
+    "wil": 3,
+    "attacks": [
+      {
+        "name": "Sharpened arms",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": true,
+    "description": "- Gigantic, four-armed constructs made of bone and sorcery.\n- Mindless guardians that stand ready to attack any creature other than their creator.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

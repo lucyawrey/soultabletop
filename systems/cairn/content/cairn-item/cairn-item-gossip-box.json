@@ -1,0 +1,12 @@
+{
+  "name": "Gossip Box",
+  "readableId": "cairn-item-gossip-box",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "recharge": "Successfully spread one falsehood in the presence of the box.",
+    "description": "Wind the crank to replay any sound made in the past day in your current location. Each crank goes back one hour.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

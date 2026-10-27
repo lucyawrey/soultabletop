@@ -1,0 +1,11 @@
+{
+  "name": "Expeditionary Gear",
+  "readableId": "cairn-item-expeditionary-gear",
+  "data": {
+    "kind": "gear",
+    "cost": 10,
+    "description": "Climbing Spikes, Pulley, etc.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

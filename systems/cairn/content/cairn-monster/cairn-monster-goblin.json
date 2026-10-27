@@ -1,0 +1,26 @@
+{
+  "name": "Goblin",
+  "readableId": "cairn-monster-goblin",
+  "data": {
+    "hp": 4,
+    "armor": 0,
+    "str": 8,
+    "dex": 12,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Dagger",
+        "damage": "d6",
+        "blast": false
+      },
+      {
+        "name": "Sling",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Small, grotesque humanoids with skin in earthly tones of green, brown, and grey.\n- Avoid combat, only attacking when advantageous, using hit-and-run tactics.\n- Sometimes are found using dire wolves as mounts.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

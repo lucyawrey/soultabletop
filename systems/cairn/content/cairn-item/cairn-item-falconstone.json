@@ -1,0 +1,12 @@
+{
+  "name": "Falconstone",
+  "readableId": "cairn-item-falconstone",
+  "data": {
+    "kind": "relic",
+    "charges": 3,
+    "recharge": "Kill and eat a common quarry, cooking the meat alongside the stone.",
+    "description": "Perceive the world through the eyes and ears of a nearby bird of prey. You feel whatever it feels but have no control over it.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

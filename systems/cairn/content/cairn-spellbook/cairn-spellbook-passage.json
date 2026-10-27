@@ -1,0 +1,9 @@
+{
+  "name": "Passage",
+  "readableId": "cairn-spellbook-passage",
+  "data": {
+    "effect": "Creates a temporary path through wood, stone or brick.",
+    "book": "An object dropped on top of the book inevitably falls through the other side.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

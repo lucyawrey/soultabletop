@@ -1,0 +1,9 @@
+{
+  "name": "Identify Owner",
+  "readableId": "cairn-spellbook-identify-owner",
+  "data": {
+    "effect": "Letters appear over the object you touch, spelling out the name of the object’s owners, if there are any.",
+    "book": "The book's interior lists the name of its previous owner.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

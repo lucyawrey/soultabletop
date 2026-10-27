@@ -1,0 +1,11 @@
+{
+  "name": "Golden Wheat Paste",
+  "readableId": "cairn-item-golden-wheat-paste",
+  "data": {
+    "kind": "relic",
+    "uses": 2,
+    "description": "When mixed with water, this substance chemically bonds any two objects.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

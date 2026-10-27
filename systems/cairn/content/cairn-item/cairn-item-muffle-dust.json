@@ -1,0 +1,11 @@
+{
+  "name": "Muffle Dust",
+  "readableId": "cairn-item-muffle-dust",
+  "data": {
+    "kind": "relic",
+    "uses": 2,
+    "description": "A pouch of fine dust that muffles all sound in a 40ft radius when scattered.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

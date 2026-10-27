@@ -1,0 +1,9 @@
+{
+  "name": "Miniaturize",
+  "readableId": "cairn-spellbook-miniaturize",
+  "data": {
+    "effect": "A creature you touch is shrunk down to the size of a mouse.",
+    "book": "The text is ludicrously, comically large.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

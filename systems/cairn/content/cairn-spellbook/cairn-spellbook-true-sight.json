@@ -1,0 +1,9 @@
+{
+  "name": "True Sight",
+  "readableId": "cairn-spellbook-true-sight",
+  "data": {
+    "effect": "You see through all nearby illusions.",
+    "book": "Cannot be concealed by magic, and sticks out like a sore thumb.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Assassin's Goblets",
+  "readableId": "cairn-item-assassins-goblets",
+  "data": {
+    "kind": "relic",
+    "description": "A pair of fragile wine flutes. Any liquid poured into one is swapped with the other.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

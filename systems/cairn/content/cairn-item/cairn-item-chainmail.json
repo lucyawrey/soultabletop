@@ -1,0 +1,11 @@
+{
+  "name": "Chainmail",
+  "readableId": "cairn-item-chainmail",
+  "data": {
+    "kind": "armor",
+    "armor": 2,
+    "slots": 2,
+    "cost": 40,
+    "source": "Cairn Second Edition, Player's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Objectify",
+  "readableId": "cairn-spellbook-objectify",
+  "data": {
+    "effect": "You become any inanimate object between the size of a grand piano and an apple.",
+    "book": "The owner experiences intense pareidolia for days after use.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Dowsing Rod",
+  "readableId": "cairn-item-dowsing-rod",
+  "data": {
+    "kind": "gear",
+    "cost": 15,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

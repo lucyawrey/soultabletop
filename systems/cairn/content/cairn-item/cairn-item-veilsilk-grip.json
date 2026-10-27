@@ -1,0 +1,12 @@
+{
+  "name": "Veilsilk Grip",
+  "readableId": "cairn-item-veilsilk-grip",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "slots": 0,
+    "recharge": "Snip off one of the fingers.",
+    "description": "A hand wearing this glove can phase through solid objects.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Scry",
+  "readableId": "cairn-spellbook-scry",
+  "data": {
+    "effect": "You can see through the eyes of a creature you touched earlier today.",
+    "book": "The owner's eyes turn milky-white for an hour after use.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

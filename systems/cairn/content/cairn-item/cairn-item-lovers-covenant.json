@@ -1,0 +1,11 @@
+{
+  "name": "Lover's Covenant",
+  "readableId": "cairn-item-lovers-covenant",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "A bottle of red-tinted ink, a broken heart emblazoned on the front. Write up a contract of any length. Any who sign are bound to obey by penalty of death.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Root Witch",
+  "readableId": "cairn-monster-root-witch",
+  "data": {
+    "hp": 8,
+    "armor": 0,
+    "str": 9,
+    "dex": 16,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Tuber-fingers",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Excellent tunnelers that hide underground near water. Wiggle tiny fronds into the air as lures.\n- Above-ground, appear vaguely humanoid with the face of a rotted tree stump.\n- Will exchange rare minerals for a “fresh corpse” of any kind.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

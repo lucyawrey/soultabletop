@@ -1,0 +1,21 @@
+{
+  "name": "Wight",
+  "readableId": "cairn-monster-wight",
+  "data": {
+    "hp": 12,
+    "armor": 3,
+    "str": 16,
+    "dex": 8,
+    "wil": 12,
+    "attacks": [
+      {
+        "name": "Long sword",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Grotesque, fallen warriors, raised from death for ill purpose. Often astride equally nightmarish steeds, leading lesser undead creatures into battle.\n- **Critical Damage**: On a fail, any STR loss is permanent.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

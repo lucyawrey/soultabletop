@@ -1,0 +1,7 @@
+{
+  "name": "Cairn Second Edition",
+  "readableId": "cairn",
+  "owner": "soul",
+  "isPubliclyReadable": false,
+  "description": "Rules content converted from the text of Cairn Second Edition (https://github.com/yochaigal/cairn), licensed CC-BY-SA 4.0.\n\nTODO(team): the license and attribution notice. Until it's added, the system stays Limited."
+}

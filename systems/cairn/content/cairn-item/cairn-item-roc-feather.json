@@ -1,0 +1,11 @@
+{
+  "name": "Roc Feather",
+  "readableId": "cairn-item-roc-feather",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "Hold while falling to float safely to the ground from any height.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

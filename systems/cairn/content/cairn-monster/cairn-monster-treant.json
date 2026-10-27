@@ -1,0 +1,21 @@
+{
+  "name": "Treant",
+  "readableId": "cairn-monster-treant",
+  "data": {
+    "hp": 10,
+    "armor": 3,
+    "str": 15,
+    "dex": 3,
+    "wil": 12,
+    "attacks": [
+      {
+        "name": "Roots",
+        "damage": "d8+d8",
+        "blast": true
+      }
+    ],
+    "detachment": false,
+    "description": "- Sentient, bipedal trees with a vaguely humanoid face on their trunks. Found in the deepest part of the wood.\n- Speak slowly and ponderously, with a deep voice. Timeless, living for thousands of years.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

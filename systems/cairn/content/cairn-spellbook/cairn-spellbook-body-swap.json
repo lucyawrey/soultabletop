@@ -1,0 +1,9 @@
+{
+  "name": "Body Swap",
+  "readableId": "cairn-spellbook-body-swap",
+  "data": {
+    "effect": "You switch bodies with a creature you touch. If one body dies, the other dies as well.",
+    "book": "The front cover shows an image of the last creature to read it.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

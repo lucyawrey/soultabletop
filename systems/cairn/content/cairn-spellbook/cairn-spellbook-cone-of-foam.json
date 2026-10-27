@@ -1,0 +1,9 @@
+{
+  "name": "Cone of Foam",
+  "readableId": "cairn-spellbook-cone-of-foam",
+  "data": {
+    "effect": "Dense foam sprays from your hand, coating the target.",
+    "book": "Spongy and moist with a soapy residue.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

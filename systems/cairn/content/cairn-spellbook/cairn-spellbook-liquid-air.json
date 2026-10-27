@@ -1,0 +1,9 @@
+{
+  "name": "Liquid Air",
+  "readableId": "cairn-spellbook-liquid-air",
+  "data": {
+    "effect": "The air around you becomes swimmable.",
+    "book": "Floats of its own volition, bouncing off of whatever it touches.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

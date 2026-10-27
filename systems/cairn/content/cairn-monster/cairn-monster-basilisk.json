@@ -1,0 +1,21 @@
+{
+  "name": "Basilisk",
+  "readableId": "cairn-monster-basilisk",
+  "data": {
+    "hp": 10,
+    "armor": 1,
+    "str": 12,
+    "dex": 13,
+    "wil": 13,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Long, serpentine lizards that nest deep below the earth or in brambles just underfoot.\n- Fighting a **Basilisk** without meeting its gaze is difficult. (Attacks facing it are _impaired_.)\n- **Gaze**: A target facing the Basilisk is slowly petrified from the bottom up and completely frozen after three rounds. An antidote can be brewed from the Basilisk's gizzards. The creature's reflection is harmless.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

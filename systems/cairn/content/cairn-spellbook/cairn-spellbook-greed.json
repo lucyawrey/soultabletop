@@ -1,0 +1,9 @@
+{
+  "name": "Greed",
+  "readableId": "cairn-spellbook-greed",
+  "data": {
+    "effect": "A creature develops the overwhelming urge to possess a visible item of your choice.",
+    "book": "The cover changes depending on the owner, subtly hinting at their deepest desires.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

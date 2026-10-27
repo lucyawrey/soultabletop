@@ -1,0 +1,10 @@
+{
+  "name": "Card Deck",
+  "readableId": "cairn-item-card-deck",
+  "data": {
+    "kind": "gear",
+    "cost": 5,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

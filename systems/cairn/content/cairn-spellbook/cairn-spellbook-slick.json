@@ -1,0 +1,9 @@
+{
+  "name": "Slick",
+  "readableId": "cairn-spellbook-slick",
+  "data": {
+    "effect": "Every surface in a 30ft radius becomes extremely slippery.",
+    "book": "Gloves are required for handling, lest the book is dropped in a most comical fashion.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

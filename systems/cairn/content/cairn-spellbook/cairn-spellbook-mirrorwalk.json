@@ -1,0 +1,9 @@
+{
+  "name": "Mirrorwalk",
+  "readableId": "cairn-spellbook-mirrorwalk",
+  "data": {
+    "effect": "A mirror becomes a gateway to another mirror that you looked into today.",
+    "book": "Will not open unless the owner politely knocks on the cover.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

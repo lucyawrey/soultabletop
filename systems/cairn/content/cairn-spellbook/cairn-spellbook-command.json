@@ -1,0 +1,9 @@
+{
+  "name": "Command",
+  "readableId": "cairn-spellbook-command",
+  "data": {
+    "effect": "A target obeys a single three-word command that does not cause it harm.",
+    "book": "Grows thinner over time, until finally disappearing forever.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

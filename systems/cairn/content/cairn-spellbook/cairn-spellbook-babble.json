@@ -1,0 +1,9 @@
+{
+  "name": "Babble",
+  "readableId": "cairn-spellbook-babble",
+  "data": {
+    "effect": "A creature must loudly and clearly repeat everything you think. It is otherwise mute.",
+    "book": "When the text is read aloud, the words of others become unintelligible.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Shuffle",
+  "readableId": "cairn-spellbook-shuffle",
+  "data": {
+    "effect": "Two creatures you can see instantly switch places.",
+    "book": "If stolen but not yet read, it reappears wherever its owner last left it.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

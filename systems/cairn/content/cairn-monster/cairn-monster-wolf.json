@@ -1,0 +1,21 @@
+{
+  "name": "Wolf",
+  "readableId": "cairn-monster-wolf",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 12,
+    "dex": 14,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Large canines that dwell primarily in forest or tundra.\n- Can be trained with effort if captured at a young age.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

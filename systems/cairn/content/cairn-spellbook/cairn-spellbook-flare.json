@@ -1,0 +1,9 @@
+{
+  "name": "Flare",
+  "readableId": "cairn-spellbook-flare",
+  "data": {
+    "effect": "A bright ball of energy fires a trail of light into the sky, revealing your location to friend or foe.",
+    "book": "Faintly glows in complete darkness.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

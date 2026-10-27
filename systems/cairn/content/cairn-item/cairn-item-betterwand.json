@@ -1,0 +1,12 @@
+{
+  "name": "Betterwand",
+  "readableId": "cairn-item-betterwand",
+  "data": {
+    "kind": "relic",
+    "charges": 2,
+    "recharge": "Willingly accept a poor deal or trade while in possession of the wand.",
+    "description": "Vibrates with increased intensity when pointed at the best of a series of objects.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

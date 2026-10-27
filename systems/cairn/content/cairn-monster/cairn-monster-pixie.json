@@ -1,0 +1,15 @@
+{
+  "name": "Pixie",
+  "readableId": "cairn-monster-pixie",
+  "data": {
+    "hp": 3,
+    "armor": 0,
+    "str": 3,
+    "dex": 15,
+    "wil": 13,
+    "attacks": [],
+    "detachment": false,
+    "description": "- Tiny humanoids with insectoid wings. Naturally invisible.\n- Can cast _Sleep_ and _Masquerade_ at will.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

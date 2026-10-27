@@ -1,0 +1,9 @@
+{
+  "name": "Sense",
+  "readableId": "cairn-spellbook-sense",
+  "data": {
+    "effect": "Choose one kind of object (key, gold, arrow, jug, etc). You can sense the nearest example.",
+    "book": "The book's previous owner is always aware of the book's current location.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

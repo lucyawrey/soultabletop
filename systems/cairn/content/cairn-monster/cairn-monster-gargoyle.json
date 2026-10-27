@@ -1,0 +1,21 @@
+{
+  "name": "Gargoyle",
+  "readableId": "cairn-monster-gargoyle",
+  "data": {
+    "hp": 8,
+    "armor": 3,
+    "str": 14,
+    "dex": 4,
+    "wil": 12,
+    "attacks": [
+      {
+        "name": "Claws",
+        "damage": "d8+d8",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Magical, slow-moving statues of monstrous winged creatures, typically employed as guards or watchdogs.\n- Prowl at nights but fear the day, when the sun's light freezes them in place.\n- Immune to charms and magical sleep.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Control Weather",
+  "readableId": "cairn-spellbook-control-weather",
+  "data": {
+    "effect": "You may alter the type of weather at will, but you do not otherwise control it.",
+    "book": "Highly resistant to fire and water damage.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

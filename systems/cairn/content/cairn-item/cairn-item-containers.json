@@ -1,0 +1,11 @@
+{
+  "name": "Containers",
+  "readableId": "cairn-item-containers",
+  "data": {
+    "kind": "gear",
+    "cost": 10,
+    "description": "Sack, Waterskin, etc.",
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

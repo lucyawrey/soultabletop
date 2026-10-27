@@ -1,0 +1,21 @@
+{
+  "name": "Acolyte",
+  "readableId": "cairn-monster-acolyte",
+  "data": {
+    "hp": 4,
+    "armor": 1,
+    "str": 8,
+    "dex": 11,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Ceremonial dagger",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Holy servants bound to a particular deity. Typically travel in groups of four or more.\n- Carry a holy symbol (_Ward_ once per day).",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

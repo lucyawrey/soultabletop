@@ -1,0 +1,21 @@
+{
+  "name": "Titan",
+  "readableId": "cairn-monster-titan",
+  "data": {
+    "hp": 18,
+    "armor": 3,
+    "str": 16,
+    "dex": 15,
+    "wil": 18,
+    "attacks": [
+      {
+        "name": "Lightning sword",
+        "damage": "d12",
+        "blast": false
+      }
+    ],
+    "detachment": true,
+    "description": "- Mythical, humanoid giants of radiant beauty and powerfully athletic bodies. Beneficent of character, but prone to megalomania.\n- Natives of other planes of existence, but sometimes have strongholds in the mortal world.\n- Can levitate, shape shift, and sculpt elements at will.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

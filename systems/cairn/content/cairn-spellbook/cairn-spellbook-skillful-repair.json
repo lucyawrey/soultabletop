@@ -1,0 +1,9 @@
+{
+  "name": "Skillful Repair",
+  "readableId": "cairn-spellbook-skillful-repair",
+  "data": {
+    "effect": "You make minor repairs to a nonliving object.",
+    "book": "Sewn from the vellum of one hundred books, no two pages are alike.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Flail",
+  "readableId": "cairn-item-flail",
+  "data": {
+    "kind": "weapon",
+    "damage": "d8",
+    "cost": 10,
+    "source": "Cairn Second Edition, Player's Guide",
+    "slots": 1
+  }
+}

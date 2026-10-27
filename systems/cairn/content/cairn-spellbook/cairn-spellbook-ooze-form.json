@@ -1,0 +1,9 @@
+{
+  "name": "Ooze Form",
+  "readableId": "cairn-spellbook-ooze-form",
+  "data": {
+    "effect": "You become a living jelly.",
+    "book": "Slowly drips an acid that eventually eats away anything it touches.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

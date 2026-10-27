@@ -1,0 +1,11 @@
+{
+  "name": "Crossbow",
+  "readableId": "cairn-item-crossbow",
+  "data": {
+    "kind": "weapon",
+    "damage": "d8",
+    "slots": 2,
+    "cost": 30,
+    "source": "Cairn Second Edition, Player's Guide"
+  }
+}

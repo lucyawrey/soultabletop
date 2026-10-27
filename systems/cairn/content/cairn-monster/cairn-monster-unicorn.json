@@ -1,0 +1,22 @@
+{
+  "name": "Unicorn",
+  "readableId": "cairn-monster-unicorn",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 14,
+    "dex": 12,
+    "wil": 14,
+    "attacks": [
+      {
+        "name": "Horn",
+        "damage": "d10",
+        "blast": false,
+        "notes": "Ignores armor."
+      }
+    ],
+    "detachment": false,
+    "description": "- Magical horses with a single long horn on their foreheads. Timid, but proud and willful, are seen as divine beings.\n- Their hair is worth a small fortune due to its powerful healing properties.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

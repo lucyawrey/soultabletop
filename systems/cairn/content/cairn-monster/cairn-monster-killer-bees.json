@@ -1,0 +1,21 @@
+{
+  "name": "Killer Bees",
+  "readableId": "cairn-monster-killer-bees",
+  "data": {
+    "hp": 6,
+    "armor": 0,
+    "str": 6,
+    "dex": 14,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Sting",
+        "damage": "d6",
+        "blast": false
+      }
+    ],
+    "detachment": true,
+    "description": "- Oversized bees that build underground hives. Hyper-aggressive, attack anything that comes near.\n- Produce special honey that heals 1d6 STR. 3 uses.\n- When the bees cause STR damage, the stingers are lodged into the target, dealing d4 damage each round until removed.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

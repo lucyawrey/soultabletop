@@ -1,0 +1,9 @@
+{
+  "name": "Marble Craze",
+  "readableId": "cairn-spellbook-marble-craze",
+  "data": {
+    "effect": "Your pockets are full of marbles and will refill every 30 seconds.",
+    "book": "When jostled, makes a playful rattling sound.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

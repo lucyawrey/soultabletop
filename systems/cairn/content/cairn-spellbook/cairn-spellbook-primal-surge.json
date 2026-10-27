@@ -1,0 +1,9 @@
+{
+  "name": "Primal Surge",
+  "readableId": "cairn-spellbook-primal-surge",
+  "data": {
+    "effect": "A creature rapidly evolves into a future version of its species.",
+    "book": "The owner is haunted by strange visions of their own ancestors.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

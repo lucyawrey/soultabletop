@@ -1,0 +1,9 @@
+{
+  "name": "Snuff",
+  "readableId": "cairn-spellbook-snuff",
+  "data": {
+    "effect": "The source of any mundane light you can see is instantly snuffed out.",
+    "book": "If left in one place for long periods, nearby light sources eventually dim, then finally go out.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

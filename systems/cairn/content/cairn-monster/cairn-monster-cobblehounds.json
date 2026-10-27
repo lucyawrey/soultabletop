@@ -1,0 +1,21 @@
+{
+  "name": "Cobblehounds",
+  "readableId": "cairn-monster-cobblehounds",
+  "data": {
+    "hp": 12,
+    "armor": 2,
+    "str": 14,
+    "dex": 1,
+    "wil": 8,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d10",
+        "blast": false
+      }
+    ],
+    "detachment": false,
+    "description": "- Immobile constructs typically used as guardians to great tombs or artifacts.\n- Unaffected by mundane persuasion techniques, but love a good bone.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

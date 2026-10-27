@@ -1,0 +1,12 @@
+{
+  "name": "Wraith Lantern",
+  "readableId": "cairn-item-wraith-lantern",
+  "data": {
+    "kind": "relic",
+    "charges": 1,
+    "recharge": "Kill the last person found with the help of the lantern, trapping their spirit inside. The lantern must be nearby when they are killed.",
+    "description": "Write someone's name onto its glass, and the name will disappear. The lantern reveals a path to their current location, visible only to the holder (day or night).",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

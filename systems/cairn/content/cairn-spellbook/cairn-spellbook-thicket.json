@@ -1,0 +1,9 @@
+{
+  "name": "Thicket",
+  "readableId": "cairn-spellbook-thicket",
+  "data": {
+    "effect": "A thicket of trees and dense brush up to 50ft wide suddenly sprouts up.",
+    "book": "Wrapped in vines that must be destroyed again with each use.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

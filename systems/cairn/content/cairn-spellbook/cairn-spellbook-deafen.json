@@ -1,0 +1,9 @@
+{
+  "name": "Deafen",
+  "readableId": "cairn-spellbook-deafen",
+  "data": {
+    "effect": "All nearby creatures are deafened.",
+    "book": "Nearby instruments occasionally sound off, as if in protest.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Nightstone",
+  "readableId": "cairn-item-nightstone",
+  "data": {
+    "kind": "relic",
+    "uses": 1,
+    "description": "Rare moon-shaped stones dredged from underwater caves and jungle dolines. Swallow whole to relieve all fatigue and deprivation as if you had a good night's sleep and a good meal. The stone will eventually pass through your system. It isn't fun.",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

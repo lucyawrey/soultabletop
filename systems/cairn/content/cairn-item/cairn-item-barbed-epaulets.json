@@ -1,0 +1,11 @@
+{
+  "name": "Barbed Epaulets",
+  "readableId": "cairn-item-barbed-epaulets",
+  "data": {
+    "kind": "relic",
+    "armor": 1,
+    "description": "Spiked shoulder pads that poison anyone that touches them (STR save or lose consciousness).",
+    "source": "Cairn Second Edition, Warden's Guide",
+    "slots": 1
+  }
+}

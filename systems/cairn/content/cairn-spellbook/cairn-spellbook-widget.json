@@ -1,0 +1,9 @@
+{
+  "name": "Widget",
+  "readableId": "cairn-spellbook-widget",
+  "data": {
+    "effect": "A primitive version of a drawn tool or item appears before you and disappears after a short time.",
+    "book": "Smells of iron and rust, sweat and effort. Faint sounds of harsh labor emanate from deep within its pages.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

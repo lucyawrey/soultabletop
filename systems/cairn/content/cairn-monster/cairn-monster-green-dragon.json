@@ -1,0 +1,21 @@
+{
+  "name": "Green Dragon",
+  "readableId": "cairn-monster-green-dragon",
+  "data": {
+    "hp": 12,
+    "armor": 2,
+    "str": 14,
+    "dex": 15,
+    "wil": 18,
+    "attacks": [
+      {
+        "name": "Bite",
+        "damage": "d12",
+        "blast": false
+      }
+    ],
+    "detachment": true,
+    "description": "- Forest-dwelling snakes topped with tall green scales. Collect great hoards of treasure.\n- Use intelligence and cunning to manipulate the weak into their service.\n- **Chlorine Gas**: Anyone nearby must make a DEX save to escape its reach or lose 1d4 STR and becomes _deprived_.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}

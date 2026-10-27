@@ -1,0 +1,15 @@
+{
+  "name": "Will-o-Wisp",
+  "readableId": "cairn-monster-will-o-wisp",
+  "data": {
+    "hp": 3,
+    "armor": 0,
+    "str": 6,
+    "dex": 17,
+    "wil": 12,
+    "attacks": [],
+    "detachment": false,
+    "description": "- Nocturnal spirits of cool flame, commonly found in dense woodlands, marshes, and swamps.\n- Known to lead travelers astray, to a corpse, or back home again.",
+    "source": "Cairn Second Edition, Warden's Guide"
+  }
+}
