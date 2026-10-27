@@ -976,7 +976,7 @@ class Validator {
     if (stepTags.includes(spec.name)) {
       if (this.cardDepth)
         return invalid("step-in-preview", `<${spec.name}> can't be in a <Preview>: previews are read-only`);
-      if (!this.action) return invalid("step-misplaced", `<${spec.name}> must be directly inside a <Button>, <Value>, <Number>, <Column>, or <FollowUp>`);
+      if (!this.action) return invalid("step-misplaced", `<${spec.name}> must be directly inside a <Button>, <Value>, <Number>, <Column>, or <FollowUp>${spec.name === "Set" ? ", or a <Ref> of content" : ""}`);
       const outerStep = this.inStep;
       this.inStep = true;
       try {
@@ -1154,6 +1154,20 @@ class Validator {
             );
           }
         }
+        const addPick = attrs.addPick as string | undefined;
+        if (addPick !== undefined && field) {
+          const item = field.type === "array" ? field.itemType : undefined;
+          const target =
+            item?.type === "struct" && Object.hasOwn(item.entries, addPick)
+              ? item.entries[addPick]
+              : undefined;
+          if (target?.type !== "content") {
+            return invalid(
+              "invalid-attribute",
+              `addPick names a content field of each item, but "${addPick}" isn't one in "${attrs.field as string}"`,
+            );
+          }
+        }
       }
     }
 
@@ -1251,6 +1265,12 @@ class Validator {
       if (!node.children.some((child) => child.type === "element")) {
         this.error("missing-child", "<Button> needs a step: a <Set> for each field it changes, or a <Roll>", node.loc);
       }
+    } else if (hasSteps && spec.name === "Ref") {
+      // Its <Set>s run after a new pick, in the Ref's scope.
+      if (binding?.field?.type !== "content") {
+        return invalid("invalid-attribute", "<Set> steps on a <Ref> need a content field: they run after content is picked");
+      }
+      this.action = { params: {}, rolls: new Set(), names: new Set(), rolled: false, depth: 0 };
     } else if (hasSteps && (spec.name === "Value" || spec.name === "Number" || spec.name === "Column")) {
       if (typeof attrs.field !== "string" && !formula && !hasParts) {
         return invalid(

@@ -459,6 +459,8 @@ export function sheetActionWrites(node: ValidatedElement) {
 
 // Whether an action has steps at all (a value tag with Rolls or Sets).
 export function sheetActionSteps(node: ValidatedElement) {
+  // A Ref's steps run after a pick, not on a click.
+  if (node.tag === "Ref") return false;
   return node.children.some(
     (child) => child.type === "element" && (child.tag === "Set" || child.tag === "Roll" || child.tag === "FollowUp"),
   );

@@ -2,7 +2,7 @@
 import { optionLabel } from "#shared/content-schema";
 import { schemaDisplayName } from "#shared/schema-builder";
 import type { SheetLink, SheetRef } from "#shared/sheet/runtime";
-import { defaultSheetValue, filterDataKeys, findRef, ownProperty, refRecord } from "#shared/sheet/runtime";
+import { defaultSheetValue, filterDataKeys, findRef, ownProperty, runSheetAction } from "#shared/sheet/runtime";
 import { isCompiledFormula, type ValidatedElement } from "#shared/sheet/validate";
 
 // The editing control of a field tag (see Field.vue for viewing). Disabled, it
@@ -19,7 +19,7 @@ const props = defineProps<{
   automatic?: string;
 }>();
 
-const { context, number, condition } = useSheet();
+const { context, scope, number, condition } = useSheet();
 
 // A Ref's `filter`: which content its picker offers, read against each
 // candidate (paths are the candidate's fields; `/` is this sheet's content).
@@ -240,13 +240,33 @@ function pickLink(id: string, link: SheetLink) {
 function pick(id: string, ref: SheetRef) {
   context.addRef(id, ref);
   set(id);
+  void runPickSteps();
 }
+// A Ref's <Set> steps run after a new pick, filling in what the pick
+// determines (a class's starting ranks). They wait for the pick to reach the
+// sheet's data (it comes back as a prop), so they read it.
+const toast = useToast();
+async function runPickSteps() {
+  await nextTick();
+  const steps = props.node.children.filter((child) => child.type === "element" && child.tag === "Set");
+  if (!steps.length) return;
+  const result = runSheetAction(steps, {
+    root: context.root.value,
+    scope: scope.value,
+    refs: context.refs.value,
+    formulas: context.formulas.value,
+    random: () => 1,
+    title: "",
+  });
+  if ("error" in result) {
+    toast.add({ title: "Couldn't fill in from the pick", description: result.error, color: "error", icon: "i-lucide-triangle-alert" });
+    return;
+  }
+  for (const write of result.writes) context.update(write.path, write.value);
+}
+// A new custom entry starts empty, even after a pick, rather than copying it.
 function makeCustom() {
-  set(
-    referenced.value
-      ? structuredClone(refRecord(referenced.value))
-      : defaultSheetValue(contentField.value, context.schemas.value),
-  );
+  set(defaultSheetValue(contentField.value, context.schemas.value));
 }
 
 const imageError = computed(() =>

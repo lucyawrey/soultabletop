@@ -232,6 +232,7 @@ function addRef(id: string, ref: SheetRefs[string]) {
 
 const statusText = computed(() => {
   if (saveStatus.value === "saving") return "Saving…";
+  if (saveStatus.value === "invalid") return `Not saved: ${saveError.value}`;
   if (dirty.value) return autosave.value || liveSaving.value ? "Unsaved changes…" : "Unsaved changes";
   if (saveStatus.value === "saved") return "Saved";
   return "";

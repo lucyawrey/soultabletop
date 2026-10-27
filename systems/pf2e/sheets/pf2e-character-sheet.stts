@@ -41,11 +41,33 @@
     <Stack class="ident">
       <Text field="name" hideLabel class="charname" />
       <Stack direction="row" wrap class="refs">
-        <Ref field="ancestry" label="Ancestry" preview="card" class="card" />
+        <Ref field="ancestry" label="Ancestry" preview="card" class="card">
+          <Set field="hp" formula="if(coalesce(hp, 0) == 0 or level <= 1, maxHp(), hp)" />
+        </Ref>
         <Ref field="heritage" label="Heritage" preview="card" filter="ancestry == /ancestry" class="card" />
-        <Ref field="background" label="Background" preview="card" class="card" />
+        <Ref field="background" label="Background" preview="card" class="card">
+          <Set field="skills.*" formula="max(coalesce(., 0), if(hasTrait(/background.trainedSkills, itemKey()), 1, 0))" />
+        </Ref>
         <Stack direction="row" class="refgroup">
-          <Ref field="class" label="Class" preview="card" class="card" />
+          <!-- Picking a class fills in what it determines, never lowering a rank already set; at 1st level, HP follows the new maximum. -->
+          <Ref field="class" label="Class" preview="card" class="card">
+            <Set field="hp" formula="if(coalesce(hp, 0) == 0 or level <= 1, maxHp(), hp)" />
+            <Set field="perception" formula="max(coalesce(perception, 0), coalesce(class.perception, 0))" />
+            <Set field="classDc" formula="max(coalesce(classDc, 0), coalesce(class.classDc, 0))" />
+            <Set field="saves.fortitude" formula="max(coalesce(saves.fortitude, 0), coalesce(class.saves.fortitude, 0))" />
+            <Set field="saves.reflex" formula="max(coalesce(saves.reflex, 0), coalesce(class.saves.reflex, 0))" />
+            <Set field="saves.will" formula="max(coalesce(saves.will, 0), coalesce(class.saves.will, 0))" />
+            <Set field="attacks.unarmed" formula="max(coalesce(attacks.unarmed, 0), coalesce(class.attacks.unarmed, 0))" />
+            <Set field="attacks.simple" formula="max(coalesce(attacks.simple, 0), coalesce(class.attacks.simple, 0))" />
+            <Set field="attacks.martial" formula="max(coalesce(attacks.martial, 0), coalesce(class.attacks.martial, 0))" />
+            <Set field="attacks.advanced" formula="max(coalesce(attacks.advanced, 0), coalesce(class.attacks.advanced, 0))" />
+            <Set field="defenses.unarmored" formula="max(coalesce(defenses.unarmored, 0), coalesce(class.defenses.unarmored, 0))" />
+            <Set field="defenses.light" formula="max(coalesce(defenses.light, 0), coalesce(class.defenses.light, 0))" />
+            <Set field="defenses.medium" formula="max(coalesce(defenses.medium, 0), coalesce(class.defenses.medium, 0))" />
+            <Set field="defenses.heavy" formula="max(coalesce(defenses.heavy, 0), coalesce(class.defenses.heavy, 0))" />
+            <Set field="skills.*" formula="max(coalesce(., 0), if(hasTrait(/class.trainedSkills, itemKey()), 1, 0))" />
+            <Set field="keyAttribute" formula="if(count(class.keyAttributes) == 1, first(class.keyAttributes), keyAttribute)" />
+          </Ref>
           <Ref field="subclass" label="{switch(class.name, 'Rogue', 'Racket', 'Cleric', 'Doctrine', 'Subclass')}" preview="card" class="card" />
         </Stack>
       </Stack>
@@ -133,8 +155,8 @@
             </Stack>
             <!-- Temp HP draws over the HP bar from the left, in another color. -->
             <Stack class="hpbar">
-              <Tracker formula="hp" max="{maxHp()}" hideLabel class="meter" />
-              <Tracker formula="coalesce(tempHp, 0)" max="{maxHp()}" hideLabel class="meter tempbar" />
+              <Tracker formula="hp" max="{maxHp()}" hideLabel class="meter" show="maxHp() > 0" />
+              <Tracker formula="coalesce(tempHp, 0)" max="{maxHp()}" hideLabel class="meter tempbar" show="maxHp() > 0" />
             </Stack>
             <Stack direction="row" wrap class="death">
               <Tracker field="dying" label="Dying" max="4" style="pips" live class="bad" />
@@ -227,7 +249,7 @@
       <Stack direction="row" class="row th strike">
         <Note></Note><Note>Weapon</Note><Note>Hit · MAP</Note><Note>Damage</Note><Note>Traits</Note>
       </Stack>
-      <List field="strikes" addLabel="Add strike" class="rows">
+      <List field="strikes" addLabel="Add strike" addPick="weapon" class="rows">
         <Stack direction="row" class="row strike">
           <Note class="act">◆</Note>
           <Stack class="cell">
