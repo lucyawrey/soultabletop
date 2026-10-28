@@ -631,6 +631,8 @@
 .sheet-sheet .card button[data-slot="base"][aria-haspopup] { height: auto; font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
 /* A card's controls follow its name on the value line. */
 .card { position: relative; }
+/* A custom entry's name input grows with its name, so the card fits it like a picked name. */
+.card .sheet-custom-name { flex: none; width: auto; field-sizing: content; min-width: 6rem; max-width: 16rem; }
 .card:has(button[data-slot="base"]) { border-style: dashed; }
 .card:has(button[data-slot="base"]), .rankcell:has(.rank-sel) .rank.on .sheet-field-value {
   outline: 2px solid color-mix(in srgb, var(--st-primary) 22%, transparent);
