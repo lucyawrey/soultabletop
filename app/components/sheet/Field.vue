@@ -248,6 +248,8 @@ const trackerMark = computed(() => {
 const trackerValue = computed(() =>
   typeof value.value === "number" ? value.value : 0,
 );
+// The bar stays within 0 and max (Reka warns otherwise); the number shows the real value.
+const trackerBar = computed(() => Math.min(Math.max(trackerValue.value, 0), trackerMax.value));
 // Pips are capped so a large max can't render thousands of boxes.
 const pips = computed(() =>
   Array.from({ length: Math.min(trackerMax.value, 50) }, (_, index) => index),
@@ -468,7 +470,7 @@ const imageSize = computed(
         />
       </div>
       <div v-else class="relative">
-        <UProgress :model-value="trackerValue" :max="trackerMax" />
+        <UProgress :model-value="trackerBar" :max="trackerMax" />
         <span
           v-if="trackerMark"
           class="sheet-tracker-mark absolute -inset-y-1 w-0.5 -translate-x-1/2 bg-inverted"
