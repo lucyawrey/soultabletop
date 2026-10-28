@@ -11,6 +11,7 @@ import {
   validateSheet,
   type SheetSchemas,
   type ValidatedElement,
+  isCompiledFormula,
   type ValidatedNode,
 } from "./validate";
 import { compileInSheet as compileSheet } from "./fixtures/in-sheet";
@@ -532,7 +533,7 @@ describe("formulas", () => {
   });
 
   it("takes formula only on the tags that support it", () => {
-    for (const tag of ["Image", "Ref", "Markdown", "Select", "Tags", "Toggle"]) {
+    for (const tag of ["Image", "Ref", "Markdown", "Tags", "Toggle"]) {
       expect(errorCodes(`<${tag} field="notes" formula="1" />`), tag).toContain("unknown-attribute");
     }
     expect(errorCodes('<List field="tags" formula="1"><Value field="." /></List>')).toContain(
@@ -828,6 +829,8 @@ describe("dynamic number attributes", () => {
     expect(errorCodes('<Section span="{2}">x</Section>')).toEqual(["invalid-attribute"]);
     expect(messages('<Number field="hp" min="{0}" max="{hpMax}" step="{1}" />')).toEqual([]);
     expect(messages('<Tracker field="hp" max="{hpMax}" />')).toEqual([]);
+    expect(messages('<Tracker field="hp" max="{hpMax}" mark="{hpMax / 2}" />')).toEqual([]);
+    expect(errorCodes('<Tracker field="hp" max="10" mark="-1" />')).toEqual(["invalid-attribute"]);
   });
 });
 
@@ -930,6 +933,15 @@ describe("choice fields", () => {
         <Number formula="rank + level" />
       `),
     ).toEqual([]);
+  });
+
+  it("lets a Select take a formula (an override)", () => {
+    expect(choiceMessages(`<Select field="size" formula="if(level > 1, 's', 'm')" />`)).toEqual([]);
+    expect(choiceMessages(`<Select field="rank" formula="level" />`)).toEqual([]);
+    expect(choiceErrors(`<Select field="size" formula="level" />`)).toEqual(["formula-result-type"]);
+    expect(compile(`<Select field="size" formula="'m'" />`, choiceSchemas).computedFields.get("size")).toMatchObject({
+      tag: "Select",
+    });
   });
 
   it("ignores a Select's own list on a field with options, with a warning", () => {
@@ -1039,6 +1051,13 @@ describe("repeating over a struct's entries", () => {
     ]);
   });
 
+  it("accepts addPick naming a content field of the item, and rejects anything else", () => {
+    expect(errorCodes(`<List field="inventory" addPick="item"><Ref field="item" /></List>`)).toEqual([]);
+    expect(messages(`<List field="inventory" addPick="qty"><Number field="qty" /></List>`)).toEqual([
+      'error invalid-attribute: addPick names a content field of each item, but "qty" isn\'t one in "inventory"',
+    ]);
+  });
+
   it("warns that addLabel does nothing on a struct List", () => {
     expect(structMessages(`<List field="attributes" addLabel="Add"><Value field="." /></List>`)).toEqual([
       "warning flag-no-effect: addLabel has no effect on a <List> of a struct's entries: its rows come from the schema",
@@ -1085,5 +1104,30 @@ describe("repeating over a struct's entries", () => {
     expect(structMessages(`<Define name="itemKey" formula="1" /><Value formula="itemKey()" />`)).toEqual([
       expect.stringMatching(/^warning formula-shadows-builtin/),
     ]);
+  });
+});
+
+describe("Ref filter", () => {
+  it("reads the candidate content, with / for the sheet's own", () => {
+    const result = compile('<Ref field="class" filter="hitDie >= 8 and hitDie <= /hp" />');
+    expect(result.diagnostics).toEqual([]);
+    const ref = first(result.nodes);
+    expect(isCompiledFormula(ref.attrs.filter)).toBe(true);
+  });
+
+  it("works on a content field in a list row", () => {
+    expect(errorCodes('<List field="inventory"><Ref field="item" filter="weight < 5" /></List>')).toEqual([]);
+  });
+
+  it("must give true or false", () => {
+    expect(errorCodes('<Ref field="class" filter="hitDie" />')).toEqual(["formula-result-type"]);
+  });
+
+  it("checks paths against the referenced content type", () => {
+    expect(errorCodes('<Ref field="class" filter="weight > 1" />').length).toBeGreaterThan(0);
+  });
+
+  it("needs a content field", () => {
+    expect(errorCodes('<Ref field="link" filter="true" />')).toEqual(["invalid-attribute"]);
   });
 });

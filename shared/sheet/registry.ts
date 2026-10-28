@@ -196,6 +196,11 @@ const fieldAttrs: Record<string, AttrSpec> = {
   hint: text("Help text; defaults to the schema description"),
 };
 
+// Number inputs (Number, Tracker, Column) have no − and + buttons unless asked.
+const steppers = bool(
+  "Edit inputs show − and + buttons beside the number",
+);
+
 // `formula` on field tags; see TagSpec.formula.
 const readOnlyFormula: AttrSpec = {
   type: { kind: "formula" },
@@ -416,6 +421,7 @@ const tagList: TagSpec[] = [
         ["input", "stat"],
         "stat shows a large number with a small label",
       ),
+      steppers,
     },
     // Parts that explain its formula (needs one), and steps a click runs.
     children: { only: ["Part", ...STEP_TAGS] },
@@ -452,6 +458,7 @@ const tagList: TagSpec[] = [
     description: "A choice from a list: the field's options, or its own list",
     attrs: {
       ...fieldAttrs,
+      formula: overrideFormula,
       options: {
         type: { kind: "list" },
         description: "Comma-separated choices, for a text field without options in the schema",
@@ -459,12 +466,13 @@ const tagList: TagSpec[] = [
     },
     children: "none",
     binds: ["string", "number"],
+    formula: "override",
   },
   {
     name: "Tags",
     category: "field",
     description: "A list of short texts",
-    attrs: { ...fieldAttrs },
+    attrs: { ...fieldAttrs, placeholder: text("Shown in the empty input while editing") },
     children: "none",
     binds: ["stringArray"],
   },
@@ -480,7 +488,13 @@ const tagList: TagSpec[] = [
         description:
           "Maximum: a number or a {formula}; without one (or at 0), only the value shows",
       },
+      mark: {
+        type: { kind: "number", min: 0, dynamic: true },
+        description:
+          "A mark on the bar at this value, like an encumbrance threshold: a number or a {formula} (bar style, not editable)",
+      },
       style: oneOf(["bar", "pips"], "bar (default) or tick boxes"),
+      steppers,
     },
     children: "none",
     binds: ["number"],
@@ -490,9 +504,18 @@ const tagList: TagSpec[] = [
     name: "Ref",
     category: "field",
     description: "A link to another resource or content",
-    attrs: { ...fieldAttrs, preview: previewAttr },
-    // The card its preview opens.
-    children: { only: ["Preview"] },
+    attrs: {
+      ...fieldAttrs,
+      preview: previewAttr,
+      filter: {
+        type: { kind: "formula" },
+        description:
+          "Which content the picker offers: a formula read against each candidate (paths are the candidate's fields, / still reaches the top level), like filter=\"kind == 'weapon'\"",
+      },
+    },
+    // The card its preview opens, and <Set> steps run after a new pick
+    // (filling in what the pick determines).
+    children: { only: ["Preview", "Set"] },
     binds: ["resourceLink", "content"],
   },
   {
@@ -545,6 +568,9 @@ const tagList: TagSpec[] = [
         description: "Columns for layout=\"grid\"",
       },
       addLabel: text("Text of the add button (default \"Add\")"),
+      addPick: text(
+        "A content field of the item: the add control is a picker for it, and each pick adds a row with it set",
+      ),
     },
     children: "any",
     binds: ["array", "entries"],
@@ -568,6 +594,7 @@ const tagList: TagSpec[] = [
       formula: readOnlyFormula,
       format: formatAttr,
       width: oneOf(["auto", "xs", "sm", "md", "lg"], "Column width"),
+      steppers,
       preview: previewAttr,
     },
     // Parts explaining its number, Buttons (each row gets its own), and the
@@ -657,7 +684,7 @@ const tagList: TagSpec[] = [
       },
     },
     children: "none",
-    parents: [...ACTION_TAGS],
+    parents: [...ACTION_TAGS, "Ref"],
     noCommonAttrs: true,
   },
   {

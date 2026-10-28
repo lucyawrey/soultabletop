@@ -16,6 +16,7 @@ import {
   FormulaError,
   formulaLimits,
   isFormulaError,
+  walkFormula,
   type FormulaNode,
   type FormulaValue,
 } from "./formula";
@@ -56,6 +57,7 @@ export {
   ownProperty,
   refRecord,
   resolveSheetPath,
+  sheetRowTitle,
   type SheetEntry,
   type SheetRef,
   type SheetRefs,
@@ -90,7 +92,7 @@ export function formatSheetValue(
 ): string {
   if (value === undefined || value === null) return "";
   if (typeof value === "number") {
-    return format === "signed" && value > 0 ? `+${value}` : String(value);
+    return format === "signed" && value >= 0 ? `+${value}` : String(value);
   }
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "string") return findRef(refs, value)?.name ?? value;
@@ -178,6 +180,47 @@ export function defaultSheetValue(
     default:
       return null;
   }
+}
+
+// Whether a list item is still blank, so the list can drop it when focus
+// leaves it (an added entry left unfilled doesn't stay behind). Only items of
+// plain text, numbers, and switches count: choices and pickers open menus that
+// take focus away from the item while it's being filled in. Text is blank when
+// empty, a number or switch when unset or at its default.
+export function isBlankListItem(
+  value: unknown,
+  field: ContentFieldSchema | undefined,
+  schemas: SheetSchemas,
+): boolean {
+  if (!field || fieldOptions(field)?.length) return false;
+  switch (field.type) {
+    case "string":
+      return value == null || (typeof value === "string" && value.trim() === "");
+    case "number":
+    case "boolean":
+      return value == null || value === defaultSheetValue(field, schemas);
+    case "struct": {
+      const entries = Object.entries(field.entries);
+      const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+      return (
+        entries.length > 0 &&
+        entries.every(([key, entry]) => isBlankListItem(record[key], entry, schemas))
+      );
+    }
+    default:
+      return false;
+  }
+}
+
+// The top-level fields a Ref's `filter` reads from each candidate content
+// (its relative paths' first segments), so a picker can ask the list for just
+// those (`dataKeys`). Paths from `/` read the sheet's own content.
+export function filterDataKeys(ast: FormulaNode): string[] {
+  const keys = new Set<string>();
+  walkFormula(ast, (node) => {
+    if (node.type === "path" && !node.path.absolute && node.path.segments[0]) keys.add(node.path.segments[0]);
+  });
+  return [...keys];
 }
 
 // The sheet's `<Define>`s, for formulas that call them.
@@ -416,6 +459,8 @@ export function sheetActionWrites(node: ValidatedElement) {
 
 // Whether an action has steps at all (a value tag with Rolls or Sets).
 export function sheetActionSteps(node: ValidatedElement) {
+  // A Ref's steps run after a pick, not on a click.
+  if (node.tag === "Ref") return false;
   return node.children.some(
     (child) => child.type === "element" && (child.tag === "Set" || child.tag === "Roll" || child.tag === "FollowUp"),
   );
@@ -647,7 +692,7 @@ export function formatFormulaValue(
   if (isFormulaError(value)) return "";
   if (typeof value === "number") {
     const text = formatFormulaNumber(value);
-    return format === "signed" && value > 0 ? `+${text}` : text;
+    return format === "signed" && value >= 0 ? `+${text}` : text;
   }
   return formatSheetValue(value, refs, format);
 }

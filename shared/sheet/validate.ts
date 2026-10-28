@@ -976,7 +976,7 @@ class Validator {
     if (stepTags.includes(spec.name)) {
       if (this.cardDepth)
         return invalid("step-in-preview", `<${spec.name}> can't be in a <Preview>: previews are read-only`);
-      if (!this.action) return invalid("step-misplaced", `<${spec.name}> must be directly inside a <Button>, <Value>, <Number>, <Column>, or <FollowUp>`);
+      if (!this.action) return invalid("step-misplaced", `<${spec.name}> must be directly inside a <Button>, <Value>, <Number>, <Column>, or <FollowUp>${spec.name === "Set" ? ", or a <Ref> of content" : ""}`);
       const outerStep = this.inStep;
       this.inStep = true;
       try {
@@ -1154,6 +1154,20 @@ class Validator {
             );
           }
         }
+        const addPick = attrs.addPick as string | undefined;
+        if (addPick !== undefined && field) {
+          const item = field.type === "array" ? field.itemType : undefined;
+          const target =
+            item?.type === "struct" && Object.hasOwn(item.entries, addPick)
+              ? item.entries[addPick]
+              : undefined;
+          if (target?.type !== "content") {
+            return invalid(
+              "invalid-attribute",
+              `addPick names a content field of each item, but "${addPick}" isn't one in "${attrs.field as string}"`,
+            );
+          }
+        }
       }
     }
 
@@ -1211,6 +1225,26 @@ class Validator {
         card = { shape: found.shape };
       }
     }
+    // A Ref's filter: a true/false formula read against each candidate content.
+    if (spec.name === "Ref" && typeof attrs.filter === "string") {
+      const attr = attrNamed(node, "filter")!;
+      const target = trail.at(-1);
+      delete attrs.filter;
+      if (!target || target.kind !== "field" || target.field.type !== "content") {
+        this.error("invalid-attribute", "filter needs a content field: it picks which content the picker offers", attr.loc);
+      } else if (!attr.valueLoc || !(attr.raw ?? "").trim()) {
+        this.error("invalid-attribute", 'filter needs a formula, like filter="kind == \'weapon\'"', attr.loc);
+      } else {
+        const compiled = this.compileFormula(attr.raw!, attr.valueLoc.start, target, attr.valueLoc);
+        if (compiled && !couldBe(compiled.type, ["boolean"])) {
+          this.error(
+            "formula-result-type",
+            `filter must give true or false, but ${attr.raw!.trim()} gives ${describeType(compiled.type)}`,
+            attr.valueLoc,
+          );
+        } else if (compiled) attrs.filter = compiled;
+      }
+    }
     const cards = node.children.filter(
       (child) => child.type === "element" && child.tag.toLowerCase() === "preview",
     );
@@ -1231,6 +1265,12 @@ class Validator {
       if (!node.children.some((child) => child.type === "element")) {
         this.error("missing-child", "<Button> needs a step: a <Set> for each field it changes, or a <Roll>", node.loc);
       }
+    } else if (hasSteps && spec.name === "Ref") {
+      // Its <Set>s run after a new pick, in the Ref's scope.
+      if (binding?.field?.type !== "content") {
+        return invalid("invalid-attribute", "<Set> steps on a <Ref> need a content field: they run after content is picked");
+      }
+      this.action = { params: {}, rolls: new Set(), names: new Set(), rolled: false, depth: 0 };
     } else if (hasSteps && (spec.name === "Value" || spec.name === "Number" || spec.name === "Column")) {
       if (typeof attrs.field !== "string" && !formula && !hasParts) {
         return invalid(
@@ -1683,6 +1723,8 @@ class Validator {
       // A definition's body is checked with the other definitions, and a
       // Set's in its own scope, and a Roll's with dice (see stepElement).
       if (spec.category === "definition" || spec.name === "Set" || spec.name === "Roll") return raw;
+      // A Ref's filter reads the candidate content, so it's checked once the field is known.
+      if (spec.name === "Ref" && name === "filter") return raw;
       if (!attr.valueLoc) return fail(`${name} on <${spec.name}> needs a value`);
       return this.compileFormula(raw, attr.valueLoc.start, scope, attr.valueLoc);
     }

@@ -184,10 +184,19 @@ const viewCss = computed(() => {
 // Edit and Autosave switches start as the viewed Sheet says.
 const editMode = ref(false);
 const autosave = ref(false);
+// The Edit switch moves at once; the sheet follows after the thumb's 150ms
+// slide, since re-rendering it would freeze the slide halfway.
+const editSwitch = ref(false);
+let editTimer: ReturnType<typeof setTimeout> | undefined;
+watch(editSwitch, (on) => {
+  clearTimeout(editTimer);
+  editTimer = setTimeout(() => (editMode.value = on), 160);
+});
+onBeforeUnmount(() => clearTimeout(editTimer));
 watch(
   () => viewSheet.value?.id ?? GENERATED,
   () => {
-    editMode.value = viewSheet.value?.defaultEditMode ?? false;
+    editMode.value = editSwitch.value = viewSheet.value?.defaultEditMode ?? false;
     autosave.value = viewSheet.value?.defaultAutosave ?? false;
   },
   { immediate: true },
@@ -223,6 +232,7 @@ function addRef(id: string, ref: SheetRefs[string]) {
 
 const statusText = computed(() => {
   if (saveStatus.value === "saving") return "Saving…";
+  if (saveStatus.value === "invalid") return `Not saved: ${saveError.value}`;
   if (dirty.value) return autosave.value || liveSaving.value ? "Unsaved changes…" : "Unsaved changes";
   if (saveStatus.value === "saved") return "Saved";
   return "";
@@ -399,7 +409,7 @@ function printPage() {
 
       <div class="flex flex-wrap items-center justify-between gap-4 text-sm print:hidden">
         <div v-if="item.canEdit" class="flex flex-wrap items-center gap-4">
-          <USwitch v-model="editMode" label="Edit Fields" />
+          <USwitch v-model="editSwitch" label="Edit" />
           <USwitch v-model="autosave" label="Autosave" />
           <span class="text-muted" aria-live="polite">{{ statusText }}</span>
         </div>
