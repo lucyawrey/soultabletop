@@ -550,9 +550,9 @@
         <Stack direction="row" wrap class="strip keyline">
           <Stack direction="row" class="trad" show="not editing()"><Value field="spellcasting.tradition" hideLabel class="strong" /><Value field="spellcasting.kind" hideLabel class="strong" /></Stack>
           <Stack direction="row" class="trad" show="editing()">
-            <Select field="spellcasting.tradition" hideLabel class="small-sel" />
-            <Select field="spellcasting.kind" hideLabel class="small-sel" />
-            <Select field="spellcasting.attribute" hideLabel class="small-sel" />
+            <Select field="spellcasting.tradition" label="Tradition" class="small-sel" />
+            <Select field="spellcasting.kind" label="Casting" class="small-sel" />
+            <Select field="spellcasting.attribute" label="Attribute" class="small-sel" />
           </Stack>
           <Stack direction="row" class="kvp">
             <Value label="Spell DC" formula="10 + spellMod()">

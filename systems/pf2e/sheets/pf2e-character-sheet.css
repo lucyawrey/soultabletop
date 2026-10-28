@@ -278,7 +278,7 @@
 }
 .sheet-button.raise.pressed { background: var(--st-primary); color: var(--st-on-primary); }
 /* The strip under the defenses: labels beside their values, on one line. */
-.strip .sheet-number, .strip .sheet-tags, .strip .sheet-value, .resist { display: flex; align-items: center; gap: 4px 6px; }
+.strip .sheet-number, .strip .sheet-tags, .strip .sheet-value, .strip .trad .sheet-select, .resist { display: flex; align-items: center; gap: 4px 6px; }
 .strip .sheet-field-label { white-space: nowrap; }
 /* Conditions and IWR are one flow of labels and chips: the wrappers step aside (display: contents), so
    IWR follows the last condition, and every next line starts at the left edge. Edit's entry groups
@@ -501,7 +501,7 @@
 .tempbar [data-slot="indicator"] { background: var(--st-contrast); }
 .bmeter { width: 90px; }
 .bmeter [data-slot="base"] { height: 7px; }
-.trad { gap: 4px; }
+.trad { gap: 4px 10px; flex-wrap: wrap; }
 /* In edit, tradition, kind, and attribute are selects about the size of the words they replace. */
 .sheet-sheet .trad .small-sel button[data-slot="base"] { height: 20px; padding: 0 14px 0 4px; }
 .sheet-sheet .trad .small-sel [data-slot="trailing"] { padding-right: 2px; }
