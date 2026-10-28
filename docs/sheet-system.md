@@ -406,9 +406,9 @@ spell's or feat's rules text (gap 6 of the frozen PF2e sheet mockup). Two ways t
   its fields as inputs. For a picked entry the first icon is part of the name: in view mode the name and View are one
   button that opens the preview (class `sheet-name-link`); in edit mode the picker's trigger is the name and Select,
   followed by View (the `sheet-preview-button sheet-edit-preview` wrapper). A custom entry in edit mode shows its name
-  input, then Select alone (`sheet-select-button`), Edit (`sheet-edit-button`), and View (its read-only card); Edit
-  and View open the same spot, and switching between them keeps it open. Edit never shows on a picked entry or in
-  view mode. Icon buttons have a click area a little larger than the icon. Values that can't be edited keep their
+  input, then Select alone (`sheet-select-button`) and Edit (`sheet-edit-button`), with no View (decided
+  2026-10-28: the card it edits already shows everything); in view mode it shows View like a picked entry. Edit never
+  shows on a picked entry or in view mode. Icon buttons have a click area a little larger than the icon. Values that can't be edited keep their
   preview. A custom entry's card while editing is a generated sheet without the name (typed in the row) that writes
   straight into the entry (`sheet/PreviewEditor.vue`). `display="box"` doesn't box a value with a preview (a `Ref`
   keeps its box with the name link inside).
