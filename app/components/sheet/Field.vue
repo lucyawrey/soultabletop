@@ -352,7 +352,7 @@ const imageSize = computed(
         :label="label"
         :automatic="automatic ? computedText : undefined"
       />
-      <!-- After the picker's Select icon: Edit (custom entries only), then View. -->
+      <!-- After the picker's Select icon: Edit on a custom entry, View on a picked one. -->
       <span v-if="display === 'ref' && previewTarget" class="sheet-preview-button sheet-edit-preview">
         <SheetPreviewTrigger
           v-if="previewEditable"
@@ -368,6 +368,7 @@ const imageSize = computed(
           <UIcon name="i-lucide-pencil" class="size-3.5 align-middle" />
         </SheetPreviewTrigger>
         <SheetPreviewTrigger
+          v-else
           :mode="previewMode"
           :target="previewTarget"
           :card="previewCard"
