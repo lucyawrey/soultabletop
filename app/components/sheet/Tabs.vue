@@ -43,13 +43,14 @@ const tabFor = (key: string | number | undefined) =>
 </script>
 
 <template>
+  <!-- Only the open tab is mounted (UTabs' default): mounting every panel
+       made switching to edit mode twice as slow. -->
   <UTabs
     v-if="items.length"
     v-model="active"
     :items="items"
     :size="compact ? 'xs' : undefined"
     :class="sheetClasses(node)"
-    :unmount-on-hide="false"
   >
     <template #content="{ item }">
       <div

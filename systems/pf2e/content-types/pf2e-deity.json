@@ -182,7 +182,7 @@
             "type": "content",
             "label": "Spell",
             "contentTypeId": "pf2e-spell",
-            "allow": "reference"
+            "allow": "both"
           }
         }
       }

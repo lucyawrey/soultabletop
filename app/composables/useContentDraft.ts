@@ -14,7 +14,10 @@ interface SavedContent {
   updatedAt: string;
 }
 
-export type DraftStatus = "idle" | "saving" | "saved" | "error" | "conflict";
+// "invalid": an automatic save (autosave or a live edit) the server refused as
+// invalid, often an entry still being filled in (a custom item with no name
+// yet). Shown quietly; the next change tries again.
+export type DraftStatus = "idle" | "saving" | "saved" | "error" | "invalid" | "conflict";
 
 const AUTOSAVE_DELAY_MS = 800;
 
@@ -30,6 +33,13 @@ function stableJson(value: unknown): string {
         )
       : item,
   );
+}
+
+// A plain copy of draft data. The draft can hold Vue proxies below its top
+// level (a list's add spreads its reactive items into the new array), which
+// structuredClone rejects; the data is JSON, so a JSON round trip copies it.
+function plainCopy<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 // An editable copy of a Content's data (with its built-in `name`), saved with
@@ -57,7 +67,7 @@ export function useContentDraft(
     const current = source.value;
     if (!current) return;
     draft.value = structuredClone({ ...toRaw(current.data), name: current.name });
-    saved = structuredClone(toRaw(draft.value));
+    saved = plainCopy(draft.value);
     baseline.value = stableJson(draft.value);
     expectedUpdatedAt.value = current.updatedAt;
     status.value = "idle";
@@ -81,11 +91,11 @@ export function useContentDraft(
   let saving: Promise<void> | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  async function save(overwrite = false) {
+  async function save(overwrite = false, automatic = false) {
     if (saving) await saving;
     const current = source.value;
     if (!current || (!dirty.value && !overwrite)) return;
-    const { name, ...data } = structuredClone(toRaw(draft.value));
+    const { name, ...data } = plainCopy(draft.value);
     const snapshot = stableJson(draft.value);
     status.value = "saving";
     error.value = "";
@@ -108,7 +118,8 @@ export function useContentDraft(
         status.value = "saved";
       } catch (caught) {
         const statusCode = (caught as { statusCode?: number }).statusCode;
-        status.value = statusCode === 409 ? "conflict" : "error";
+        status.value =
+          statusCode === 409 ? "conflict" : automatic && statusCode === 400 ? "invalid" : "error";
         error.value = extractApiErrorMessage(caught, "Could not save.");
       }
     })();
@@ -138,7 +149,7 @@ export function useContentDraft(
       }
       liveSaving.value = live;
       const mine = setTimeout(async () => {
-        await save();
+        await save(false, true);
         // A newer change may have started its own wait meanwhile.
         if (timer === mine) liveSaving.value = false;
       }, AUTOSAVE_DELAY_MS);

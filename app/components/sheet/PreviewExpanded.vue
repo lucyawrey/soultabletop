@@ -15,6 +15,7 @@ defineProps<{ preview: SheetPreview }>();
       size="xs"
       class="float-right -mt-1 -mr-1 ml-2"
     />
-    <SheetPreviewBody :target="preview.target" :card="preview.card" />
+    <SheetPreviewEditor v-if="preview.editable" :target="preview.target" />
+    <SheetPreviewBody v-else :target="preview.target" :card="preview.card" />
   </div>
 </template>

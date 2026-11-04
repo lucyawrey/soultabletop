@@ -4,9 +4,9 @@ import { isFormulaError } from "#shared/sheet/formula";
 import {
   findRef,
   hasSheetParts,
-  isRecord,
   ownProperty,
   sheetActionSteps,
+  sheetRowTitle,
   resourceLinkPath,
   sheetOverride,
   type SheetScope,
@@ -53,9 +53,11 @@ const override = computed(() =>
 );
 const automatic = computed(() => override.value.automatic);
 const value = computed(() => override.value.value);
-// The computed value as text, for the input's placeholder.
+// The computed value as text (a choice's label), for the input's placeholder.
 const computedText = computed(() =>
-  computedValue.value === undefined ? "" : formatFormula(computedValue.value),
+  computedValue.value === undefined
+    ? ""
+    : (computedChoiceText.value ?? formatFormula(computedValue.value)),
 );
 // `field="."` in a struct entry row is labeled by its row ("Str", "Dex", …).
 const rowLabel = computed(() => {
@@ -82,10 +84,11 @@ const { editable, lockedEditable, unlock, boxed } = useSheetEditable(
   () => (display.value === "value" ? null : resolved.value.path),
 );
 
-// `preview`: the content a click opens a card of (none while the field is
-// editable, or when it isn't loaded).
+// `preview`: the content a click opens a card of (none when it isn't loaded,
+// or while the field is editable, except a Ref, whose picker gets a button
+// beside it that opens the same preview).
 const previewTarget = computed(() =>
-  props.node.preview && !editable.value
+  props.node.preview && (!editable.value || display.value === "ref")
     ? sheetPreviewTarget(props.node, context.root.value, scope.value, context.refs.value)
     : undefined,
 );
@@ -95,6 +98,13 @@ const previewCard = computed(() =>
     (child): child is ValidatedElement => child.type === "element" && child.tag === "Preview",
   ),
 );
+// A custom entry (local data, no ID) being edited: its Edit button opens its
+// card with its fields as inputs, and its View button the read-only card.
+const previewEditable = computed(
+  () => editable.value && !!previewTarget.value && !previewTarget.value.id,
+);
+// Whether the open preview is the editable one (opened by Edit).
+const previewEditing = ref(false);
 // An expanded preview opens under this tag, or for a Column under its row.
 const rowPreviews = props.node.tag === "Column" ? useSheetRowPreviews() : undefined;
 const previewKey = `${props.node.loc.start.offset}`;
@@ -106,18 +116,24 @@ const previewOpen = computed(() => {
 // What is expanded under this tag (not under a row).
 const expandedPreview = computed<SheetPreview | undefined>(() =>
   previewTarget.value && previewOpen.value && !rowPreviews && previewMode.value === "expand"
-    ? { key: previewKey, target: previewTarget.value, card: previewCard.value }
+    ? { key: previewKey, target: previewTarget.value, card: previewCard.value, editable: previewEditable.value && previewEditing.value }
     : undefined,
 );
 // A boxed Ref's card lines up with the box rather than the name in it.
 const refBox = useTemplateRef<HTMLElement>("refBox");
-function togglePreview() {
+// Edit and View open the same spot: switching between them keeps it open.
+function togglePreview(editing = false) {
   const target = previewTarget.value;
   if (!target) return;
+  const edit = editing && previewEditable.value;
+  const switching = previewOpen.value && previewEditing.value !== edit;
+  previewEditing.value = edit;
   const row = scope.value.item?.key;
-  if (rowPreviews && row !== undefined)
-    rowPreviews.toggle(row, { key: previewKey, target, card: previewCard.value });
-  else expandedHere.value = !expandedHere.value;
+  if (rowPreviews && row !== undefined) {
+    const preview = { key: previewKey, target, card: previewCard.value, editable: edit };
+    if (switching) rowPreviews.toggle(row, preview);
+    rowPreviews.toggle(row, preview);
+  } else if (!switching) expandedHere.value = !expandedHere.value;
 }
 
 // `display="box"` shows a non-editable field as its disabled input. Value tags
@@ -155,9 +171,18 @@ const showStatLabel = computed(
 
 // A choice field shows its option's label; formulas still see the value.
 const choiceOptions = computed(() => sheetChoiceOptions(props.node));
+const computedChoiceText = computed(() =>
+  computedValue.value === undefined || isFormulaError(computedValue.value)
+    ? undefined
+    : sheetChoiceText(choiceOptions.value, computedValue.value),
+);
 const text = computed(() => {
   const signed = props.node.attrs.format === "signed";
-  if (automatic.value) return formatFormula(computedValue.value ?? null, signed ? "signed" : "plain");
+  if (automatic.value)
+    return (
+      computedChoiceText.value ??
+      formatFormula(computedValue.value ?? null, signed ? "signed" : "plain")
+    );
   return (
     sheetChoiceText(choiceOptions.value, value.value) ??
     format(value.value, signed ? "signed" : "plain")
@@ -187,19 +212,15 @@ const tags = computed(() =>
 // Steps (<Roll>, <Set>, <FollowUp>) run when the value is clicked: a die
 // button beside it when it also opens a breakdown or preview (or with
 // <Sheet rolls="button">), else the value itself. Entries are named after the
-// List or Table row (its label, or its name field), else the tag's label.
+// List or Table row (its label, its name field, or the Content it references),
+// else the tag's label.
 const hasSteps = computed(() => sheetActionSteps(props.node));
 const rollButton = computed(
   () => context.rollTarget.value === "button" || !!parts.value || !!previewTarget.value,
 );
-const rollTitle = computed(() => {
-  const item = scope.value.item;
-  const row = scope.value.value;
-  const rowName = item
-    ? (item.label ?? (isRecord(row) && typeof row.name === "string" ? row.name : undefined))
-    : undefined;
-  return rowName || label.value || "Roll";
-});
+const rollTitle = computed(
+  () => sheetRowTitle(scope.value.item, scope.value.value, context.refs.value) || label.value || "Roll",
+);
 
 const breakdownView = computed(() => {
   if (!parts.value) return undefined;
@@ -218,9 +239,17 @@ const breakdownView = computed(() => {
 // A computed maximum can be anything; keep it a whole number of at least 0.
 // 0 (or no `max`) shows just the count.
 const trackerMax = computed(() => Math.max(Math.floor(number(props.node.attrs.max) ?? 0), 0));
+// `mark`: a tick on the bar at a value (a threshold), as a share of the bar.
+const trackerMark = computed(() => {
+  const mark = number(props.node.attrs.mark);
+  if (mark === undefined || mark <= 0 || mark >= trackerMax.value) return undefined;
+  return `${(mark / trackerMax.value) * 100}%`;
+});
 const trackerValue = computed(() =>
   typeof value.value === "number" ? value.value : 0,
 );
+// The bar stays within 0 and max (Reka warns otherwise); the number shows the real value.
+const trackerBar = computed(() => Math.min(Math.max(trackerValue.value, 0), trackerMax.value));
 // Pips are capped so a large max can't render thousands of boxes.
 const pips = computed(() =>
   Array.from({ length: Math.min(trackerMax.value, 50) }, (_, index) => index),
@@ -242,7 +271,7 @@ const refInfo = computed(() => {
     return { name: "Unavailable", to: undefined, muted: true };
   }
   if (current && typeof current === "object" && "name" in current)
-    return { name: String(current.name), to: undefined, custom: true };
+    return { name: String(current.name), to: undefined };
   return undefined;
 });
 
@@ -281,25 +310,19 @@ const imageSize = computed(
       <span v-if="shownLabel && !compact" class="sheet-field-label">{{
         shownLabel
       }}</span>
-      <UButton
+      <SheetIconButton
         v-if="canReset"
         icon="i-lucide-rotate-ccw"
-        color="neutral"
-        variant="ghost"
-        size="xs"
         class="-my-1"
-        aria-label="Use automatic value"
+        label="Use automatic value"
         title="Use automatic value"
         @click="useAutomatic"
       />
-      <UButton
+      <SheetIconButton
         v-if="lockedEditable"
         icon="i-lucide-pencil"
-        color="neutral"
-        variant="ghost"
-        size="xs"
         class="-my-1"
-        :aria-label="`Edit ${label}`"
+        :label="`Edit ${label}`"
         @click="unlock"
       />
       <!-- An input's parts open from a small button beside its label. -->
@@ -312,6 +335,18 @@ const imageSize = computed(
 
     <div class="sheet-field-value">
     <template v-if="editable && resolved.path">
+      <!-- An image's input keeps the picture above it, following the URL as it's typed. -->
+      <div v-if="display === 'image'" class="sheet-image-frame mb-1">
+        <img
+          v-if="imageUrl"
+          :src="imageUrl"
+          :alt="attrText(node.attrs.alt) || label"
+          referrerpolicy="no-referrer"
+          class="rounded-md object-contain"
+          :class="imageSize"
+        >
+        <span v-else class="text-dimmed">No image</span>
+      </div>
       <SheetFieldInput
         :node="node"
         :value="overrideTag === 'Checkbox' ? value : stored"
@@ -319,6 +354,33 @@ const imageSize = computed(
         :label="label"
         :automatic="automatic ? computedText : undefined"
       />
+      <!-- After the picker's Select icon: Edit on a custom entry, View on a picked one. -->
+      <span v-if="display === 'ref' && previewTarget" class="sheet-preview-button sheet-edit-preview">
+        <SheetPreviewTrigger
+          v-if="previewEditable"
+          class="sheet-edit-button"
+          :mode="previewMode"
+          :target="previewTarget"
+          :card="previewCard"
+          :open="previewOpen && previewEditing"
+          editable
+          :label="`Edit ${previewTarget.name || label}`"
+          @toggle="togglePreview(true)"
+        >
+          <UIcon name="i-lucide-pencil" class="size-3.5 align-middle" />
+        </SheetPreviewTrigger>
+        <SheetPreviewTrigger
+          v-else
+          :mode="previewMode"
+          :target="previewTarget"
+          :card="previewCard"
+          :open="previewOpen && !previewEditing"
+          :label="`View ${previewTarget.name || label}`"
+          @toggle="togglePreview(false)"
+        >
+          <UIcon name="i-lucide-info" class="size-3.5 align-middle" />
+        </SheetPreviewTrigger>
+      </span>
     </template>
 
     <span v-else-if="showsError" class="tabular-nums">
@@ -357,7 +419,7 @@ const imageSize = computed(
     <span v-else-if="display === 'number'" class="tabular-nums">
       <SheetRollTrigger :node="node" :shown="value" :title="rollTitle" :button="rollButton">
         <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-        <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
+        <template v-else-if="previewTarget && text"><SheetPreviewTrigger class="sheet-name-link" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview()">{{ text }}<UIcon name="i-lucide-info" class="sheet-preview-icon size-3.5" /></SheetPreviewTrigger></template>
         <template v-else>{{ text || "—" }}</template>
       </SheetRollTrigger>
     </span>
@@ -407,7 +469,15 @@ const imageSize = computed(
           :class="index < trackerValue ? 'bg-primary' : ''"
         />
       </div>
-      <UProgress v-else :model-value="trackerValue" :max="trackerMax" />
+      <div v-else class="relative">
+        <UProgress :model-value="trackerBar" :max="trackerMax" />
+        <span
+          v-if="trackerMark"
+          class="sheet-tracker-mark absolute -inset-y-1 w-0.5 -translate-x-1/2 bg-inverted"
+          :style="{ left: trackerMark }"
+          aria-hidden="true"
+        />
+      </div>
       <div class="text-xs text-muted tabular-nums">
         {{ trackerValue }} / {{ trackerMax }}
       </div>
@@ -422,18 +492,18 @@ const imageSize = computed(
           : ''
       "
     >
+      <!-- The name and the View icon are one link to the preview. -->
       <SheetPreviewTrigger
         v-if="refInfo && previewTarget"
-        class="text-primary decoration-primary/40 hover:decoration-primary"
+        class="sheet-name-link"
         :mode="previewMode"
         :target="previewTarget"
         :card="previewCard"
         :open="previewOpen"
         :anchor="boxedView ? refBox : undefined"
-        @toggle="togglePreview"
+        @toggle="togglePreview()"
       >
-        {{ refInfo.name }}
-        <span v-if="refInfo.custom" class="text-xs text-muted">(custom)</span>
+        {{ refInfo.name }}<UIcon name="i-lucide-info" class="sheet-preview-icon size-3.5" />
       </SheetPreviewTrigger>
       <NuxtLink
         v-else-if="refInfo?.to"
@@ -444,7 +514,6 @@ const imageSize = computed(
       </NuxtLink>
       <span v-else-if="refInfo" :class="refInfo.muted ? 'text-dimmed' : ''">
         {{ refInfo.name }}
-        <span v-if="refInfo.custom" class="text-xs text-muted">(custom)</span>
       </span>
       <span v-else class="text-dimmed">—</span>
     </div>
@@ -483,7 +552,7 @@ const imageSize = computed(
     <span v-else :class="text ? '' : 'text-dimmed'">
       <SheetRollTrigger :node="node" :shown="value" :title="rollTitle" :button="rollButton">
         <SheetBreakdown v-if="breakdownView" :parts="breakdownView.parts" :total="breakdownView.total" :label="label">{{ text || "—" }}</SheetBreakdown>
-        <SheetPreviewTrigger v-else-if="previewTarget && text" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview">{{ text }}</SheetPreviewTrigger>
+        <template v-else-if="previewTarget && text"><SheetPreviewTrigger class="sheet-name-link" :mode="previewMode" :target="previewTarget" :card="previewCard" :open="previewOpen" @toggle="togglePreview()">{{ text }}<UIcon name="i-lucide-info" class="sheet-preview-icon size-3.5" /></SheetPreviewTrigger></template>
         <template v-else>{{ text || "—" }}</template>
       </SheetRollTrigger>
     </span>
