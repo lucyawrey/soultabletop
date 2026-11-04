@@ -15,6 +15,7 @@ Soul Tabletop is a Nuxt 4 app for managing tabletop RPG Systems, Campaigns, Cont
 ## Git
 
 - `main` is protected. Every change goes through a pull request, and PRs are squash-merged, so the PR title and description become the commit message: write them like one.
+- No AI attribution in history: commits are authored by the person running the agent, with no `Co-authored-by` trailers for agents, and PR descriptions have no "Generated with/by" or session-link footers. Remove any that a tool adds before opening the PR.
 - Run `scripts/check-secrets.sh` before pushing. It checks unpushed commits against `.env.local`'s values and common key patterns.
 
 ## Data model
