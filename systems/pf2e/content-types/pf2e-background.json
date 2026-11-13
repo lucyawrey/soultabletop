@@ -129,7 +129,7 @@
       "type": "content",
       "label": "Skill Feat",
       "contentTypeId": "pf2e-feat",
-      "allow": "reference"
+      "allow": "both"
     },
     "traits": {
       "type": "array",

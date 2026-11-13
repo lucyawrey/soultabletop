@@ -240,6 +240,15 @@ describe("running an action", () => {
     expect(run(button, { heroPoints: 2, damage: "200d6" })).toEqual({ error: "A roll can have at most 100 dice" });
   });
 
+  it("leaves a zero modifier out of the expression", () => {
+    const button = find(
+      `<Button label="X"><Roll formula="if(fortune, 4, d6) + heroPoints" /><Roll formula="d6 - heroPoints" /></Button>`,
+      "Button",
+    );
+    const result = run(button, { heroPoints: 0, fortune: true }, { random: faces(3) });
+    expect(result).toMatchObject({ entries: [{ expression: "4", total: 4 }, { expression: "d6", total: 3 }] });
+  });
+
   it("prints expressions as players write them", () => {
     const button = find(`<Button label="X"><Roll formula="(d6 - 1) - (d4 + 2) / 2 * -d8" /></Button>`, "Button");
     const result = run(button, {});

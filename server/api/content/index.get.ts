@@ -45,6 +45,14 @@ defineRouteMeta({
         description: "Only content of this content type",
         schema: { type: "string", format: "uuid" },
       },
+      {
+        name: "dataKeys",
+        in: "query",
+        required: false,
+        description:
+          "Comma-separated top-level `data` fields to include in each row (at most 10), e.g. `kind,ancestry`; for pickers that filter on them",
+        schema: { type: "string" },
+      },
     ],
     responses: {
       200: { description: "Content list. Each row has `source` (official, you, yourGroups, shared, or community) and `ownerReadableId`, the owner's username or group ID, which with `readableId` is the resource's address" },
@@ -59,8 +67,18 @@ export default defineEventHandler(async (event) => {
   const user = await getAuthenticatedUser(event);
   const query = requireListQuery(event);
   const systemId = requireSystemFilter(event);
-  const { contentTypeId, categories } = getQuery(event);
+  const { contentTypeId, categories, dataKeys } = getQuery(event);
   if (contentTypeId !== undefined) requireUuid(contentTypeId, "contentTypeId");
+  // Rows leave out `data`; a picker that filters can ask for a few of its top-level fields.
+  let keys: string[] = [];
+  if (dataKeys !== undefined) {
+    keys = [...new Set(String(dataKeys).split(",").filter(Boolean))];
+    if (keys.length > 10 || keys.some((key) => !/^[A-Za-z_][A-Za-z0-9_]{0,63}$/.test(key)))
+      throw createError({
+        statusCode: 400,
+        statusMessage: "dataKeys must be up to 10 comma-separated field names",
+      });
+  }
   let categoryFilter: ContentCategory[] | undefined;
   if (categories !== undefined) {
     categoryFilter = String(categories).split(",") as ContentCategory[];
@@ -106,6 +124,12 @@ export default defineEventHandler(async (event) => {
       const select = database
         .select({
           item: contentListColumns,
+          data: keys.length
+            ? sql<Record<string, unknown>>`jsonb_strip_nulls(jsonb_build_object(${sql.join(
+                keys.map((key) => sql`${key}::text, ${content.data} -> ${key}`),
+                sql`, `,
+              )}))`
+            : sql<null>`null`,
           resource: resourceListColumns,
           systemId: contentType.systemId,
           official: officialColumn,
@@ -132,7 +156,7 @@ export default defineEventHandler(async (event) => {
   });
 
   return respondWithList(
-    rows.map(({ item, resource: resourceItem, ownerReadableId, systemId: typeSystemId, source, access }) => ({
+    rows.map(({ item, data, resource: resourceItem, ownerReadableId, systemId: typeSystemId, source, access }) => ({
       id: resourceItem.id,
       readableId: resourceItem.readableId,
       ownerReadableId,
@@ -145,6 +169,7 @@ export default defineEventHandler(async (event) => {
       systemId: typeSystemId,
       sheetId: item.sheetId,
       canEdit: access.canEdit,
+      ...(keys.length ? { data: data ?? {} } : {}),
     })),
     page,
   );

@@ -11,11 +11,19 @@ const choice = (type, values) => ({
 const str = (label, extra = {}) => ({ type: "string", label, ...extra });
 const num = (label, extra = {}) => ({ type: "number", label, ...extra });
 const list = (label, itemType) => ({ type: "array", label, itemType });
-const ref = (label, contentTypeId) => ({ type: "content", label, contentTypeId, allow: "reference" });
+const ref = (label, contentTypeId) => ({ type: "content", label, contentTypeId, allow: "both" });
 
 const attributes = [["str", "Strength"], ["dex", "Dexterity"], ["con", "Constitution"], ["int", "Intelligence"], ["wis", "Wisdom"], ["cha", "Charisma"]];
 const attribute = (label) => ({ ...choice("string", attributes), label });
-const rank = (label) => ({ ...choice("number", [[0, "Untrained"], [1, "Trained"], [2, "Expert"], [3, "Master"], [4, "Legendary"]]), label, default: 0 });
+// The same choice with short labels, for narrow cells like a Strike's row.
+const shortAttribute = (label) => ({ ...choice("string", attributes.map(([value, name]) => [value, name.slice(0, 3)])), label });
+// Rank labels are the letters printed on a sheet's rank badges (U, T, E, M, L).
+const rank = (label) => ({
+  ...choice("number", [[0, "U"], [1, "T"], [2, "E"], [3, "M"], [4, "L"]]),
+  label,
+  description: "Untrained, Trained, Expert, Master, or Legendary.",
+  default: 0,
+});
 const skills = ["acrobatics", "arcana", "athletics", "crafting", "deception", "diplomacy", "intimidation", "medicine", "nature", "occultism", "performance", "religion", "society", "stealth", "survival", "thievery"];
 const skill = (label) => ({ ...choice("string", skills.map((s) => [s, s[0].toUpperCase() + s.slice(1)])), label });
 const actions = (label) => ({
@@ -35,6 +43,8 @@ const common = {
 
 const bool = (label, extra = {}) => ({ type: "boolean", label, ...extra });
 const struct = (label, entries) => ({ type: "struct", label, entries });
+const traditions = choice("string", [["arcane", "Arcane"], ["divine", "Divine"], ["occult", "Occult"], ["primal", "Primal"]]);
+const castingKinds = choice("string", [["prepared", "Prepared"], ["spontaneous", "Spontaneous"]]);
 const skillRanks = Object.fromEntries(skills.map((s) => [s, rank(s[0].toUpperCase() + s.slice(1))]));
 
 const types = {
@@ -98,6 +108,8 @@ const types = {
       },
       classDc: rank("Class DC"),
       spellcasting: rank("Spellcasting"),
+      spellTradition: { ...traditions, label: "Spell Tradition" },
+      spellcastingKind: { ...castingKinds, label: "Spellcasting Kind" },
       features: list("Class Features", { type: "struct", entries: { level: num("Level", { required: true }), feature: ref("Feature", "pf2e-class-feature") } }),
       ancestryFeatLevels: list("Ancestry Feat Levels", { type: "number" }),
       classFeatLevels: list("Class Feat Levels", { type: "number" }),
@@ -126,7 +138,7 @@ const types = {
     schema: {
       rank: num("Rank", { required: true, description: "0 for a cantrip." }),
       kind: { ...choice("string", [["spell", "Spell"], ["cantrip", "Cantrip"], ["focus", "Focus"], ["ritual", "Ritual"]]), label: "Kind", default: "spell" },
-      traditions: list("Traditions", choice("string", [["arcane", "Arcane"], ["divine", "Divine"], ["occult", "Occult"], ["primal", "Primal"]])),
+      traditions: list("Traditions", traditions),
       cast: str("Cast", { description: "Actions (1, 2, 3, 1 to 3, reaction, free) or a time such as 10 minutes." }),
       range: str("Range"),
       area: str("Area"),
@@ -159,6 +171,8 @@ const types = {
     name: "Action",
     schema: {
       actions: { ...actions("Actions"), default: "1" },
+      // Set when the action comes from a feat (the import writes one for each feat with an action cost).
+      feat: ref("Feat", "pf2e-feat"),
       category: {
         ...choice("string", [["interaction", "Interaction"], ["offensive", "Offensive"], ["defensive", "Defensive"], ["familiar", "Familiar"]]),
         label: "Category",
@@ -226,7 +240,7 @@ const types = {
     name: "Character",
     contentCategory: "playerCharacter",
     schema: {
-      level: num("Level", { required: true, default: 1 }),
+      level: { ...choice("number", Array.from({ length: 20 }, (_, i) => [i + 1, String(i + 1)])), label: "Level", required: true, default: 1 },
       xp: num("Experience Points", { default: 0 }),
       heroPoints: num("Hero Points", { default: 1 }),
       ancestry: ref("Ancestry", "pf2e-ancestry"),
@@ -246,6 +260,9 @@ const types = {
       wounded: num("Wounded", { default: 0 }),
       doomed: num("Doomed", { default: 0 }),
       conditions: list("Conditions", { type: "string" }),
+      resistances: list("Resistances", { type: "struct", entries: { type: str("Damage Type"), value: num("Value") } }),
+      weaknesses: list("Weaknesses", { type: "struct", entries: { type: str("Damage Type"), value: num("Value") } }),
+      immunities: list("Immunities", { type: "string" }),
       perception: rank("Perception"),
       initiative: struct("Initiative", {
         roll: { ...choice("string", [["perception", "Perception"], ...skills.map((s) => [s, s[0].toUpperCase() + s.slice(1)])]), label: "Roll With", default: "perception" },
@@ -265,12 +282,13 @@ const types = {
         type: "struct",
         entries: {
           weapon: ref("Weapon", "pf2e-item"),
-          attribute: { ...attribute("Attack Attribute"), description: "Strength for melee, Dexterity for ranged and finesse." },
+          attribute: { ...shortAttribute("Attack Attribute"), description: "Strength for melee, Dexterity for ranged and finesse." },
           itemBonus: num("Item Bonus", { default: 0 }),
           notes: str("Notes"),
         },
       }),
-      actions: list("Actions and Reactions", { type: "struct", entries: { action: ref("Action", "pf2e-action"), feat: ref("Feat", "pf2e-feat"), notes: str("Notes") } }),
+      // Feats with an action cost are actions too (the import makes them), so a row needs only the action.
+      actions: list("Actions and Reactions", { type: "struct", entries: { action: ref("Action", "pf2e-action"), notes: str("Notes") } }),
       feats: list("Feats", {
         type: "struct",
         entries: {
@@ -280,12 +298,12 @@ const types = {
         },
       }),
       spellcasting: struct("Spellcasting", {
-        tradition: { ...choice("string", [["arcane", "Arcane"], ["divine", "Divine"], ["occult", "Occult"], ["primal", "Primal"]]), label: "Tradition" },
+        tradition: { ...traditions, label: "Tradition" },
         attribute: attribute("Attribute"),
         rank: rank("Proficiency"),
-        kind: { ...choice("string", [["prepared", "Prepared"], ["spontaneous", "Spontaneous"]]), label: "Kind" },
+        kind: { ...castingKinds, label: "Kind" },
       }),
-      slots: list("Spell Slots", { type: "struct", entries: { rank: num("Rank", { required: true }), max: num("Slots", { default: 0 }), used: num("Used", { default: 0 }) } }),
+      slots: list("Spell Slots", { type: "struct", entries: { rank: num("Rank", { required: true }), max: num("Slots", { default: 0 }), left: num("Left", { default: 0 }) } }),
       spells: list("Spells", {
         type: "struct",
         entries: {
@@ -294,8 +312,8 @@ const types = {
           cast: bool("Cast", { default: false }),
         },
       }),
-      divineFont: struct("Divine Font", { spell: ref("Spell", "pf2e-spell"), max: num("Slots", { default: 0 }), used: num("Used", { default: 0 }) }),
-      focus: struct("Focus", { max: num("Focus Points", { default: 0 }), used: num("Used", { default: 0 }), spells: list("Focus Spells", ref("Spell", "pf2e-spell")) }),
+      divineFont: struct("Divine Font", { spell: ref("Spell", "pf2e-spell"), max: num("Slots", { default: 0 }), left: num("Left", { default: 0 }) }),
+      focus: struct("Focus", { max: num("Focus Points", { default: 0 }), left: num("Left", { default: 0 }), spells: list("Focus Spells", ref("Spell", "pf2e-spell")) }),
       inventory: list("Inventory", {
         type: "struct",
         entries: {

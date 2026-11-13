@@ -6,6 +6,9 @@
 //   system.json                  { name, readableId, owner?, isPubliclyReadable?, description? }
 //   content-types/<id>.json      { name, readableId, contentCategory, hasStrictSchema, schema }
 //   content/<type>/<id>.json     { name, readableId, data }
+//   sheets/<id>.json             { name, readableId, contentType, isDefault?, defaultEditMode?,
+//                                defaultAutosave?, defaultDisplay? }, with
+//                                <id>.stts (markup) and optionally <id>.css beside it
 // `owner` is a group's readable ID (else the key's user owns everything), and
 // every resource takes the system's visibility. In the files, references are
 // readable IDs: a content field's `contentTypeId` names a type, and a content
@@ -121,6 +124,37 @@ for (const readableId of typeOrder) {
   });
 }
 console.log(`${typeIds.size} of ${types.size} content types`);
+
+// Sheets, each for a content type named by its readable ID.
+const readText = (path) => {
+  try {
+    return readFileSync(path, "utf8");
+  } catch {
+    return "";
+  }
+};
+const sheetFiles = jsonFiles(join(root, "sheets"));
+let sheetsLoaded = 0;
+for (const path of sheetFiles) {
+  const sheet = readJson(path);
+  await step(`sheet ${sheet.readableId}`, async () => {
+    const contentTypeId = typeIds.get(sheet.contentType);
+    if (!contentTypeId) throw new Error(`is for the content type ${sheet.contentType}, which isn't loaded`);
+    const fields = {
+      name: sheet.name,
+      markup: readFileSync(path.replace(/\.json$/, ".stts"), "utf8"),
+      cssStyles: readText(path.replace(/\.json$/, ".css")),
+      ...(sheet.isDefault ? { isDefault: true, confirmReplaceDefault: true } : {}),
+      ...Object.fromEntries(["defaultEditMode", "defaultAutosave", "defaultDisplay"].filter((key) => key in sheet).map((key) => [key, sheet[key]])),
+      ...visibility,
+    };
+    const existing = await api("GET", `/sheet/${owner}/${sheet.readableId}`);
+    if (existing) await api("PATCH", `/sheet/${existing.id}`, fields);
+    else await api("POST", "/sheet", { ...fields, readableId: sheet.readableId, contentTypeId, ...ownerFields });
+    sheetsLoaded++;
+  });
+}
+console.log(`${sheetsLoaded} of ${sheetFiles.length} sheets`);
 
 // Content: the content fields of a schema hold readable IDs in the files.
 // `strip` removes them (for the first pass), `resolveRefs` swaps in IDs.

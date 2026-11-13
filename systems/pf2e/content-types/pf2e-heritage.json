@@ -8,7 +8,7 @@
       "type": "content",
       "label": "Ancestry",
       "contentTypeId": "pf2e-ancestry",
-      "allow": "reference",
+      "allow": "both",
       "description": "Empty for a versatile heritage, which any ancestry can take."
     },
     "traits": {

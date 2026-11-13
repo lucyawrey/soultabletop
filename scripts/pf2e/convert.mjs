@@ -68,6 +68,16 @@ function refByName(type, name, from) {
   if (!found) warn(`${from}: ${type} "${name}" is not in the slice; left empty`);
   return found;
 }
+// Foundry gives a class only its spellcasting rank; the tradition and whether
+// spells are prepared are in the text of its "<Class> Spellcasting" feature.
+function spellcastingOf(className) {
+  const feature = items.find((item) => item.type === "pf2e-class-feature" && item.source.name.toLowerCase() === `${className.toLowerCase()} spellcasting`);
+  const text = feature?.source.system.description.value ?? "";
+  return nonEmpty({
+    spellTradition: text.match(/\b(arcane|divine|occult|primal) (?:spells|tradition)\b/i)?.[1].toLowerCase(),
+    spellcastingKind: /repertoire/i.test(text) ? "spontaneous" : /\bprepare\b/i.test(text) ? "prepared" : undefined,
+  });
+}
 // A Foundry UUID ends with the target's name or ID; names are what we match.
 const uuidName = (uuid) => (uuid ? uuid.split(".").at(-1) : undefined);
 
@@ -175,7 +185,7 @@ const converters = {
     trainedLore: (s.trainedSkills?.lore ?? [])[0],
     skillFeat: refByName("pf2e-feat", Object.values(s.items ?? {})[0]?.name, from),
   }),
-  "pf2e-class": ({ system: s }, from) => ({
+  "pf2e-class": ({ name, system: s }, from) => ({
     hp: s.hp,
     keyAttributes: values(s.keyAbility),
     perception: s.perception,
@@ -187,6 +197,7 @@ const converters = {
     // Every class starts trained in its class DC; Foundry's data leaves it out.
     classDc: 1,
     spellcasting: s.spellcasting,
+    ...spellcastingOf(name),
     // Only the features in the slice; the rest are left out for now.
     features: Object.values(s.items ?? {})
       .sort((a, b) => a.level - b.level)
@@ -278,5 +289,22 @@ for (const item of items) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(new URL(`${item.readableId}.json`, dir), JSON.stringify({ name: item.source.name, readableId: item.readableId, data }, null, 2) + "\n");
 }
-console.log(`${items.length} files written to systems/pf2e/content/`);
+// A feat with an action cost is also an action, so the character's action
+// picker offers it; the action links back to its feat.
+let featActions = 0;
+const actionDir = new URL("pf2e-action/", outDir);
+for (const item of items.filter((entry) => entry.type === "pf2e-feat")) {
+  const actions = actionsOf(item.source.system);
+  if (actions === "passive") continue;
+  const readableId = item.readableId.replace(/^feat-/, "action-");
+  if (items.some((entry) => entry.readableId === readableId)) {
+    warnings.push(`${item.source.name}: an action ${readableId} already exists, so the feat's action is skipped`);
+    continue;
+  }
+  if (!existsSync(actionDir)) mkdirSync(actionDir, { recursive: true });
+  const data = nonEmpty({ actions, feat: item.readableId, ...common(item.source) });
+  writeFileSync(new URL(`${readableId}.json`, actionDir), JSON.stringify({ name: item.source.name, readableId, data }, null, 2) + "\n");
+  featActions += 1;
+}
+console.log(`${items.length + featActions} files written to systems/pf2e/content/ (${featActions} actions from feats)`);
 for (const message of warnings) console.warn(`warning: ${message}`);

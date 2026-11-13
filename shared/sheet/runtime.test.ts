@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { ContentFieldSchema } from "../content-schema";
 import {
   defaultSheetValue,
+  filterDataKeys,
+  isBlankListItem,
   entryScopes,
   evaluateSheetDefinition,
   evaluateSheetFormula,
@@ -121,9 +123,9 @@ describe("formatSheetValue", () => {
     expect(formatSheetValue(value, refs)).toBe(text);
   });
 
-  it("signs positive numbers when asked", () => {
+  it("signs zero and positive numbers when asked", () => {
     expect(formatSheetValue(2, refs, "signed")).toBe("+2");
-    expect(formatSheetValue(0, refs, "signed")).toBe("0");
+    expect(formatSheetValue(0, refs, "signed")).toBe("+0");
     expect(formatSheetValue(-1, refs, "signed")).toBe("-1");
   });
 });
@@ -174,6 +176,36 @@ describe("setSheetValue", () => {
     const target = { a: 1 };
     setSheetValue(target, [], 2);
     expect(target).toEqual({ a: 1 });
+  });
+});
+
+describe("filterDataKeys", () => {
+  it("lists the candidate's top-level fields a filter reads, not the sheet's own", () => {
+    const source = "kind == 'weapon' and weapon.range > 0 and ancestry == /ancestry and any(traits, . == 'Agile')";
+    const ast = parseFormula(source, { line: 1, column: 1, offset: 0 }).ast!;
+    expect(filterDataKeys(ast).sort()).toEqual(["ancestry", "kind", "traits", "weapon"]);
+  });
+});
+
+describe("isBlankListItem", () => {
+  const schemas: SheetSchemas = { root: { hasStrictSchema: true, schema: {} }, types: {} };
+  const pair: ContentFieldSchema = {
+    type: "struct",
+    entries: { type: { type: "string" }, value: { type: "number" } },
+  };
+
+  it.each([
+    ["empty text", { type: "string" }, "", true],
+    ["spaces", { type: "string" }, "  ", true],
+    ["text", { type: "string" }, "darkvision", false],
+    ["an untouched pair", pair, {}, true],
+    ["a pair at its defaults", pair, { type: "", value: 0 }, true],
+    ["a pair with a value", pair, { type: "", value: 5 }, false],
+    ["a pair with text", pair, { type: "fire", value: 0 }, false],
+    ["a choice", { type: "string", options: ["a", "b"] }, "", false],
+    ["a struct with a picker", { type: "struct", entries: { item: { type: "content", contentTypeId: "x" } } }, {}, false],
+  ] as const)("%s", (_name, field, value, blank) => {
+    expect(isBlankListItem(value, field as ContentFieldSchema, schemas)).toBe(blank);
   });
 });
 
