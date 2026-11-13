@@ -285,7 +285,7 @@
           </Stack>
           <Stack direction="row" wrap class="traits">
             <!-- Traits come from the weapon; with none picked the path would be an input that writes to the reference. -->
-            <Tags field="weapon.traits" hideLabel class="chips" show="weapon.name != null" />
+            <Tags field="weapon.traits" hideLabel placeholder="+ Add" class="chips" show="weapon.name != null" />
             <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
             <Text field="notes" hideLabel class="note-in" show="editing()" />
           </Stack>

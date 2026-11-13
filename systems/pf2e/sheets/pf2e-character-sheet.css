@@ -137,7 +137,10 @@
   padding: 0 6px;
 }
 .charname .sheet-field-value { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); line-height: 1; }
-.refs { gap: 6px 8px; margin-top: 0; }
+/* The name shares its line with the level strip; the build cards take the full row under both. */
+.ident { display: contents; }
+.charname { grid-column: 1; grid-row: 1; align-self: center; }
+.refs { grid-column: 1 / -1; grid-row: 2; gap: 6px 8px; margin-top: 0; }
 .refgroup { gap: 6px 8px; flex-wrap: nowrap; }
 .card {
   border: 1px solid var(--st-border-strong);
@@ -147,24 +150,21 @@
 }
 .card .sheet-field-value { font-size: calc(var(--d-fs) + 3px); line-height: 1.25; }
 .meta {
-  /* Beside the name and build cards, its bottom level with the cards'; set in from the panel's
-     top and right edges by the same amount. The facts run under both. */
   grid-column: 2;
   grid-row: 1;
-  align-self: stretch;
   border: 1px solid var(--st-border);
   border-radius: var(--st-radius);
   background: var(--st-panel-muted);
 }
 /* The header's stack spacing reset would zero this margin, so it's more specific. */
-.head .meta.meta { margin: 6px 6px 0 0 !important; }
+.head .meta.meta { margin: 0 !important; }
 .meta > * {
   display: grid;
-  grid-template-rows: auto calc(var(--d-big) * 1.5);
+  grid-template-rows: auto calc(var(--d-big) * 1.05);
   align-items: center;
   justify-items: center;
-  gap: 2px;
-  padding: calc(var(--d-pad) * .9) calc(var(--d-pad) + 8px);
+  gap: 0;
+  padding: 2px calc(var(--d-pad) + 4px) 3px;
 }
 .meta > * + * { border-left: 1px solid var(--st-border); }
 .meta > * { text-align: center; align-content: center; }
@@ -173,8 +173,8 @@
 .meta .cellv > .label { min-height: 16px; display: flex; align-items: center; justify-content: center; }
 .meta > * > div { justify-content: center; }
 .meta .sheet-field-value { display: flex; justify-content: center; align-items: center; }
-.meta .sheet-field-value { font-size: calc(var(--d-big) * 1.15); line-height: 1; }
-.meta .word .sheet-field-value { font-size: calc(var(--d-big) * .7); }
+.meta .sheet-field-value { font-size: calc(var(--d-big) * .85); line-height: 1; }
+.meta .word .sheet-field-value { font-size: calc(var(--d-big) * .6); }
 .meta .cellv { display: grid; }
 .per { align-items: baseline; justify-content: center; gap: 3px; flex-wrap: nowrap !important; }
 .unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; white-space: nowrap; }
@@ -295,15 +295,15 @@
 .iwrcond > .resist > .rgroup { flex-wrap: wrap; max-width: 100%; margin-left: 6px; }
 /* In edit the kinds sit closer: each is a "+ Resist"-style pill. */
 .iwrcond > .resist > .rgroup:not(.iwrview) { margin-left: 0; }
-/* Tag inputs on the strip and in the facts: chips, then a small dashed "+ Add" input; no box. */
-.sheet-sheet .strip .sheet-tags [data-slot="root"], .sheet-sheet .facts .sheet-tags [data-slot="root"] {
+/* Tag inputs on the strip, in the facts, and a custom weapon's traits: chips, then a small dashed "+ Add" input; no box. */
+.sheet-sheet :is(.strip, .facts, .traits) .sheet-tags [data-slot="root"] {
   border: 0;
   padding: 0;
   min-height: 0;
   background: transparent;
   gap: 4px;
 }
-.strip .sheet-tags input, .facts .sheet-tags input {
+:is(.strip, .facts, .traits) .sheet-tags input {
   flex: none;
   width: 52px;
   min-width: 0;
@@ -315,7 +315,7 @@
   background: var(--st-panel-muted);
 }
 /* Chips match the "+ Add" input beside them, and read-only tags (Traits) match the chips. */
-.strip .sheet-tags [data-slot="item"], .facts .sheet-tags [data-slot="item"],
+:is(.strip, .facts, .traits) .sheet-tags [data-slot="item"],
 .strip .sheet-tags .sheet-field-value > .flex-wrap > span, .facts .sheet-tags .sheet-field-value > .flex-wrap > span,
 .traits .sheet-tags .sheet-field-value > .flex-wrap > span {
   height: 20px;
@@ -326,7 +326,7 @@
 }
 /* Where it can, the "+ Add" input is as wide as its placeholder ("+ Immune"). */
 @supports (field-sizing: content) {
-  .strip .sheet-tags input, .facts .sheet-tags input { width: auto; field-sizing: content; }
+  :is(.strip, .facts, .traits) .sheet-tags input { width: auto; field-sizing: content; }
 }
 .strip .sheet-tags input:focus, .facts .sheet-tags input:focus { width: 110px; background: transparent; }
 .strip .sheet-tags input::placeholder, .facts .sheet-tags input::placeholder { color: var(--st-primary); font-weight: 700; opacity: 1; }
@@ -466,8 +466,10 @@
 .sheet-sheet .kv input[data-slot="base"], .sheet-sheet .kv textarea[data-slot="base"] { margin-left: -5px; width: calc(100% + 5px); padding: 0 4px; font-size: inherit; }
 .sheet-sheet .kv input[data-slot="base"] { height: 22px; }
 .sheet-sheet .kv textarea[data-slot="base"] { min-height: 22px; padding-block: 2px; line-height: 1.35; field-sizing: content; resize: none; }
-.sheet-sheet .kv .sheet-tags [data-slot="root"] { margin-left: -5px; min-height: 22px; padding-block: 0; padding-left: 4px; }
+.sheet-sheet .kv :is(.sheet-tags, .sheet-field) [data-slot="root"]:has([data-slot="input"]) { margin-left: -5px; min-height: 22px; padding-block: 0; padding-left: 4px; }
 /* Backstory and notes editors: a dashed box like the other inputs, its text where the play text sits. */
+/* A custom deity's fields are selects and tags too; their text starts where the inputs' does. */
+.sheet-sheet .kv .sheet-field button[data-slot="base"] { margin-left: -5px; height: 22px; padding-left: 4px; font-weight: 400; }
 .sheet-sheet .kv .sheet-markdown .sheet-field-value > div { margin-left: -5px; padding: 2px 4px; border: 1px dashed var(--st-border-strong); border-radius: 4px; }
 .sheet-sheet .kv .ProseMirror { padding-inline: 0; }
 .sheet-sheet .kv .ProseMirror p { line-height: 1.5; }
@@ -569,7 +571,7 @@
 .cell { min-width: 0; }
 .sheet-sheet input[data-slot="base"], .sheet-sheet textarea[data-slot="base"],
 .sheet-sheet button[data-slot="base"][role="combobox"], .sheet-sheet button[data-slot="base"][aria-haspopup="listbox"],
-.sheet-sheet .sheet-tags [data-slot="root"] {
+.sheet-sheet .sheet-tags [data-slot="root"], .sheet-sheet .sheet-field [data-slot="root"]:has([data-slot="input"]) {
   background: transparent;
   box-shadow: none;
   border: 1px dashed var(--st-border-strong);
