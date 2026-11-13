@@ -34,7 +34,7 @@
 <Sheet display="text">
   <Section class="head">
     <Stack class="ident">
-      <Text field="name" hideLabel class="charname" />
+      <Text field="name" label="Name" class="charname" />
       <Stack direction="row" wrap class="refs">
         <Ref field="ancestry" label="Ancestry" preview="card" class="card">
           <Set field="hp" formula="if(coalesce(hp, 0) == 0 or level <= 1, maxHp(), hp)" />
@@ -67,7 +67,7 @@
       </Stack>
     </Stack>
     <Stack direction="row" class="meta">
-      <Number field="level" label="Level" min="1" max="20" />
+      <Select field="level" label="Level" />
       <Stack class="cellv">
         <Note class="label">XP</Note>
         <Stack direction="row" class="per"><Number field="xp" hideLabel min="0" /><Note class="unit">/ 1000</Note></Stack>

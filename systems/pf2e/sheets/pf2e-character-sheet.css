@@ -123,12 +123,12 @@
   max-width: calc(100% + 7px);
   field-sizing: content;
   height: calc(var(--d-big) * 1.35 + 6px);
-  margin: -3px 0 -3px -7px;
+  margin: -3px 0 -3px -3px;
   padding: 0 6px;
 }
 .charname .sheet-field-value { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); line-height: 1; }
 .ident { display: contents; }
-.charname { grid-column: 1; grid-row: 1; align-self: center; }
+.charname { grid-column: 1; grid-row: 1; align-self: center; padding-left: 13px; display: flex; align-items: center; gap: 6px; }
 .refs { grid-column: 1 / -1; grid-row: 2; gap: 6px 8px; margin-top: 0; }
 .refgroup { gap: 6px 8px; flex-wrap: nowrap; }
 .card {
