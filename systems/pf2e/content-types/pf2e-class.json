@@ -536,6 +536,42 @@
       "description": "Untrained, Trained, Expert, Master, or Legendary.",
       "default": 0
     },
+    "spellTradition": {
+      "type": "string",
+      "options": [
+        {
+          "value": "arcane",
+          "label": "Arcane"
+        },
+        {
+          "value": "divine",
+          "label": "Divine"
+        },
+        {
+          "value": "occult",
+          "label": "Occult"
+        },
+        {
+          "value": "primal",
+          "label": "Primal"
+        }
+      ],
+      "label": "Spell Tradition"
+    },
+    "spellcastingKind": {
+      "type": "string",
+      "options": [
+        {
+          "value": "prepared",
+          "label": "Prepared"
+        },
+        {
+          "value": "spontaneous",
+          "label": "Spontaneous"
+        }
+      ],
+      "label": "Spellcasting Kind"
+    },
     "features": {
       "type": "array",
       "label": "Class Features",

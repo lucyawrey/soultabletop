@@ -68,6 +68,16 @@ function refByName(type, name, from) {
   if (!found) warn(`${from}: ${type} "${name}" is not in the slice; left empty`);
   return found;
 }
+// Foundry gives a class only its spellcasting rank; the tradition and whether
+// spells are prepared are in the text of its "<Class> Spellcasting" feature.
+function spellcastingOf(className) {
+  const feature = items.find((item) => item.type === "pf2e-class-feature" && item.source.name.toLowerCase() === `${className.toLowerCase()} spellcasting`);
+  const text = feature?.source.system.description.value ?? "";
+  return nonEmpty({
+    spellTradition: text.match(/\b(arcane|divine|occult|primal) (?:spells|tradition)\b/i)?.[1].toLowerCase(),
+    spellcastingKind: /repertoire/i.test(text) ? "spontaneous" : /\bprepare\b/i.test(text) ? "prepared" : undefined,
+  });
+}
 // A Foundry UUID ends with the target's name or ID; names are what we match.
 const uuidName = (uuid) => (uuid ? uuid.split(".").at(-1) : undefined);
 
@@ -175,7 +185,7 @@ const converters = {
     trainedLore: (s.trainedSkills?.lore ?? [])[0],
     skillFeat: refByName("pf2e-feat", Object.values(s.items ?? {})[0]?.name, from),
   }),
-  "pf2e-class": ({ system: s }, from) => ({
+  "pf2e-class": ({ name, system: s }, from) => ({
     hp: s.hp,
     keyAttributes: values(s.keyAbility),
     perception: s.perception,
@@ -187,6 +197,7 @@ const converters = {
     // Every class starts trained in its class DC; Foundry's data leaves it out.
     classDc: 1,
     spellcasting: s.spellcasting,
+    ...spellcastingOf(name),
     // Only the features in the slice; the rest are left out for now.
     features: Object.values(s.items ?? {})
       .sort((a, b) => a.level - b.level)

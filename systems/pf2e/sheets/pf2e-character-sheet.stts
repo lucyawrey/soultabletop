@@ -61,6 +61,10 @@
             <Set field="defenses.heavy" formula="max(coalesce(defenses.heavy, 0), coalesce(class.defenses.heavy, 0))" />
             <Set field="skills.*" formula="max(coalesce(., 0), if(hasTrait(/class.trainedSkills, itemKey()), 1, 0))" />
             <Set field="keyAttribute" formula="if(count(class.keyAttributes) == 1, first(class.keyAttributes), keyAttribute)" />
+            <Set field="spellcasting.rank" formula="max(coalesce(spellcasting.rank, 0), coalesce(class.spellcasting, 0))" />
+            <Set field="spellcasting.tradition" formula="coalesce(spellcasting.tradition, class.spellTradition)" />
+            <Set field="spellcasting.kind" formula="coalesce(spellcasting.kind, class.spellcastingKind)" />
+            <Set field="spellcasting.attribute" formula="if(coalesce(class.spellcasting, 0) > 0, coalesce(spellcasting.attribute, if(count(class.keyAttributes) == 1, first(class.keyAttributes), keyAttribute)), spellcasting.attribute)" />
           </Ref>
           <Ref field="subclass" label="{switch(class.name, 'Rogue', 'Racket', 'Cleric', 'Doctrine', 'Subclass')}" preview="card" class="card" />
         </Stack>

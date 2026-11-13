@@ -43,6 +43,8 @@ const common = {
 
 const bool = (label, extra = {}) => ({ type: "boolean", label, ...extra });
 const struct = (label, entries) => ({ type: "struct", label, entries });
+const traditions = choice("string", [["arcane", "Arcane"], ["divine", "Divine"], ["occult", "Occult"], ["primal", "Primal"]]);
+const castingKinds = choice("string", [["prepared", "Prepared"], ["spontaneous", "Spontaneous"]]);
 const skillRanks = Object.fromEntries(skills.map((s) => [s, rank(s[0].toUpperCase() + s.slice(1))]));
 
 const types = {
@@ -106,6 +108,8 @@ const types = {
       },
       classDc: rank("Class DC"),
       spellcasting: rank("Spellcasting"),
+      spellTradition: { ...traditions, label: "Spell Tradition" },
+      spellcastingKind: { ...castingKinds, label: "Spellcasting Kind" },
       features: list("Class Features", { type: "struct", entries: { level: num("Level", { required: true }), feature: ref("Feature", "pf2e-class-feature") } }),
       ancestryFeatLevels: list("Ancestry Feat Levels", { type: "number" }),
       classFeatLevels: list("Class Feat Levels", { type: "number" }),
@@ -134,7 +138,7 @@ const types = {
     schema: {
       rank: num("Rank", { required: true, description: "0 for a cantrip." }),
       kind: { ...choice("string", [["spell", "Spell"], ["cantrip", "Cantrip"], ["focus", "Focus"], ["ritual", "Ritual"]]), label: "Kind", default: "spell" },
-      traditions: list("Traditions", choice("string", [["arcane", "Arcane"], ["divine", "Divine"], ["occult", "Occult"], ["primal", "Primal"]])),
+      traditions: list("Traditions", traditions),
       cast: str("Cast", { description: "Actions (1, 2, 3, 1 to 3, reaction, free) or a time such as 10 minutes." }),
       range: str("Range"),
       area: str("Area"),
@@ -236,7 +240,7 @@ const types = {
     name: "Character",
     contentCategory: "playerCharacter",
     schema: {
-      level: num("Level", { required: true, default: 1 }),
+      level: { ...choice("number", Array.from({ length: 20 }, (_, i) => [i + 1, String(i + 1)])), label: "Level", required: true, default: 1 },
       xp: num("Experience Points", { default: 0 }),
       heroPoints: num("Hero Points", { default: 1 }),
       ancestry: ref("Ancestry", "pf2e-ancestry"),
@@ -294,10 +298,10 @@ const types = {
         },
       }),
       spellcasting: struct("Spellcasting", {
-        tradition: { ...choice("string", [["arcane", "Arcane"], ["divine", "Divine"], ["occult", "Occult"], ["primal", "Primal"]]), label: "Tradition" },
+        tradition: { ...traditions, label: "Tradition" },
         attribute: attribute("Attribute"),
         rank: rank("Proficiency"),
-        kind: { ...choice("string", [["prepared", "Prepared"], ["spontaneous", "Spontaneous"]]), label: "Kind" },
+        kind: { ...castingKinds, label: "Kind" },
       }),
       slots: list("Spell Slots", { type: "struct", entries: { rank: num("Rank", { required: true }), max: num("Slots", { default: 0 }), left: num("Left", { default: 0 }) } }),
       spells: list("Spells", {

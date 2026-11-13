@@ -31,6 +31,8 @@
     },
     "classDc": 1,
     "spellcasting": 1,
+    "spellTradition": "divine",
+    "spellcastingKind": "prepared",
     "features": [
       {
         "level": 1,

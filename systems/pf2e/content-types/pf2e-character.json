@@ -6,9 +6,6 @@
   "schema": {
     "level": {
       "type": "number",
-      "label": "Level",
-      "required": true,
-      "default": 1,
       "options": [
         {
           "value": 1,
@@ -90,7 +87,10 @@
           "value": 20,
           "label": "20"
         }
-      ]
+      ],
+      "label": "Level",
+      "required": true,
+      "default": 1
     },
     "xp": {
       "type": "number",
