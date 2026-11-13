@@ -137,7 +137,6 @@
   padding: 0 6px;
 }
 .charname .sheet-field-value { font-family: var(--st-font-display); font-size: calc(var(--d-big) * 1.35); line-height: 1; }
-/* The name shares its line with the level strip; the build cards take the full row under both. */
 .ident { display: contents; }
 .charname { grid-column: 1; grid-row: 1; align-self: center; }
 .refs { grid-column: 1 / -1; grid-row: 2; gap: 6px 8px; margin-top: 0; }
@@ -156,15 +155,13 @@
   border-radius: var(--st-radius);
   background: var(--st-panel-muted);
 }
-/* The header's stack spacing reset would zero this margin, so it's more specific. */
-.head .meta.meta { margin: 0 !important; }
 .meta > * {
   display: grid;
-  grid-template-rows: auto calc(var(--d-big) * 1.05);
+  grid-template-rows: auto calc(var(--d-big) * 1.5);
   align-items: center;
   justify-items: center;
-  gap: 0;
-  padding: 2px calc(var(--d-pad) + 4px) 3px;
+  gap: 2px;
+  padding: calc(var(--d-pad) * .9) calc(var(--d-pad) + 8px);
 }
 .meta > * + * { border-left: 1px solid var(--st-border); }
 .meta > * { text-align: center; align-content: center; }
@@ -173,11 +170,22 @@
 .meta .cellv > .label { min-height: 16px; display: flex; align-items: center; justify-content: center; }
 .meta > * > div { justify-content: center; }
 .meta .sheet-field-value { display: flex; justify-content: center; align-items: center; }
-.meta .sheet-field-value { font-size: calc(var(--d-big) * .85); line-height: 1; }
-.meta .word .sheet-field-value { font-size: calc(var(--d-big) * .6); }
+.meta .sheet-field-value { font-size: calc(var(--d-big) * 1.15); line-height: 1; }
+.meta .word .sheet-field-value { font-size: calc(var(--d-big) * .7); }
 .meta .cellv { display: grid; }
 .per { align-items: baseline; justify-content: center; gap: 3px; flex-wrap: nowrap !important; }
 .unit { font-size: var(--d-lfs); color: var(--st-ink-muted); font-weight: 400; white-space: nowrap; }
+@container (min-width: 881px) {
+  .head > div:last-child { grid-template-columns: auto 1fr; }
+  .meta { align-self: center; justify-self: start; border: 0; border-left: 1px solid var(--st-border); border-radius: 0; background: transparent; }
+  .meta > *, .meta .cellv, .head .meta .sheet-tracker { display: flex; flex-direction: row; align-items: center; gap: 6px; padding: 0 12px; }
+  .meta > :last-child { padding-right: 0; }
+  .meta .cellv > .label { min-height: 0; }
+  .meta .sheet-field-value, .head .meta .sheet-number input { font-size: calc(var(--d-fs) + 3px); }
+  .meta .word .sheet-field-value { font-size: calc(var(--d-fs) + 1px); }
+  .head .meta .sheet-number input { height: 24px; }
+  .meta .sheet-tracker .sheet-field-value button { width: 15px; height: 15px; }
+}
 .facts { grid-column: 1 / -1; gap: 2px 14px; align-items: baseline; }
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
 .facts .sheet-value .sheet-field-value { font-weight: 400; }
@@ -231,9 +239,7 @@
   background: var(--st-primary);
   color: var(--st-on-primary);
 }
-/* One grid under the attributes and defenses: the attributes run down to the bottom of the shield
-   button's row, which keeps one height; Conditions and IWR start in that row, and their extra lines
-   take a row of their own, so neither the attributes nor the shield info move. */
+/* The attributes end at the shield row; extra Conditions and IWR lines get their own row, so neither moves. */
 .top { grid-template-rows: auto calc(var(--d-h) + 4px) 1fr; }
 .defwrap, .defwrap > .strip { display: contents !important; }
 .top > .attrs { grid-column: 1; grid-row: 1 / 3; align-self: stretch; }
@@ -280,9 +286,7 @@
 /* The strip under the defenses: labels beside their values, on one line. */
 .strip .sheet-number, .strip .sheet-tags, .strip .sheet-value, .strip .trad .sheet-select, .resist { display: flex; align-items: center; gap: 4px 6px; }
 .strip .sheet-field-label { white-space: nowrap; }
-/* Conditions and IWR are one flow of labels and chips: the wrappers step aside (display: contents), so
-   IWR follows the last condition, and every next line starts at the left edge. Edit's entry groups
-   stay whole. */
+/* Conditions and IWR are one flow of chips (wrappers are display: contents); edit's entry groups stay whole. */
 .iwrcond { display: flex !important; flex-wrap: wrap; align-items: baseline; align-content: flex-start; gap: 4px; min-width: 0; line-height: 20px; padding-top: 4px; }
 .iwrcond > .sheet-tags, .iwrcond > .sheet-tags > div, .iwrcond > .sheet-tags [data-slot="root"],
 .iwrcond > .resist, .iwrview, .iwrview > .chiplist, .iwrview > .chiplist > div, .iwrview .sheet-list-item,
@@ -468,7 +472,6 @@
 .sheet-sheet .kv textarea[data-slot="base"] { min-height: 22px; padding-block: 2px; line-height: 1.35; field-sizing: content; resize: none; }
 .sheet-sheet .kv :is(.sheet-tags, .sheet-field) [data-slot="root"]:has([data-slot="input"]) { margin-left: -5px; min-height: 22px; padding-block: 0; padding-left: 4px; }
 /* Backstory and notes editors: a dashed box like the other inputs, its text where the play text sits. */
-/* A custom deity's fields are selects and tags too; their text starts where the inputs' does. */
 .sheet-sheet .kv .sheet-field button[data-slot="base"] { margin-left: -5px; height: 22px; padding-left: 4px; font-weight: 400; }
 .sheet-sheet .kv .sheet-markdown .sheet-field-value > div { margin-left: -5px; padding: 2px 4px; border: 1px dashed var(--st-border-strong); border-radius: 4px; }
 .sheet-sheet .kv .ProseMirror { padding-inline: 0; }
@@ -738,9 +741,8 @@
 .inline { display: flex; align-items: center; gap: 4px; }
 .inline .sheet-field-label { color: inherit; }
 .resist { gap: 4px 8px; align-items: center; }
-/* Editable pills (Languages, Senses, Other speeds, IWR in edit): each entry is one chip, the size of
-   the tag chips, whose inputs are borderless and split by a hairline, with its × inside. You click
-   into it to change it; "+ Add" is the dashed pill after the entries. */
+/* Editable pills (Languages, Senses, Other speeds, IWR in edit): each entry is one tag-sized chip of
+   borderless inputs split by hairlines, with its × inside. */
 .pills { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 .facts > .pills { align-items: center; }
 .pills > * { margin-block: 0 !important; }
@@ -810,9 +812,10 @@
 /* Under 880px the header and the Attributes & Defenses row stop fitting side by side
    (breakpoints from the approved mockup). */
 @container (max-width: 880px) {
-  .head .meta.meta { margin: 0 !important; }
   .head > div:last-child { grid-template-columns: 1fr; }
-  .meta, .facts { grid-column: 1; grid-row: auto; }
+  .meta { grid-column: 1; grid-row: 2; }
+  .refs { grid-row: 3; }
+  .facts { grid-column: 1; grid-row: auto; }
   .meta > * { flex: 1 1 0; min-width: 0; }
   /* The Level/XP strip and the Hit Points number get full width here, so they shrink to stay quiet. */
   .meta > * { grid-template-rows: auto calc(var(--d-big) * 1.2); padding-top: 4px; padding-bottom: 4px; }
@@ -839,9 +842,7 @@
   .iwrcond { grid-column: 2 !important; }
   .top:not(:has(.shieldrow)) .iwrcond { grid-column: 1 / -1 !important; }
 }
-/* Under 820px Strikes and Actions, then Skills and the tabs, stack; each keeps its wide rows.
-   Proficiencies moves after the tabs. Stacked sections are as far apart as the sheet's own areas,
-   whose gap also has the renderer's space-y margin (8px) under it. */
+/* Under 820px the column pairs stack, Proficiencies after the tabs. The gap adds the renderer's 8px space-y margin. */
 @container (max-width: 820px) {
   .mid, .pair { grid-template-columns: 1fr !important; row-gap: calc(var(--d-gap) + 18px) !important; }
   .leftcol { display: contents; }
