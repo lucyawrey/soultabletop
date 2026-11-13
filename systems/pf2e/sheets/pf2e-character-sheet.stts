@@ -527,12 +527,6 @@
 
       <Tab label="Spells" icon="i-game-icons-spell-book" show="length(coalesce(spellcasting.tradition, '')) > 0 or editing()">
         <Stack direction="row" wrap class="strip keyline">
-          <Stack direction="row" class="trad" show="not editing()"><Value field="spellcasting.tradition" hideLabel class="strong" /><Value field="spellcasting.kind" hideLabel class="strong" /></Stack>
-          <Stack direction="row" class="trad" show="editing()">
-            <Select field="spellcasting.tradition" label="Tradition" class="small-sel" />
-            <Select field="spellcasting.kind" label="Casting" class="small-sel" />
-            <Select field="spellcasting.attribute" label="Attribute" class="small-sel" />
-          </Stack>
           <Stack direction="row" class="kvp">
             <Value label="Spell DC" formula="10 + spellMod()">
               <Part label="Base" formula="10" />
@@ -550,6 +544,12 @@
             <Part label="{rankName(spellcasting.rank)}" formula="prof(spellcasting.rank)" />
             <Roll label="Spell attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
           </Value>
+          <Stack direction="row" class="trad" show="not editing()"><Value field="spellcasting.tradition" hideLabel class="strong" /><Value field="spellcasting.kind" hideLabel class="strong" /></Stack>
+          <Stack direction="row" class="trad" show="editing()">
+            <Select field="spellcasting.tradition" label="Tradition" class="small-sel" />
+            <Select field="spellcasting.kind" label="Casting" class="small-sel" />
+            <Select field="spellcasting.attribute" label="Attribute" class="small-sel" />
+          </Stack>
           <Button label="Daily preparations" icon="i-lucide-sunrise" live toast show="not editing()">
             <Set field="spells.*.cast" formula="false" />
             <Set field="slots.*.left" formula="max" />

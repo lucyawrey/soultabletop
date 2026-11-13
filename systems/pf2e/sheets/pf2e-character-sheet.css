@@ -433,6 +433,7 @@
 .sheet-sheet .kv input[data-slot="base"] { height: 22px; }
 .sheet-sheet .kv textarea[data-slot="base"] { min-height: 22px; padding-block: 2px; line-height: 1.35; field-sizing: content; resize: none; }
 .sheet-sheet .kv :is(.sheet-tags, .sheet-field) [data-slot="root"]:has([data-slot="input"]) { margin-left: -5px; width: calc(100% + 5px); min-height: 22px; padding-block: 0; padding-left: 4px; }
+.sheet-sheet .kv .sheet-ref input.sheet-custom-name { margin-left: -5px; height: 22px; padding-left: 4px; }
 .sheet-sheet .kv .sheet-field button[data-slot="base"] { margin-left: -5px; width: calc(100% + 5px); height: 22px; padding-left: 4px; font-weight: 400; }
 .sheet-sheet .kv .sheet-markdown .sheet-field-value > div { margin-left: -5px; padding: 2px 4px; border: 1px dashed var(--st-border-strong); border-radius: 4px; }
 .sheet-sheet .kv .ProseMirror { padding-inline: 0; }
@@ -627,9 +628,9 @@
 .sheet-list.rows > :first-child:not(:last-child) { margin-bottom: 0 !important; }
 .sheet-list.rows > .flex-wrap { margin-top: 6px !important; }
 .sheet-sheet .sheet-list.rows > .flex-wrap > button[data-slot="base"], .sheet-sheet .sheet-list.rows > .flex-wrap button[data-slot="base"][aria-haspopup="listbox"] {
-  height: 24px;
-  padding: 0 10px;
-  font-size: calc(var(--d-lfs) + 1px);
+  height: 28px;
+  padding: 0 12px;
+  font-size: calc(var(--d-lfs) + 2.5px);
   border: 1px solid var(--st-border-strong);
   background: var(--st-panel);
   border-radius: 5px;
@@ -653,7 +654,7 @@
 .traits { flex-wrap: wrap !important; }
 .traits .chips, .traits .chips > .sheet-field-value, .sheet-sheet .traits .chips [data-slot="root"], .traits .chips .sheet-field-value > .flex-wrap { display: contents; }
 .gear { flex-basis: auto; margin-left: auto; }
-.sheet-list > .flex-wrap > .w-56 button[data-slot="base"] { min-width: 130px; padding-right: 18px; }
+.sheet-list > .flex-wrap > .w-56 button[data-slot="base"] { min-width: 150px; padding-right: 20px; }
 .spell .sheet-checkbox button, .spell .sheet-field-value > button { width: 13px; height: 13px; border-radius: 2px; }
 .spell > .sheet-value:not(.name) .sheet-field-value { font-weight: 400; }
 .small-num .sheet-field-value { width: 44px; }
