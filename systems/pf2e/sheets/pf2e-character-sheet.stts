@@ -68,7 +68,7 @@
     </Stack>
     <Stack direction="row" class="meta">
       <Select field="level" label="Level" />
-      <Stack class="cellv">
+      <Stack class="cellv xp">
         <Note class="label">XP</Note>
         <Stack direction="row" class="per"><Number field="xp" hideLabel min="0" /><Note class="unit">/ 1000</Note></Stack>
       </Stack>

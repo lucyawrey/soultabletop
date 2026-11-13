@@ -183,6 +183,8 @@
   .head .meta .sheet-number input { height: calc(var(--d-big) * 1.1); }
   .head .meta .sheet-tracker .sheet-field-value button { width: 15px; height: 15px; }
   .refs .card, .charname { min-width: 140px; }
+  .meta > .sheet-select { min-width: 80px; }
+  .meta > .xp { min-width: 124px; }
 }
 .facts { grid-column: 1 / -1; gap: 2px 14px; align-items: baseline; }
 .facts > * { display: flex; gap: 6px; align-items: baseline; }
