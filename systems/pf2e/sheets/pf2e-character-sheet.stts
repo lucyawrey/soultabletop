@@ -34,7 +34,7 @@
 <Sheet display="text">
   <Section class="head">
     <Stack class="ident">
-      <Text field="name" label="Name" class="charname" />
+      <Text field="name" label="Character Name" class="charname" />
       <Stack direction="row" wrap class="refs">
         <Ref field="ancestry" label="Ancestry" preview="card" class="card">
           <Set field="hp" formula="if(coalesce(hp, 0) == 0 or level <= 1, maxHp(), hp)" />
