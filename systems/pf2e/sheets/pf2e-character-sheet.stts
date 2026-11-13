@@ -1,4 +1,3 @@
-<!-- Pathfinder 2e character sheet. Design: the approved mockup (frozen 2026-10-06). -->
 <Define name="prof" params="r" formula="if(r > 0, level + 2 * r, 0)" />
 <Define name="rankLetter" params="r" formula="switch(r, 1, 'T', 2, 'E', 3, 'M', 4, 'L', 'U')" />
 <Define name="rankName" params="r" formula="switch(r, 1, 'Trained', 2, 'Expert', 3, 'Master', 4, 'Legendary', 'Untrained')" />
@@ -6,7 +5,6 @@
 <Define name="skillAttr" params="k"
         formula="if(any(list('acrobatics', 'stealth', 'thievery'), . == k), 'dex', if(k == 'athletics', 'str', if(any(list('arcana', 'crafting', 'occultism', 'society'), . == k), 'int', if(any(list('medicine', 'nature', 'religion', 'survival'), . == k), 'wis', 'cha'))))" />
 <Define name="saveAttr" params="k" formula="switch(k, 'fortitude', 'con', 'reflex', 'dex', 'wis')" />
-<!-- Armor's check penalty applies to Str and Dex skills unless the character meets its Strength. -->
 <Define name="checkPenalty" params="k"
         formula="if((skillAttr(k) == 'str' or skillAttr(k) == 'dex') and coalesce(armor.armor.strength, 0) > attributes.str, coalesce(armor.armor.checkPenalty, 0), 0)" />
 <Define name="armorRank" formula="get(defenses, coalesce(armor.armor.category, 'unarmored'))" />
@@ -19,9 +17,7 @@
 <Define name="glyph" params="a"
         formula="switch(a, '1', '◆', '2', '◆◆', '3', '◆◆◆', '1 to 3', '◆ to ◆◆◆', '1 to 2', '◆ to ◆◆', '2 to 3', '◆◆ to ◆◆◆', 'reaction', '↺', 'free', '◇', '')" />
 <Define name="hasTrait" params="traits, t" formula="any(traits, . == t)" />
-<!-- Strikes: the hit modifier, the multiple attack penalty steps, and damage. Thieves add Dex to finesse melee damage. -->
 <Define name="strikeHit" params="category, attr, bonus" formula="get(attributes, attr) + prof(get(attacks, coalesce(category, 'simple'))) + coalesce(bonus, 0)" />
-<!-- A Strike's attribute unless the player picks one: Dex for ranged weapons, the higher of Str and Dex for finesse ones, else Str. -->
 <Define name="strikeAttr" params="range, traits"
         formula="if(coalesce(range, 0) > 0, 'dex', if(hasTrait(traits, 'Finesse') and attributes.dex > attributes.str, 'dex', 'str'))" />
 <Define name="mapStep" params="traits" formula="if(hasTrait(traits, 'Agile'), 4, 5)" />
@@ -36,7 +32,6 @@
 <Define name="bulk" formula="sum(inventory, if(state == 'dropped', 0, quantity * coalesce(item.bulk, 0)))" />
 
 <Sheet display="text">
-  <!-- Header: name, build choices, the level strip, and facts. -->
   <Section class="head">
     <Stack class="ident">
       <Text field="name" hideLabel class="charname" />
@@ -49,7 +44,6 @@
           <Set field="skills.*" formula="max(coalesce(., 0), if(hasTrait(/background.trainedSkills, itemKey()), 1, 0))" />
         </Ref>
         <Stack direction="row" class="refgroup">
-          <!-- Picking a class fills in what it determines, never lowering a rank already set; at 1st level, HP follows the new maximum. -->
           <Ref field="class" label="Class" preview="card" class="card">
             <Set field="hp" formula="if(coalesce(hp, 0) == 0 or level <= 1, maxHp(), hp)" />
             <Set field="perception" formula="max(coalesce(perception, 0), coalesce(class.perception, 0))" />
@@ -88,11 +82,9 @@
     <Stack direction="row" wrap class="facts">
       <Tags field="ancestry.traits" label="Traits" />
       <Tags field="senses" label="Senses" show="not editing() and length(coalesce(senses, list())) > 0" />
-      <!-- In edit, entries are pills you can click into and change (Languages, Senses, Other speeds, IWR). -->
       <List field="senses" label="Senses" addLabel="Add" class="pills" show="editing()">
         <Text field="." hideLabel placeholder="darkvision" />
       </List>
-      <!-- In play, other speeds are chips like the tags beside them. -->
       <List field="otherSpeeds" label="Other speeds" class="speeds chiplist" show="not editing() and length(coalesce(otherSpeeds, list())) > 0">
         <Value formula="concat(kind, ' ', speed, ' ft')" hideLabel class="chip20" />
       </List>
@@ -109,7 +101,6 @@
     </Stack>
   </Section>
 
-  <!-- Attributes and defenses. -->
   <Section title="Attributes &amp; Defenses" class="folio">
     <Stack direction="row" class="top">
       <Grid cols="3" gap="sm" class="attrs">
@@ -130,7 +121,6 @@
               <Part label="Armor" formula="armor.armor.acBonus" />
               <Part label="Shield raised" formula="shield.shield.acBonus" show="shieldRaised" />
             </Value>
-            <!-- A raised shield shows beside the armor, as in the mockup. -->
             <Stack direction="row" class="subline">
               <Value formula="coalesce(armor.name, 'No armor')" hideLabel class="sub" />
               <Value formula="concat('· +', shield.shield.acBonus, ' shield')" hideLabel class="up" show="shieldRaised and shield.shield.acBonus > 0" />
@@ -153,7 +143,6 @@
               </Stack>
               <Number field="tempHp" label="Temp" min="0" live class="temp" />
             </Stack>
-            <!-- Temp HP draws over the HP bar from the left, in another color. -->
             <Stack class="hpbar">
               <Tracker formula="hp" max="{maxHp()}" hideLabel class="meter" show="maxHp() > 0" />
               <Tracker formula="coalesce(tempHp, 0)" max="{maxHp()}" hideLabel class="meter tempbar" show="maxHp() > 0" />
@@ -197,13 +186,11 @@
             <Value formula="concat('/ ', shield.shield.hp, ' (', shield.shield.brokenThreshold, ')')" hideLabel class="dim" show="shield.name != null" />
             <Badge class="broken" color="error" show="shield.name != null and coalesce(shieldHp, shield.shield.hp) <= shield.shield.brokenThreshold">Broken</Badge>
           </Stack>
-          <!-- Conditions and IWR move together, and share a line: each wraps inside itself first. -->
           <Stack direction="row" class="iwrcond">
             <Tags field="conditions" label="Conditions" placeholder="+ Add" live />
             <Stack direction="row" wrap class="resist">
               <Note class="label">IWR</Note>
               <Value hideLabel class="dim" formula="'none'" show="not editing() and length(coalesce(defensesList(), '')) == 0" />
-              <!-- In view, each kind's entries are chips, like Conditions. -->
               <Stack direction="row" class="rgroup iwrview" show="not editing() and length(coalesce(resistances, list())) > 0">
                 <Note>Resist</Note>
                 <List field="resistances" class="chiplist"><Value formula="concat(type, ' ', value)" hideLabel class="chip20" /></List>
@@ -216,7 +203,6 @@
                 <Note>Immune</Note>
                 <Tags field="immunities" hideLabel />
               </Stack>
-              <!-- In edit, each kind is named by its "+ Resist" button, and by a label once it has entries. -->
               <Stack direction="row" class="rgroup" show="editing()">
                 <Note show="length(coalesce(resistances, list())) > 0">Resist</Note>
                 <List field="resistances" addLabel="Resist" class="pills">
@@ -242,7 +228,6 @@
     </Stack>
   </Section>
 
-  <!-- Strikes and actions, side by side. -->
   <Grid cols="2" class="pair">
     <Section title="Strikes" icon="i-game-icons-crossed-swords" class="folio strikes">
       <Note class="aside">MAP −5 / −10 · agile −4 / −8</Note>
@@ -262,7 +247,6 @@
               <Part label="{rankName(get(/attacks, coalesce(weapon.weapon.category, 'simple')))}" formula="prof(get(/attacks, coalesce(weapon.weapon.category, 'simple')))" />
               <Part label="Item" formula="itemBonus" />
               <Roll name="hit" label="Attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
-              <!-- A weapon without a damage die deals its damage dice as a fixed amount. -->
               <FollowUp label="Damage">
                 <Roll label="Damage" formula="if(coalesce(weapon.weapon.damageDie, '') == '', coalesce(weapon.weapon.damageDice, 0), dice(concat(coalesce(weapon.weapon.damageDice, 1), weapon.weapon.damageDie))) + damageMod(weapon.weapon.range, weapon.traits)" />
               </FollowUp>
@@ -284,7 +268,6 @@
             <Value hideLabel class="dim" formula="concat('+', sneakDice(), 'd6 sneak')" show="/class.name == 'Rogue'" />
           </Stack>
           <Stack direction="row" wrap class="traits">
-            <!-- Traits come from the weapon; with none picked the path would be an input that writes to the reference. -->
             <Tags field="weapon.traits" hideLabel placeholder="+ Add" class="chips" show="weapon.name != null" />
             <Value field="notes" hideLabel class="dim" show="not editing() and length(coalesce(notes, '')) > 0" />
             <Text field="notes" hideLabel class="note-in" show="editing()" />
@@ -296,7 +279,6 @@
       <List field="actions" addLabel="Add action" addPick="action" class="rows">
         <Stack direction="row" class="row">
           <Value hideLabel class="act" formula="glyph(action.actions)" />
-          <!-- Feats with an action cost are actions too (the import makes them), so one picker offers both. -->
           <Stack class="cell">
             <Value field="action.name" hideLabel preview class="name" show="not editing()" />
             <Ref field="action" hideLabel preview class="name" show="editing()" />
@@ -308,7 +290,6 @@
     </Section>
   </Grid>
 
-  <!-- Skills and proficiencies on the left, the tabs on the right. -->
   <Stack direction="row" class="mid">
     <Stack class="leftcol">
       <Section title="Skills" icon="i-game-icons-skills" class="folio skills">
@@ -473,7 +454,6 @@
             <Tracker formula="round(bulk(), 1)" max="{10 + attributes.str}" mark="{5 + attributes.str}" hideLabel class="bmeter" />
             <Value hideLabel class="dim" formula="concat('encumbered over ', 5 + attributes.str, ' · limit ', 10 + attributes.str)" show="bulk() <= 5 + attributes.str" />
             <Badge color="error" show="bulk() > 5 + attributes.str">Encumbered</Badge>
-            <!-- In edit, the armor and shield pickers end the first two lines, where there's room, so nothing moves. -->
             <Stack direction="row" class="kvp gear" show="editing()"><Note class="label">Armor</Note><Ref field="armor" hideLabel preview="card" filter="kind == 'armor'" class="name" /></Stack>
           </Stack>
           <Value label="Invested" formula="concat(count(inventory, invested), ' / 10')" />
@@ -540,7 +520,6 @@
             </Stack>
           </List>
         </Stack>
-        <!-- Only its Add button shows: new items are worn (the schema's default) and join that group. -->
         <List field="inventory" addLabel="Add item" addPick="item" class="rows addonly" show="editing()">
           <Note class="none" show="false"></Note>
         </List>
@@ -571,7 +550,6 @@
             <Part label="{rankName(spellcasting.rank)}" formula="prof(spellcasting.rank)" />
             <Roll label="Spell attack" formula="d20 + value()" crit="face == 20" fumble="face == 1" />
           </Value>
-          <!-- A play action; in edit its place goes to the selects above, which would push it onto a line of its own. -->
           <Button label="Daily preparations" icon="i-lucide-sunrise" live toast show="not editing()">
             <Set field="spells.*.cast" formula="false" />
             <Set field="slots.*.left" formula="max" />
@@ -654,7 +632,6 @@
             <Value hideLabel formula="concat(focus.left, ' of ', focus.max, ' focus points')" show="not editing()" />
             <Stack direction="row" class="inline" show="editing()"><Number field="focus.max" hideLabel min="0" max="3" class="small-num" /><Note>focus points</Note></Stack>
           </Stack>
-          <!-- Rows without a .row are hidden (the cantrip split), so the picker is in the row too. -->
           <List field="focus.spells" addLabel="Add focus spell" class="rows spells">
             <Stack direction="row" class="row spell">
               <Note></Note>
